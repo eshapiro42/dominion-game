@@ -1,7 +1,7 @@
 import cards
+import prettytable
 from abc import ABCMeta, abstractmethod
 from dataclasses import dataclass
-from prettytable import PrettyTable
 
 
 class ActionPhaseError(Exception):
@@ -51,12 +51,12 @@ class Phase(metaclass=ABCMeta):
         while True:
             try:
                 hand = self.player_mat.hand
-                hand_table = PrettyTable()
-                hand_table.field_names = ['Number', 'Card']
+                hand_table = prettytable.PrettyTable(hrules=prettytable.ALL)
+                hand_table.field_names = ['Number', 'Card', 'Description']
                 # Only action cards can be chosen
                 playable_cards = [card for card in hand if cards.CardType.ACTION in card.types]
                 for idx, card in enumerate(playable_cards):
-                    hand_table.add_row([idx + 1, card.name])
+                    hand_table.add_row([idx + 1, card.name, card.description])
                 print(f'You have {self.turn.actions_remaining} actions. Which card would you like to play?\n')
                 print(hand_table)
                 card_num = int(input(f'Enter choice 1-{len(playable_cards)} (0 to skip): '))
@@ -78,15 +78,13 @@ class Phase(metaclass=ABCMeta):
         while True:
             try:
                 max_cost = self.turn.coppers_remaining
-                supply_table = PrettyTable()
-                supply_table.field_names = ['Number', 'Card', 'Cost', 'Quantity']
-                # Only cards you can afford can be chosen
-                buyable_card_stacks = [card_class for card_class in self.supply.card_stacks if card_class.cost <= max_cost]
+                supply_table = prettytable.PrettyTable(hrules=prettytable.ALL)
+                supply_table.field_names = ['Number', 'Card', 'Cost', 'Quantity', 'Description']
+                # Only cards you can afford can be chosen (and with non-zero quantity)
+                buyable_card_stacks = [card_class for card_class in self.supply.card_stacks if card_class.cost <= max_cost and self.supply.card_stacks[card_class].cards_remaining > 0]
                 for idx, card_class in enumerate(buyable_card_stacks):
-                    card_name = card_class.name
                     card_quantity = self.supply.card_stacks[card_class].cards_remaining
-                    card_cost = card_class.cost
-                    supply_table.add_row([idx + 1, card_name, card_cost, card_quantity])
+                    supply_table.add_row([idx + 1, card_class.name, card_class.cost, card_quantity, card_class.description])
                 print(f'You have {max_cost} coppers. Which card would you like to buy?\n')
                 print(supply_table)
                 card_num = int(input(f'Enter choice 1-{len(buyable_card_stacks)} (0 to skip): '))

@@ -1,8 +1,9 @@
+import cards
+import prettytable
+import random
 from collections import deque
 from copy import deepcopy
-from prettytable import PrettyTable
-import cards
-import random
+
 
 class PlayerMat:
     def __init__(self, player):
@@ -69,19 +70,19 @@ class PlayerMat:
 
     def print_hand(self):
         print(f"{self.player}'s hand:")
-        hand_table = PrettyTable()
-        hand_table.field_names = ['Number', 'Card']
+        hand_table = prettytable.PrettyTable(hrules=prettytable.ALL)
+        hand_table.field_names = ['Number', 'Card', 'Description']
         for idx, card in enumerate(self.hand):
-            hand_table.add_row([idx + 1, card.name])
+            hand_table.add_row([idx + 1, card.name, card.description])
         print(hand_table)
         print('\n')
 
     def print_discard_pile(self):
         print(f"{self.player}'s discard pile:")
-        discard_table = PrettyTable()
-        discard_table.field_names = ['Number', 'Card']
+        discard_table = prettytable.PrettyTable(hrules=prettytable.ALL)
+        discard_table.field_names = ['Number', 'Card', 'Description']
         for idx, card in enumerate(self.discard_pile):
-            discard_table.add_row([idx + 1, card.name])
+            discard_table.add_row([idx + 1, card.name, card.description])
         print(discard_table)
         print('\n')
  

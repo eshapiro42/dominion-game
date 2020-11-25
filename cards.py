@@ -25,6 +25,8 @@ class Card(metaclass=ABCMeta):
         types:      the types of card (list[CardType])
         image_path: path to the card's image (str)
     '''
+    description = ''
+
     def __init__(self, owner=None):
         self._owner = owner
 
@@ -35,10 +37,6 @@ class Card(metaclass=ABCMeta):
     @owner.setter
     def owner(self, owner):
         self._owner = owner
-
-    @property
-    def description(self):
-        return ''
 
     @property
     @abstractmethod
@@ -294,9 +292,11 @@ class Moat(ReactionCard):
     extra_coppers = 0
 
     def play(self):
+        # TODO: Implement Moat
         pass
 
     def react(self):
+        # TODO: Implement Moat
         pass
 
 
@@ -350,6 +350,7 @@ class Merchant(ActionCard):
     extra_coppers = 0
 
     def merchant_action(self):
+        # TODO: Implement Merchant
         pass
 
     def play(self):
@@ -375,7 +376,13 @@ class Vassal(ActionCard):
     extra_coppers = 2
 
     def vassal_action(self):
-        pass
+        card = self.owner.player_mat.deck.pop()
+        self.owner.player_mat.discard_pile.append(card)
+        if CardType.ACTION in card.types:
+            print(f'You revealed a {card.name}. Would you like to play it?')
+            play_card = self.owner.choose_yes_or_no()
+            if play_card:
+                card.play()
 
     def play(self):
         self.vassal_action()
@@ -420,6 +427,7 @@ class Workshop(ActionCard):
     extra_coppers = 0
 
     def workshop_action(self):
+        # TODO: Implement Workshop
         pass
 
     def play(self):
@@ -440,6 +448,7 @@ class Bureaucrat(ActionCard):
     extra_coppers = 0
 
     def bureaucrat_action(self):
+        # TODO: Implement Bureaucrat
         pass
 
     def play(self):
@@ -474,6 +483,7 @@ class Militia(ActionCard):
     extra_coppers = 2
 
     def militia_action(self):
+        # TODO: Implement Militia
         pass
 
     def play(self):
@@ -494,6 +504,7 @@ class Moneylender(ActionCard):
     extra_coppers = 0
 
     def moneylender_action(self):
+        # TODO: Implement Moneylender
         pass
 
     def play(self):
@@ -514,6 +525,7 @@ class Poacher(ActionCard):
     extra_coppers = 1
 
     def poacher_action(self):
+        # TODO: Implement Poacher
         pass
 
     def play(self):
@@ -534,6 +546,7 @@ class Remodel(ActionCard):
     extra_coppers = 0
 
     def remodel_action(self):
+        # TODO: Implement Remodel
         pass
 
     def play(self):
@@ -548,18 +561,18 @@ class Remodel(ActionCard):
 KINGDOM_CARDS = [
     Cellar,
     Chapel,
-    Moat,
+    # Moat,
     Harbinger,
-    Merchant,
+    # Merchant,
     Vassal,
     Village,
-    Workshop,
-    Bureaucrat,
+    # Workshop,
+    # Bureaucrat,
     Gardens,
-    Militia,
-    Moneylender,
-    Poacher,
-    Remodel,
+    # Militia,
+    # Moneylender,
+    # Poacher,
+    # Remodel,
     # Smithy,
     # ThroneRoom,
     # Bandit,

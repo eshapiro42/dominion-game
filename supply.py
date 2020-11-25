@@ -1,9 +1,9 @@
 import cards
 import itertools
+import prettytable
 import random
 from abc import ABCMeta, abstractmethod
 from math import inf
-from prettytable import PrettyTable
 
 
 class SupplyStackEmptyError(Exception):
@@ -33,7 +33,8 @@ class Supply:
         for card_class in self.victory_card_classes:
             self.card_stacks[card_class] = FiniteSupplyStack(card_class, stack_size)
         # 10 randomly selected stacks of 10 kingdom cards each
-        self.kingdom_card_classes = random.sample(cards.KINGDOM_CARDS, 10)
+        # TODO: Remove hack to allow less than 10 kingdom card stacks
+        self.kingdom_card_classes = random.sample(cards.KINGDOM_CARDS, min(10, len(cards.KINGDOM_CARDS)))
         for card_class in self.kingdom_card_classes:
             self.card_stacks[card_class] = FiniteSupplyStack(card_class, 10)
         # Create empty trash pile
@@ -48,10 +49,10 @@ class Supply:
 
     def __str__(self):
         ret = "SUPPLY:\n"
-        supply_table = PrettyTable()
-        supply_table.field_names = ['Number', 'Card', 'Cost', 'Quantity']
+        supply_table = prettytable.PrettyTable(hrules=prettytable.ALL)
+        supply_table.field_names = ['Number', 'Card', 'Cost', 'Quantity', 'Description']
         for idx, card_class in enumerate(self.card_stacks):
-            supply_table.add_row([idx + 1, card_class.name, card_class.cost, self.card_stacks[card_class].cards_remaining])
+            supply_table.add_row([idx + 1, card_class.name, card_class.cost, self.card_stacks[card_class].cards_remaining, card_class.description])
         ret += supply_table.get_string()
         ret += '\n'
         return ret

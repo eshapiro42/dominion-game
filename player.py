@@ -54,7 +54,16 @@ class Player:
             except:
                 print('That is not a valid choice.\n')
 
-
+    def choose_yes_or_no(self):
+        while True:
+            response = input('Enter choice Yes/No: ')
+            if response.lower() in ['yes', 'y', 'no', 'n']:
+                break
+        if response.lower() in ['yes', 'y']:
+            return True
+        else:
+            return False
+        
     @property
     def current_victory_points(self):
         return self.player_mat.current_victory_points
