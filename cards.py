@@ -109,7 +109,7 @@ class ActionCard(Card):
         pass
 
     @abstractmethod
-    def play(self):
+    def play(self, turn):
         pass
 
 
@@ -234,7 +234,15 @@ class Cellar(ActionCard):
     extra_coppers = 0
 
     def cellar_action(self):
-        pass
+        discarded_card_count = 0
+        while True:
+            card_to_discard = self.owner.choose_card_to_discard(force=False)
+            if card_to_discard is None:
+                break
+            else:
+                discarded_card_count += 1
+                self.owner.player_mat.discard(card_to_discard)
+        self.owner.player_mat.draw(discarded_card_count)
 
     def play(self):
         self.cellar_action()

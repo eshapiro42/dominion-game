@@ -1,5 +1,6 @@
 from collections import deque
 from copy import deepcopy
+from prettytable import PrettyTable
 import cards
 import random
 
@@ -61,6 +62,15 @@ class PlayerMat:
         self.played_cards.clear()
         # Draw a new hand of five cards
         self.draw(5)
+
+    def print_hand(self):
+        print(f"{self.player}'s hand:")
+        hand_table = PrettyTable()
+        hand_table.field_names = ['Number', 'Card']
+        for idx, card in enumerate(self.hand):
+            hand_table.add_row([idx + 1, card.name])
+        print(hand_table)
+        print('\n')
  
     # TODO: Implement __repr__ method for PlayerMat
     # def __repr__(self):

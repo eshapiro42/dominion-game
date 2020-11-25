@@ -35,20 +35,10 @@ class Turn:
 
     def start(self):
         print(f"{self.player}'s turn!\n".upper())
-        self.print_hand()
+        self.player_mat.print_hand()
         self.action_phase.start()
         self.buy_phase.start()
         self.cleanup_phase.start()
-
-    def print_hand(self):
-        print(f"{self.player}'s hand:")
-        hand = self.player_mat.hand
-        hand_table = PrettyTable()
-        hand_table.field_names = ['Number', 'Card']
-        for idx, card in enumerate(hand):
-            hand_table.add_row([idx + 1, card.name])
-        print(hand_table)
-        print('\n')
 
 class Phase(metaclass=ABCMeta):
     def __init__(self, turn):
@@ -123,26 +113,30 @@ class ActionPhase(Phase):
                 print('No action cards to play. Ending action phase.\n')
                 return
             card = self.choose_from_hand()
+            if card is None:
+                # The player is forfeiting their action phase
+                print('Action phase forfeited.\n')
+                return
             self.play(card)
         print('No actions left. Ending action phase.\n')
 
     def play(self, card):
+        modifier = 'an' if card.name[0] in ['a', 'e', 'i', 'o', 'u'] else 'a'
+        print(f'{self.player} played {modifier} {card}.\n')
         # Playing an action card uses one action
         self.turn.actions_remaining -= 1
-        if card is not None:
-            print(f'{self.player} played a {card}.\n')
-            # Draw any additional cards specified on the card
-            self.player_mat.draw(quantity=card.extra_cards)
-            # Add back any additional actions on the card
-            self.turn.actions_remaining += card.extra_actions
-            # Add any additional buys on the card
-            self.turn.buys_remaining += card.extra_buys
-            # Add any additional coppers on the card
-            self.turn.coppers_remaining += card.extra_coppers
-            # Add the card to the played cards area
-            self.player_mat.play(card)
-            # Do whatever the card is supposed to do
-            card.play()
+        # Draw any additional cards specified on the card
+        self.player_mat.draw(quantity=card.extra_cards)
+        # Add back any additional actions on the card
+        self.turn.actions_remaining += card.extra_actions
+        # Add any additional buys on the card
+        self.turn.buys_remaining += card.extra_buys
+        # Add any additional coppers on the card
+        self.turn.coppers_remaining += card.extra_coppers
+        # Add the card to the played cards area
+        self.player_mat.play(card)
+        # Do whatever the card is supposed to do
+        card.play()
 
 
 class BuyPhase(Phase):
@@ -154,6 +148,10 @@ class BuyPhase(Phase):
         # Buy cards
         while self.turn.buys_remaining > 0:
             card_class = self.choose_from_supply()
+            if card_class is None:
+                # The player is forfeiting their buy phase
+                print('Buy phase forfeited.\n')
+                return
             self.buy(card_class)
         print('No buys left. Ending buy phase.\n')
 
@@ -161,11 +159,10 @@ class BuyPhase(Phase):
         # Buying a card uses one buy
         self.turn.buys_remaining -= 1
         # Gain the desired card
-        if card_class is not None:
-            print(f'{self.player} bought a {card_class.name}.\n')
-            self.player_mat.gain(card_class)
-            self.turn.coppers_remaining -= card_class.cost
-
+        modifier = 'an' if card_class.name[0] in ['a', 'e', 'i', 'o', 'u'] else 'a'
+        print(f'{self.player} bought {modifier} {card_class.name}.\n')
+        self.player_mat.gain(card_class)
+        self.turn.coppers_remaining -= card_class.cost
 
 
 class CleanupPhase(Phase):
