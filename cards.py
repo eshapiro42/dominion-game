@@ -1,3 +1,4 @@
+import math
 from abc import ABCMeta, abstractmethod
 from enum import Enum, auto
 
@@ -14,12 +15,31 @@ class CardType(Enum):
 class Card(metaclass=ABCMeta):
     '''Base card class.
 
+    Attributes:
+        player: the player who owns the card
+        description: the card's description (default: '')
+
     Abstract properties:
         name:       the name of the card (str)
         cost:       the cost of the card (int)
         types:      the types of card (list[CardType])
         image_path: path to the card's image (str)
     '''
+    def __init__(self, owner=None):
+        self._owner = owner
+
+    @property
+    def owner(self):
+        return self._owner
+
+    @owner.setter
+    def owner(self, owner):
+        self._owner = owner
+
+    @property
+    def description(self):
+        return ''
+
     @property
     @abstractmethod
     def name(self):
@@ -66,7 +86,7 @@ class ActionCard(Card):
         extra_cards
 
     Abstract methods:
-        start: complete the directions on the card
+        play: complete the directions on the card
     '''
     @property
     @abstractmethod
@@ -89,7 +109,7 @@ class ActionCard(Card):
         pass
 
     @abstractmethod
-    def start(self):
+    def play(self):
         pass
 
 
@@ -192,7 +212,7 @@ BASIC_CARDS = [
 ]
 
 
-# KINGDOM CARDS
+# KINGDOM CARDS # TODO: Implement card actions
 
 
 class Cellar(ActionCard):
@@ -200,6 +220,13 @@ class Cellar(ActionCard):
     cost = 2
     types = [CardType.ACTION]
     image_path = ''
+
+    description = '\n'.join(
+        [
+            '+1 Action',
+            'Discard any number of cards, then draw that many.'
+        ]
+    )
 
     extra_cards = 0
     extra_actions = 1
@@ -209,7 +236,7 @@ class Cellar(ActionCard):
     def cellar_action(self):
         pass
 
-    def start(self):
+    def play(self):
         self.cellar_action()
 
 
@@ -219,6 +246,8 @@ class Chapel(ActionCard):
     types = [CardType.ACTION]
     image_path = ''
 
+    description = 'Trash up to 4 cards from your hand.'
+
     extra_cards = 0
     extra_actions = 0
     extra_buys = 0
@@ -227,7 +256,7 @@ class Chapel(ActionCard):
     def chapel_action(self):
         pass
 
-    def start(self):
+    def play(self):
         self.chapel_action()
 
 
@@ -237,12 +266,19 @@ class Moat(ReactionCard):
     types = [CardType.ACTION, CardType.REACTION]
     image_path = ''
 
+    description = '\n'.join(
+        [
+            '+2 Cards',
+            'When another player plays an Attack card, you may first reveal this from your hand, to be unaffected by it.'
+        ]
+    )
+
     extra_cards = 2
     extra_actions = 0
     extra_buys = 0
     extra_coppers = 0
 
-    def start(self):
+    def play(self):
         pass
 
     def react(self):
@@ -255,6 +291,14 @@ class Harbinger(ActionCard):
     types = [CardType.ACTION]
     image_path = ''
 
+    description = '\n'.join(
+        [
+            '+1 Card',
+            '+1 Action',
+            'Look through your discard pile. You may put a card from it onto your deck.'
+        ]
+    )
+
     extra_cards = 1
     extra_actions = 1
     extra_buys = 0
@@ -263,7 +307,7 @@ class Harbinger(ActionCard):
     def harbinger_action(self):
         pass
 
-    def start(self):
+    def play(self):
         self.harbinger_action()
 
 
@@ -273,6 +317,14 @@ class Merchant(ActionCard):
     types = [CardType.ACTION]
     image_path = ''
 
+    description = '\n'.join(
+        [
+            '+1 Card',
+            '+1 Action',
+            'The first time you play a Silver this turn, +1 Copper.'
+        ]
+    )
+    
     extra_cards = 1
     extra_actions = 1
     extra_buys = 0
@@ -281,7 +333,7 @@ class Merchant(ActionCard):
     def merchant_action(self):
         pass
 
-    def start(self):
+    def play(self):
         self.merchant_action()
 
 
@@ -291,6 +343,13 @@ class Vassal(ActionCard):
     types = [CardType.ACTION]
     image_path = ''
 
+    description = '\n'.join(
+        [
+            '+2 Coppers',
+            "Discard the top card of your deck. If it's an Action card, you may play it."
+        ]
+    )
+    
     extra_cards = 0
     extra_actions = 0
     extra_buys = 0
@@ -299,7 +358,7 @@ class Vassal(ActionCard):
     def vassal_action(self):
         pass
 
-    def start(self):
+    def play(self):
         self.vassal_action()
 
 
@@ -309,6 +368,13 @@ class Village(ActionCard):
     types = [CardType.ACTION]
     image_path = ''
 
+    description = '\n'.join(
+        [
+            '+1 Card',
+            '+2 Actions'
+        ]
+    )
+    
     extra_cards = 1
     extra_actions = 2
     extra_buys = 0
@@ -317,7 +383,7 @@ class Village(ActionCard):
     def village_action(self):
         pass
 
-    def start(self):
+    def play(self):
         self.village_action()
 
 
@@ -327,6 +393,8 @@ class Workshop(ActionCard):
     types = [CardType.ACTION]
     image_path = ''
 
+    description = 'Gain a card costing up to 4 Coppers.'
+
     extra_cards = 0
     extra_actions = 0
     extra_buys = 0
@@ -335,7 +403,7 @@ class Workshop(ActionCard):
     def workshop_action(self):
         pass
 
-    def start(self):
+    def play(self):
         self.workshop_action()
 
 
@@ -345,6 +413,8 @@ class Bureaucrat(ActionCard):
     types = [CardType.ACTION]
     image_path = ''
 
+    description = ''
+
     extra_cards = 0
     extra_actions = 0
     extra_buys = 0
@@ -353,14 +423,22 @@ class Bureaucrat(ActionCard):
     def bureaucrat_action(self):
         pass
 
-    def start(self):
+    def play(self):
         self.bureaucrat_action()
 
 
 class Gardens(VictoryCard):
+    name = 'Gardens'
+    cost = 4
+    types = [CardType.VICTORY]
+    image_path = ''
+
+    description = 'Worth 1 victory point per 10 cards you have (round down).'
+
     @property
     def points(self):
-        pass
+        num_cards = len(self.owner.player_mat.all_cards)
+        return math.floor(num_cards / 10)
 
 
 class Militia(ActionCard):
@@ -368,6 +446,8 @@ class Militia(ActionCard):
     cost = 4
     types = [CardType.ACTION, CardType.ATTACK]
     image_path = ''
+
+    description = ''
 
     extra_cards = 0
     extra_actions = 0
@@ -377,7 +457,7 @@ class Militia(ActionCard):
     def militia_action(self):
         pass
 
-    def start(self):
+    def play(self):
         self.militia_action()
 
 
@@ -387,6 +467,8 @@ class Moneylender(ActionCard):
     types = [CardType.ACTION]
     image_path = ''
 
+    description = ''
+
     extra_cards = 0
     extra_actions = 0
     extra_buys = 0
@@ -395,7 +477,7 @@ class Moneylender(ActionCard):
     def moneylender_action(self):
         pass
 
-    def start(self):
+    def play(self):
         self.moneylender_action()
 
 
@@ -405,6 +487,8 @@ class Poacher(ActionCard):
     types = [CardType.ACTION]
     image_path = ''
 
+    description = ''
+
     extra_cards = 1
     extra_actions = 1
     extra_buys = 0
@@ -413,7 +497,7 @@ class Poacher(ActionCard):
     def poacher_action(self):
         pass
 
-    def start(self):
+    def play(self):
         self.poacher_action()
 
 
@@ -423,6 +507,8 @@ class Remodel(ActionCard):
     types = [CardType.ACTION]
     image_path = ''
 
+    description = ''
+
     extra_cards = 0
     extra_actions = 0
     extra_buys = 0
@@ -431,7 +517,7 @@ class Remodel(ActionCard):
     def remodel_action(self):
         pass
 
-    def start(self):
+    def play(self):
         self.remodel_action()
 
 

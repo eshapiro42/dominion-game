@@ -35,19 +35,25 @@ class Supply:
         self.kingdom_card_classes = random.sample(cards.KINGDOM_CARDS, 10)
         for card_class in self.kingdom_card_classes:
             self.card_stacks[card_class] = FiniteSupplyStack(card_class, 10)
+        # Create empty trash pile
+        self.trash_pile = {card_class: 0 for card_class in self.card_stacks}
 
     def draw(self, card_class):
         return self.card_stacks[card_class].draw()
 
+    def trash(self, card):
+        card_class = type(card)
+        self.trash_pile[card_class] += 1
+
     def __repr__(self):
         repr_lines = []
         for card_class in self.card_stacks:
-            repr_lines.append(f'{card_class}: {self.card_stacks[card_class].cards_remaining}')
+            repr_lines.append(f'{card_class.name}: {self.card_stacks[card_class].cards_remaining}')
         return '\n'.join(repr_lines)
 
     @property
     def num_empty_stacks(self):
-        return len(stack.is_empty for stack in self.card_stacks.values())
+        return [stack.is_empty for stack in self.card_stacks.values()].count(True)
 
 
 class SupplyStack(metaclass=ABCMeta):
@@ -82,8 +88,6 @@ class InfiniteSupplyStack(SupplyStack):
     @property
     def is_empty(self):
         return False
-
-    
 
 
 class FiniteSupplyStack(SupplyStack):

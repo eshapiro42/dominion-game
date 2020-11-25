@@ -1,4 +1,5 @@
 from collections import deque
+from copy import deepcopy
 import cards
 import random
 
@@ -23,7 +24,11 @@ class PlayerMat:
                 card = card_class()
             else:
                 card = self.supply.draw(card_class)
+            card.owner = self.player
             self.discard_pile.append(card)
+
+    def trash(self, card):
+        self.supply.trash(card)
 
     def shuffle(self):
         self.deck.extend(self.discard_pile)
@@ -39,16 +44,38 @@ class PlayerMat:
                 card = self.deck.pop()
             self.hand.append(card)
 
+    def play(self, card):
+        self.played_cards.append(card)
+        self.hand.remove(card)
+
     def discard(self, card):
         self.discard_pile.append(card)
         self.hand.remove(card)
 
     def cleanup(self):
+        # Discard hand from this turn
         self.discard_pile.extend(self.hand)
         self.hand.clear()
+        # Discard cards played this turn
         self.discard_pile.extend(self.played_cards)
         self.played_cards.clear()
+        # Draw a new hand of five cards
         self.draw(5)
+ 
+    # TODO: Implement __repr__ method for PlayerMat
+    # def __repr__(self):
+    #     pass
 
-    def __repr__(self):
-        pass
+    @property
+    def all_cards(self):
+        '''Concatenate all cards on the player mat (no side effects)'''
+        return deepcopy(self.deck + self.discard_pile + self.hand + self.played_cards)
+
+    @property
+    def current_victory_points(self):
+        victory_points = 0
+        for card in self.all_cards:
+            # Count only if it's a victory or curse card
+            if cards.CardType.VICTORY in card.types or cards.CardType.CURSE in card.types:
+                victory_points += card.points
+        return victory_points
