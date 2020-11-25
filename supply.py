@@ -3,6 +3,7 @@ import itertools
 import random
 from abc import ABCMeta, abstractmethod
 from math import inf
+from prettytable import PrettyTable
 
 
 class SupplyStackEmptyError(Exception):
@@ -45,11 +46,15 @@ class Supply:
         card_class = type(card)
         self.trash_pile[card_class] += 1
 
-    def __repr__(self):
-        repr_lines = []
-        for card_class in self.card_stacks:
-            repr_lines.append(f'{card_class.name}: {self.card_stacks[card_class].cards_remaining}')
-        return '\n'.join(repr_lines)
+    def __str__(self):
+        ret = "SUPPLY:\n"
+        supply_table = PrettyTable()
+        supply_table.field_names = ['Number', 'Card', 'Cost', 'Quantity']
+        for idx, card_class in enumerate(self.card_stacks):
+            supply_table.add_row([idx + 1, card_class.name, card_class.cost, self.card_stacks[card_class].cards_remaining])
+        ret += supply_table.get_string()
+        ret += '\n'
+        return ret
 
     @property
     def num_empty_stacks(self):

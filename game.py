@@ -35,7 +35,7 @@ class Game:
         for player in self.players:
             player.start()
         # TODO: Turn on the game loop
-        # self.game_loop()
+        self.game_loop()
 
     def game_loop(self):
         self.turn_order = random.sample(self.players, len(self.players))
