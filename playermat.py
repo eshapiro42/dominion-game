@@ -28,9 +28,6 @@ class PlayerMat:
             card.owner = self.player
             self.discard_pile.append(card)
 
-    def trash(self, card):
-        self.supply.trash(card)
-
     def shuffle(self):
         self.deck.extend(self.discard_pile)
         self.discard_pile.clear()
@@ -40,9 +37,12 @@ class PlayerMat:
         for _ in range(quantity):
             try:
                 card = self.deck.pop()
-            except IndexError:
+            except IndexError: # If a card cannot be drawn, shuffle
                 self.shuffle()
-                card = self.deck.pop()
+                try:
+                    card = self.deck.pop()
+                except IndexError: # If a card still cannot be drawn, there are none left
+                    break
             self.hand.append(card)
 
     def play(self, card):
@@ -51,6 +51,10 @@ class PlayerMat:
 
     def discard(self, card):
         self.discard_pile.append(card)
+        self.hand.remove(card)
+
+    def trash(self, card):
+        self.supply.trash(card)
         self.hand.remove(card)
 
     def cleanup(self):
@@ -70,6 +74,15 @@ class PlayerMat:
         for idx, card in enumerate(self.hand):
             hand_table.add_row([idx + 1, card.name])
         print(hand_table)
+        print('\n')
+
+    def print_discard_pile(self):
+        print(f"{self.player}'s discard pile:")
+        discard_table = PrettyTable()
+        discard_table.field_names = ['Number', 'Card']
+        for idx, card in enumerate(self.discard_pile):
+            discard_table.add_row([idx + 1, card.name])
+        print(discard_table)
         print('\n')
  
     # TODO: Implement __repr__ method for PlayerMat

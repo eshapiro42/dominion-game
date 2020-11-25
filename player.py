@@ -14,24 +14,43 @@ class Player:
     def __str__(self):
         return self.name
 
-    def choose_card_to_discard(self, force):
+    def choose_card_from_hand(self, force):
         hand = self.player_mat.hand
         if not hand:
             return None
         while True:
             try:
-                print('Which card would you like to discard?\n')
                 self.player_mat.print_hand()
                 if force:
                     card_num = int(input(f'Enter choice 1-{len(hand)}: '))
-                    card_to_discard = hand[card_num - 1]
+                    card_chosen = hand[card_num - 1]
                 else:
                     card_num = int(input(f'Enter choice 1-{len(hand)} (0 to skip): '))
                     if card_num == 0:
                         return None
                     else:
-                        card_to_discard = hand[card_num - 1]
-                return card_to_discard
+                        card_chosen = hand[card_num - 1]
+                return card_chosen
+            except:
+                print('That is not a valid choice.\n')
+
+    def choose_card_from_discard_pile(self, force):
+        discard_pile = self.player_mat.discard_pile
+        if not discard_pile:
+            return None
+        while True:
+            try:
+                self.player_mat.print_discard_pile()
+                if force:
+                    card_num = int(input(f'Enter choice 1-{len(discard_pile)}: '))
+                    card_chosen = discard_pile[card_num - 1]
+                else:
+                    card_num = int(input(f'Enter choice 1-{len(discard_pile)} (0 to skip): '))
+                    if card_num == 0:
+                        return None
+                    else:
+                        card_chosen = discard_pile[card_num - 1]
+                return card_chosen
             except:
                 print('That is not a valid choice.\n')
 

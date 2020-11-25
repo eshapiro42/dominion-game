@@ -236,7 +236,8 @@ class Cellar(ActionCard):
     def cellar_action(self):
         discarded_card_count = 0
         while True:
-            card_to_discard = self.owner.choose_card_to_discard(force=False)
+            print('Choose a card to discard.\n')
+            card_to_discard = self.owner.choose_card_from_hand(force=False)
             if card_to_discard is None:
                 break
             else:
@@ -262,7 +263,13 @@ class Chapel(ActionCard):
     extra_coppers = 0
 
     def chapel_action(self):
-        pass
+        for _ in range(4):
+            print('Choose a card to trash.\n')
+            card_to_trash = self.owner.choose_card_from_hand(force=False)
+            if card_to_trash is None:
+                break
+            else:
+                self.owner.player_mat.trash(card_to_trash)
 
     def play(self):
         self.chapel_action()
@@ -313,7 +320,11 @@ class Harbinger(ActionCard):
     extra_coppers = 0
 
     def harbinger_action(self):
-        pass
+        print('Choose a card from your discard pile.\n')
+        card = self.owner.choose_card_from_discard_pile(force=False)
+        if card is not None:
+            self.owner.player_mat.deck.append(card)
+            self.owner.player_mat.discard_pile.remove(card)
 
     def play(self):
         self.harbinger_action()
