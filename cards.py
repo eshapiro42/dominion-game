@@ -16,7 +16,7 @@ class Card(metaclass=ABCMeta):
     '''Base card class.
 
     Attributes:
-        player: the player who owns the card
+        owner: the player who owns the card
         description: the card's description (default: '')
 
     Abstract properties:
@@ -38,11 +38,6 @@ class Card(metaclass=ABCMeta):
     def owner(self, owner):
         self._owner = owner
         self.interactions = self.owner.interactions
-        self.turn = self.owner.turn
-        self.hand = self.owner.hand
-        self.discard_pile = self.owner.discard_pile
-        self.deck = self.owner.deck
-        self.supply = self.owner.game.supply
 
     @property
     @abstractmethod
@@ -246,8 +241,10 @@ class Cellar(ActionCard):
                 break
             else:
                 discarded_card_count += 1
-                self.player.discard(card_to_discard)
-        self.player.draw(discarded_card_count)
+                self.owner.discard(card_to_discard)
+        drawn_cards = self.owner.draw(discarded_card_count)
+        print(f'+{discarded_card_count} cards --> {drawn_cards}')
+
 
     def play(self):
         self.cellar_action()
@@ -273,7 +270,7 @@ class Chapel(ActionCard):
             if card_to_trash is None:
                 break
             else:
-                self.player.trash(card_to_trash)
+                self.owner.trash(card_to_trash)
 
     def play(self):
         self.chapel_action()
@@ -298,11 +295,11 @@ class Moat(ReactionCard):
     extra_coppers = 0
 
     def play(self):
-        # TODO: Implement Moat
-        pass
+        drawn_cards = self.owner.draw(2)
+        print(f'+2 cards --> {drawn_cards}')
 
     def react(self):
-        # TODO: Implement Moat
+        # TODO: Implement Moat reaction
         pass
 
 
@@ -329,8 +326,8 @@ class Harbinger(ActionCard):
         print('Choose a card from your discard pile.\n')
         card = self.interactions.choose_card_from_discard_pile(force=False)
         if card is not None:
-            self.deck.append(card)
-            self.discard_pile.remove(card)
+            self.owner.deck.append(card)
+            self.owner.discard_pile.remove(card)
 
     def play(self):
         self.harbinger_action()
@@ -346,7 +343,7 @@ class Merchant(ActionCard):
         [
             '+1 Card',
             '+1 Action',
-            'The first time you play a Silver this turn, +1 Copper.'
+            'The first time you play a Silver this turn, +1 $.'
         ]
     )
     
@@ -371,7 +368,7 @@ class Vassal(ActionCard):
 
     description = '\n'.join(
         [
-            '+2 Coppers',
+            '+2 $',
             "Discard the top card of your deck. If it's an Action card, you may play it."
         ]
     )
@@ -382,13 +379,13 @@ class Vassal(ActionCard):
     extra_coppers = 2
 
     def vassal_action(self):
-        card = self.deck.pop()
-        self.discard_pile.append(card)
+        card = self.owner.deck.pop()
+        self.owner.discard_pile.append(card)
         if CardType.ACTION in card.types:
             print(f'You revealed a {card.name}. Would you like to play it?')
             play_card = self.interactions.choose_yes_or_no()
             if play_card:
-                card.play()
+                self.owner.turn.action_phase.play_without_side_effects(card)
 
     def play(self):
         self.vassal_action()
@@ -425,7 +422,7 @@ class Workshop(ActionCard):
     types = [CardType.ACTION]
     image_path = ''
 
-    description = 'Gain a card costing up to 4 Coppers.'
+    description = 'Gain a card costing up to 4 $.'
 
     extra_cards = 0
     extra_actions = 0
@@ -433,8 +430,7 @@ class Workshop(ActionCard):
     extra_coppers = 0
 
     def workshop_action(self):
-        # TODO: Implement Workshop
-        pass
+        self.owner.turn.buy_phase.buy_without_side_effects(max_cost=4, force=True)
 
     def play(self):
         self.workshop_action()
@@ -446,7 +442,7 @@ class Bureaucrat(ActionCard):
     types = [CardType.ACTION]
     image_path = ''
 
-    description = ''
+    description = 'Gain a Silver onto your deck. Each other player reveals a Victory card from their hand and puts it onto their deck (or reveals a hand with no Victory cards).'
 
     extra_cards = 0
     extra_actions = 0
@@ -471,7 +467,7 @@ class Gardens(VictoryCard):
 
     @property
     def points(self):
-        num_cards = len(self.owner.player.all_cards)
+        num_cards = len(self.owner.all_cards)
         return math.floor(num_cards / 10)
 
 
@@ -481,7 +477,12 @@ class Militia(ActionCard):
     types = [CardType.ACTION, CardType.ATTACK]
     image_path = ''
 
-    description = ''
+    description = '\n'.join(
+        [
+            '+2 $',
+            'Each other player discards down to 3 cards in hand.'
+        ]
+    )
 
     extra_cards = 0
     extra_actions = 0
@@ -502,7 +503,7 @@ class Moneylender(ActionCard):
     types = [CardType.ACTION]
     image_path = ''
 
-    description = ''
+    description = 'You may trash a Copper from your hand for +3 $.'
 
     extra_cards = 0
     extra_actions = 0
@@ -510,8 +511,12 @@ class Moneylender(ActionCard):
     extra_coppers = 0
 
     def moneylender_action(self):
-        # TODO: Implement Moneylender
-        pass
+        print('You may trash a Copper from your hand.')
+        copper_to_trash = self.interactions.choose_specific_card_class_from_hand(force=False, card_class=Copper)
+        if copper_to_trash is not None:
+            self.owner.turn.coppers_remaining += 3
+            print(f'+3 $ --> {self.owner.turn.coppers_remaining}')
+            self.owner.trash(copper_to_trash)
 
     def play(self):
         self.moneylender_action()
@@ -523,7 +528,14 @@ class Poacher(ActionCard):
     types = [CardType.ACTION]
     image_path = ''
 
-    description = ''
+    description = '\n'.join(
+        [
+            '+1 Card',
+            '+1 Action',
+            '+1 $',
+            'Discard a card per empty Supply pile.'
+        ]
+    )
 
     extra_cards = 1
     extra_actions = 1
@@ -531,8 +543,14 @@ class Poacher(ActionCard):
     extra_coppers = 1
 
     def poacher_action(self):
-        # TODO: Implement Poacher
-        pass
+        number_to_discard = self.owner.supply.num_empty_stacks
+        if number_to_discard > 0:
+            print(f'You must discard {number_to_discard} cards.')
+            for num in range(number_to_discard):
+                print(f'Choose a card to discard.')
+                card_to_discard = self.interactions.choose_card_from_hand(force=True)
+                if card_to_discard is not None:
+                    self.owner.discard(card_to_discard)
 
     def play(self):
         self.poacher_action()
@@ -544,7 +562,7 @@ class Remodel(ActionCard):
     types = [CardType.ACTION]
     image_path = ''
 
-    description = ''
+    description = 'Trash a card from your hand. Gain a card costing up to 2 $ more than it.'
 
     extra_cards = 0
     extra_actions = 0
@@ -552,14 +570,63 @@ class Remodel(ActionCard):
     extra_coppers = 0
 
     def remodel_action(self):
-        # TODO: Implement Remodel
-        pass
+        card_to_trash = self.interactions.choose_card_from_hand(force=True)
+        if card_to_trash is not None:
+            self.owner.trash(card_to_trash)
+            max_cost = card_to_trash.cost + 2
+            self.owner.turn.buy_phase.buy_without_side_effects(self, max_cost=max_cost, force=True)
 
     def play(self):
         self.remodel_action()
 
 
+class Smithy(ActionCard):
+    name = 'Smithy'
+    cost = 4
+    types = [CardType.ACTION]
+    image_path = ''
 
+    description = '+3 Cards'
+
+    extra_cards = 3
+    extra_actions = 0
+    extra_buys = 0
+    extra_coppers = 0
+
+    def smithy_action(self):
+        pass
+
+    def play(self):
+        self.smithy_action()
+
+
+class ThroneRoom(ActionCard):
+    name = 'Throne Room'
+    cost = 4
+    types = [CardType.ACTION]
+    image_path = ''
+
+    description = 'You may play an Action card from your hand twice.'
+
+    extra_cards = 0
+    extra_actions = 0
+    extra_buys = 0
+    extra_coppers = 0
+
+    def throne_room_action(self):
+        print('Select an action card to play twice.')
+        card = self.interactions.choose_action_card_from_hand()
+        if card is not None:
+            # Playing the card should not use any actions, so we use a special method
+            # The first time, add the card to the played cards area
+            self.owner.play(card)
+            print(f'Playing {card.name} for the first time.')
+            self.owner.turn.action_phase.play_without_side_effects(card)
+            print(f'Playing {card.name} for the second time.')
+            self.owner.turn.action_phase.play_without_side_effects(card)
+
+    def play(self):
+        self.throne_room_action()
 
 
 
@@ -572,15 +639,15 @@ KINGDOM_CARDS = [
     # Merchant,
     Vassal,
     Village,
-    # Workshop,
+    Workshop,
     # Bureaucrat,
     Gardens,
     # Militia,
-    # Moneylender,
-    # Poacher,
-    # Remodel,
-    # Smithy,
-    # ThroneRoom,
+    Moneylender,
+    Poacher,
+    Remodel,
+    Smithy,
+    ThroneRoom,
     # Bandit,
     # CouncilRoom,
     # Festival,

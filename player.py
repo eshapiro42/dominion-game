@@ -39,6 +39,7 @@ class Player:
         random.shuffle(self.deck)
 
     def draw(self, quantity: int = 1):
+        drawn_cards = []
         for _ in range(quantity):
             try:
                 card = self.deck.pop()
@@ -49,10 +50,15 @@ class Player:
                 except IndexError: # If a card still cannot be drawn, there are none left
                     break
             self.hand.append(card)
+            drawn_cards.append(card)
+        return drawn_cards
 
     def play(self, card):
-        self.played_cards.append(card)
-        self.hand.remove(card)
+        try:
+            self.hand.remove(card)
+            self.played_cards.append(card)
+        except ValueError:
+            pass
 
     def discard(self, card):
         self.discard_pile.append(card)
