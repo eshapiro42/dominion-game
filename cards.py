@@ -38,6 +38,8 @@ class Card(metaclass=ABCMeta):
     def owner(self, owner):
         self._owner = owner
         self.interactions = self.owner.interactions
+        self.game = self.owner.game
+        self.supply = self.owner.game.supply
 
     @property
     @abstractmethod
@@ -243,7 +245,7 @@ class Cellar(ActionCard):
                 discarded_card_count += 1
                 self.owner.discard(card_to_discard)
         drawn_cards = self.owner.draw(discarded_card_count)
-        print(f'+{discarded_card_count} cards --> {drawn_cards}')
+        print(f'+{discarded_card_count} cards --> {drawn_cards}\n')
 
 
     def play(self):
@@ -294,12 +296,13 @@ class Moat(ReactionCard):
     extra_buys = 0
     extra_coppers = 0
 
+    def moat_action(self):
+        pass
+
     def play(self):
-        drawn_cards = self.owner.draw(2)
-        print(f'+2 cards --> {drawn_cards}')
+        self.moat_action()
 
     def react(self):
-        # TODO: Implement Moat reaction
         pass
 
 
@@ -382,9 +385,8 @@ class Vassal(ActionCard):
         card = self.owner.deck.pop()
         self.owner.discard_pile.append(card)
         if CardType.ACTION in card.types:
-            print(f'You revealed a {card.name}. Would you like to play it?')
-            play_card = self.interactions.choose_yes_or_no()
-            if play_card:
+            print(f'You revealed a {card.name}. Would you like to play it?\n')
+            if self.interactions.choose_yes_or_no():
                 self.owner.turn.action_phase.play_without_side_effects(card)
 
     def play(self):
@@ -439,7 +441,7 @@ class Workshop(ActionCard):
 class Bureaucrat(ActionCard):
     name = 'Bureaucrat'
     cost = 4
-    types = [CardType.ACTION]
+    types = [CardType.ACTION, CardType.ATTACK]
     image_path = ''
 
     description = 'Gain a Silver onto your deck. Each other player reveals a Victory card from their hand and puts it onto their deck (or reveals a hand with no Victory cards).'
@@ -451,6 +453,10 @@ class Bureaucrat(ActionCard):
 
     def bureaucrat_action(self):
         # TODO: Implement Bureaucrat
+        # Gain a Silver and put onto deck
+        silver = self.supply.draw(Silver)
+        silver.owner = self.owner
+        self.owner.deck.append(silver)
         pass
 
     def play(self):
@@ -490,8 +496,33 @@ class Militia(ActionCard):
     extra_coppers = 2
 
     def militia_action(self):
-        # TODO: Implement Militia
-        pass
+        other_players = [player for player in self.game.players if player is not self.owner]
+        immune_players = set()
+        print(f'Other players ({other_players}) must discard down to 3 cards in their hands.')
+        for player in other_players:
+            # First, check if they have a reaction card in their hand
+            if any(CardType.REACTION in card.types for card in player.hand):
+                reaction_cards_in_hand = [card for card in player.hand if CardType.REACTION in card.types]
+                reaction_card_classes_to_ignore = set() # We don't want to keep asking about reaction card classes that have already been played/ignored
+                for reaction_card in reaction_cards_in_hand:
+                    if type(reaction_card) in reaction_card_classes_to_ignore:
+                        continue
+                    else:
+                        print(f'{player}: You have a Reaction ({reaction_card.name}) in your hand. Play it?')
+                        if player.interactions.choose_yes_or_no():
+                            immune_players.add(player)
+                        reaction_card_classes_to_ignore.add(type(reaction_card))
+            # Now force non-immune players to discard down to three cards in their hand
+            if player in immune_players:
+                print(f'{player} is immune to the effects.')
+                continue
+            else:
+                number_to_discard = len(player.hand) - 3
+                print(f'{player} must discard {number_to_discard} cards.')
+                for card_num in range(number_to_discard):
+                    print(f'{player}: Choose card {card_num + 1}/{number_to_discard} to discard.')
+                    card_to_discard = player.interactions.choose_card_from_hand(force=True)
+                    player.discard(card_to_discard)
 
     def play(self):
         self.militia_action()
@@ -511,11 +542,11 @@ class Moneylender(ActionCard):
     extra_coppers = 0
 
     def moneylender_action(self):
-        print('You may trash a Copper from your hand.')
+        print('You may trash a Copper from your hand.\n')
         copper_to_trash = self.interactions.choose_specific_card_class_from_hand(force=False, card_class=Copper)
         if copper_to_trash is not None:
             self.owner.turn.coppers_remaining += 3
-            print(f'+3 $ --> {self.owner.turn.coppers_remaining}')
+            print(f'+3 $ --> {self.owner.turn.coppers_remaining}\n')
             self.owner.trash(copper_to_trash)
 
     def play(self):
@@ -543,11 +574,11 @@ class Poacher(ActionCard):
     extra_coppers = 1
 
     def poacher_action(self):
-        number_to_discard = self.owner.supply.num_empty_stacks
+        number_to_discard = self.supply.num_empty_stacks
         if number_to_discard > 0:
-            print(f'You must discard {number_to_discard} cards.')
+            print(f'You must discard {number_to_discard} cards.\n')
             for num in range(number_to_discard):
-                print(f'Choose a card to discard.')
+                print(f'Choose card {num + 1}/{number_to_discard} to discard.\n')
                 card_to_discard = self.interactions.choose_card_from_hand(force=True)
                 if card_to_discard is not None:
                     self.owner.discard(card_to_discard)
@@ -614,15 +645,15 @@ class ThroneRoom(ActionCard):
     extra_coppers = 0
 
     def throne_room_action(self):
-        print('Select an action card to play twice.')
+        print('Select an action card to play twice.\n')
         card = self.interactions.choose_action_card_from_hand()
         if card is not None:
             # Playing the card should not use any actions, so we use a special method
             # The first time, add the card to the played cards area
             self.owner.play(card)
-            print(f'Playing {card.name} for the first time.')
+            print(f'Playing {card.name} for the first time.\n')
             self.owner.turn.action_phase.play_without_side_effects(card)
-            print(f'Playing {card.name} for the second time.')
+            print(f'Playing {card.name} for the second time.\n')
             self.owner.turn.action_phase.play_without_side_effects(card)
 
     def play(self):
@@ -670,8 +701,10 @@ class CouncilRoom(ActionCard):
     extra_coppers = 0
 
     def council_room_action(self):
-        # TODO: Implement Council Room
-        pass
+        other_players = [player for player in self.game.players if player is not self.owner]
+        print(f'Other players ({other_players}) each draw a card.')
+        for player in other_players:
+            player.draw(1)
 
     def play(self):
         self.council_room_action()
@@ -1016,19 +1049,31 @@ class Adventurer(ActionCard):
     extra_coppers = 0
 
     def adventurer_action(self):
-        # TODO: Implement Adventurer
-        pass
+        revealed_treasures = []
+        revealed_other_cards = []
+        while len(revealed_treasures) < 2:
+            card = self.owner.take_from_deck()
+            if card is None:
+                print('No cards left in deck.')
+                break
+            else:
+                if CardType.TREASURE in card.types:
+                    revealed_treasures.append(card)
+                else:
+                    revealed_other_cards.append(card)
+        print(f'Revealed treasures: {revealed_treasures}. Putting these on top of deck.')
+        self.owner.hand.extend(revealed_treasures)
+        print(f'Other revealed cards: {revealed_other_cards}. Discarding these.')
+        self.owner.discard_pile.extend(revealed_other_cards)
 
     def play(self):
         self.adventurer_action()
 
 
-
-
 KINGDOM_CARDS = [
     Cellar,
     Chapel,
-    # Moat,
+    Moat,
     Harbinger,
     # Merchant,
     Vassal,
@@ -1036,14 +1081,14 @@ KINGDOM_CARDS = [
     Workshop,
     # Bureaucrat,
     Gardens,
-    # Militia,
+    Militia,
     Moneylender,
     Poacher,
     Remodel,
     Smithy,
     ThroneRoom,
     # Bandit,
-    # CouncilRoom,
+    CouncilRoom,
     Festival,
     Laboratory,
     # Library,
@@ -1057,5 +1102,5 @@ KINGDOM_CARDS = [
     Feast,
     # Spy,
     # Thief,
-    # Adventurer
+    Adventurer
 ]

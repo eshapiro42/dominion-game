@@ -48,7 +48,7 @@ class Supply:
         self.trash_pile[card_class] += 1
 
     def __str__(self):
-        ret = "SUPPLY:\n"
+        ret = "SUPPLY:\n\n"
         supply_table = prettytable.PrettyTable(hrules=prettytable.ALL)
         supply_table.field_names = ['Number', 'Card', 'Cost', 'Quantity', 'Description']
         for idx, card_class in enumerate(self.card_stacks):

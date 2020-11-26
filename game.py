@@ -76,13 +76,6 @@ class Game:
             if victory_points == most_victory_points:
                 winners.append(player)
         return victory_points_dict, winners
-        # # Print out winners
-        # if len(winners) == 1:
-        #     winner_string = winners[0]
-        #     print(f'The winner is {winner_string}!')
-        # else:
-        #     winners_string = f"{', '.join(map(str, winners[:-1]))} and {winners[-1]}"
-        #     print(f"It's a tie! The winners are {winners_string}!")
 
     @property
     def num_players(self):

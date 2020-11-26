@@ -48,7 +48,7 @@ class Interaction(metaclass=ABCMeta):
 
 class CLI(Interaction):
     def display_hand(self):
-        print(f"{self.player}'s hand:")
+        print(f"{self.player}'s hand:\n")
         hand_table = prettytable.PrettyTable(hrules=prettytable.ALL)
         hand_table.field_names = ['Number', 'Card', 'Description']
         for idx, card in enumerate(self.hand):
@@ -57,7 +57,7 @@ class CLI(Interaction):
         print('\n')
 
     def display_discard_pile(self):
-        print(f"{self.player}'s discard pile:")
+        print(f"{self.player}'s discard pile:\n")
         discard_table = prettytable.PrettyTable(hrules=prettytable.ALL)
         discard_table.field_names = ['Number', 'Card', 'Description']
         for idx, card in enumerate(self.discard_pile):
@@ -115,16 +115,15 @@ class CLI(Interaction):
         if force:
             return card
         else:
-            print(f'Do you want to choose a {card_class.name} from your hand?')
-            choice = self.choose_yes_or_no()
-            if choice:
+            print(f'Do you want to choose a {card_class.name} from your hand?\n')
+            if self.choose_yes_or_no():
                 return card
             else:
                 return None
 
     def choose_card_from_discard_pile(self, force):
         if not self.discard_pile:
-            print('There are no cards in your discard pile!')
+            print('There are no cards in your discard pile!\n')
             return None
         while True:
             try:

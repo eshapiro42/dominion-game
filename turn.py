@@ -5,19 +5,15 @@ from dataclasses import dataclass
 
 
 class Turn:
-    def __init__(self, player, reaction=False):
+    def __init__(self, player):
         self.player = player
-
         self.player.turn = self
-
         self.actions_remaining = 1
         self.buys_remaining = 1
         self.coppers_remaining = 0
-
         self.action_phase = ActionPhase(turn=self)
         self.buy_phase = BuyPhase(turn=self)
         self.cleanup_phase = CleanupPhase(turn=self)
-
         self.start()
 
     def start(self):
@@ -26,6 +22,7 @@ class Turn:
         self.action_phase.start()
         self.buy_phase.start()
         self.cleanup_phase.start()
+
 
 class Phase(metaclass=ABCMeta):
     def __init__(self, turn):
@@ -95,6 +92,7 @@ class ActionPhase(Phase):
         print(f'+{card.extra_coppers} $ --> {self.turn.coppers_remaining}')
         # Do whatever the card is supposed to do
         card.play()
+
 
 class BuyPhase(Phase):
     def start(self):

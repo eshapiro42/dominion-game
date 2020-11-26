@@ -38,19 +38,24 @@ class Player:
         self.discard_pile.clear()
         random.shuffle(self.deck)
 
+    def take_from_deck(self):
+        try:
+            card = self.deck.pop()
+        except IndexError: # If a card cannot be taken, shuffle
+            self.shuffle()
+            try:
+                card = self.deck.pop()
+            except IndexError: # If a card still cannot be drawn, there are none left
+                card = None
+        return card
+
     def draw(self, quantity: int = 1):
         drawn_cards = []
         for _ in range(quantity):
-            try:
-                card = self.deck.pop()
-            except IndexError: # If a card cannot be drawn, shuffle
-                self.shuffle()
-                try:
-                    card = self.deck.pop()
-                except IndexError: # If a card still cannot be drawn, there are none left
-                    break
-            self.hand.append(card)
-            drawn_cards.append(card)
+            card = self.take_from_deck()
+            if card is not None:
+                self.hand.append(card)
+                drawn_cards.append(card)
         return drawn_cards
 
     def play(self, card):
