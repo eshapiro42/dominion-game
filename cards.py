@@ -574,7 +574,7 @@ class Remodel(ActionCard):
         if card_to_trash is not None:
             self.owner.trash(card_to_trash)
             max_cost = card_to_trash.cost + 2
-            self.owner.turn.buy_phase.buy_without_side_effects(self, max_cost=max_cost, force=True)
+            self.owner.turn.buy_phase.buy_without_side_effects(max_cost=max_cost, force=True)
 
     def play(self):
         self.remodel_action()

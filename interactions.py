@@ -1,8 +1,9 @@
 import cards
 import prettytable
+from abc import ABCMeta, abstractmethod
 
 
-class CLI:
+class Interaction(metaclass=ABCMeta):
     def __init__(self, player):
         self.player = player
 
@@ -12,6 +13,40 @@ class CLI:
         self.deck = self.player.deck
         self.supply = self.player.game.supply
 
+    @abstractmethod
+    def display_hand(self):
+        pass
+
+    @abstractmethod
+    def display_discard_pile(self):
+        pass
+
+    @abstractmethod
+    def choose_card_from_hand(self, force):
+        pass
+
+    @abstractmethod
+    def choose_action_card_from_hand(self):
+        pass
+
+    @abstractmethod
+    def choose_specific_card_class_from_hand(self, force, card_class):
+        pass
+
+    @abstractmethod
+    def choose_card_from_discard_pile(self, force):
+        pass
+
+    @abstractmethod
+    def choose_card_class_from_supply(self, max_cost, force):
+        pass
+
+    @abstractmethod
+    def choose_yes_or_no(self):
+        pass
+
+
+class CLI(Interaction):
     def display_hand(self):
         print(f"{self.player}'s hand:")
         hand_table = prettytable.PrettyTable(hrules=prettytable.ALL)
@@ -95,10 +130,10 @@ class CLI:
             try:
                 self.display_discard_pile()
                 if force:
-                    card_num = int(input(f'Enter choice 1-{len(selfdiscard_pile)}: '))
+                    card_num = int(input(f'Enter choice 1-{len(self.discard_pile)}: '))
                     card_chosen = self.discard_pile[card_num - 1]
                 else:
-                    card_num = int(input(f'Enter choice 1-{len(selfdiscard_pile)} (0 to skip): '))
+                    card_num = int(input(f'Enter choice 1-{len(self.discard_pile)} (0 to skip): '))
                     if card_num == 0:
                         return None
                     else:
