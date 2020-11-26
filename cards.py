@@ -37,6 +37,12 @@ class Card(metaclass=ABCMeta):
     @owner.setter
     def owner(self, owner):
         self._owner = owner
+        self.interactions = self.owner.interactions
+        self.turn = self.owner.turn
+        self.hand = self.owner.hand
+        self.discard_pile = self.owner.discard_pile
+        self.deck = self.owner.deck
+        self.supply = self.owner.game.supply
 
     @property
     @abstractmethod
@@ -235,13 +241,13 @@ class Cellar(ActionCard):
         discarded_card_count = 0
         while True:
             print('Choose a card to discard.\n')
-            card_to_discard = self.owner.choose_card_from_hand(force=False)
+            card_to_discard = self.interactions.choose_card_from_hand(force=False)
             if card_to_discard is None:
                 break
             else:
                 discarded_card_count += 1
-                self.owner.player_mat.discard(card_to_discard)
-        self.owner.player_mat.draw(discarded_card_count)
+                self.player.discard(card_to_discard)
+        self.player.draw(discarded_card_count)
 
     def play(self):
         self.cellar_action()
@@ -263,11 +269,11 @@ class Chapel(ActionCard):
     def chapel_action(self):
         for _ in range(4):
             print('Choose a card to trash.\n')
-            card_to_trash = self.owner.choose_card_from_hand(force=False)
+            card_to_trash = self.interactions.choose_card_from_hand(force=False)
             if card_to_trash is None:
                 break
             else:
-                self.owner.player_mat.trash(card_to_trash)
+                self.player.trash(card_to_trash)
 
     def play(self):
         self.chapel_action()
@@ -321,10 +327,10 @@ class Harbinger(ActionCard):
 
     def harbinger_action(self):
         print('Choose a card from your discard pile.\n')
-        card = self.owner.choose_card_from_discard_pile(force=False)
+        card = self.interactions.choose_card_from_discard_pile(force=False)
         if card is not None:
-            self.owner.player_mat.deck.append(card)
-            self.owner.player_mat.discard_pile.remove(card)
+            self.deck.append(card)
+            self.discard_pile.remove(card)
 
     def play(self):
         self.harbinger_action()
@@ -376,11 +382,11 @@ class Vassal(ActionCard):
     extra_coppers = 2
 
     def vassal_action(self):
-        card = self.owner.player_mat.deck.pop()
-        self.owner.player_mat.discard_pile.append(card)
+        card = self.deck.pop()
+        self.discard_pile.append(card)
         if CardType.ACTION in card.types:
             print(f'You revealed a {card.name}. Would you like to play it?')
-            play_card = self.owner.choose_yes_or_no()
+            play_card = self.interactions.choose_yes_or_no()
             if play_card:
                 card.play()
 
@@ -465,7 +471,7 @@ class Gardens(VictoryCard):
 
     @property
     def points(self):
-        num_cards = len(self.owner.player_mat.all_cards)
+        num_cards = len(self.owner.player.all_cards)
         return math.floor(num_cards / 10)
 
 

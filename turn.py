@@ -21,7 +21,8 @@ class BuyPhaseError(Exception):
 class Turn:
     def __init__(self, player, reaction=False):
         self.player = player
-        self.player_mat = self.player.player_mat
+
+        self.player.turn = self
 
         self.actions_remaining = 1
         self.buys_remaining = 1
@@ -35,7 +36,7 @@ class Turn:
 
     def start(self):
         print(f"{self.player}'s turn!\n".upper())
-        self.player_mat.print_hand()
+        self.player.interactions.display_hand()
         self.action_phase.start()
         self.buy_phase.start()
         self.cleanup_phase.start()
@@ -44,59 +45,7 @@ class Phase(metaclass=ABCMeta):
     def __init__(self, turn):
         self.turn = turn
         self.player = self.turn.player
-        self.player_mat = self.turn.player.player_mat
         self.supply = self.player.game.supply
-    
-    def choose_from_hand(self):
-        while True:
-            try:
-                hand = self.player_mat.hand
-                hand_table = prettytable.PrettyTable(hrules=prettytable.ALL)
-                hand_table.field_names = ['Number', 'Card', 'Description']
-                # Only action cards can be chosen
-                playable_cards = [card for card in hand if cards.CardType.ACTION in card.types]
-                for idx, card in enumerate(playable_cards):
-                    hand_table.add_row([idx + 1, card.name, card.description])
-                print(f'You have {self.turn.actions_remaining} actions. Which card would you like to play?\n')
-                print(hand_table)
-                card_num = int(input(f'Enter choice 1-{len(playable_cards)} (0 to skip): '))
-                if card_num == 0:
-                    return None
-                else:
-                    card_to_play = playable_cards[card_num - 1]
-                # Check that the card is an action card
-                if not cards.CardType.ACTION in card_to_play.types:
-                    raise ActionPhaseError(card_to_play)
-                else:
-                    return card_to_play
-            except ActionPhaseError:
-                print('That is not an action card!\n')
-            except (IndexError, ValueError):
-                print('That is not a valid choice!\n')
-
-    def choose_from_supply(self):
-        while True:
-            try:
-                max_cost = self.turn.coppers_remaining
-                supply_table = prettytable.PrettyTable(hrules=prettytable.ALL)
-                supply_table.field_names = ['Number', 'Card', 'Cost', 'Quantity', 'Description']
-                # Only cards you can afford can be chosen (and with non-zero quantity)
-                buyable_card_stacks = [card_class for card_class in self.supply.card_stacks if card_class.cost <= max_cost and self.supply.card_stacks[card_class].cards_remaining > 0]
-                for idx, card_class in enumerate(buyable_card_stacks):
-                    card_quantity = self.supply.card_stacks[card_class].cards_remaining
-                    supply_table.add_row([idx + 1, card_class.name, card_class.cost, card_quantity, card_class.description])
-                print(f'You have {max_cost} coppers. Which card would you like to buy?\n')
-                print(supply_table)
-                card_num = int(input(f'Enter choice 1-{len(buyable_card_stacks)} (0 to skip): '))
-                if card_num == 0:
-                    return None
-                else:
-                    card_to_buy = list(buyable_card_stacks)[card_num - 1]
-                return card_to_buy
-            except BuyPhaseError:
-                print('That card is too expensive!\n')
-            except (IndexError, ValueError):
-                print('That is not a valid choice!\n')
 
     @abstractmethod
     def start(self):
@@ -107,10 +56,11 @@ class ActionPhase(Phase):
     def start(self):
         while self.turn.actions_remaining > 0:
             # If there are no action cards in the player's hand, move on
-            if not any(cards.CardType.ACTION in card.types for card in self.player_mat.hand):
+            if not any(cards.CardType.ACTION in card.types for card in self.player.hand):
                 print('No action cards to play. Ending action phase.\n')
                 return
-            card = self.choose_from_hand()
+            print(f'You have {self.turn.actions_remaining} actions. Select an action card to play.')
+            card = self.player.interactions.choose_action_card_from_hand()
             if card is None:
                 # The player is forfeiting their action phase
                 print('Action phase forfeited.\n')
@@ -124,7 +74,7 @@ class ActionPhase(Phase):
         # Playing an action card uses one action
         self.turn.actions_remaining -= 1
         # Draw any additional cards specified on the card
-        self.player_mat.draw(quantity=card.extra_cards)
+        self.player.draw(quantity=card.extra_cards)
         # Add back any additional actions on the card
         self.turn.actions_remaining += card.extra_actions
         # Add any additional buys on the card
@@ -132,7 +82,7 @@ class ActionPhase(Phase):
         # Add any additional coppers on the card
         self.turn.coppers_remaining += card.extra_coppers
         # Add the card to the played cards area
-        self.player_mat.play(card)
+        self.player.play(card)
         # Do whatever the card is supposed to do
         card.play()
 
@@ -140,12 +90,13 @@ class ActionPhase(Phase):
 class BuyPhase(Phase):
     def start(self):
         # Add up any coppers from player's hand
-        for card in self.player_mat.hand:
+        for card in self.player.hand:
             if cards.CardType.TREASURE in card.types:
                 self.turn.coppers_remaining += card.value
         # Buy cards
         while self.turn.buys_remaining > 0:
-            card_class = self.choose_from_supply()
+            print(f'You have {self.turn.coppers_remaining} Coppers and {self.turn.buys_remaining} buys. Select a card to buy.')
+            card_class = self.player.interactions.choose_card_class_from_supply(max_cost=self.turn.coppers_remaining)
             if card_class is None:
                 # The player is forfeiting their buy phase
                 print('Buy phase forfeited.\n')
@@ -159,10 +110,10 @@ class BuyPhase(Phase):
         # Gain the desired card
         modifier = 'an' if card_class.name[0] in ['a', 'e', 'i', 'o', 'u'] else 'a'
         print(f'{self.player} bought {modifier} {card_class.name}.\n')
-        self.player_mat.gain(card_class)
+        self.player.gain(card_class)
         self.turn.coppers_remaining -= card_class.cost
 
 
 class CleanupPhase(Phase):
     def start(self):
-        self.player_mat.cleanup()
+        self.player.cleanup()

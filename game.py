@@ -15,6 +15,7 @@ class GameStartedError(Exception):
 
 class Game:
     def __init__(self):
+        self.player_names = []
         self.players = []
         self.started = False
 
@@ -24,17 +25,19 @@ class Game:
             raise GameStartedError()
         if name is None:
             name = f'Player {self.num_players}'
-        player = Player(game=self, name=name)
-        self.players.append(player)
+        self.player_names.append(name)
 
     def start(self):
         self.started = True
         # Create the supply
         self.supply = Supply(num_players=self.num_players)
         print(self.supply)
-        for player in self.players:
-            player.start()
-        # TODO: Turn on the game loop
+        # Create each player object
+        for player_name in self.player_names:
+            player = Player(game=self, name=player_name)
+            self.players.append(player)
+            player.interactions.start()
+        # Start the game loop!
         self.game_loop()
 
     def game_loop(self):

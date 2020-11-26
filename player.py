@@ -1,69 +1,93 @@
-from playermat import PlayerMat
+import cards
+import prettytable
+import random
+from collections import deque
+from copy import deepcopy
+from interactions import CLI
+
 
 class Player:
     def __init__(self, game, name):
         self.game = game
         self.name = name
+        self.turn = None
+        self.supply = self.game.supply
+        self.interactions = CLI(player=self)
+        self.deck = deque()
+        self.discard_pile = deque()
+        self.hand = deque()
+        self.played_cards = deque()
+        # Start with seven coppers and three estates
+        self.gain(cards.Copper, quantity=7, from_supply=False)
+        self.gain(cards.Estate, quantity=3, from_supply=False)
+        self.shuffle()
+        # Draw a hand of five cards
+        self.draw(5)
 
-    def start(self):
-        self.player_mat = PlayerMat(player=self)
+    def gain(self, card_class, quantity: int = 1, from_supply: bool = True):
+        for _ in range(quantity):
+            if not from_supply:
+                card = card_class()
+            else:
+                card = self.supply.draw(card_class)
+            card.owner = self
+            self.discard_pile.append(card)
+
+    def shuffle(self):
+        self.deck.extend(self.discard_pile)
+        self.discard_pile.clear()
+        random.shuffle(self.deck)
+
+    def draw(self, quantity: int = 1):
+        for _ in range(quantity):
+            try:
+                card = self.deck.pop()
+            except IndexError: # If a card cannot be drawn, shuffle
+                self.shuffle()
+                try:
+                    card = self.deck.pop()
+                except IndexError: # If a card still cannot be drawn, there are none left
+                    break
+            self.hand.append(card)
+
+    def play(self, card):
+        self.played_cards.append(card)
+        self.hand.remove(card)
+
+    def discard(self, card):
+        self.discard_pile.append(card)
+        self.hand.remove(card)
+
+    def trash(self, card):
+        self.supply.trash(card)
+        self.hand.remove(card)
+
+    def cleanup(self):
+        # Discard hand from this turn
+        self.discard_pile.extend(self.hand)
+        self.hand.clear()
+        # Discard cards played this turn
+        self.discard_pile.extend(self.played_cards)
+        self.played_cards.clear()
+        # Draw a new hand of five cards
+        self.draw(5)
  
     def __repr__(self):
         return f'Player({self.name})'
 
     def __str__(self):
         return self.name
-
-    def choose_card_from_hand(self, force):
-        hand = self.player_mat.hand
-        if not hand:
-            return None
-        while True:
-            try:
-                self.player_mat.print_hand()
-                if force:
-                    card_num = int(input(f'Enter choice 1-{len(hand)}: '))
-                    card_chosen = hand[card_num - 1]
-                else:
-                    card_num = int(input(f'Enter choice 1-{len(hand)} (0 to skip): '))
-                    if card_num == 0:
-                        return None
-                    else:
-                        card_chosen = hand[card_num - 1]
-                return card_chosen
-            except:
-                print('That is not a valid choice.\n')
-
-    def choose_card_from_discard_pile(self, force):
-        discard_pile = self.player_mat.discard_pile
-        if not discard_pile:
-            return None
-        while True:
-            try:
-                self.player_mat.print_discard_pile()
-                if force:
-                    card_num = int(input(f'Enter choice 1-{len(discard_pile)}: '))
-                    card_chosen = discard_pile[card_num - 1]
-                else:
-                    card_num = int(input(f'Enter choice 1-{len(discard_pile)} (0 to skip): '))
-                    if card_num == 0:
-                        return None
-                    else:
-                        card_chosen = discard_pile[card_num - 1]
-                return card_chosen
-            except:
-                print('That is not a valid choice.\n')
-
-    def choose_yes_or_no(self):
-        while True:
-            response = input('Enter choice Yes/No: ')
-            if response.lower() in ['yes', 'y', 'no', 'n']:
-                break
-        if response.lower() in ['yes', 'y']:
-            return True
-        else:
-            return False
         
     @property
+    def all_cards(self):
+        '''Concatenate all cards on the player mat (no side effects)'''
+        return deepcopy(self.deck + self.discard_pile + self.hand + self.played_cards)
+
+    @property
     def current_victory_points(self):
-        return self.player_mat.current_victory_points
+        victory_points = 0
+        for card in self.all_cards:
+            # Count only if it's a victory or curse card
+            if cards.CardType.VICTORY in card.types or cards.CardType.CURSE in card.types:
+                victory_points += card.points
+        return victory_points
