@@ -68,6 +68,10 @@ class Player:
         self.supply.trash(card)
         self.hand.remove(card)
 
+    def trash_played_card(self, card):
+        self.supply.trash(card)
+        self.played_cards.remove(card)
+
     def cleanup(self):
         # Discard hand from this turn
         self.discard_pile.extend(self.hand)

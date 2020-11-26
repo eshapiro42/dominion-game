@@ -629,6 +629,400 @@ class ThroneRoom(ActionCard):
         self.throne_room_action()
 
 
+class Bandit(ActionCard):
+    name = 'Bandit'
+    cost = 5
+    types = [CardType.ACTION, CardType.ATTACK]
+    image_path = ''
+
+    description = 'Gain a Gold. Each other player reveals the top 2 cards of their deck, trashes a revealed Treasure other than Copper, and discards the rest.'
+
+    extra_cards = 0
+    extra_actions = 0
+    extra_buys = 0
+    extra_coppers = 0
+
+    def bandit_action(self):
+        # TODO: Implement Bandit
+        pass
+
+    def play(self):
+        self.bandit_action()
+
+
+class CouncilRoom(ActionCard):
+    name = 'Council Room'
+    cost = 5
+    types = [CardType.ACTION]
+    image_path = ''
+
+    description = '\n'.join(
+        [
+            '+4 Cards',
+            '+1 Buy',
+            'Each other player draws a card.'
+        ]
+    )
+
+    extra_cards = 4
+    extra_actions = 0
+    extra_buys = 1
+    extra_coppers = 0
+
+    def council_room_action(self):
+        # TODO: Implement Council Room
+        pass
+
+    def play(self):
+        self.council_room_action()
+
+
+class Festival(ActionCard):
+    name = 'Festival'
+    cost = 5
+    types = [CardType.ACTION]
+    image_path = ''
+
+    description = '\n'.join(
+        [
+            '+2 Actions',
+            '+1 Buy',
+            '+2 $'
+        ]
+    )
+
+    extra_cards = 0
+    extra_actions = 2
+    extra_buys = 1
+    extra_coppers = 2
+
+    def festival_action(self):
+        pass
+
+    def play(self):
+        self.festival_action()
+
+
+class Laboratory(ActionCard):
+    name = 'Laboratory'
+    cost = 5
+    types = [CardType.ACTION]
+    image_path = ''
+
+    description = '\n'.join(
+        [
+            '+2 Cards',
+            '+1 Action',
+        ]
+    )
+
+    extra_cards = 2
+    extra_actions = 1
+    extra_buys = 0
+    extra_coppers = 0
+
+    def laboratory_action(self):
+        pass
+
+    def play(self):
+        self.laboratory_action()
+
+
+class Library(ActionCard):
+    name = 'Library'
+    cost = 5
+    types = [CardType.ACTION]
+    image_path = ''
+
+    description = 'Draw until you have 7 cards in hand, skipping any Action cards you choose to; set those aside, discarding them afterwards.'
+
+    extra_cards = 0
+    extra_actions = 0
+    extra_buys = 0
+    extra_coppers = 0
+
+    def library_action(self):
+        # TODO: Implement Library
+        pass
+
+    def play(self):
+        self.library_action()
+
+
+class Market(ActionCard):
+    name = 'Market'
+    cost = 5
+    types = [CardType.ACTION]
+    image_path = ''
+
+    description = '\n'.join(
+        [
+            '+1 Card',
+            '+1 Action',
+            '+1 Buy',
+            '+1 $'
+        ]
+    )
+
+    extra_cards = 1
+    extra_actions = 1
+    extra_buys = 1
+    extra_coppers = 1
+
+    def market_action(self):
+        pass
+
+    def play(self):
+        self.market_action()
+
+
+class Mine(ActionCard):
+    name = 'Mine'
+    cost = 5
+    types = [CardType.ACTION]
+    image_path = ''
+
+    description = 'You may trash a Treasure from your hand. Gain a Treasure to your hand costing up to $3 more than it.'
+
+    extra_cards = 0
+    extra_actions = 0
+    extra_buys = 0
+    extra_coppers = 0
+
+    def mine_action(self):
+        # TODO: Implement Mine
+        pass
+
+    def play(self):
+        self.mine_action()
+
+
+class Sentry(ActionCard):
+    name = 'Sentry'
+    cost = 5
+    types = [CardType.ACTION]
+    image_path = ''
+
+    description = '\n'.join(
+        [
+            '+1 Card',
+            '+1 Action',
+            'Look at the top 2 cards of your deck. Trash and/or discard any number of them. Put the rest back on top in any order.'
+        ]
+    )
+
+    extra_cards = 1
+    extra_actions = 1
+    extra_buys = 0
+    extra_coppers = 0
+
+    def sentry_action(self):
+        # TODO: Implement Sentry
+        pass
+
+    def play(self):
+        self.sentry_action()
+
+
+class Witch(ActionCard):
+    name = 'Witch'
+    cost = 5
+    types = [CardType.ACTION, CardType.ATTACK]
+    image_path = ''
+
+    description = '\n'.join(
+        [
+            '+2 Cards',
+            'Each other player gains a Curse.'
+        ]
+    )
+
+    extra_cards = 2
+    extra_actions = 0
+    extra_buys = 0
+    extra_coppers = 0
+
+    def witch_action(self):
+        # TODO: Implement Witch
+        pass
+
+    def play(self):
+        self.witch_action()
+
+
+class Artisan(ActionCard):
+    name = 'Artisan'
+    cost = 6
+    types = [CardType.ACTION]
+    image_path = ''
+
+    description = '\n'.join(
+        [
+            'Gain a card to your hand costing up to 5 $.',
+            'Put a card from your hand onto your deck.'
+        ]
+    )
+
+    extra_cards = 0
+    extra_actions = 0
+    extra_buys = 0
+    extra_coppers = 0
+
+    def artisan_action(self):
+        # TODO: Implement Artisan
+        pass
+
+    def play(self):
+        self.artisan_action()
+
+
+class Chancellor(ActionCard):
+    name = 'Chancellor'
+    cost = 3
+    types = [CardType.ACTION]
+    image_path = ''
+
+    description = '\n'.join(
+        [
+            '+2 $',
+            'You may immediately put your deck into your discard pile.'
+        ]
+    )
+
+    extra_cards = 0
+    extra_actions = 0
+    extra_buys = 0
+    extra_coppers = 2
+
+    def chancellor_action(self):
+        # TODO: Implement Chancellor
+        pass
+
+    def play(self):
+        self.chancellor_action()
+
+
+class Woodcutter(ActionCard):
+    name = 'Woodcutter'
+    cost = 3
+    types = [CardType.ACTION]
+    image_path = ''
+
+    description = '\n'.join(
+        [
+            '+1 Buy',
+            '+2 $'
+        ]
+    )
+
+    extra_cards = 0
+    extra_actions = 0
+    extra_buys = 1
+    extra_coppers = 2
+
+    def woodcutter_action(self):
+        pass
+
+    def play(self):
+        self.woodcutter_action()
+
+
+class Feast(ActionCard):
+    name = 'Feast'
+    cost = 4
+    types = [CardType.ACTION]
+    image_path = ''
+
+    description = '\n'.join(
+        [
+            'Trash this card.',
+            'Gain a card costing up to 5 $.'
+        ]
+    )
+
+    extra_cards = 0
+    extra_actions = 0
+    extra_buys = 0
+    extra_coppers = 0
+
+    def feast_action(self):
+        # TODO: Implement Feast
+        self.owner.trash_played_card(self)
+        self.owner.turn.buy_phase.buy_without_side_effects(max_cost=5, force=True)
+
+    def play(self):
+        self.feast_action()
+
+
+class Spy(ActionCard):
+    name = 'Spy'
+    cost = 4
+    types = [CardType.ACTION, CardType.ATTACK]
+    image_path = ''
+
+    description = '\n'.join(
+        [
+            '+1 Card',
+            '+1 Action',
+            'Each player (including you) reveals the top card of his deck and either discards it or puts it back, your choice.'
+        ]
+    )
+
+    extra_cards = 1
+    extra_actions = 1
+    extra_buys = 0
+    extra_coppers = 0
+
+    def spy_action(self):
+        # TODO: Implement Spy
+        pass
+
+    def play(self):
+        self.spy_action()
+
+
+class Thief(ActionCard):
+    name = 'Thief'
+    cost = 4
+    types = [CardType.ACTION, CardType.ATTACK]
+    image_path = ''
+
+    description = 'Each other player reveals the top 2 cards of his deck. If they revealed any Treasure cards, they trash one of them that you choose. You may gain any or all of these trashed cards. They discard the other revealed cards.'
+
+    extra_cards = 0
+    extra_actions = 0
+    extra_buys = 0
+    extra_coppers = 0
+
+    def thief_action(self):
+        # TODO: Implement Thief
+        pass
+
+    def play(self):
+        self.thief_action()
+
+
+class Adventurer(ActionCard):
+    name = 'Adventurer'
+    cost = 6
+    types = [CardType.ACTION]
+    image_path = ''
+
+    description = 'Reveal cards from your deck until you reveal 2 Treasure cards. Put those Treasure cards into your hand and discard the other revealed cards.'
+    
+    extra_cards = 0
+    extra_actions = 0
+    extra_buys = 0
+    extra_coppers = 0
+
+    def adventurer_action(self):
+        # TODO: Implement Adventurer
+        pass
+
+    def play(self):
+        self.adventurer_action()
+
+
 
 
 KINGDOM_CARDS = [
@@ -650,17 +1044,17 @@ KINGDOM_CARDS = [
     ThroneRoom,
     # Bandit,
     # CouncilRoom,
-    # Festival,
-    # Laboratory,
+    Festival,
+    Laboratory,
     # Library,
-    # Market,
+    Market,
     # Mine,
     # Sentry,
     # Witch,
     # Artisan,
     # Chancellor,
-    # Woodcutter,
-    # Feast,
+    Woodcutter,
+    Feast,
     # Spy,
     # Thief,
     # Adventurer

@@ -86,7 +86,7 @@ class Game:
 
     @property
     def num_players(self):
-        return len(self.players)
+        return len(self.player_names)
 
 
 if __name__ == '__main__':
