@@ -33,6 +33,15 @@ class Player:
             card.owner = self
             self.discard_pile.append(card)
 
+    def gain_to_hand(self, card_class, quantity: int = 1, from_supply: bool = True):
+        for _ in range(quantity):
+            if not from_supply:
+                card = card_class()
+            else:
+                card = self.supply.draw(card_class)
+            card.owner = self
+            self.hand.append(card)
+
     def shuffle(self):
         self.deck.extend(self.discard_pile)
         self.discard_pile.clear()

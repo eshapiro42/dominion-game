@@ -1,5 +1,4 @@
 import cards
-import prettytable
 from abc import ABCMeta, abstractmethod
 from dataclasses import dataclass
 
@@ -14,6 +13,11 @@ class Turn:
         self.action_phase = ActionPhase(turn=self)
         self.buy_phase = BuyPhase(turn=self)
         self.cleanup_phase = CleanupPhase(turn=self)
+        self.pre_buy_hooks = {
+            cards.Copper: [],
+            cards.Silver: [],
+            cards.Gold: [],
+        }
         self.start()
 
     def start(self):
@@ -22,6 +26,20 @@ class Turn:
         self.action_phase.start()
         self.buy_phase.start()
         self.cleanup_phase.start()
+
+
+class PreBuyHook(metaclass=ABCMeta):
+    def __init__(self, player):
+        self.player = player
+
+    @abstractmethod
+    def __call__(self):
+        pass
+
+    @property
+    @abstractmethod
+    def persistent(self):
+        pass
 
 
 class Phase(metaclass=ABCMeta):
@@ -42,8 +60,8 @@ class ActionPhase(Phase):
             if not any(cards.CardType.ACTION in card.types for card in self.player.hand):
                 print('No action cards to play. Ending action phase.\n')
                 return
-            print(f'You have {self.turn.actions_remaining} actions. Select an action card to play.\n')
-            card = self.player.interactions.choose_action_card_from_hand()
+            prompt = f'You have {self.turn.actions_remaining} actions. Select an action card to play.'
+            card = self.player.interactions.choose_specific_card_type_from_hand(prompt=prompt, card_type=cards.CardType.ACTION)
             if card is None:
                 # The player is forfeiting their action phase
                 print('Action phase forfeited.\n')
@@ -70,7 +88,7 @@ class ActionPhase(Phase):
         print(f'+{card.extra_buys} buys --> {self.turn.buys_remaining}')
         # Add any additional coppers on the card
         self.turn.coppers_remaining += card.extra_coppers
-        print(f'+{card.extra_coppers} $ --> {self.turn.coppers_remaining}')
+        print(f'+{card.extra_coppers} $ --> {self.turn.coppers_remaining}\n')
         # Do whatever the card is supposed to do
         card.play()
 
@@ -89,21 +107,26 @@ class ActionPhase(Phase):
         print(f'+{card.extra_buys} buys --> {self.turn.buys_remaining}')
         # Add any additional coppers on the card
         self.turn.coppers_remaining += card.extra_coppers
-        print(f'+{card.extra_coppers} $ --> {self.turn.coppers_remaining}')
+        print(f'+{card.extra_coppers} $ --> {self.turn.coppers_remaining}\n')
         # Do whatever the card is supposed to do
         card.play()
 
 
 class BuyPhase(Phase):
     def start(self):
-        # Add up any coppers from player's hand
+        # Add up any treasures from player's hand
         for card in self.player.hand:
             if cards.CardType.TREASURE in card.types:
+                # Activate any pre-buy hooks caused by playing the Treasure
+                for pre_buy_hook in self.turn.pre_buy_hooks[type(card)]:
+                    pre_buy_hook()
+                    if not pre_buy_hook.persistent:
+                        self.turn.pre_buy_hooks[type(card)].remove(pre_buy_hook)
                 self.turn.coppers_remaining += card.value
         # Buy cards
         while self.turn.buys_remaining > 0:
-            print(f'You have {self.turn.coppers_remaining} Coppers and {self.turn.buys_remaining} buys. Select a card to buy.\n')
-            card_class = self.player.interactions.choose_card_class_from_supply(max_cost=self.turn.coppers_remaining, force=False)
+            prompt = f'You have {self.turn.coppers_remaining} $ to spend and {self.turn.buys_remaining} buys. Select a card to buy.'
+            card_class = self.player.interactions.choose_card_class_from_supply(prompt=prompt, max_cost=self.turn.coppers_remaining, force=False)
             if card_class is None:
                 # The player is forfeiting their buy phase
                 print('Buy phase forfeited.\n')
@@ -123,8 +146,8 @@ class BuyPhase(Phase):
 
     def buy_without_side_effects(self, max_cost, force):
         '''Buy a card without affecting coppers_remaining or buys_remaining'''
-        print(f'You have {max_cost} Coppers to spend. Select a card to buy.\n')
-        card_class = self.player.interactions.choose_card_class_from_supply(max_cost=max_cost, force=force)
+        prompt = f'You have {max_cost} $ to spend. Select a card to buy.'
+        card_class = self.player.interactions.choose_card_class_from_supply(prompt=prompt, max_cost=max_cost, force=force)
         if card_class is None:
             print('Did not buy anything.\n')
             return

@@ -1,5 +1,6 @@
 import cards
 import itertools
+import operator
 import prettytable
 import random
 from abc import ABCMeta, abstractmethod
@@ -26,12 +27,15 @@ class Supply:
             self.card_stacks[card_class] = InfiniteSupplyStack(card_class)
         # Victory card stack sizes depend on number of players
         if num_players == 2:
-            stack_size = 8
+            victory_stack_size = 8
         else:
-            stack_size = 12
+            victory_stack_size = 12
         self.victory_card_classes = [cards.Estate, cards.Duchy, cards.Province]
         for card_class in self.victory_card_classes:
-            self.card_stacks[card_class] = FiniteSupplyStack(card_class, stack_size)
+            self.card_stacks[card_class] = FiniteSupplyStack(card_class, victory_stack_size)
+        # Curse card stack size depends on number of players
+        curse_stack_size = (num_players - 1) * 10
+        self.card_stacks[cards.Curse] = FiniteSupplyStack(cards.Curse, curse_stack_size)
         # 10 randomly selected stacks of 10 kingdom cards each
         # TODO: Remove hack to allow less than 10 kingdom card stacks
         self.kingdom_card_classes = random.sample(cards.KINGDOM_CARDS, min(10, len(cards.KINGDOM_CARDS)))
@@ -50,9 +54,11 @@ class Supply:
     def __str__(self):
         ret = "SUPPLY:\n\n"
         supply_table = prettytable.PrettyTable(hrules=prettytable.ALL)
-        supply_table.field_names = ['Number', 'Card', 'Cost', 'Quantity', 'Description']
-        for idx, card_class in enumerate(self.card_stacks):
-            supply_table.add_row([idx + 1, card_class.name, card_class.cost, self.card_stacks[card_class].cards_remaining, card_class.description])
+        supply_table.field_names = ['Number', 'Card', 'Cost', 'Type', 'Quantity', 'Description']
+        for idx, card_class in enumerate(sorted(self.card_stacks.keys(), key=lambda x: (x.types[0].value, x.cost))):
+            quantity = self.card_stacks[card_class].cards_remaining
+            types = ', '.join([type.name.lower().capitalize() for type in card_class.types])
+            supply_table.add_row([idx + 1, card_class.name, card_class.cost, types, quantity, card_class.description])
         ret += supply_table.get_string()
         ret += '\n'
         return ret
