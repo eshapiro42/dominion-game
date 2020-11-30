@@ -1,4 +1,5 @@
 import math
+import time
 from abc import ABCMeta, abstractmethod
 from enum import Enum, auto
 from turn import PreBuyHook
@@ -128,6 +129,7 @@ class AttackCard(ActionCard):
     def attack(self):
         other_players = [player for player in self.game.players if player is not self.owner]
         immune_players = set()
+        self.game.broadcast('Checking if any other players have a Reaction card in their hand...')
         for player in other_players:
             # First, check if they have a reaction card in their hand
             if any(CardType.REACTION in card.types for card in player.hand):
@@ -142,7 +144,7 @@ class AttackCard(ActionCard):
                             self.game.broadcast(f'{player} revealed a {reaction_card.name}.')
                             immune_players.add(player)
                         reaction_card_classes_to_ignore.add(type(reaction_card))
-            # Now force non-immune players to reveal the top 2 cards of their deck
+            # Now force non-immune players to endure the attack effect
             if player in immune_players:
                 self.game.broadcast(f'{player} is immune to the effects.')
                 continue
@@ -153,7 +155,9 @@ class AttackCard(ActionCard):
         if self.prompt is not None:
             self.game.broadcast(self.prompt)
         self.action()
+        time.sleep(0.5)
         self.attack()
+        time.sleep(0.5)
 
     @property
     @abstractmethod
@@ -969,6 +973,9 @@ class Witch(AttackCard):
         player.gain(Curse)
         self.game.broadcast(f'{player} gained a Curse')
 
+    def action(self):
+        pass
+
 
 class Artisan(ActionCard):
     name = 'Artisan'
@@ -1153,7 +1160,7 @@ class Thief(AttackCard):
                 card_to_trash = player.interactions.choose_from_options(prompt=prompt, options=treasures, force=True)
                 treasures.remove(card_to_trash)
                 card_to_discard = treasures[0]
-            self.game.broadcast(f'{player} trashed a {card_to_trash} and discarded a {card_to_discard}')
+            self.game.broadcast(f'{player} trashed a {card_to_trash} and discarded a {card_to_discard}.')
             # Allow the attacker to gain the trashed card
             prompt = f'{attacker}: Would you like to gain the trashed {card_to_trash}?'
             if attacker.interactions.choose_yes_or_no(prompt=prompt):
@@ -1206,36 +1213,36 @@ class Adventurer(ActionCard):
 
 
 KINGDOM_CARDS = [
-    Cellar,
-    Chapel,
+    # Cellar,
+    # Chapel,
     Moat,
-    Harbinger,
-    Merchant,
-    Vassal,
-    Village,
-    Workshop,
+    # Harbinger,
+    # Merchant,
+    # Vassal,
+    # Village,
+    # Workshop,
     Bureaucrat,
-    Gardens,
+    # Gardens,
     Militia,
-    Moneylender,
-    Poacher,
-    Remodel,
-    Smithy,
-    ThroneRoom,
+    # Moneylender,
+    # Poacher,
+    # Remodel,
+    # Smithy,
+    # ThroneRoom,
     Bandit,
-    CouncilRoom,
-    Festival,
-    Laboratory,
-    Library,
-    Market,
-    Mine,
-    Sentry,
+    # CouncilRoom,
+    # Festival,
+    # Laboratory,
+    # Library,
+    # Market,
+    # Mine,
+    # Sentry,
     Witch,
-    Artisan,
-    Chancellor,
-    Woodcutter,
-    Feast,
+    # Artisan,
+    # Chancellor,
+    # Woodcutter,
+    # Feast,
     Spy,
     Thief,
-    Adventurer
+    # Adventurer
 ]

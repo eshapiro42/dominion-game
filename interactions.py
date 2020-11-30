@@ -1,12 +1,16 @@
 import cards
 import prettytable
+import time
 from abc import ABCMeta, abstractmethod
-from flask_socketio import SocketIO
-from math import inf
+
+
+def ack(*args, **kwargs):
+    pass
 
 
 class Broadcast(metaclass=ABCMeta):
-    def __init__(self, socketio=None, room=None):
+    def __init__(self, game, socketio=None, room=None):
+        self.game = game
         self.socketio = socketio
         self.room = room
 
@@ -285,52 +289,57 @@ class CLIInteraction(Interaction):
 
 class NetworkedCLIBroadcast(Broadcast):
     def __call__(self, message):
-        self.socketio.send('', room=self.room)
+        message = f'\n{message}'
         self.socketio.send(message, room=self.room)
 
 
 class NetworkedCLIInteraction(Interaction):
     def enter_choice(self, prompt):
-        self.socketio.send('', to=self.sid)
+        prompt = f'\n{prompt}'
         return self.socketio.call('enter choice', {'prompt': prompt}, to=self.sid, timeout=None)
 
     def send(self, message):
-        self.socketio.send('', to=self.sid)
+        message = f'\n{message}'
         self.socketio.send(message, to=self.sid)
 
-    def display_hand(self):
-        self.send('Your hand:')
+    def get_hand_string(self):
         hand_table = prettytable.PrettyTable(hrules=prettytable.ALL)
         hand_table.field_names = ['Number', 'Card', 'Type', 'Description']
         for idx, card in enumerate(self.hand):
             types = ', '.join([type.name.lower().capitalize() for type in card.types])
             hand_table.add_row([idx + 1, card.name, types, card.description])
-        self.send(hand_table.get_string())
+        return hand_table.get_string()
 
-    def display_discard_pile(self):
-        self.send('Your discard pile:')
+    def get_discard_pile_string(self):
         discard_table = prettytable.PrettyTable(hrules=prettytable.ALL)
         discard_table.field_names = ['Number', 'Card', 'Type', 'Description']
         for idx, card in enumerate(self.discard_pile):
             types = ', '.join([type.name.lower().capitalize() for type in card.types])
             discard_table.add_row([idx + 1, card.name, types, card.description])
-        self.send(discard_table.get_string())
+        return discard_table.get_string()
+
+    def display_hand(self):
+        hand_string = f'Your hand:\n{self.get_hand_string()}'
+        self.send(hand_string)
+
+    def display_discard_pile(self):
+        discard_string = f'Your discard pile:\n{self.get_discard_pile_string()}'
+        self.send(discard_string)
 
     def choose_card_from_hand(self, prompt, force):
-        self.send(prompt)
         if not self.hand:
             self.send('There are no cards in your hand.')
             return None
         while True:
             try:
-                self.display_hand()
+                _prompt = self.get_hand_string()
                 if force:
-                    prompt = f'Enter choice 1-{len(self.hand)}: '
+                    _prompt += f'\n{prompt}\nEnter choice 1-{len(self.hand)}: '
                     card_num = self.enter_choice(prompt)
                     card_chosen = self.hand[card_num - 1]
                 else:
-                    prompt = f'Enter choice 1-{len(self.hand)} (0 to skip): '
-                    card_num = self.enter_choice(prompt)
+                    _prompt += f'\n{prompt}\nEnter choice 1-{len(self.hand)} (0 to skip): '
+                    card_num = self.enter_choice(_prompt)
                     if card_num == 0:
                         return None
                     else:
@@ -340,7 +349,6 @@ class NetworkedCLIInteraction(Interaction):
                 self.send('That is not a valid choice.')
 
     def choose_specific_card_class_from_hand(self, prompt, force, card_class):
-        self.send(prompt)
         if not any(type(card) == card_class for card in self.hand):
             self.send(f'There are no {card_class} cards in your hand.')
             return None
@@ -351,14 +359,13 @@ class NetworkedCLIInteraction(Interaction):
         if force:
             return card
         else:
-            prompt = f'Do you want to choose a {card_class.name} from your hand?'
-            if self.choose_yes_or_no(prompt):
+            _prompt = f'{prompt}\nDo you want to choose a {card_class.name} from your hand?'
+            if self.choose_yes_or_no(_prompt):
                 return card
             else:
                 return None
 
     def choose_specific_card_type_from_hand(self, prompt, card_type):
-        self.send(prompt)
         # Only cards of the correct type can be chosen
         playable_cards = [card for card in self.hand if card_type in card.types]
         if not playable_cards:
@@ -371,9 +378,9 @@ class NetworkedCLIInteraction(Interaction):
                 for idx, card in enumerate(playable_cards):
                     types = ', '.join([type.name.lower().capitalize() for type in card.types])
                     hand_table.add_row([idx + 1, card.name, types, card.description])
-                self.send(hand_table.get_string())
-                prompt = f'Enter choice 1-{len(playable_cards)} (0 to skip): '
-                card_num = self.enter_choice(prompt)
+                _prompt = hand_table.get_string()
+                _prompt += f'\n{prompt}\nEnter choice 1-{len(playable_cards)} (0 to skip): '
+                card_num = self.enter_choice(_prompt)
                 if card_num == 0:
                     return None
                 else:
@@ -383,20 +390,19 @@ class NetworkedCLIInteraction(Interaction):
                 self.send('That is not a valid choice.')
 
     def choose_card_from_discard_pile(self, prompt, force):
-        self.send(prompt)
         if not self.discard_pile:
             self.send('There are no cards in your discard pile!')
             return None
         while True:
             try:
-                self.display_discard_pile()
+                _prompt = self.get_discard_pile_string()
                 if force:
-                    prompt = f'Enter choice 1-{len(self.discard_pile)}: '
-                    card_num = self.enter_choice(prompt)
+                    _prompt += f'\n{prompt}\nEnter choice 1-{len(self.discard_pile)}: '
+                    card_num = self.enter_choice(_prompt)
                     card_chosen = self.discard_pile[card_num - 1]
                 else:
-                    prompt = f'Enter choice 1-{len(self.discard_pile)} (0 to skip): '
-                    card_num = self.enter_choice(prompt)
+                    _prompt += f'\n{prompt}\nEnter choice 1-{len(self.discard_pile)} (0 to skip): '
+                    card_num = self.enter_choice(_prompt)
                     if card_num == 0:
                         return None
                     else:
@@ -407,7 +413,6 @@ class NetworkedCLIInteraction(Interaction):
 
     def choose_card_class_from_supply(self, prompt, max_cost, force):
         while True:
-            self.send(prompt)
             try:
                 supply_table = prettytable.PrettyTable(hrules=prettytable.ALL)
                 supply_table.field_names = ['Number', 'Card', 'Cost', 'Type', 'Quantity', 'Description']
@@ -419,18 +424,20 @@ class NetworkedCLIInteraction(Interaction):
                     types = ', '.join([type.name.lower().capitalize() for type in card_class.types])
                     card_quantity = stacks[card_class].cards_remaining
                     supply_table.add_row([idx + 1, card_class.name, card_class.cost, types, card_quantity, card_class.description])
-                self.send(supply_table.get_string())       
+                _prompt = supply_table.get_string()
                 if force:
-                    card_num = self.enter_choice(f'Enter choice 1-{len(buyable_card_stacks)}: ')
+                    _prompt += f'\n{prompt}\nEnter choice 1-{len(buyable_card_stacks)}: '
+                    card_num = self.enter_choice(_prompt)
                     card_to_buy = list(buyable_card_stacks)[card_num - 1]
                 else:
-                    card_num = self.enter_choice(f'Enter choice 1-{len(buyable_card_stacks)} (0 to skip): ')
+                    _prompt += f'\n{prompt}\nEnter choice 1-{len(buyable_card_stacks)} (0 to skip): '
+                    card_num = self.enter_choice(_prompt)
                     if card_num == 0:
                         return None
                     else:
                         card_to_buy = list(buyable_card_stacks)[card_num - 1]
                 return card_to_buy
-            except (IndexError, ValueError):
+            except (IndexError, ValueError, TypeError):
                 self.send('That is not a valid choice.')        
 
     def choose_specific_card_type_from_supply(self, prompt, max_cost, card_type, force):
@@ -464,11 +471,14 @@ class NetworkedCLIInteraction(Interaction):
                 self.send('That is not a valid choice.')        
 
     def choose_yes_or_no(self, prompt):
-        self.send(prompt)
         while True:
-            response = self.enter_choice('Enter choice (Yes/No): ')
-            if response.lower() in ['yes', 'y', 'no', 'n']:
-                break
+            try:
+                _prompt = f'{prompt}\nEnter choice (Yes/No): '
+                response = self.socketio.call('choose yes or no', {'prompt': _prompt}, to=self.sid, timeout=None)
+                if response.lower() in ['yes', 'y', 'no', 'n']:
+                    break
+            except AttributeError:
+                self.send(f'{response} is not a valid choice. WTF???')
         if response.lower() in ['yes', 'y']:
             return True
         else:

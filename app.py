@@ -4,10 +4,11 @@ from flask import Flask
 from game import Game
 from interactions import NetworkedCLIInteraction, NetworkedCLIBroadcast
 from socketio import Server, WSGIApp
+import tornado
+import tornado.websocket
 
-socketio = Server()
+socketio = Server(async_mode='threading')
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'Dooooooo?'
 app.wsgi_app = WSGIApp(socketio, app.wsgi_app)
 
 
@@ -74,6 +75,11 @@ def disconnect(sid):
 
 
 if __name__ == '__main__':
-    import eventlet
-    eventlet.wsgi.server(eventlet.listen(('', 5000)), app)
-    # app.run(debug=True, threaded=True)
+    # app = WSGIApp(socketio)
+    # import eventlet
+    # eventlet.wsgi.server(eventlet.listen(('0.0.0.0', 5000)), app)
+
+    app.run(debug=True, threaded=True)
+
+    # app.listen(5000)
+    # tornado.ioloop.IOLoop.current().start()

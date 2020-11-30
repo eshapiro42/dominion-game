@@ -1,7 +1,8 @@
+import cards
 import itertools
 import interactions
 import random
-import cards
+import time
 from player import Player
 from supply import Supply
 from turn import Turn
@@ -18,8 +19,8 @@ class Game:
     def __init__(self, interactions_class=interactions.CLIInteraction, broadcast_class=interactions.CLIBroadcast, socketio=None, room=None):
         # Interaction objects need to be instantiated later, one for each player
         self.interactions_class = interactions_class
-        # Broadcast object can be instantiated now
-        self.broadcast = broadcast_class(socketio=socketio, room=room)
+        # Broadcast object needs to be instantiated later, just once for the whole game
+        self.broadcast_class = broadcast_class
         self.socketio = socketio
         self.room = room
         self.player_names = []
@@ -45,6 +46,7 @@ class Game:
         # Create the supply
         self.supply = Supply(num_players=self.num_players)
         self.supply.setup()
+        self.broadcast = self.broadcast_class(game=self, socketio=self.socketio, room=self.room)
         # Create each player object
         for player_name, player_sid in zip(self.player_names, self.player_sids):
             player = Player(game=self, name=player_name, interactions_class=self.interactions_class, socketio=self.socketio, sid=player_sid)
@@ -52,6 +54,7 @@ class Game:
             player.interactions.start()
         # Print out the supply
         self.broadcast(str(self.supply))
+        time.sleep(0.5)
         # Start the game loop!
         self.game_loop()
 

@@ -1,4 +1,5 @@
 import cards
+import time
 from abc import ABCMeta, abstractmethod
 from dataclasses import dataclass
 
@@ -24,6 +25,7 @@ class Turn:
     def start(self):
         self.game.broadcast(''.join((['*'] * 80)))
         self.game.broadcast(f"{self.player}'s turn!".upper())
+        time.sleep(0.1)
         self.player.interactions.display_hand()
         self.action_phase.start()
         self.buy_phase.start()
@@ -62,9 +64,9 @@ class ActionPhase(Phase):
         while self.turn.actions_remaining > 0:
             # If there are no action cards in the player's hand, move on
             if not any(cards.CardType.ACTION in card.types for card in self.player.hand):
-                self.player.interactions.send('No action cards to play. Ending action phase.')
+                self.player.interactions.send('No Action cards to play. Ending action phase.')
                 return
-            prompt = f'You have {self.turn.actions_remaining} actions. Select an action card to play.'
+            prompt = f'You have {self.turn.actions_remaining} actions. Select an Action card to play.'
             card = self.player.interactions.choose_specific_card_type_from_hand(prompt=prompt, card_type=cards.CardType.ACTION)
             if card is None:
                 # The player is forfeiting their action phase
@@ -72,6 +74,7 @@ class ActionPhase(Phase):
                 return
             self.play(card)
         self.player.interactions.send('No actions left. Ending action phase.')
+        time.sleep(0.5)
 
     def play(self, card):
         modifier = 'an' if card.name[0] in ['a', 'e', 'i', 'o', 'u'] else 'a'
@@ -133,6 +136,7 @@ class BuyPhase(Phase):
             else:
                 self.buy(card_class)
         self.player.interactions.send('No buys left. Ending buy phase.')
+        time.sleep(0.5)
 
     def buy(self, card_class):
         # Buying a card uses one buy
@@ -160,3 +164,6 @@ class BuyPhase(Phase):
 class CleanupPhase(Phase):
     def start(self):
         self.player.cleanup()
+        self.player.interactions.send('Your hand for next turn:')
+        self.player.interactions.display_hand()
+        time.sleep(0.5)
