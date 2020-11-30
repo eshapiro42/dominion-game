@@ -139,19 +139,19 @@ class AttackCard(ActionCard):
                     else:
                         prompt = f'{player}: You have a Reaction card ({reaction_card.name}) in your hand. Play it?'
                         if player.interactions.choose_yes_or_no(prompt=prompt):
+                            self.game.broadcast(f'{player} revealed a {reaction_card.name}.')
                             immune_players.add(player)
                         reaction_card_classes_to_ignore.add(type(reaction_card))
             # Now force non-immune players to reveal the top 2 cards of their deck
             if player in immune_players:
-                print(f'{player} is immune to the effects.')
+                self.game.broadcast(f'{player} is immune to the effects.')
                 continue
             else:
                 self.attack_effect(self.owner, player)
 
     def play(self):
         if self.prompt is not None:
-            print(self.prompt)
-            print()
+            self.game.broadcast(self.prompt)
         self.action()
         self.attack()
 
@@ -295,8 +295,9 @@ class Cellar(ActionCard):
             else:
                 discarded_card_count += 1
                 self.owner.discard(card_to_discard)
+                self.game.broadcast(f'{self.owner} discarded a {card_to_discard}.')
         drawn_cards = self.owner.draw(discarded_card_count)
-        print(f'+{discarded_card_count} cards --> {drawn_cards}\n')
+        self.game.broadcast(f'+{discarded_card_count} cards --> {drawn_cards}')
 
 
 class Chapel(ActionCard):
@@ -313,8 +314,8 @@ class Chapel(ActionCard):
     extra_coppers = 0
 
     def action(self):
-        for _ in range(4):
-            prompt = 'Choose a card from your hand to trash.'
+        for idx in range(4):
+            prompt = f'You may choose a card from your hand to trash ({idx} of 4).'
             card_to_trash = self.interactions.choose_card_from_hand(prompt=prompt, force=False)
             if card_to_trash is None:
                 break
@@ -398,7 +399,7 @@ class Merchant(ActionCard):
         persistent = False
 
         def __call__(self):
-            print(f'{self.player} played a Silver and gets +1 $ from his Merchant.')
+            self.game.broadcast(f'{self.player} played a Silver and gets +1 $ from his Merchant.')
             self.player.turn.coppers_remaining += 1
 
 
@@ -499,12 +500,12 @@ class Bureaucrat(AttackCard):
                 # If there is more than one type of Victory card, player must choose one
                 prompt = f'{player}: choose a Victory card to put back onto your deck.'
                 card = player.interactions.choose_from_options(prompt=prompt, options=victory_cards, force=True)
-            print(f'{player} puts a {card} on top of their deck.')
+            self.game.broadcast(f'{player} puts a {card} on top of their deck.')
             player.hand.remove(card)
             player.deck.append(card)
         else:
             # Player reveals a hand with no Victory cards
-            print(f'{player} reveals a hand with no Victory cards: {player.hand}.')
+            self.game.broadcast(f'{player} revealed a hand with no Victory cards: {player.hand}.')
 
     def action(self):
         # Gain a Silver and put onto deck
@@ -549,9 +550,9 @@ class Militia(AttackCard):
 
     def attack_effect(self, attacker, player):
         number_to_discard = len(player.hand) - 3
-        print(f'{player} must discard {number_to_discard} cards.')
+        self.game.broadcast(f'{player} must discard {number_to_discard} cards.')
         for card_num in range(number_to_discard):
-            prompt = f'{player}: Choose card {card_num + 1}/{number_to_discard} to discard.'
+            prompt = f'{player}: Choose card {card_num + 1} of {number_to_discard} to discard.'
             card_to_discard = player.interactions.choose_card_from_hand(prompt=prompt, force=True)
             player.discard(card_to_discard)
 
@@ -576,8 +577,9 @@ class Moneylender(ActionCard):
         prompt = 'You may trash a Copper from your hand.'
         copper_to_trash = self.interactions.choose_specific_card_class_from_hand(prompt=prompt, force=False, card_class=Copper)
         if copper_to_trash is not None:
+            self.game.broadcast(f'{self.owner} trashed a Copper.')
             self.owner.turn.coppers_remaining += 3
-            print(f'+3 $ --> {self.owner.turn.coppers_remaining}\n')
+            self.game.broadcast(f'+3 $ --> {self.owner.turn.coppers_remaining}')
             self.owner.trash(copper_to_trash)
 
 
@@ -604,9 +606,9 @@ class Poacher(ActionCard):
     def action(self):
         number_to_discard = self.supply.num_empty_stacks
         if number_to_discard > 0:
-            print(f'You must discard {number_to_discard} cards.\n')
+            self.interactions.send(f'You must discard {number_to_discard} cards.')
             for num in range(number_to_discard):
-                prompt = f'Choose card {num + 1}/{number_to_discard} to discard.'
+                prompt = f'Choose card {num + 1} of {number_to_discard} to discard.'
                 card_to_discard = self.interactions.choose_card_from_hand(prompt=prompt, force=True)
                 if card_to_discard is not None:
                     self.owner.discard(card_to_discard)
@@ -671,9 +673,9 @@ class ThroneRoom(ActionCard):
             # Playing the card should not use any actions, so we use a special method
             # The first time, add the card to the played cards area
             self.owner.play(card)
-            print(f'Playing {card.name} for the first time.\n')
+            self.game.broadcast(f'{self.owner} plays a{card.name} for the first time, thanks to their Throne Room.')
             self.owner.turn.action_phase.play_without_side_effects(card)
-            print(f'Playing {card.name} for the second time.\n')
+            self.game.broadcast(f'{self.owner} plays a {card.name} for the second time, thanks to their Throne Room.')
             self.owner.turn.action_phase.play_without_side_effects(card)
 
 
@@ -701,23 +703,23 @@ class Bandit(AttackCard):
             else:
                 other_cards.append(card)
         revealed_cards = trashable_cards + other_cards
-        print(f'{player} revealed a {revealed_cards[0]} and a {revealed_cards[1]}.')
+        self.game.broadcast(f'{player} revealed a {revealed_cards[0]} and a {revealed_cards[1]}.')
         if not trashable_cards:
             # The player discards both cards
-            print(f'{player} discards a {other_cards[0]} and a {other_cards[1]}.')
+            self.game.broadcast(f'{player} discards a {other_cards[0]} and a {other_cards[1]}.')
             player.discard_pile.extend(other_cards)
         elif len(trashable_cards) == 1:
             # The player trashes the only possible card
             card_to_trash = trashable_cards[0]
             card_to_discard = other_cards[0]
-            print(f'{player} trashes a {card_to_trash} and discards a {card_to_discard}.')
+            self.game.broadcast(f'{player} trashes a {card_to_trash} and discards a {card_to_discard}.')
             self.supply.trash(card_to_trash)
             player.discard_pile.append(card_to_discard)
         elif len(trashable_cards) == 2 and type(trashable_cards[0]) == type(trashable_cards[1]):
             # The player trashes either card since they're the same
             card_to_trash = trashable_cards[0]
             card_to_discard = trashable_cards[1]
-            print(f'{player} trashes a {card_to_trash} and discards a {card_to_discard}.')
+            self.game.broadcast(f'{player} trashes a {card_to_trash} and discards a {card_to_discard}.')
             self.supply.trash(card_to_trash)
             player.discard_pile.append(card_to_discard)
         else:
@@ -726,12 +728,12 @@ class Bandit(AttackCard):
             card_to_trash = player.interactions.choose_from_options(prompt=prompt, options=trashable_cards, force=True)
             trashable_cards.remove(card_to_trash)
             card_to_discard = trashable_cards[0]
-            print(f'{player} trashes a {card_to_trash} and discards a {card_to_discard}.')
+            self.game.broadcast(f'{player} trashes a {card_to_trash} and discards a {card_to_discard}.')
             self.supply.trash(card_to_trash)
             player.discard_pile.append(card_to_discard)
 
     def action(self):
-        print(f'{self.owner} gained a Gold.')
+        self.game.broadcast(f'{self.owner} gained a Gold.')
         self.owner.gain(Gold)
 
 
@@ -756,9 +758,10 @@ class CouncilRoom(ActionCard):
 
     def action(self):
         other_players = [player for player in self.game.players if player is not self.owner]
-        print(f'Other players ({other_players}) each draw a card.')
+        self.game.broadcast(f'Other players ({other_players}) each draw a card.')
         for player in other_players:
-            player.draw(1)
+            card = player.draw(1)[0]
+            player.interactions.send(f'You drew a {card}.')
 
 
 class Festival(ActionCard):
@@ -822,16 +825,17 @@ class Library(ActionCard):
     def action(self):
         while len(self.owner.hand) < 7:
             card_drawn = self.owner.take_from_deck()
-            print(f'You drew a {card_drawn}.')
+            self.interactions.send(f'You drew a {card_drawn}.')
             if CardType.ACTION in card_drawn.types:
                 prompt = "It's an action card. Would you like to skip and discard it?"
                 if self.interactions.choose_yes_or_no(prompt=prompt):
                     self.owner.discard_pile.append(card_drawn)
+                    self.game.broadcast(f'{self.owner} discarded a {card_drawn}.')
                 else:
-                    print('Adding it to your hand.')
+                    self.interactions.send('Adding it to your hand.')
                     self.owner.hand.append(card_drawn)
             else:
-                print('Adding it to your hand.')
+                self.interactions.send('Adding it to your hand.')
                 self.owner.hand.append(card_drawn)
 
 
@@ -876,14 +880,14 @@ class Mine(ActionCard):
         prompt = 'You may choose a Treasure card from your hand to trash.'
         card_to_trash = self.interactions.choose_specific_card_type_from_hand(prompt=prompt, card_type=CardType.TREASURE)
         if card_to_trash is None:
-            print('You did not trash anything.')
+            self.game.broadcast(f'{self.owner} did not trash anything.')
         else:
             self.owner.trash(card_to_trash)
             max_cost = card_to_trash.cost + 3
             prompt = f'Choose a Treasure card costing up to {max_cost} $ to gain to your hand.'
             card_to_gain = self.interactions.choose_specific_card_type_from_supply(prompt=prompt, max_cost=max_cost, card_type=CardType.TREASURE, force=True)
             self.owner.gain_to_hand(card_to_gain)
-            print(f'{self.owner} bought a {card_to_gain.name}')
+            self.game.broadcast(f'{self.owner} trashed a {card_to_trash} and gained a {card_to_gain} to their hand.')
 
 
 class Sentry(ActionCard):
@@ -907,25 +911,28 @@ class Sentry(ActionCard):
 
     def action(self):
         cards_kept = []
+        cards_revealed = []
         # Look at the top 2 cards of the deck and decide what to do with them
         for card_num in range(2):
             card = self.owner.take_from_deck()
+            cards_revealed.append(card)
+        for card in cards_revealed:
             prompt = f'You revealed a {card}. What would you like to do with it?'
             options = ['Trash', 'Discard', 'Return to deck']
             choice = self.interactions.choose_from_options(prompt=prompt, options=list(options), force=True)
-            print(f'You chose {choice}')
             if choice == 'Trash':
-                print('Trashing it.')
+                self.game.broadcast(f'{self.owner} trashed a {card}.')
                 self.supply.trash(card)
             elif choice == 'Discard':
-                print('Discarding it.')
+                self.game.broadcast(f'{self.owner} discarded a {card}.')
                 self.owner.discard_pile.append(card)
             elif choice == 'Return to deck':
-                print('Setting aside to return to deck.')
+                self.interactions.send(f'You set the {card} aside to return to your deck.')
                 cards_kept.append(card)
-        print(f'Cards kept: {cards_kept}.')
+        self.interactions.send(f"Cards set aside to return to your deck: {', '.join(cards_kept)}.")
         if len(cards_kept) == 1:
             # If one card was kept, put it back on top of the deck
+            self.game.broadcast(f'{self.owner} put one card back on top of their deck.')
             card_kept = cards_kept[0]
             self.owner.deck.append(card_kept)
         elif len(cards_kept) == 2:
@@ -936,6 +943,7 @@ class Sentry(ActionCard):
             bottom_card = cards_kept[0]
             self.owner.deck.append(bottom_card)
             self.owner.deck.append(top_card)
+            self.game.broadcast(f'{self.owner} put two cards back on top of their deck.')
 
 
 class Witch(AttackCard):
@@ -957,9 +965,9 @@ class Witch(AttackCard):
     extra_buys = 0
     extra_coppers = 0
 
-    def effect(self, attacker, player):
+    def attack_effect(self, attacker, player):
         player.gain(Curse)
-        print(f'{player} gained a Curse')
+        self.game.broadcast(f'{player} gained a Curse')
 
 
 class Artisan(ActionCard):
@@ -1076,6 +1084,7 @@ class Spy(AttackCard):
     def reveal_top_card_and_discard_or_replace(self, revealer, chooser):
         # Revealer reveals a card
         card = revealer.take_from_deck()
+        self.game.broadcast(f'{revealer} revealed a {card}.')
         # Then the chooser makes a choice
         options = ['Discard', 'Return to deck']
         if revealer == chooser:
@@ -1085,10 +1094,10 @@ class Spy(AttackCard):
         choice = chooser.interactions.choose_from_options(prompt=prompt, options=options, force=True)
         if choice == 'Discard':
             revealer.discard_pile.append(card)
-            print(f'{revealer} discarded a {card}.')
+            self.game.broadcast(f'{revealer} discarded a {card}.')
         elif choice == 'Return to deck':
             revealer.deck.append(card)
-            print(f'{revealer} returned the {card} to his deck.')
+            self.game.broadcast(f'{revealer} returned the {card} to their deck.')
 
     def attack_effect(self, attacker, player):
         self.reveal_top_card_and_discard_or_replace(revealer=player, chooser=attacker)
@@ -1125,7 +1134,7 @@ class Thief(AttackCard):
         for _ in range(2):
             card = player.take_from_deck()
             revealed_cards.append(card)
-        print(f'{player} revealed a {revealed_cards[0]} and a {revealed_cards[1]}.')
+        self.game.broadcast(f'{player} revealed a {revealed_cards[0]} and a {revealed_cards[1]}.')
         # Check if they revealed any treasure cards
         if any(CardType.TREASURE in card.types for card in revealed_cards):
             treasures = [card for card in revealed_cards if CardType.TREASURE in card.types]
@@ -1144,12 +1153,12 @@ class Thief(AttackCard):
                 card_to_trash = player.interactions.choose_from_options(prompt=prompt, options=treasures, force=True)
                 treasures.remove(card_to_trash)
                 card_to_discard = treasures[0]
-            print(f'{player} trashed a {card_to_trash} and discarded a {card_to_discard}')
+            self.game.broadcast(f'{player} trashed a {card_to_trash} and discarded a {card_to_discard}')
             # Allow the attacker to gain the trashed card
             prompt = f'{attacker}: Would you like to gain the trashed {card_to_trash}?'
             if attacker.interactions.choose_yes_or_no(prompt=prompt):
                 attacker.discard_pile.append(card_to_trash)
-                print(f'{attacker} gained the trashed {card_to_trash}.')
+                self.game.broadcast(f"{attacker} gained {player}'s trashed {card_to_trash}.")
             else:
                 self.supply.trash(card_to_trash)
         else:
@@ -1183,16 +1192,16 @@ class Adventurer(ActionCard):
         while len(revealed_treasures) < 2:
             card = self.owner.take_from_deck()
             if card is None:
-                print('No cards left in deck.')
+                self.game.broadcast(f'{self.owner} has no cards left to draw from.')
                 break
             else:
                 if CardType.TREASURE in card.types:
                     revealed_treasures.append(card)
                 else:
                     revealed_other_cards.append(card)
-        print(f'Revealed treasures: {revealed_treasures}. Putting these on top of deck.')
+        self.game.broadcast(f'Revealed treasures: {revealed_treasures}. {self.owner} puts these into their hand.')
         self.owner.hand.extend(revealed_treasures)
-        print(f'Other revealed cards: {revealed_other_cards}. Discarding these.')
+        self.game.broadcast(f'Other revealed cards: {revealed_other_cards}. {self.owner} discards these.')
         self.owner.discard_pile.extend(revealed_other_cards)
 
 

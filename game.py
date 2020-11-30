@@ -1,4 +1,5 @@
 import itertools
+import interactions
 import random
 import cards
 from player import Player
@@ -14,29 +15,43 @@ class GameStartedError(Exception):
 
 
 class Game:
-    def __init__(self):
+    def __init__(self, interactions_class=interactions.CLIInteraction, broadcast_class=interactions.CLIBroadcast, socketio=None, room=None):
+        # Interaction objects need to be instantiated later, one for each player
+        self.interactions_class = interactions_class
+        # Broadcast object can be instantiated now
+        self.broadcast = broadcast_class(socketio=socketio, room=room)
+        self.socketio = socketio
+        self.room = room
         self.player_names = []
+        self.player_sids = []
         self.players = []
+        self.startable = False
         self.started = False
 
-    def add_player(self, name=None):
+    def add_player(self, name=None, sid=None):
         # Players can only be added before the game starts
         if self.started:
             raise GameStartedError()
         if name is None:
             name = f'Player {self.num_players}'
         self.player_names.append(name)
+        self.player_sids.append(sid)
+        # If there are two players, the game is joinable
+        if len(self.player_names) == 2:
+            self.startable = True
 
     def start(self):
         self.started = True
         # Create the supply
         self.supply = Supply(num_players=self.num_players)
-        print(self.supply)
+        self.supply.setup()
         # Create each player object
-        for player_name in self.player_names:
-            player = Player(game=self, name=player_name)
+        for player_name, player_sid in zip(self.player_names, self.player_sids):
+            player = Player(game=self, name=player_name, interactions_class=self.interactions_class, socketio=self.socketio, sid=player_sid)
             self.players.append(player)
             player.interactions.start()
+        # Print out the supply
+        self.broadcast(str(self.supply))
         # Start the game loop!
         self.game_loop()
 
@@ -47,9 +62,9 @@ class Game:
             # Check if the game ended after each turn
             if self.ended:
                 victory_points_dict, winners = self.scores
-                print('Game over!')
-                print(f'\tScores: {victory_points_dict}')
-                print(f'\tWinners: {winners}.')
+                self.broadcast('Game over!')
+                self.broadcast(f'\tScores: {victory_points_dict}')
+                self.broadcast(f'\tWinners: {winners}.')
                 break
 
     @property
@@ -67,14 +82,14 @@ class Game:
     @property
     def scores(self):
         # Count up victory points for each player
-        victory_points_dict = {player: player.current_victory_points for player in self.players}
+        victory_points_dict = {player.name: player.current_victory_points for player in self.players}
         # Figure out the most victory points attained
         most_victory_points = max(victory_points_dict.values())
         # Figure out which players got that many victory points
         winners = []
         for player, victory_points in victory_points_dict.items():
             if victory_points == most_victory_points:
-                winners.append(player)
+                winners.append(player.name)
         return victory_points_dict, winners
 
     @property
@@ -85,5 +100,5 @@ class Game:
 if __name__ == '__main__':
     game = Game()
     game.add_player('Eric')
-    game.add_player('Brendon')
+    game.add_player('Michael')
     game.start()

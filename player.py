@@ -3,16 +3,15 @@ import prettytable
 import random
 from collections import deque
 from copy import deepcopy
-from interactions import CLI
 
 
 class Player:
-    def __init__(self, game, name):
+    def __init__(self, game, name, interactions_class, socketio=None, sid=None):
         self.game = game
         self.name = name
         self.turn = None
         self.supply = self.game.supply
-        self.interactions = CLI(player=self)
+        self.interactions = interactions_class(player=self, socketio=socketio, sid=sid)
         self.deck = deque()
         self.discard_pile = deque()
         self.hand = deque()
@@ -43,6 +42,7 @@ class Player:
             self.hand.append(card)
 
     def shuffle(self):
+        self.game.broadcast(f'{self.name} shuffled their deck.')
         self.deck.extend(self.discard_pile)
         self.discard_pile.clear()
         random.shuffle(self.deck)
