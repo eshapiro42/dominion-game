@@ -9,7 +9,7 @@ sio = socketio.Client()
 class Client:
     def __init__(self):
         # sio.connect('http://0.0.0.0:5000', transports=['websocket'])
-        sio.connect('http://0.0.0.0:5000')
+        sio.connect('http://womboserver.duckdns.org:5000')
         self.username = self.get_username()
         self.room = None
         self.enter_room()

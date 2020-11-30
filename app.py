@@ -79,7 +79,7 @@ if __name__ == '__main__':
     # import eventlet
     # eventlet.wsgi.server(eventlet.listen(('0.0.0.0', 5000)), app)
 
-    app.run(debug=True, threaded=True)
+    app.run(host='0.0.0.0', debug=True, threaded=True)
 
     # app.listen(5000)
     # tornado.ioloop.IOLoop.current().start()
