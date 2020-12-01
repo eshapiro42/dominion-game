@@ -59,9 +59,9 @@ def test_stability(logdir, num_players):
     with open(stdoutfile, 'w') as of, open(stderrfile, 'w') as ef:
         with redirect_stdout(of), redirect_stderr(ef):
             try:
-                game = Game(interactions_class=AutoInteraction, broadcast_class=AutoBroadcast)
+                game = Game(broadcast_class=AutoBroadcast)
                 for _ in range(num_players):
-                    game.add_player()
+                    game.add_player(interactions_class=AutoInteraction)
                 game.start()
             except Exception as e:
                 ef.write(str(e))
