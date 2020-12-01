@@ -30,8 +30,8 @@ def create_logdir():
 
 def test_instantiate_cards(logdir):
     timestamp = time.time()
-    stdoutfile = os.path.join(logdir, f'test_stability_{timestamp}_stdout.txt')
-    stderrfile = os.path.join(logdir, f'test_stability_{timestamp}_stderr.txt')
+    stdoutfile = os.path.join(logdir, f'test_instantiate_cards_{timestamp}_stdout.txt')
+    stderrfile = os.path.join(logdir, f'test_instantiate_cards_{timestamp}_stderr.txt')
     with open(stdoutfile, 'w') as of, open(stderrfile, 'w') as ef:
         with redirect_stdout(of), redirect_stderr(ef):
             for card_class in cards.BASIC_CARDS:
@@ -54,7 +54,6 @@ def test_stability(logdir, num_players):
             except Exception as e:
                 ef.write(str(e))
                 ef.write(traceback.format_exc())
-
 
 
 if __name__ == '__main__':
