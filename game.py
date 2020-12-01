@@ -20,20 +20,19 @@ class Game:
         NO_MORE_PROVINCES = 1
         THREE_SUPPLY_PILES_EMPTY = 2
 
-    def __init__(self, interactions_class=interactions.CLIInteraction, broadcast_class=interactions.CLIBroadcast, socketio=None, room=None):
-        # Interaction objects need to be instantiated later, one for each player
-        self.interactions_class = interactions_class
+    def __init__(self, broadcast_class=interactions.CLIBroadcast, socketio=None, room=None):
         # Broadcast object needs to be instantiated later, just once for the whole game
         self.broadcast_class = broadcast_class
         self.socketio = socketio
         self.room = room
         self.player_names = []
         self.player_sids = []
+        self.player_interactions_classes = []
         self.players = []
         self.startable = False
         self.started = False
 
-    def add_player(self, name=None, sid=None):
+    def add_player(self, name=None, sid=None, interactions_class=interactions.CLIBroadcast):
         # Players can only be added before the game starts
         if self.started:
             raise GameStartedError()
@@ -41,6 +40,7 @@ class Game:
             name = f'Player {self.num_players + 1}'
         self.player_names.append(name)
         self.player_sids.append(sid)
+        self.player_interactions_classes.append(interactions_class)
         # If there are two players, the game is joinable
         if len(self.player_names) == 2:
             self.startable = True
@@ -52,8 +52,8 @@ class Game:
         self.supply.setup()
         self.broadcast = self.broadcast_class(game=self, socketio=self.socketio, room=self.room)
         # Create each player object
-        for player_name, player_sid in zip(self.player_names, self.player_sids):
-            player = Player(game=self, name=player_name, interactions_class=self.interactions_class, socketio=self.socketio, sid=player_sid)
+        for player_name, player_sid, player_interactions_class in zip(self.player_names, self.player_sids, self.player_interactions_classes):
+            player = Player(game=self, name=player_name, interactions_class=player_interactions_class, socketio=self.socketio, sid=player_sid)
             self.players.append(player)
             player.interactions.start()
         # Print out the supply
@@ -116,7 +116,7 @@ class Game:
 
 if __name__ == '__main__':
     # game = Game()
-    game = Game(interactions_class=interactions.AutoInteraction, broadcast_class=interactions.AutoBroadcast)
-    game.add_player()
-    game.add_player()
+    game = Game(broadcast_class=interactions.CLIBroadcast)
+    game.add_player(name='Eric', interactions_class=interactions.CLIInteraction)
+    game.add_player(name='CPU', interactions_class=interactions.AutoInteraction)
     game.start()

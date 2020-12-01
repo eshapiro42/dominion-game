@@ -1,44 +1,67 @@
 import prettytable
 import random
 import socketio
+import time
 
 
 sio = socketio.Client()
 
 
-class Client:
-    def __init__(self):
-        # sio.connect('http://0.0.0.0:5000', transports=['websocket'])
-        sio.connect('http://womboserver.duckdns.org:5000')
-        self.username = self.get_username()
-        self.room = None
-        self.enter_room()
-    
-    @property
-    def json(self):
-        return {
-            'username': self.username,
-            'room': self.room,
-            'room_creator': self.room_creator,
-        }
+def json():
+    return {
+        'username': username,
+        'room': room,
+        'room_creator': room_creator,
+    }
 
-    def get_username(self):
-        return input('Please enter your username: ')
+def get_username():
+    return input('Please enter your username: ')
 
-    def set_room(self, room):
-        self.room = room
+def set_room(room_id):
+    global room
+    room = room_id
 
-    def enter_room(self):
-        prompt = 'What would you like to do?'
-        options = ['Create a new room', 'Join an existing room']
-        choice = choose_from_options(prompt=prompt, options=options, force=True)
-        if choice == 'Create a new room':
-            self.room_creator = True
-            sio.emit('create room', self.json, callback=self.set_room)
-        elif choice == 'Join an existing room':
-            self.room_creator = False
-            self.room = input('Please enter the room ID: ')
-            sio.emit('join room', self.json)
+def joined_room(success):
+    global joined
+    if success:
+        joined = True
+    else:
+        print('Invalid room ID.')
+
+def enter_room():
+    global room
+    global room_creator
+    prompt = 'What would you like to do?'
+    options = ['Create a new room', 'Join an existing room']
+    choice = choose_from_options(prompt=prompt, options=options, force=True)
+    if choice == 'Create a new room':
+        room_creator = True
+        sio.emit('create room', json(), callback=set_room)
+    elif choice == 'Join an existing room':
+        room_creator = False
+        while not joined:
+            room = input('Please enter the room ID: ')
+            sio.emit('join room', json(), callback=joined_room)
+            time.sleep(0.5)
+
+def setup_room():
+    if room_creator:
+        while True:
+            prompt = 'What would you like to do?'
+            options = ['Add CPU', 'Start Game']
+            choice = choose_from_options(prompt=prompt, options=options, force=True)
+            if choice == 'Add CPU':
+                sio.emit('add cpu', json())
+            elif choice == 'Start Game':
+                if not startable:
+                    print('The game cannot be started without at least two players.')
+                    continue
+                else:
+                    sio.emit('start game', json())
+                    break
+            time.sleep(0.5)
+    else:
+        print('Please wait for the game to start...')
 
 # @sio.event
 # def connect():
@@ -50,10 +73,10 @@ def disconnect():
 
 @sio.on('game startable')
 def game_startable():
-    if client.room_creator:
+    global startable
+    if room_creator:
+        startable = True
         print('The game can now be started.')
-        input('Press Enter when you are ready to start the game... ')
-        sio.emit('start game', client.json)
 
 @sio.on('message')
 def on_message(data):
@@ -99,6 +122,12 @@ def choose_from_options(prompt, options, force):
 
 
 if __name__ == '__main__':
-    client = Client()
-
-
+    # sio.connect('http://0.0.0.0:5000', transports=['websocket'])
+    sio.connect('http://womboserver.duckdns.org:5000')
+    username = get_username()
+    room = None
+    room_creator = False
+    joined = False
+    startable = False
+    enter_room()
+    setup_room()

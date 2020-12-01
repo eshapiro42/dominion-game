@@ -522,6 +522,7 @@ class Bureaucrat(AttackCard):
         silver = self.supply.draw(Silver)
         silver.owner = self.owner
         self.owner.deck.append(silver)
+        self.game.broadcast(f'{self.owner} gained a Silver onto their deck.')
 
 
 class Gardens(VictoryCard):
@@ -1026,7 +1027,7 @@ class Artisan(ActionCard):
         prompt = 'Gain a card to your hand costing up to 5 $.'
         card_class = self.interactions.choose_card_class_from_supply(prompt=prompt, max_cost=5, force=True)
         self.owner.gain_to_hand(card_class)
-        self.game.broadcast(f'{self.owner} gained a {card_class} to their hand.')
+        self.game.broadcast(f'{self.owner} gained a {card_class.name} to their hand.')
         prompt = 'Put a card from your hand onto your deck.'
         card = self.interactions.choose_card_from_hand(prompt=prompt, force=True)
         self.interactions.send(f'You put a {card} from your hand onto your deck.')

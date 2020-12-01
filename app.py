@@ -2,7 +2,7 @@ import random
 import string
 from flask import Flask
 from game import Game
-from interactions import NetworkedCLIInteraction, NetworkedCLIBroadcast
+from interactions import NetworkedCLIInteraction, NetworkedCLIBroadcast, AutoInteraction
 from socketio import Server, WSGIApp
 import tornado
 import tornado.websocket
@@ -18,6 +18,9 @@ games = {}
 # Global dictionary of sids, {sid: (room, data)}
 sids = {}
 
+# Global dictionary of CPUs, indexed by room ID, {room: CPU_COUNT}
+cpus = {}
+
 
 @socketio.on('join room')
 def join_room(sid, data):
@@ -26,16 +29,19 @@ def join_room(sid, data):
     # Add the user to the room
     socketio.enter_room(sid, room)
     sids[sid] = (room, data)
-    # Add the player to the game
-    game = games[room]
-    game_startable_before = game.startable
-    game.add_player(username, sid)
-    socketio.send(f'{username} has entered the room.', room=room)
-    # If the game just became startable, push an event
-    game_startable_after = game.startable
-    if game_startable_after != game_startable_before:
-        print('The game is startable.')
-        socketio.emit('game startable', room=room)
+    try:
+        # Add the player to the game
+        game = games[room]
+        game_startable_before = game.startable
+        game.add_player(username, sid, interactions_class=NetworkedCLIInteraction)
+        socketio.send(f'{username} has entered the room.', room=room)
+        # If the game just became startable, push an event
+        game_startable_after = game.startable
+        if game_startable_after != game_startable_before:
+            socketio.emit('game startable', room=room)
+        return True # This activates the client's joined_room() callback
+    except KeyError:
+        return False
 
 @socketio.on('create room')
 def create_room(sid, data):
@@ -49,13 +55,33 @@ def create_room(sid, data):
     socketio.enter_room(sid, room)
     sids[sid] = (room, data)
     # Create the game object
-    game = Game(interactions_class=NetworkedCLIInteraction, broadcast_class=NetworkedCLIBroadcast, socketio=socketio, room=room)
+    game = Game(broadcast_class=NetworkedCLIBroadcast, socketio=socketio, room=room)
     # Add the game object to the global dictionary of games
     games[room] = game
     # Add the player to the game
-    game.add_player(username, sid)
+    game.add_player(username, sid, interactions_class=NetworkedCLIInteraction)
     socketio.send(f'{username} has created room {room}', room=room)
-    return room # This activates the client.set_room() callback
+    return room # This activates the client's set_room() callback
+
+@socketio.on('add cpu')
+def add_cpu(sid, data):
+    username = data['username']
+    room = data['room']
+    # Add the CPU to the global dictionary of CPUs
+    if room not in cpus:
+        cpus[room] = 0
+    cpus[room] += 1
+    cpu_num = cpus[room]
+    # Add the CPU player to the game
+    game = games[room]
+    game_startable_before = game.startable
+    cpu_name = f'CPU {cpu_num}'
+    game.add_player(cpu_name, sid=None, interactions_class=AutoInteraction)
+    socketio.send(f'{cpu_name} has entered the room.', room=room)
+    # If the game just became startable, push an event
+    game_startable_after = game.startable
+    if game_startable_after != game_startable_before:
+        socketio.emit('game startable', room=room)
 
 @socketio.on('start game')
 def start_game(sid, data):
