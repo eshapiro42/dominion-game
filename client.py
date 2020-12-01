@@ -9,6 +9,14 @@ from threading import Lock
 sio = socketio.Client()
 
 
+lock = Lock()
+username = None
+room = None
+room_creator = False
+joined = False
+startable = False
+
+
 def json():
     return {
         'username': username,
@@ -17,9 +25,9 @@ def json():
     }
 
 def get_username():
+    global username
     username = input('Please enter your username: ')
     print()
-    return username
 
 def set_room(room_id):
     global room
@@ -68,13 +76,21 @@ def setup_room():
     else:
         print('Please wait for the game to start...\n')
 
-# @sio.event
-# def connect():
-#     print("You are connected to the server.")
+@sio.event
+def connect():
+    print("You are connected to the server.\n")
+    get_username()
+    enter_room()
+    setup_room()
 
+@sio.event
+def connect_error(data):
+    print(f"Unable to connect to the server: {data}.\n")
+    
 @sio.event
 def disconnect():
     print("You have been disconnected from the server.\n")
+    sio.disconnect()
 
 @sio.on('game startable')
 def game_startable():
@@ -132,13 +148,4 @@ def choose_from_options(prompt, options, force):
 
 
 if __name__ == '__main__':
-    # sio.connect('http://0.0.0.0:5000', transports=['websocket'])
     sio.connect('http://womboserver.duckdns.org:5000', transports=['websocket'])
-    lock = Lock()
-    username = get_username()
-    room = None
-    room_creator = False
-    joined = False
-    startable = False
-    enter_room()
-    setup_room()
