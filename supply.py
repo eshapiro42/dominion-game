@@ -166,3 +166,6 @@ class FiniteSupplyStack(SupplyStack):
     @property
     def is_empty(self):
         return self._cards_remaining == 0
+
+    def __repr__(self):
+        return self.card_class.name

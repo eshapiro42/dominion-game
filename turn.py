@@ -25,7 +25,8 @@ class Turn:
     def start(self):
         self.game.broadcast(''.join((['*'] * 80)))
         self.game.broadcast(f"{self.player}'s turn!".upper())
-        time.sleep(0.1)
+        if self.game.socketio is not None:
+            time.sleep(0.5)
         self.player.interactions.display_hand()
         self.action_phase.start()
         self.buy_phase.start()
@@ -74,7 +75,8 @@ class ActionPhase(Phase):
                 return
             self.play(card)
         self.player.interactions.send('No actions left. Ending action phase.')
-        time.sleep(0.5)
+        if self.game.socketio is not None:
+            time.sleep(0.5)
 
     def play(self, card):
         modifier = 'an' if card.name[0] in ['a', 'e', 'i', 'o', 'u'] else 'a'
@@ -136,7 +138,8 @@ class BuyPhase(Phase):
             else:
                 self.buy(card_class)
         self.player.interactions.send('No buys left. Ending buy phase.')
-        time.sleep(0.5)
+        if self.game.socketio is not None:
+            time.sleep(0.5)
 
     def buy(self, card_class):
         # Buying a card uses one buy
@@ -166,4 +169,5 @@ class CleanupPhase(Phase):
         self.player.cleanup()
         self.player.interactions.send('Your hand for next turn:')
         self.player.interactions.display_hand()
-        time.sleep(0.5)
+        if self.game.socketio is not None:
+            time.sleep(0.5)

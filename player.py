@@ -3,6 +3,7 @@ import prettytable
 import random
 from collections import deque
 from copy import deepcopy
+from supply import SupplyStackEmptyError
 
 
 class Player:
@@ -28,7 +29,11 @@ class Player:
             if not from_supply:
                 card = card_class()
             else:
-                card = self.supply.draw(card_class)
+                try:
+                    card = self.supply.draw(card_class)
+                except SupplyStackEmptyError:
+                    self.game.broadcast(f'{self.name} could not gain a {card_class} since that supply pile is empty.')
+                    return
             card.owner = self
             self.discard_pile.append(card)
 
@@ -37,7 +42,10 @@ class Player:
             if not from_supply:
                 card = card_class()
             else:
-                card = self.supply.draw(card_class)
+                try:
+                    card = self.supply.draw(card_class)
+                except SupplyStackEmptyError:
+                    self.game.broadcast(f'{self.name} could not gain a {card_class} since that supply pile is empty.')
             card.owner = self
             self.hand.append(card)
 
@@ -84,7 +92,10 @@ class Player:
 
     def trash_played_card(self, card):
         self.supply.trash(card)
-        self.played_cards.remove(card)
+        try:
+            self.played_cards.remove(card)
+        except ValueError:
+            pass
 
     def cleanup(self):
         # Discard hand from this turn
@@ -105,7 +116,7 @@ class Player:
     @property
     def all_cards(self):
         '''Concatenate all cards on the player mat (no side effects)'''
-        return deepcopy(self.deck + self.discard_pile + self.hand + self.played_cards)
+        return deepcopy(set(self.deck + self.discard_pile + self.hand + self.played_cards))
 
     @property
     def current_victory_points(self):

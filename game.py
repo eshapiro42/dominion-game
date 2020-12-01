@@ -16,6 +16,10 @@ class GameStartedError(Exception):
 
 
 class Game:
+    class GameEndConditions:
+        NO_MORE_PROVINCES = 1
+        THREE_SUPPLY_PILES_EMPTY = 2
+
     def __init__(self, interactions_class=interactions.CLIInteraction, broadcast_class=interactions.CLIBroadcast, socketio=None, room=None):
         # Interaction objects need to be instantiated later, one for each player
         self.interactions_class = interactions_class
@@ -34,7 +38,7 @@ class Game:
         if self.started:
             raise GameStartedError()
         if name is None:
-            name = f'Player {self.num_players}'
+            name = f'Player {self.num_players + 1}'
         self.player_names.append(name)
         self.player_sids.append(sid)
         # If there are two players, the game is joinable
@@ -54,7 +58,8 @@ class Game:
             player.interactions.start()
         # Print out the supply
         self.broadcast(str(self.supply))
-        time.sleep(0.5)
+        if self.socketio is not None:
+            time.sleep(0.5)
         # Start the game loop!
         self.game_loop()
 
@@ -63,21 +68,30 @@ class Game:
         for player in itertools.cycle(self.turn_order):
             turn = Turn(player)
             # Check if the game ended after each turn
-            if self.ended:
-                victory_points_dict, winners = self.scores
+            ended = self.ended
+            if ended:
+                # Game is over. Print out info.
+                if ended == self.GameEndConditions.NO_MORE_PROVINCES:
+                    self.broadcast('All provinces have been bought.')
+                elif ended == self.GameEndConditions.THREE_SUPPLY_PILES_EMPTY:
+                    empty_piles = [stack for stack in self.supply.card_stacks.values() if stack.is_empty]
+                    self.broadcast(f"Three supply piles are empty: {', '.join(map(str, empty_piles))}")
                 self.broadcast('Game over!')
+                victory_points_dict, winners = self.scores
                 self.broadcast(f'\tScores: {victory_points_dict}')
                 self.broadcast(f'\tWinners: {winners}.')
+                for player in self.players:
+                    self.broadcast(f"{player}'s cards: {list(player.all_cards)}")
                 break
 
     @property
     def ended(self):
         # Check if all provinces are gone
         if self.supply.card_stacks[cards.Province].is_empty:
-            return True
+            return self.GameEndConditions.NO_MORE_PROVINCES
         # Check if three supply stacks are gone
         elif self.supply.num_empty_stacks >= 3:
-            return True
+            return self.GameEndConditions.THREE_SUPPLY_PILES_EMPTY
         # Otherwise, the game is not over
         else:
             return False
@@ -90,9 +104,9 @@ class Game:
         most_victory_points = max(victory_points_dict.values())
         # Figure out which players got that many victory points
         winners = []
-        for player, victory_points in victory_points_dict.items():
+        for player_name, victory_points in victory_points_dict.items():
             if victory_points == most_victory_points:
-                winners.append(player.name)
+                winners.append(player_name)
         return victory_points_dict, winners
 
     @property
@@ -101,7 +115,8 @@ class Game:
 
 
 if __name__ == '__main__':
-    game = Game()
-    game.add_player('Eric')
-    game.add_player('Michael')
+    # game = Game()
+    game = Game(interactions_class=interactions.AutoInteraction, broadcast_class=interactions.AutoBroadcast)
+    game.add_player()
+    game.add_player()
     game.start()
