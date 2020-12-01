@@ -155,11 +155,11 @@ class AttackCard(ActionCard):
         if self.prompt is not None:
             self.game.broadcast(self.prompt)
         self.action()
-        if self.game.socketio is not None:
-            time.sleep(0.5)
+        # if self.game.socketio is not None:
+        #     time.sleep(0.5)
         self.attack()
-        if self.game.socketio is not None:
-            time.sleep(0.5)
+        # if self.game.socketio is not None:
+        #     time.sleep(0.5)
 
     @property
     @abstractmethod
@@ -515,7 +515,7 @@ class Bureaucrat(AttackCard):
             player.deck.append(card)
         else:
             # Player reveals a hand with no Victory cards
-            self.game.broadcast(f'{player} revealed a hand with no Victory cards: {player.hand}.')
+            self.game.broadcast(f"{player} revealed a hand with no Victory cards: {', '.join(map(str, player.hand))}.")
 
     def action(self):
         # Gain a Silver and put onto deck
@@ -687,10 +687,12 @@ class ThroneRoom(ActionCard):
             # Playing the card should not use any actions, so we use a special method
             # The first time, add the card to the played cards area
             self.owner.play(card)
-            self.game.broadcast(f'{self.owner} plays a{card.name} for the first time, thanks to their Throne Room.')
+            self.game.broadcast(f'{self.owner} plays a {card.name} for the first time, thanks to their Throne Room.')
             self.owner.turn.action_phase.play_without_side_effects(card)
             self.game.broadcast(f'{self.owner} plays a {card.name} for the second time, thanks to their Throne Room.')
             self.owner.turn.action_phase.play_without_side_effects(card)
+        else:
+            self.game.broadcast(f'{self.owner} has no other Actions cards to use with their Throne Room.')
 
 
 class Bandit(AttackCard):
@@ -780,7 +782,7 @@ class CouncilRoom(ActionCard):
 
     def action(self):
         other_players = [player for player in self.game.players if player is not self.owner]
-        self.game.broadcast(f'Other players ({other_players}) each draw a card.')
+        self.game.broadcast(f"Other players ({', '.join(map(str, other_players))}) each draw a card.")
         for player in other_players:
             try:
                 card = player.draw(1)[0]
@@ -914,9 +916,9 @@ class Mine(ActionCard):
             self.owner.trash(card_to_trash)
             max_cost = card_to_trash.cost + 3
             prompt = f'Choose a Treasure card costing up to {max_cost} $ to gain to your hand.'
-            card_to_gain = self.interactions.choose_specific_card_type_from_supply(prompt=prompt, max_cost=max_cost, card_type=CardType.TREASURE, force=True)
-            self.owner.gain_to_hand(card_to_gain)
-            self.game.broadcast(f'{self.owner} trashed a {card_to_trash} and gained a {card_to_gain} to their hand.')
+            card_class_to_gain = self.interactions.choose_specific_card_type_from_supply(prompt=prompt, max_cost=max_cost, card_type=CardType.TREASURE, force=True)
+            self.owner.gain_to_hand(card_class_to_gain)
+            self.game.broadcast(f'{self.owner} trashed a {card_to_trash} and gained a {card_class_to_gain.name} to their hand.')
 
 
 class Sentry(ActionCard):
@@ -1052,8 +1054,9 @@ class Chancellor(ActionCard):
     extra_coppers = 2
 
     def action(self):
-        prompt = 'Would you like to put your deck onto your discard pile?'
+        prompt = f'Would you like to put your deck ({len(self.owner.deck)} cards) onto your discard pile ({len(self.owner.discard_pile)} cards)?'
         if self.interactions.choose_yes_or_no(prompt):
+            self.game.broadcast(f'{self.owner} put their deck onto their discard pile.')
             self.owner.deck.extend(self.owner.discard_pile)
 
 
@@ -1151,7 +1154,7 @@ class Spy(AttackCard):
 
     @property
     def prompt(self):
-         return f"Each other player reveals the top card of his deck and either discards it or puts it back, {self.owner}'s choice."
+         return f"Each player reveals the top card of his deck and either discards it or puts it back, {self.owner}'s choice."
 
 
 class Thief(AttackCard):

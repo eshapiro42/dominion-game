@@ -58,8 +58,8 @@ class Game:
             player.interactions.start()
         # Print out the supply
         self.broadcast(str(self.supply))
-        if self.socketio is not None:
-            time.sleep(0.5)
+        # if self.socketio is not None:
+        #     time.sleep(0.5)
         # Start the game loop!
         self.game_loop()
 

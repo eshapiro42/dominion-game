@@ -24,6 +24,7 @@ class Supply:
         self.num_players = num_players
         self.card_stacks = {}
         # Optional toggles
+        self.required_card_classes = [cards.Spy] # If nonempty, ensures that each card in the list ends up in the supply
         self.distribute_cost = False # If toggled, ensures there are at least two cards each of cost {2, 3, 4, 5}
         self.disable_attack_cards = False # If toggled, Attack cards are not allowed
         # self.require_plus_two_action = False # If toggled, ensures there is at least one card with '+2 Actions'
@@ -60,6 +61,10 @@ class Supply:
         self.card_stacks[cards.Curse] = FiniteSupplyStack(cards.Curse, curse_stack_size)
 
     def select_kingdom_cards(self):
+        selected_kingdom_card_classes = []
+        # Add in required cards
+        for card_class in self.required_card_classes:
+            selected_kingdom_card_classes.append(card_class)
         if self.disable_attack_cards:
             # Filter out attack cards
             possible_kingdom_card_classes = [card_class for card_class in copy.deepcopy(cards.KINGDOM_CARDS) if cards.CardType.ATTACK not in card_class.types]
@@ -68,21 +73,17 @@ class Supply:
             possible_kingdom_card_classes = copy.deepcopy(cards.KINGDOM_CARDS)
         if self.distribute_cost:
             # Make sure at least two cards each of cost {2, 3, 4, 5} (this totals 8 cards)
-            self.selected_kingdom_card_classes = []
             possible_kingdom_card_classes_by_cost = {cost: [card_class for card_class in possible_kingdom_card_classes if card_class.cost == cost] for cost in range(2, 6)}
             for cost in range(2, 6):
                 card_classes_of_cost = random.sample(possible_kingdom_card_classes_by_cost[cost], 2)
                 for card_class in card_classes_of_cost:
-                    self.selected_kingdom_card_classes.append(card_class)
+                    selected_kingdom_card_classes.append(card_class)
                     possible_kingdom_card_classes.remove(card_class)
-            # Select the other two cards at random
-            two_random_card_classes = random.sample(possible_kingdom_card_classes, 2)
-            self.selected_kingdom_card_classes += two_random_card_classes
-        else:
-            # 10 randomly selected cards
-            self.selected_kingdom_card_classes = random.sample(cards.KINGDOM_CARDS, min(10, len(cards.KINGDOM_CARDS))) # This lets the game work even if fewer than 10 cards are defined
+        # Select the remaining cards at random
+        num_cards_remaining = 10 - len(selected_kingdom_card_classes)
+        selected_kingdom_card_classes += random.sample(cards.KINGDOM_CARDS, num_cards_remaining)
         # Sort kingdom cards first by cost, then by name
-        for card_class in sorted(self.selected_kingdom_card_classes, key=lambda card_class: (card_class.cost, card_class.name)):
+        for card_class in sorted(selected_kingdom_card_classes, key=lambda card_class: (card_class.cost, card_class.name)):
             # Stacks of ten kingdom cards each
             self.card_stacks[card_class] = FiniteSupplyStack(card_class, 10)
 

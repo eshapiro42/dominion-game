@@ -25,8 +25,8 @@ class Turn:
     def start(self):
         self.game.broadcast(''.join((['*'] * 80)))
         self.game.broadcast(f"{self.player}'s turn!".upper())
-        if self.game.socketio is not None:
-            time.sleep(0.5)
+        # if self.game.socketio is not None:
+        #     time.sleep(0.5)
         self.player.interactions.display_hand()
         self.action_phase.start()
         self.buy_phase.start()
@@ -75,8 +75,8 @@ class ActionPhase(Phase):
                 return
             self.play(card)
         self.player.interactions.send('No actions left. Ending action phase.')
-        if self.game.socketio is not None:
-            time.sleep(0.5)
+        # if self.game.socketio is not None:
+        #     time.sleep(0.5)
 
     def play(self, card):
         modifier = 'an' if card.name[0] in ['a', 'e', 'i', 'o', 'u'] else 'a'
@@ -87,15 +87,16 @@ class ActionPhase(Phase):
         self.turn.actions_remaining -= 1
         self.game.broadcast(f'-1 action --> {self.turn.actions_remaining}')
         self.walk_through_action_card(card)
-        if self.game.socketio is not None:
-            time.sleep(0.5)
-
+        # if self.game.socketio is not None:
+        #     time.sleep(0.5)
 
     def play_without_side_effects(self, card):
         '''Use this to play a card without losing actions or moving the card to the played cards area'''
         modifier = 'an' if card.name[0] in ['a', 'e', 'i', 'o', 'u'] else 'a'
         self.game.broadcast(f'{self.player} played {modifier} {card}.')
         self.walk_through_action_card(card)
+        # if self.game.socketio is not None:
+        #     time.sleep(0.5)
 
     def walk_through_action_card(self, card):
         # Draw any additional cards specified on the card
@@ -118,8 +119,8 @@ class ActionPhase(Phase):
             card_effects.append(f'+{card.extra_coppers} $ --> {self.turn.coppers_remaining}')
         # Send out string of card effects
         self.game.broadcast('\n'.join(card_effects))
-        if self.game.socketio is not None:
-            time.sleep(0.5)
+        # if self.game.socketio is not None:
+        #     time.sleep(0.5)
         if drawn_cards:
             self.player.interactions.send(f"You drew: {', '.join(map(str, drawn_cards))}")
         # Do whatever the card is supposed to do
@@ -148,8 +149,8 @@ class BuyPhase(Phase):
             else:
                 self.buy(card_class)
         self.player.interactions.send('No buys left. Ending buy phase.')
-        if self.game.socketio is not None:
-            time.sleep(0.5)
+        # if self.game.socketio is not None:
+        #     time.sleep(0.5)
 
     def buy(self, card_class):
         # Buying a card uses one buy
@@ -179,5 +180,5 @@ class CleanupPhase(Phase):
         self.player.cleanup()
         self.player.interactions.send('Your hand for next turn:')
         self.player.interactions.display_hand()
-        if self.game.socketio is not None:
-            time.sleep(0.5)
+        # if self.game.socketio is not None:
+        #     time.sleep(0.5)

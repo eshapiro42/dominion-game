@@ -7,9 +7,11 @@ from socketio import Server, WSGIApp
 import tornado
 import tornado.websocket
 
-socketio = Server(async_mode='threading')
-app = Flask(__name__)
-app.wsgi_app = WSGIApp(socketio, app.wsgi_app)
+# socketio = Server(async_mode='threading')
+# app = Flask(__name__)
+# app.wsgi_app = WSGIApp(socketio, app.wsgi_app)
+
+socketio = Server(async_mode='eventlet')
 
 
 # Global dictionary of games, indexed by room ID
@@ -34,7 +36,7 @@ def join_room(sid, data):
         game = games[room]
         game_startable_before = game.startable
         game.add_player(username, sid, interactions_class=NetworkedCLIInteraction)
-        socketio.send(f'{username} has entered the room.', room=room)
+        socketio.send(f'{username} has entered the room.\n', room=room)
         # If the game just became startable, push an event
         game_startable_after = game.startable
         if game_startable_after != game_startable_before:
@@ -60,7 +62,7 @@ def create_room(sid, data):
     games[room] = game
     # Add the player to the game
     game.add_player(username, sid, interactions_class=NetworkedCLIInteraction)
-    socketio.send(f'{username} has created room {room}', room=room)
+    socketio.send(f'{username} has created room {room}\n', room=room)
     return room # This activates the client's set_room() callback
 
 @socketio.on('add cpu')
@@ -77,7 +79,7 @@ def add_cpu(sid, data):
     game_startable_before = game.startable
     cpu_name = f'CPU {cpu_num}'
     game.add_player(cpu_name, sid=None, interactions_class=AutoInteraction)
-    socketio.send(f'{cpu_name} has entered the room.', room=room)
+    socketio.send(f'{cpu_name} has entered the room.\n', room=room)
     # If the game just became startable, push an event
     game_startable_after = game.startable
     if game_startable_after != game_startable_before:
@@ -88,24 +90,27 @@ def start_game(sid, data):
     username = data['username']
     room = data['room']
     # Start the game
+    socketio.send(f'{username} has started the game.\n', room=room)
     game = games[room]
     game.start()
-    socketio.send(f'{username} has started the game.', room=room)
 
 @socketio.event
 def disconnect(sid):
-    room, data = sids[sid]
-    username = data['username']
-    socketio.leave_room(sid, room)
-    socketio.send(f'{username} has left the room.', room=room)
+    try:
+        room, data = sids[sid]
+        username = data['username']
+        socketio.leave_room(sid, room)
+        socketio.send(f'{username} has left the room.\n', room=room)
+    except KeyError:
+        pass
 
 
 if __name__ == '__main__':
-    # app = WSGIApp(socketio)
-    # import eventlet
-    # eventlet.wsgi.server(eventlet.listen(('0.0.0.0', 5000)), app)
+    app = WSGIApp(socketio)
+    import eventlet
+    eventlet.wsgi.server(eventlet.listen(('0.0.0.0', 5000)), app)
 
-    app.run(host='0.0.0.0', debug=True, threaded=True)
+    # app.run(host='0.0.0.0', debug=True, threaded=True)
 
     # app.listen(5000)
     # tornado.ioloop.IOLoop.current().start()

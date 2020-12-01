@@ -359,13 +359,13 @@ class NetworkedCLIInteraction(Interaction):
             return None
         while True:
             try:
-                _prompt = self.get_hand_string()
+                _prompt = f'{prompt}\n{self.get_hand_string()}'
                 if force:
-                    _prompt += f'\n{prompt}\nEnter choice 1-{len(self.hand)}: '
-                    card_num = self.enter_choice(prompt)
+                    _prompt += f'\nEnter choice 1-{len(self.hand)}: '
+                    card_num = self.enter_choice(_prompt)
                     card_chosen = self.hand[card_num - 1]
                 else:
-                    _prompt += f'\n{prompt}\nEnter choice 1-{len(self.hand)} (0 to skip): '
+                    _prompt += f'\nEnter choice 1-{len(self.hand)} (0 to skip): '
                     card_num = self.enter_choice(_prompt)
                     if card_num == 0:
                         return None
@@ -405,8 +405,8 @@ class NetworkedCLIInteraction(Interaction):
                 for idx, card in enumerate(playable_cards):
                     types = ', '.join([type.name.lower().capitalize() for type in card.types])
                     hand_table.add_row([idx + 1, card.name, types, card.description])
-                _prompt = hand_table.get_string()
-                _prompt += f'\n{prompt}\nEnter choice 1-{len(playable_cards)} (0 to skip): '
+                _prompt = f'{prompt}\n{hand_table.get_string()}'
+                _prompt += f'\nEnter choice 1-{len(playable_cards)} (0 to skip): '
                 card_num = self.enter_choice(_prompt)
                 if card_num == 0:
                     return None
@@ -451,13 +451,13 @@ class NetworkedCLIInteraction(Interaction):
                     types = ', '.join([type.name.lower().capitalize() for type in card_class.types])
                     card_quantity = stacks[card_class].cards_remaining
                     supply_table.add_row([idx + 1, card_class.name, card_class.cost, types, card_quantity, card_class.description])
-                _prompt = supply_table.get_string()
+                _prompt = f'{prompt}\n{supply_table.get_string()}'
                 if force:
-                    _prompt += f'\n{prompt}\nEnter choice 1-{len(buyable_card_stacks)}: '
+                    _prompt += f'\nEnter choice 1-{len(buyable_card_stacks)}: '
                     card_num = self.enter_choice(_prompt)
                     card_to_buy = list(buyable_card_stacks)[card_num - 1]
                 else:
-                    _prompt += f'\n{prompt}\nEnter choice 1-{len(buyable_card_stacks)} (0 to skip): '
+                    _prompt += f'\nEnter choice 1-{len(buyable_card_stacks)} (0 to skip): '
                     card_num = self.enter_choice(_prompt)
                     if card_num == 0:
                         return None
@@ -468,7 +468,6 @@ class NetworkedCLIInteraction(Interaction):
                 self.send('That is not a valid choice.')        
 
     def choose_specific_card_type_from_supply(self, prompt, max_cost, card_type, force):
-        self.send(prompt)
         while True:
             try:
                 supply_table = prettytable.PrettyTable(hrules=prettytable.ALL)
@@ -481,14 +480,14 @@ class NetworkedCLIInteraction(Interaction):
                     types = ', '.join([type.name.lower().capitalize() for type in card_class.types])
                     card_quantity = stacks[card_class].cards_remaining
                     supply_table.add_row([idx + 1, card_class.name, card_class.cost, types, card_quantity, card_class.description])
-                self.send(supply_table.get_string())
+                _prompt = f'{prompt}\n{supply_table.get_string()}'
                 if force:
-                    prompt = f'Enter choice 1-{len(buyable_card_stacks)}: '
-                    card_num = self.enter_choice(prompt)
+                    _prompt += f'\nEnter choice 1-{len(buyable_card_stacks)}: '
+                    card_num = self.enter_choice(_prompt)
                     card_to_buy = list(buyable_card_stacks)[card_num - 1]
                 else:
-                    prompt = f'Enter choice 1-{len(buyable_card_stacks)} (0 to skip): '
-                    card_num = self.enter_choice(prompt)
+                    _prompt += f'\nEnter choice 1-{len(buyable_card_stacks)} (0 to skip): '
+                    card_num = self.enter_choice(_prompt)
                     if card_num == 0:
                         return None
                     else:
@@ -512,21 +511,20 @@ class NetworkedCLIInteraction(Interaction):
             return False
 
     def choose_from_options(self, prompt, options, force):
-        self.send(prompt)
         while True:
             options_table = prettytable.PrettyTable(hrules=prettytable.ALL)
             options_table.field_names = ['Number', 'Option']
             for idx, option in enumerate(options):
                 options_table.add_row([idx + 1, option])
             try:
-                self.send(options_table.get_string())
+                _prompt = f'{prompt}\n{options_table.get_string()}'
                 if force:
-                    prompt = f'Enter choice 1-{len(options)}: '
-                    response_num = self.enter_choice(prompt)
+                    _prompt += f'\nEnter choice 1-{len(options)}: '
+                    response_num = self.enter_choice(_prompt)
                     response = options[response_num - 1]
                 else:
-                    prompt = f'Enter choice 0-{len(options)} (0 to skip): '
-                    response_num = self.enter_choice(prompt)
+                    _prompt += f'\nEnter choice 0-{len(options)} (0 to skip): '
+                    response_num = self.enter_choice(_prompt)
                     if response_num == 0:
                         return None
                     else:
@@ -543,12 +541,14 @@ class NetworkedCLIInteraction(Interaction):
 
 class AutoBroadcast(Broadcast):
     def __call__(self, message):
+        # TODO: Turn off printing (useful for debugging)
         print(message)
         print()
 
 
 class AutoInteraction(Interaction):
     def send(self, message):
+        # TODO: Turn off printing (useful for debugging)
         print(message)
         print()
 
@@ -707,8 +707,8 @@ class AutoInteraction(Interaction):
                 if force:
                     print(f'Enter choice 1-{len(buyable_card_stacks)}: ', end='')
                     choices = range(1, len(buyable_card_stacks) + 1)
-                    # Weight by cost (more expensive are more likely)
-                    weights = [card.cost * 5 for card in buyable_card_stacks]
+                    # Weight by cost (more expensive are more likely, coppers and estates are unlikely)
+                    weights = [0 if cards.CardType.CURSE in card.types else 1 if type(card) == cards.Copper or type(card) == cards.Estate else card.cost * 5 for card in buyable_card_stacks]
                     card_num = random.choices(choices, weights, k=1)[0]
                     print(card_num)
                     print()
@@ -716,7 +716,7 @@ class AutoInteraction(Interaction):
                 else:
                     print(f'Enter choice 1-{len(buyable_card_stacks)} (0 to skip): ', end='')
                     choices = range(0, len(buyable_card_stacks) + 1)
-                    weights = [1] + [card.cost * 5 for card in buyable_card_stacks]
+                    weights = [1] + [0 if cards.CardType.CURSE in card.types else 1 if type(card) == cards.Copper or type(card) == cards.Estate else card.cost * 5 for card in buyable_card_stacks]
                     card_num = random.choices(choices, weights, k=1)[0]
                     print(card_num)
                     print()
