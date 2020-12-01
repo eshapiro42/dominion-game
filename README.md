@@ -8,11 +8,12 @@
 
 2. Download and install the latest stable Python 3 release from here: https://www.python.org/downloads/.
 
-   * Use the default settings unless you know what you're doing.
+   * Use the default settings unless you know what you're doing, except for:
+     * **Add Python to PATH**: Check this box.
 
 3. Download and install the latest stable Git for Windows release from here: https://gitforwindows.org/
 
-   * Use the default settings except for these:
+   * Use the default settings except for:
      * **Default Editor**: Whatever you're comfortable using.
      * **PATH Environment**: Choose "Git from the command line and also from 3rd-party software."
 
