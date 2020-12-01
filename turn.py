@@ -87,6 +87,9 @@ class ActionPhase(Phase):
         self.turn.actions_remaining -= 1
         self.game.broadcast(f'-1 action --> {self.turn.actions_remaining}')
         self.walk_through_action_card(card)
+        if self.game.socketio is not None:
+            time.sleep(0.5)
+
 
     def play_without_side_effects(self, card):
         '''Use this to play a card without losing actions or moving the card to the played cards area'''
@@ -96,22 +99,29 @@ class ActionPhase(Phase):
 
     def walk_through_action_card(self, card):
         # Draw any additional cards specified on the card
+        card_effects = []
+        drawn_cards = None
         if card.extra_cards != 0:
             drawn_cards = self.player.draw(quantity=card.extra_cards)
-            self.game.broadcast(f'+{card.extra_cards} cards --> {len(self.player.hand)} in hand')
-            self.player.interactions.send(f"You drew: {', '.join(map(str, drawn_cards))}")
+            card_effects.append(f'+{card.extra_cards} cards --> {len(self.player.hand)} in hand')
         # Add back any additional actions on the card
         if card.extra_actions != 0:
             self.turn.actions_remaining += card.extra_actions
-            self.game.broadcast(f'+{card.extra_actions} actions --> {self.turn.actions_remaining}')
+            card_effects.append(f'+{card.extra_actions} actions --> {self.turn.actions_remaining}')
         # Add any additional buys on the card
         if card.extra_buys != 0:
             self.turn.buys_remaining += card.extra_buys
-            self.game.broadcast(f'+{card.extra_buys} buys --> {self.turn.buys_remaining}')
+            card_effects.append(f'+{card.extra_buys} buys --> {self.turn.buys_remaining}')
         # Add any additional coppers on the card
         if card.extra_coppers != 0:
             self.turn.coppers_remaining += card.extra_coppers
-            self.game.broadcast(f'+{card.extra_coppers} $ --> {self.turn.coppers_remaining}')
+            card_effects.append(f'+{card.extra_coppers} $ --> {self.turn.coppers_remaining}')
+        # Send out string of card effects
+        self.game.broadcast('\n'.join(card_effects))
+        if self.game.socketio is not None:
+            time.sleep(0.5)
+        if drawn_cards:
+            self.player.interactions.send(f"You drew: {', '.join(map(str, drawn_cards))}")
         # Do whatever the card is supposed to do
         card.play()
 
