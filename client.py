@@ -60,7 +60,7 @@ def enter_room():
         while not joined:
             room = input('Please enter the room ID: ')
             sio.emit('join room', json(), callback=joined_room)
-            time.sleep(0.1)
+            time.sleep(0.5)
 
 def setup_room():
     if room_creator:
@@ -77,7 +77,7 @@ def setup_room():
                 else:
                     sio.emit('start game', json())
                     break
-            time.sleep(0.1)
+            time.sleep(0.5)
         joined_room(True)
     else:
         print('Please wait for the game to start...\n')

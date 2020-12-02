@@ -646,6 +646,7 @@ class Remodel(ActionCard):
         card_to_trash = self.interactions.choose_card_from_hand(prompt=prompt, force=True)
         if card_to_trash is not None:
             self.owner.trash(card_to_trash)
+            self.game.broadcast(f'{self.owner} trashed a {card_to_trash}.')
             max_cost = card_to_trash.cost + 2
             self.owner.turn.buy_phase.buy_without_side_effects(max_cost=max_cost, force=True)
 
@@ -1032,6 +1033,8 @@ class Artisan(ActionCard):
         self.game.broadcast(f'{self.owner} gained a {card_class.name} to their hand.')
         prompt = 'Put a card from your hand onto your deck.'
         card = self.interactions.choose_card_from_hand(prompt=prompt, force=True)
+        self.owner.hand.remove(card)
+        self.owner.deck.append(card)
         self.interactions.send(f'You put a {card} from your hand onto your deck.')
 
 
