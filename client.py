@@ -3,6 +3,7 @@ import random
 import socketio
 import sys
 import time
+from contextlib import contextmanager
 from threading import Lock
 
 
@@ -16,6 +17,10 @@ room_creator = False
 joined = False
 startable = False
 
+
+@contextmanager
+def nullcontext():
+    yield
 
 def json():
     return {
@@ -73,6 +78,7 @@ def setup_room():
                     sio.emit('start game', json())
                     break
             time.sleep(0.1)
+        joined_room(True)
     else:
         print('Please wait for the game to start...\n')
 
@@ -121,7 +127,11 @@ def choose_yes_or_no(data):
         return input(prompt)
 
 def choose_from_options(prompt, options, force):
-    with lock:
+    if joined:
+        context = lock
+    else:
+        context = nullcontext()
+    with context:
         print(prompt)
         print()
         while True:
