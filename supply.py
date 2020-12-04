@@ -108,8 +108,7 @@ class Supply:
 
     def __str__(self):
         supply_table = self.get_table()
-        ret += supply_table.get_string()
-        return ret
+        return supply_table.get_string()
 
     @property
     def num_empty_stacks(self):
