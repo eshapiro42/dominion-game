@@ -1,5 +1,4 @@
-var socket = io.connect('http://womboserver.duckdns.org:5000');
-
+var socket = io.connect();
 
 var client_type = 'browser';
 var username = null;
@@ -8,6 +7,7 @@ var room_creator = false;
 var joined = false;
 var startable = false;
 var messages = '';
+var choice = null;
 
 
 class Option {
@@ -27,10 +27,11 @@ function append_message(message) {
         $("#gameMessages").append(`<li>${message}</li>`);
     }
     // Scroll to the bottom of the message board
-    $("html, body").animate({ 
-        scrollTop: $( 
-          'html, body').get(0).scrollHeight 
-    }, 100); 
+    // $("html, body").animate({ 
+    //     scrollTop: $( 
+    //       'html, body').get(0).scrollHeight 
+    // }, 0); 
+    $("html, body").scrollTop($(document).height());
 }
 
 function set_room(room_id) {
@@ -89,19 +90,20 @@ socket.on('enter choice', function (data, callback) {
     message = data['prompt'];
     append_message(message);
     // Show the game input container
-    $("#gameInputContainer").show()
+    $("#gameInputContainer").show(function () {
+        // Focus on the input
+        $("#gameInput:text:visible:first").focus();
+    });
     // Allow the user to type a response and hit enter
-    $("#gameInput").on('keypress', function (event) {
-        var keycode = (event.keyCode ? event.keyCode : event.which);
-        if(keycode == '13'){
-            // Grab the response
-            choice = parseInt($(this).val());
-            callback(choice);
-            // Clear the textbox, disable submitting and hide the input container
-            $(this).val('');
-            $(this).off('keypress');
-            $("#gameInputContainer").hide();
-        }
+    $("#gameInputForm").on('submit', function (event) {
+        event.preventDefault();
+        // Grab the response
+        choice = parseInt($("#gameInput").val());
+        callback(choice);
+        // Clear the textbox and hide the input container
+        $(this).off('submit');
+        $("#gameInput").val('');
+        $("#gameInputContainer").hide();
     });
 });
 
@@ -109,19 +111,20 @@ socket.on('choose yes or no', function (data, callback) {
     message = data['prompt'];
     append_message(message);
     // Show the game input container
-    $("#gameInputContainer").show()
+    $("#gameInputContainer").show(function () {
+        // Focus on the input
+        $("#gameInput:text:visible:first").focus();
+    });
     // Allow the user to type a response and hit enter
-    $("#gameInput").on('keypress', function (event) {
-        var keycode = (event.keyCode ? event.keyCode : event.which);
-        if(keycode == '13'){
-            // Grab the response
-            choice = $(this).val();
-            callback(choice);
-            // Clear the textbox, disable submitting and hide the input container
-            $(this).val('');
-            $(this).off('keypress');
-            $("#gameInputContainer").hide();
-        }
+    $("#gameInputForm").on('submit', function (event) {
+        event.preventDefault();
+        // Grab the response
+        choice = $("#gameInput").val();
+        callback(choice);
+        // Clear the textbox and hide the input container
+        $(this).off('submit');
+        $("#gameInput").val('');
+        $("#gameInputContainer").hide();
     });
 });
 
