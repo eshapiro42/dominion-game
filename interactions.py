@@ -128,11 +128,15 @@ class CLIInteraction(Interaction):
                 if force:
                     card_num = int(input(f'Enter choice 1-{len(self.hand)}: '))
                     print()
+                    if card_num < 1:
+                        raise ValueError
                     card_chosen = self.hand[card_num - 1]
                 else:
                     card_num = int(input(f'Enter choice 1-{len(self.hand)} (0 to skip): '))
                     print()
-                    if card_num == 0:
+                    if card_num < 0:
+                        raise ValueError
+                    elif card_num == 0:
                         return None
                     else:
                         card_chosen = self.hand[card_num - 1]
@@ -177,7 +181,9 @@ class CLIInteraction(Interaction):
                 print(hand_table)
                 card_num = int(input(f'Enter choice 1-{len(playable_cards)} (0 to skip): '))
                 print()
-                if card_num == 0:
+                if card_num < 0:
+                    raise ValueError
+                elif card_num == 0:
                     return None
                 else:
                     card_to_play = playable_cards[card_num - 1]
@@ -197,11 +203,15 @@ class CLIInteraction(Interaction):
                 if force:
                     card_num = int(input(f'Enter choice 1-{len(self.discard_pile)}: '))
                     print()
+                    if card_num < 1:
+                        raise ValueError
                     card_chosen = self.discard_pile[card_num - 1]
                 else:
                     card_num = int(input(f'Enter choice 1-{len(self.discard_pile)} (0 to skip): '))
                     print()
-                    if card_num == 0:
+                    if card_num < 0:
+                        raise ValueError
+                    elif card_num == 0:
                         return None
                     else:
                         card_chosen = self.discard_pile[card_num - 1]
@@ -228,11 +238,15 @@ class CLIInteraction(Interaction):
                 if force:
                     card_num = int(input(f'Enter choice 1-{len(buyable_card_stacks)}: '))
                     print()
+                    if card_num < 1:
+                        raise ValueError
                     card_to_buy = list(buyable_card_stacks)[card_num - 1]
                 else:
                     card_num = int(input(f'Enter choice 1-{len(buyable_card_stacks)} (0 to skip): '))
                     print()
-                    if card_num == 0:
+                    if card_num < 0:
+                        raise ValueError
+                    elif card_num == 0:
                         return None
                     else:
                         card_to_buy = list(buyable_card_stacks)[card_num - 1]
@@ -259,11 +273,15 @@ class CLIInteraction(Interaction):
                 if force:
                     card_num = int(input(f'Enter choice 1-{len(buyable_card_stacks)}: '))
                     print()
+                    if card_num < 1:
+                        raise ValueError
                     card_to_buy = list(buyable_card_stacks)[card_num - 1]
                 else:
                     card_num = int(input(f'Enter choice 1-{len(buyable_card_stacks)} (0 to skip): '))
                     print()
-                    if card_num == 0:
+                    if card_num < 0:
+                        raise ValueError
+                    elif card_num == 0:
                         return None
                     else:
                         card_to_buy = list(buyable_card_stacks)[card_num - 1]
@@ -297,11 +315,15 @@ class CLIInteraction(Interaction):
                 if force:
                     response_num = int(input(f'Enter choice 1-{len(options)}: '))
                     print()
+                    if response_num < 1:
+                        raise ValueError
                     response = options[response_num - 1]
                 else:
                     response_num = int(input(f'Enter choice 0-{len(options)} (0 to skip): '))
                     print()
-                    if response_num == 0:
+                    if response_num < 0:
+                        raise ValueError
+                    elif response_num == 0:
                         return None
                     else:
                         response = options[response_num - 1]
@@ -368,11 +390,15 @@ class NetworkedCLIInteraction(Interaction):
                 if force:
                     _prompt += f'\nEnter choice 1-{len(self.hand)}: '
                     card_num = self.enter_choice(_prompt)
+                    if card_num < 1:
+                        raise ValueError
                     card_chosen = self.hand[card_num - 1]
                 else:
                     _prompt += f'\nEnter choice 1-{len(self.hand)} (0 to skip): '
                     card_num = self.enter_choice(_prompt)
-                    if card_num == 0:
+                    if card_num < 0:
+                        raise ValueError
+                    elif card_num == 0:
                         return None
                     else:
                         card_chosen = self.hand[card_num - 1]
@@ -413,7 +439,9 @@ class NetworkedCLIInteraction(Interaction):
                 _prompt = f'{prompt}\n{hand_table.get_string()}'
                 _prompt += f'\nEnter choice 1-{len(playable_cards)} (0 to skip): '
                 card_num = self.enter_choice(_prompt)
-                if card_num == 0:
+                if card_num < 0:
+                    raise ValueError
+                elif card_num == 0:
                     return None
                 else:
                     card_to_play = playable_cards[card_num - 1]
@@ -431,11 +459,15 @@ class NetworkedCLIInteraction(Interaction):
                 if force:
                     _prompt += f'\n{prompt}\nEnter choice 1-{len(self.discard_pile)}: '
                     card_num = self.enter_choice(_prompt)
+                    if card_num < 1:
+                        raise ValueError
                     card_chosen = self.discard_pile[card_num - 1]
                 else:
                     _prompt += f'\n{prompt}\nEnter choice 1-{len(self.discard_pile)} (0 to skip): '
                     card_num = self.enter_choice(_prompt)
-                    if card_num == 0:
+                    if card_num < 0:
+                        raise ValueError
+                    elif card_num == 0:
                         return None
                     else:
                         card_chosen = self.discard_pile[card_num - 1]
@@ -460,11 +492,15 @@ class NetworkedCLIInteraction(Interaction):
                 if force:
                     _prompt += f'\nEnter choice 1-{len(buyable_card_stacks)}: '
                     card_num = self.enter_choice(_prompt)
+                    if card_num < 1:
+                        raise ValueError
                     card_to_buy = list(buyable_card_stacks)[card_num - 1]
                 else:
                     _prompt += f'\nEnter choice 1-{len(buyable_card_stacks)} (0 to skip): '
                     card_num = self.enter_choice(_prompt)
-                    if card_num == 0:
+                    if card_num < 0:
+                        raise ValueError
+                    elif card_num == 0:
                         return None
                     else:
                         card_to_buy = list(buyable_card_stacks)[card_num - 1]
@@ -489,11 +525,15 @@ class NetworkedCLIInteraction(Interaction):
                 if force:
                     _prompt += f'\nEnter choice 1-{len(buyable_card_stacks)}: '
                     card_num = self.enter_choice(_prompt)
+                    if card_num < 1:
+                        raise ValueError
                     card_to_buy = list(buyable_card_stacks)[card_num - 1]
                 else:
                     _prompt += f'\nEnter choice 1-{len(buyable_card_stacks)} (0 to skip): '
                     card_num = self.enter_choice(_prompt)
-                    if card_num == 0:
+                    if card_num < 0:
+                        raise ValueError
+                    elif card_num == 0:
                         return None
                     else:
                         card_to_buy = list(buyable_card_stacks)[card_num - 1]
@@ -526,11 +566,15 @@ class NetworkedCLIInteraction(Interaction):
                 if force:
                     _prompt += f'\nEnter choice 1-{len(options)}: '
                     response_num = self.enter_choice(_prompt)
+                    if response_num < 1:
+                        raise ValueError
                     response = options[response_num - 1]
                 else:
                     _prompt += f'\nEnter choice 0-{len(options)} (0 to skip): '
                     response_num = self.enter_choice(_prompt)
-                    if response_num == 0:
+                    if response_num < 0:
+                        raise ValueError
+                    elif response_num == 0:
                         return None
                     else:
                         response = options[response_num - 1]
@@ -899,11 +943,15 @@ class BrowserInteraction(Interaction):
                 if force:
                     _prompt += f'\nEnter choice 1-{len(self.hand)}: '
                     card_num = self.enter_choice(_prompt)
+                    if card_num < 1:
+                        raise ValueError
                     card_chosen = self.hand[card_num - 1]
                 else:
                     _prompt += f'\nEnter choice 1-{len(self.hand)} (0 to skip): '
                     card_num = self.enter_choice(_prompt)
-                    if card_num == 0:
+                    if card_num < 0:
+                        raise ValueError
+                    elif card_num == 0:
                         return None
                     else:
                         card_chosen = self.hand[card_num - 1]
@@ -949,7 +997,9 @@ class BrowserInteraction(Interaction):
                         pass
                 _prompt += f'\nEnter choice 1-{len(playable_cards)} (0 to skip): '
                 card_num = self.enter_choice(_prompt)
-                if card_num == 0:
+                if card_num < 0:
+                    raise ValueError
+                elif card_num == 0:
                     return None
                 else:
                     card_to_play = playable_cards[card_num - 1]
@@ -967,11 +1017,15 @@ class BrowserInteraction(Interaction):
                 if force:
                     _prompt += f'\n{prompt}\nEnter choice 1-{len(self.discard_pile)}: '
                     card_num = self.enter_choice(_prompt)
+                    if card_num < 1:
+                        raise ValueError
                     card_chosen = self.discard_pile[card_num - 1]
                 else:
                     _prompt += f'\n{prompt}\nEnter choice 1-{len(self.discard_pile)} (0 to skip): '
                     card_num = self.enter_choice(_prompt)
-                    if card_num == 0:
+                    if card_num < 0:
+                        raise ValueError
+                    elif card_num == 0:
                         return None
                     else:
                         card_chosen = self.discard_pile[card_num - 1]
@@ -1001,11 +1055,15 @@ class BrowserInteraction(Interaction):
                 if force:
                     _prompt += f'\nEnter choice 1-{len(buyable_card_stacks)}: '
                     card_num = self.enter_choice(_prompt)
+                    if card_num < 1:
+                        raise ValueError
                     card_to_buy = list(buyable_card_stacks)[card_num - 1]
                 else:
                     _prompt += f'\nEnter choice 1-{len(buyable_card_stacks)} (0 to skip): '
                     card_num = self.enter_choice(_prompt)
-                    if card_num == 0:
+                    if card_num < 0:
+                        raise ValueError
+                    elif card_num == 0:
                         return None
                     else:
                         card_to_buy = list(buyable_card_stacks)[card_num - 1]
@@ -1035,11 +1093,15 @@ class BrowserInteraction(Interaction):
                 if force:
                     _prompt += f'\nEnter choice 1-{len(buyable_card_stacks)}: '
                     card_num = self.enter_choice(_prompt)
+                    if card_num < 1:
+                        raise ValueError
                     card_to_buy = list(buyable_card_stacks)[card_num - 1]
                 else:
                     _prompt += f'\nEnter choice 1-{len(buyable_card_stacks)} (0 to skip): '
                     card_num = self.enter_choice(_prompt)
-                    if card_num == 0:
+                    if card_num < 0:
+                        raise ValueError
+                    elif card_num == 0:
                         return None
                     else:
                         card_to_buy = list(buyable_card_stacks)[card_num - 1]
@@ -1077,11 +1139,15 @@ class BrowserInteraction(Interaction):
                 if force:
                     _prompt += f'\nEnter choice 1-{len(options)}: '
                     response_num = self.enter_choice(_prompt)
+                    if response_num < 1:
+                        raise ValueError
                     response = options[response_num - 1]
                 else:
                     _prompt += f'\nEnter choice 0-{len(options)} (0 to skip): '
                     response_num = self.enter_choice(_prompt)
-                    if response_num == 0:
+                    if response_num < 0:
+                        raise ValueError
+                    elif response_num == 0:
                         return None
                     else:
                         response = options[response_num - 1]
