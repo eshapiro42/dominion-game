@@ -94,7 +94,12 @@ class CLIInteraction(Interaction):
 
     def display_supply(self):
         supply_table = self.supply.get_table()
-        self.send(supply_table.get_string())
+        while True:
+            try:
+                self.send(supply_table.get_string())
+                break
+            except:
+                pass
 
     def display_hand(self):
         print(f"{self.player}'s hand:\n")
@@ -358,7 +363,11 @@ class NetworkedCLIInteraction(Interaction):
         for idx, card in enumerate(self.hand):
             types = ', '.join([type.name.lower().capitalize() for type in card.types])
             hand_table.add_row([idx + 1, card.name, types, card.description])
-        return hand_table.get_string()
+        while True:
+            try:
+                return hand_table.get_string()
+            except:
+                pass
 
     def get_discard_pile_string(self):
         discard_table = prettytable.PrettyTable(hrules=prettytable.ALL)
@@ -366,11 +375,19 @@ class NetworkedCLIInteraction(Interaction):
         for idx, card in enumerate(self.discard_pile):
             types = ', '.join([type.name.lower().capitalize() for type in card.types])
             discard_table.add_row([idx + 1, card.name, types, card.description])
-        return discard_table.get_string()
+        while True:
+            try:
+                return discard_table.get_string()
+            except:
+                pass
 
     def display_supply(self):
         supply_table = self.supply.get_table()
-        self.send(supply_table.get_string())
+        while True:
+            try:
+                self.send(supply_table.get_string())
+            except:
+                pass
 
     def display_hand(self):
         hand_string = f'Your hand:\n{self.get_hand_string()}'
@@ -436,7 +453,12 @@ class NetworkedCLIInteraction(Interaction):
                 for idx, card in enumerate(playable_cards):
                     types = ', '.join([type.name.lower().capitalize() for type in card.types])
                     hand_table.add_row([idx + 1, card.name, types, card.description])
-                _prompt = f'{prompt}\n{hand_table.get_string()}'
+                while True:
+                    try:
+                        _prompt = f'{prompt}\n{hand_table.get_string()}'
+                        break
+                    except:
+                        pass
                 _prompt += f'\nEnter choice 1-{len(playable_cards)} (0 to skip): '
                 card_num = self.enter_choice(_prompt)
                 if card_num < 0:
@@ -488,7 +510,13 @@ class NetworkedCLIInteraction(Interaction):
                     types = ', '.join([type.name.lower().capitalize() for type in card_class.types])
                     card_quantity = stacks[card_class].cards_remaining
                     supply_table.add_row([idx + 1, card_class.name, card_class.cost, types, card_quantity, card_class.description])
-                _prompt = f'{prompt}\n{supply_table.get_string()}'
+                while True:
+                    try:
+                        _prompt = f'{prompt}\n{supply_table.get_string()}'
+                        break
+                    except:
+                        pass
+
                 if force:
                     _prompt += f'\nEnter choice 1-{len(buyable_card_stacks)}: '
                     card_num = self.enter_choice(_prompt)
@@ -521,7 +549,12 @@ class NetworkedCLIInteraction(Interaction):
                     types = ', '.join([type.name.lower().capitalize() for type in card_class.types])
                     card_quantity = stacks[card_class].cards_remaining
                     supply_table.add_row([idx + 1, card_class.name, card_class.cost, types, card_quantity, card_class.description])
-                _prompt = f'{prompt}\n{supply_table.get_string()}'
+                while True:
+                    try:
+                        _prompt = f'{prompt}\n{supply_table.get_string()}'
+                        break
+                    except:
+                        pass
                 if force:
                     _prompt += f'\nEnter choice 1-{len(buyable_card_stacks)}: '
                     card_num = self.enter_choice(_prompt)
@@ -562,7 +595,12 @@ class NetworkedCLIInteraction(Interaction):
             for idx, option in enumerate(options):
                 options_table.add_row([idx + 1, option])
             try:
-                _prompt = f'{prompt}\n{options_table.get_string()}'
+                while True:
+                    try:
+                        _prompt = f'{prompt}\n{options_table.get_string()}'
+                        break
+                    except:
+                        pass
                 if force:
                     _prompt += f'\nEnter choice 1-{len(options)}: '
                     response_num = self.enter_choice(_prompt)
@@ -596,7 +634,12 @@ class AutoInteraction(Interaction):
 
     def display_supply(self):
         supply_table = self.supply.get_table()
-        self.send(supply_table.get_string())
+        while True:
+            try:
+                self.send(supply_table.get_string())
+                break
+            except:
+                pass
 
     def display_hand(self):
         print(f"{self.player}'s hand:\n")
