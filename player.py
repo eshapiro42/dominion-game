@@ -116,7 +116,7 @@ class Player:
     @property
     def all_cards(self):
         '''Concatenate all cards on the player mat (no side effects)'''
-        return deepcopy(set(self.deck + self.discard_pile + self.hand + self.played_cards))
+        return set(self.deck + self.discard_pile + self.hand + self.played_cards)
 
     @property
     def current_victory_points(self):

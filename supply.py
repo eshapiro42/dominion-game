@@ -24,7 +24,7 @@ class Supply:
         self.num_players = num_players
         self.card_stacks = {}
         # Optional toggles
-        self.required_card_classes = [cards.Remodel] # If nonempty, ensures that each card in the list ends up in the supply
+        self.required_card_classes = [cards.ThroneRoom, cards.Merchant] # If nonempty, ensures that each card in the list ends up in the supply
         self.distribute_cost = False # If toggled, ensures there are at least two cards each of cost {2, 3, 4, 5}
         self.disable_attack_cards = False # If toggled, Attack cards are not allowed
         # self.require_plus_two_action = False # If toggled, ensures there is at least one card with '+2 Actions'
@@ -97,14 +97,17 @@ class Supply:
         card_class = type(card)
         self.trash_pile[card_class] += 1
 
-    def __str__(self):
-        ret = "SUPPLY:\n"
+    def get_table(self):
         supply_table = prettytable.PrettyTable(hrules=prettytable.ALL)
         supply_table.field_names = ['Number', 'Card', 'Cost', 'Type', 'Quantity', 'Description']
         for idx, card_class in enumerate(sorted(self.card_stacks.keys(), key=lambda x: (x.types[0].value, x.cost))):
             quantity = self.card_stacks[card_class].cards_remaining
             types = ', '.join([type.name.lower().capitalize() for type in card_class.types])
             supply_table.add_row([idx + 1, card_class.name, card_class.cost, types, quantity, card_class.description])
+        return supply_table
+
+    def __str__(self):
+        supply_table = self.get_table()
         ret += supply_table.get_string()
         return ret
 
