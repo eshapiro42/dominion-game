@@ -5,7 +5,7 @@ import time
 import traceback
 from contextlib import redirect_stdout, redirect_stderr
 from game import Game
-from interactions import AutoBroadcast, AutoInteraction
+from interactions import AutoInteraction
 from multiprocessing import Process
 
 
@@ -59,7 +59,7 @@ def test_stability(logdir, num_players):
     with open(stdoutfile, 'w') as of, open(stderrfile, 'w') as ef:
         with redirect_stdout(of), redirect_stderr(ef):
             try:
-                game = Game(broadcast_class=AutoBroadcast)
+                game = Game()
                 for _ in range(num_players):
                     game.add_player(interactions_class=AutoInteraction)
                 game.start()

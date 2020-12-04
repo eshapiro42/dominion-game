@@ -326,6 +326,7 @@ class Chapel(ActionCard):
             if card_to_trash is None:
                 break
             else:
+                self.game.broadcast(f'{self.owner} trashed a {card_to_trash}.')
                 self.owner.trash(card_to_trash)
 
 

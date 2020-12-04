@@ -24,7 +24,7 @@ class Supply:
         self.num_players = num_players
         self.card_stacks = {}
         # Optional toggles
-        self.required_card_classes = [cards.ThroneRoom, cards.Merchant] # If nonempty, ensures that each card in the list ends up in the supply
+        self.required_card_classes = [] # If nonempty, ensures that each card in the list ends up in the supply
         self.distribute_cost = False # If toggled, ensures there are at least two cards each of cost {2, 3, 4, 5}
         self.disable_attack_cards = False # If toggled, Attack cards are not allowed
         # self.require_plus_two_action = False # If toggled, ensures there is at least one card with '+2 Actions'

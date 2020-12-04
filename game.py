@@ -119,7 +119,7 @@ class Game:
 
 if __name__ == '__main__':
     # game = Game()
-    game = Game(broadcast_class=interactions.CLIBroadcast)
+    game = Game()
     game.add_player(name='Eric', interactions_class=interactions.CLIInteraction)
     game.add_player(name='CPU', interactions_class=interactions.AutoInteraction)
     game.start()
