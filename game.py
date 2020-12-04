@@ -4,6 +4,7 @@ import interactions
 import random
 import time
 from player import Player
+from prettytable import PrettyTable
 from supply import Supply
 from turn import Turn
 
@@ -20,9 +21,7 @@ class Game:
         NO_MORE_PROVINCES = 1
         THREE_SUPPLY_PILES_EMPTY = 2
 
-    def __init__(self, broadcast_class=interactions.CLIBroadcast, socketio=None, room=None):
-        # Broadcast object needs to be instantiated later, just once for the whole game
-        self.broadcast_class = broadcast_class
+    def __init__(self, socketio=None, room=None):
         self.socketio = socketio
         self.room = room
         self.player_names = []
@@ -30,9 +29,9 @@ class Game:
         self.player_interactions_classes = []
         self.players = []
         self.startable = False
-        self.started = False
+        self.started = False        
 
-    def add_player(self, name=None, sid=None, interactions_class=interactions.CLIBroadcast):
+    def add_player(self, name=None, sid=None, interactions_class=interactions.CLIInteraction):
         # Players can only be added before the game starts
         if self.started:
             raise GameStartedError()
@@ -50,14 +49,14 @@ class Game:
         # Create the supply
         self.supply = Supply(num_players=self.num_players)
         self.supply.setup()
-        self.broadcast = self.broadcast_class(game=self, socketio=self.socketio, room=self.room)
         # Create each player object
         for player_name, player_sid, player_interactions_class in zip(self.player_names, self.player_sids, self.player_interactions_classes):
             player = Player(game=self, name=player_name, interactions_class=player_interactions_class, socketio=self.socketio, sid=player_sid)
             self.players.append(player)
             player.interactions.start()
         # Print out the supply
-        self.broadcast(str(self.supply))
+        for player in self.players:
+            player.interactions.display_supply()
         # if self.socketio is not None:
         #     time.sleep(0.5)
         # Start the game loop!
@@ -83,6 +82,10 @@ class Game:
                 for player in self.players:
                     self.broadcast(f"{player}'s cards: {list(player.all_cards)}")
                 break
+
+    def broadcast(self, message):
+        for player in self.players:
+            player.interactions.send(message)
 
     @property
     def ended(self):

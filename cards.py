@@ -412,6 +412,7 @@ class Merchant(ActionCard):
     def action(self):
         pre_buy_hook = self.MerchantPreBuyHook(self.owner)
         self.owner.turn.pre_buy_hooks[Silver].append(pre_buy_hook)
+        print(self.owner.turn.pre_buy_hooks)
 
 
 class Vassal(ActionCard):

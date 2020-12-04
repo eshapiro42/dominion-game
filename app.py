@@ -1,18 +1,21 @@
 import random
 import string
-from flask import Flask
+import time
 from game import Game
-from interactions import NetworkedCLIInteraction, NetworkedCLIBroadcast, AutoInteraction
+from interactions import NetworkedCLIInteraction, BrowserInteraction, AutoInteraction
 from socketio import Server, WSGIApp
-import tornado
-import tornado.websocket
 
-# socketio = Server(async_mode='threading')
-# app = Flask(__name__)
-# app.wsgi_app = WSGIApp(socketio, app.wsgi_app)
 
-socketio = Server(async_mode='eventlet')
+# socketio = Server(async_mode='eventlet', async_handlers=True, cors_allowed_origins='*')
+socketio = Server(async_mode='eventlet', async_handlers=True)
 
+static_files = {
+    '/': 'static/index.html',
+    '/static/socket.io.js': 'static/socket.io.js',
+    '/static/socket.io.js.map': 'static/socket.io.js.map',
+    '/static/client.js': 'static/client.js',
+    # '/static/style.css': 'static/style.css',
+}
 
 # Global dictionary of games, indexed by room ID
 games = {}
@@ -28,6 +31,11 @@ cpus = {}
 def join_room(sid, data):
     username = data['username']
     room = data['room']
+    try:
+        if data['client_type'] == 'browser':
+            interaction_class = BrowserInteraction
+    except KeyError:
+        interaction_class = NetworkedCLIInteraction
     # Add the user to the room
     socketio.enter_room(sid, room)
     sids[sid] = (room, data)
@@ -35,7 +43,7 @@ def join_room(sid, data):
         # Add the player to the game
         game = games[room]
         game_startable_before = game.startable
-        game.add_player(username, sid, interactions_class=NetworkedCLIInteraction)
+        game.add_player(username, sid, interactions_class=interaction_class)
         socketio.send(f'{username} has entered the room.\n', room=room)
         # If the game just became startable, push an event
         game_startable_after = game.startable
@@ -48,6 +56,11 @@ def join_room(sid, data):
 @socketio.on('create room')
 def create_room(sid, data):
     username = data['username']
+    try:
+        if data['client_type'] == 'browser':
+            interaction_class = BrowserInteraction
+    except KeyError:
+        interaction_class = NetworkedCLIInteraction
     characters = string.ascii_uppercase + string.digits
     # Create a unique room ID
     room = ''.join(random.choice(characters) for i in range(4))
@@ -57,17 +70,16 @@ def create_room(sid, data):
     socketio.enter_room(sid, room)
     sids[sid] = (room, data)
     # Create the game object
-    game = Game(broadcast_class=NetworkedCLIBroadcast, socketio=socketio, room=room)
+    game = Game(socketio=socketio, room=room)
     # Add the game object to the global dictionary of games
     games[room] = game
     # Add the player to the game
-    game.add_player(username, sid, interactions_class=NetworkedCLIInteraction)
+    game.add_player(username, sid, interactions_class=interaction_class)
     socketio.send(f'{username} has created room {room}\n', room=room)
     return room # This activates the client's set_room() callback
 
 @socketio.on('add cpu')
 def add_cpu(sid, data):
-    username = data['username']
     room = data['room']
     # Add the CPU to the global dictionary of CPUs
     if room not in cpus:
@@ -91,8 +103,17 @@ def start_game(sid, data):
     room = data['room']
     # Start the game
     socketio.send(f'{username} has started the game.\n', room=room)
+    socketio.emit('game started', room=room)
+    time.sleep(1)
     game = games[room]
     game.start()
+
+@socketio.on('message')
+def send_message(sid, data):
+    username = data['username']
+    room = data['room']
+    message = data['message']
+    socketio.send(f'{username}: {message}\n', room=f'{room}_message_board')
 
 @socketio.event
 def disconnect(sid):
@@ -106,11 +127,6 @@ def disconnect(sid):
 
 
 if __name__ == '__main__':
-    app = WSGIApp(socketio)
+    app = WSGIApp(socketio, static_files=static_files)
     import eventlet
     eventlet.wsgi.server(eventlet.listen(('0.0.0.0', 5000)), app)
-
-    # app.run(host='0.0.0.0', debug=True, threaded=True)
-
-    # app.listen(5000)
-    # tornado.ioloop.IOLoop.current().start()

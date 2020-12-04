@@ -132,11 +132,15 @@ class BuyPhase(Phase):
         # Add up any treasures from player's hand
         for card in self.player.hand:
             if cards.CardType.TREASURE in card.types:
+                expired_hooks = []
                 # Activate any pre-buy hooks caused by playing the Treasure
                 for pre_buy_hook in self.turn.pre_buy_hooks[type(card)]:
                     pre_buy_hook()
                     if not pre_buy_hook.persistent:
-                        self.turn.pre_buy_hooks[type(card)].remove(pre_buy_hook)
+                        expired_hooks.append(pre_buy_hook)
+                # Remove any non-persistent hooks
+                for hook in expired_hooks:
+                    self.turn.pre_buy_hooks[type(card)].remove(hook)
                 self.turn.coppers_remaining += card.value
         # Buy cards
         while self.turn.buys_remaining > 0:

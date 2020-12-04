@@ -1,0 +1,104 @@
+<!doctype html>
+
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>Dominion</title>
+
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+</head>
+
+<body>
+
+    <header class="masthead">
+        <div class="container h-100">
+            <div class="row h-100 align-items-center">
+                <div class="col-12 text-center">
+                    <h1>Dominion</h1>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Game Buttons -->
+    <div class="container">
+        <div class="accordion" id="gameJoinAccordion">
+            <!-- Join Game Button -->
+            <div class="card">
+            <div class="card-header" id="headingOne">
+                <h2 class="mb-0">
+                <button id="joinGameButton" class="btn btn-link btn-lg btn-block nounderline" type="button" data-toggle="collapse" data-target="#joinGameCollapse" aria-expanded="true" aria-controls="joinGameCollapse">
+                    Join a Game
+                </button>
+                </h2>
+            </div>
+            <!-- Join Game Collapse -->
+            <div id="joinGameCollapse" class="collapse show" aria-labelledby="headingOne" data-parent="#gameJoinAccordion">
+                <div class="card-body text-center">
+                    <form id="joinGameForm">
+                    <!-- <form id="joinGameForm"> -->
+                        <div class="form-group">
+                            <input id="joinGamePlayerNameInput" type="text" class="form-control" placeholder="Your Name" id="joinGameName" autocomplete="off" required autofocus>
+                        </div>
+                        <div class="form-group">
+                            <input type="text" class="form-control" placeholder="Room ID" id="joinGameRoomID" autocomplete="off" required>
+                        </div>
+                        <button id="joinGameSubmitButton" class="btn btn-dark">Let's Move It</button>
+                    </form>
+                </div>
+            </div>
+            <!-- Create Game Button -->
+            <div class="card">
+            <div class="card-header" id="headingTwo">
+                <h2 class="mb-0">
+                <button id="createGameButton" class="btn btn-link btn-lg btn-block collapsed nounderline" type="button" data-toggle="collapse" data-target="#createGameCollapse" aria-expanded="false" aria-controls="createGameCollapse">
+                    Create a New Game
+                </button>
+                </h2>
+            </div>
+            <!-- Create Game Collapse -->
+            <div id="createGameCollapse" class="collapse" aria-labelledby="headingTwo" data-parent="#gameJoinAccordion">
+                <div class="card-body text-center">
+                    <form id="createGameForm">
+                    <!-- <form id="createGameForm"> -->
+                        <div class="form-group">
+                            <input id="createGamePlayerNameInput" type="text" class="form-control" placeholder="Your Name" id="createGameName" autocomplete="off" required>
+                        </div>
+                        <button id="createGameSubmitButton" class="btn btn-dark">Let's Groove It</button>
+                    </form>
+                </div>
+            </div>
+            </div>
+        </div>
+        </div>
+
+        <div id="gameRoomIDContainer" class="container text-center" style="display: none">
+            <span id="gameRoomID"></span>
+        </div>
+
+        <div id="gameMessagesContainer" class="container">
+            <span id="gameMessages" class="table"></span>
+        </div>
+
+        <div id="gameSetupContainer" class="container text-center" style="display: none">
+            <button id="gameStartButton" type="button" class="btn btn-primary btn-lg btn-block">Start Game</button>
+            <button id="addCPUButton" type="button" class="btn btn-secondary btn-lg btn-block">Add CPU</button>
+        </div>
+
+        <div id="gameInputContainer" class="container text-center" style="display: none">
+            <form id="gameInputForm">
+                <div class="form-group">
+                    <input id="gameInput" type="search" class="form-control" placeholder="Your Choice" id="gameInput" autocomplete="off" required autofocus>
+                </div>
+            </form>
+        </div>
+
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+    <script src="static/socket.io.js"></script>
+    <script src="static/client.js"></script>
+</body>
+</html>
