@@ -17,6 +17,8 @@ static_files = {
     # '/static/style.css': 'static/style.css',
 }
 
+app = WSGIApp(socketio, static_files=static_files)
+
 # Global dictionary of games, indexed by room ID
 games = {}
 
@@ -127,6 +129,5 @@ def disconnect(sid):
 
 
 if __name__ == '__main__':
-    app = WSGIApp(socketio, static_files=static_files)
     import eventlet
     eventlet.wsgi.server(eventlet.listen(('0.0.0.0', 5000)), app)
