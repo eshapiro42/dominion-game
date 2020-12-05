@@ -1,9 +1,9 @@
-import cards
 import prettytable
 import random
 from collections import deque
 from copy import deepcopy
-from supply import SupplyStackEmptyError
+from .cards import cards
+from .supply import SupplyStackEmptyError
 
 
 class Player:

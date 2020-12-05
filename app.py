@@ -1,8 +1,8 @@
 import random
 import string
 import time
-from game import Game
-from interactions import NetworkedCLIInteraction, BrowserInteraction, AutoInteraction
+from dominion.game import Game
+from dominion.interactions import NetworkedCLIInteraction, BrowserInteraction, AutoInteraction
 from socketio import Server, WSGIApp
 
 

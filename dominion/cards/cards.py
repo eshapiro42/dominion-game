@@ -2,7 +2,7 @@ import math
 import time
 from abc import ABCMeta, abstractmethod
 from enum import Enum, auto
-from turn import PreBuyHook
+from ..turn import PreBuyHook
 
 
 class CardType(Enum):

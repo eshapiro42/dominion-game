@@ -1,7 +1,7 @@
-import cards
 import time
 from abc import ABCMeta, abstractmethod
 from dataclasses import dataclass
+from .cards import cards
 
 
 class Turn:

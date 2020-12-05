@@ -1,4 +1,3 @@
-import cards
 import copy
 import itertools
 import operator
@@ -6,6 +5,7 @@ import prettytable
 import random
 from abc import ABCMeta, abstractmethod
 from math import inf
+from .cards import cards
 
 
 class SupplyStackEmptyError(Exception):

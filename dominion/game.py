@@ -1,12 +1,12 @@
-import cards
 import itertools
-import interactions
 import random
 import time
-from player import Player
 from prettytable import PrettyTable
-from supply import Supply
-from turn import Turn
+from .cards import cards
+from .interactions import interactions
+from .player import Player
+from .supply import Supply
+from .turn import Turn
 
 
 class GameStartedError(Exception):

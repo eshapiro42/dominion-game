@@ -1,12 +1,12 @@
-import cards
 import os
 import sys
 import time
 import traceback
 from contextlib import redirect_stdout, redirect_stderr
-from game import Game
-from interactions import AutoInteraction
 from multiprocessing import Process
+from .cards import cards
+from .game import Game
+from .interactions import AutoInteraction
 
 
 ####################

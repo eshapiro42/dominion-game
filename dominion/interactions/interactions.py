@@ -1,20 +1,9 @@
-import cards
 import prettytable
 import random
 import time
 from abc import ABCMeta, abstractmethod
 from copy import deepcopy
-
-
-class Broadcast(metaclass=ABCMeta):
-    def __init__(self, game, socketio=None, room=None):
-        self.game = game
-        self.socketio = socketio
-        self.room = room
-
-    @abstractmethod
-    def __call__(self, message):
-        pass
+from ..cards import cards
 
 
 class Interaction(metaclass=ABCMeta):
@@ -79,12 +68,6 @@ class Interaction(metaclass=ABCMeta):
 ###############################
 # LOCAL CLI INTERACTION LAYER #
 ###############################
-
-
-class CLIBroadcast(Broadcast):
-    def __call__(self, message):
-        print(message)
-        print()
 
 
 class CLIInteraction(Interaction):
@@ -340,12 +323,6 @@ class CLIInteraction(Interaction):
 ###################################
 # NETWORKED CLI INTERACTION LAYER #
 ###################################
-
-
-class NetworkedCLIBroadcast(Broadcast):
-    def __call__(self, message):
-        for player in self.game.players:
-            player.interactions.send(message)
 
 
 class NetworkedCLIInteraction(Interaction):
