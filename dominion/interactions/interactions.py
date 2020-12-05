@@ -3,7 +3,7 @@ import random
 import time
 from abc import ABCMeta, abstractmethod
 from copy import deepcopy
-from ..cards import cards
+from ..cards import cards, base_cards
 
 
 class Interaction(metaclass=ABCMeta):
@@ -135,12 +135,12 @@ class CLIInteraction(Interaction):
     def choose_specific_card_class_from_hand(self, prompt, force, card_class):
         print(prompt)
         print()
-        if not any(type(card) == card_class for card in self.hand):
+        if not any(isinstance(card, card_class) for card in self.hand):
             print(f'There are no {card_class} cards in your hand.\n')
             return None
         # Find a card in the player's hand of the correct class
         for card in self.hand:
-            if type(card) == card_class:
+            if isinstance(card, card_class):
                 break
         if force:
             return card
@@ -401,12 +401,12 @@ class NetworkedCLIInteraction(Interaction):
                 self.send('That is not a valid choice.')
 
     def choose_specific_card_class_from_hand(self, prompt, force, card_class):
-        if not any(type(card) == card_class for card in self.hand):
+        if not any(isinstance(card, card_class) for card in self.hand):
             self.send(f'There are no {card_class} cards in your hand.')
             return None
         # Find a card in the player's hand of the correct class
         for card in self.hand:
-            if type(card) == card_class:
+            if isinstance(card, card_class):
                 break
         if force:
             return card
@@ -650,8 +650,8 @@ class AutoInteraction(Interaction):
                 if force:
                     print(f'Enter choice 1-{len(self.hand)}: ', end='')
                     choices = range(1, len(self.hand) + 1)
-                    # Weight options by cost (more expensive are more likely to be chosen)
-                    weights = [card.cost * 5 for card in self.hand]
+                    # Weight options equally
+                    weights = [1 for card in self.hand]
                     card_num = random.choices(choices, weights, k=1)[0]
                     print(card_num)
                     print()
@@ -659,7 +659,8 @@ class AutoInteraction(Interaction):
                 else:
                     print(f'Enter choice 1-{len(self.hand)} (0 to skip): ', end='')
                     choices = range(0, len(self.hand) + 1)
-                    weights = [1] + [card.cost * 5 for card in self.hand]
+                    # Weight options equally
+                    weights = [1] + [1 for card in self.hand]
                     card_num = random.choices(choices, weights, k=1)[0]
                     print(card_num)
                     print()
@@ -670,16 +671,17 @@ class AutoInteraction(Interaction):
                 return card_chosen
             except (IndexError, ValueError):
                 print('That is not a valid choice.\n')
+                raise
 
     def choose_specific_card_class_from_hand(self, prompt, force, card_class):
         print(prompt)
         print()
-        if not any(type(card) == card_class for card in self.hand):
+        if not any(isinstance(card, card_class) for card in self.hand):
             print(f'There are no {card_class} cards in your hand.\n')
             return None
         # Find a card in the player's hand of the correct class
         for card in self.hand:
-            if type(card) == card_class:
+            if isinstance(card, card_class):
                 break
         if force:
             return card
@@ -720,6 +722,7 @@ class AutoInteraction(Interaction):
                     return card_to_play
             except (IndexError, ValueError):
                 print('That is not a valid choice.\n')
+                raise
 
     def choose_card_from_discard_pile(self, prompt, force):
         print(prompt)
@@ -753,6 +756,7 @@ class AutoInteraction(Interaction):
                 return card_chosen
             except (IndexError, ValueError):
                 print('That is not a valid choice.\n')
+                raise
 
     def choose_card_class_from_supply(self, prompt, max_cost, force):
         print(prompt)
@@ -774,7 +778,12 @@ class AutoInteraction(Interaction):
                     print(f'Enter choice 1-{len(buyable_card_stacks)}: ', end='')
                     choices = range(1, len(buyable_card_stacks) + 1)
                     # Weight by cost (more expensive are more likely, coppers and estates are unlikely)
-                    weights = [0 if cards.CardType.CURSE in card.types else 1 if type(card) == cards.Copper or type(card) == cards.Estate else card.cost * 5 for card in buyable_card_stacks]
+                    weights = [
+                        0 if cards.CardType.CURSE in card_class.types \
+                        else 1 if card_class == base_cards.Copper or card_class == base_cards.Estate \
+                        else card_class.cost * 5 \
+                        for card_class in buyable_card_stacks
+                    ]
                     card_num = random.choices(choices, weights, k=1)[0]
                     print(card_num)
                     print()
@@ -782,7 +791,12 @@ class AutoInteraction(Interaction):
                 else:
                     print(f'Enter choice 1-{len(buyable_card_stacks)} (0 to skip): ', end='')
                     choices = range(0, len(buyable_card_stacks) + 1)
-                    weights = [1] + [0 if cards.CardType.CURSE in card.types else 1 if type(card) == cards.Copper or type(card) == cards.Estate else card.cost * 5 for card in buyable_card_stacks]
+                    weights = [1] + [
+                        0 if cards.CardType.CURSE in card_class.types \
+                        else 1 if card_class == base_cards.Copper or card_class == base_cards.Estate \
+                        else card_class.cost * 5 \
+                        for card_class in buyable_card_stacks
+                    ]
                     card_num = random.choices(choices, weights, k=1)[0]
                     print(card_num)
                     print()
@@ -793,6 +807,7 @@ class AutoInteraction(Interaction):
                 return card_to_buy
             except (IndexError, ValueError):
                 print('That is not a valid choice.\n')
+                raise
 
     def choose_specific_card_type_from_supply(self, prompt, max_cost, card_type, force):
         print(prompt)
@@ -833,6 +848,7 @@ class AutoInteraction(Interaction):
                 return card_to_buy
             except (IndexError, ValueError):
                 print('That is not a valid choice.\n')
+                raise
 
     def choose_yes_or_no(self, prompt):
         print(prompt)
@@ -884,6 +900,7 @@ class AutoInteraction(Interaction):
                 return response
             except (IndexError, ValueError):
                 print('That is not a valid choice.\n')
+                raise
 
 
 #############################
@@ -980,12 +997,12 @@ class BrowserInteraction(Interaction):
                 self.send('That is not a valid choice.')
 
     def choose_specific_card_class_from_hand(self, prompt, force, card_class):
-        if not any(type(card) == card_class for card in self.hand):
+        if not any(isinstance(card, card_class) for card in self.hand):
             self.send(f'There are no {card_class} cards in your hand.')
             return None
         # Find a card in the player's hand of the correct class
         for card in self.hand:
-            if type(card) == card_class:
+            if isinstance(card, card_class):
                 break
         if force:
             return card

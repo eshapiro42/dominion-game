@@ -63,11 +63,11 @@ socket.on('connect', function () {
 });
 
 socket.on('connect_error', function (data) {
-    console.log(`Unable to connect to the server: ${data}.`);
+    alert(`Unable to connect to the server: ${data}.`);
 });
 
 socket.on('disconnect', function () {
-    console.log('You have been disconnected from the server.');
+    alert('You have been disconnected from the server.');
 });
 
 socket.on('game startable', function (data) {

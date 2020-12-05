@@ -1,7 +1,7 @@
 import time
 from abc import ABCMeta, abstractmethod
 from dataclasses import dataclass
-from .cards import cards
+from .cards import cards, base_cards
 
 
 class Turn:
@@ -16,9 +16,9 @@ class Turn:
         self.buy_phase = BuyPhase(turn=self)
         self.cleanup_phase = CleanupPhase(turn=self)
         self.pre_buy_hooks = {
-            cards.Copper: [],
-            cards.Silver: [],
-            cards.Gold: [],
+            base_cards.Copper: [],
+            base_cards.Silver: [],
+            base_cards.Gold: [],
         }
         self.start()
 

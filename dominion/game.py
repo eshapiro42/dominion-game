@@ -2,7 +2,7 @@ import itertools
 import random
 import time
 from prettytable import PrettyTable
-from .cards import cards
+from .cards import base_cards
 from .interactions import interactions
 from .player import Player
 from .supply import Supply
@@ -90,7 +90,7 @@ class Game:
     @property
     def ended(self):
         # Check if all provinces are gone
-        if self.supply.card_stacks[cards.Province].is_empty:
+        if self.supply.card_stacks[base_cards.Province].is_empty:
             return self.GameEndConditions.NO_MORE_PROVINCES
         # Check if three supply stacks are gone
         elif self.supply.num_empty_stacks >= 3:

@@ -5,7 +5,7 @@ import prettytable
 import random
 from abc import ABCMeta, abstractmethod
 from math import inf
-from .cards import cards
+from .cards import cards, base_cards
 
 
 class SupplyStackEmptyError(Exception):
@@ -19,18 +19,23 @@ class SupplyStackEmptyError(Exception):
         super().__init__(message)
 
 
+class Customization:
+    required_card_classes = set() # If nonempty, ensures that each card in the list ends up in the supply
+    distribute_cost = False # If toggled, ensures there are at least two cards each of cost {2, 3, 4, 5}
+    disable_attack_cards = False # If toggled, Attack cards are not allowed
+    # require_plus_two_action = False # If toggled, ensures there is at least one card with '+2 Actions'
+    # require_drawer = False # If toggled, ensures there is at least one card with '>= +1 Cards'
+    # require_buy = False # If toggled, ensures there is at least one card with '>= +1 Buys'
+    # require_trashing = False # If toggled, ensures there is at least one card that allows trashing
+
+
 class Supply:
     def __init__(self, num_players):
         self.num_players = num_players
         self.card_stacks = {}
-        # Optional toggles
-        self.required_card_classes = [] # If nonempty, ensures that each card in the list ends up in the supply
-        self.distribute_cost = False # If toggled, ensures there are at least two cards each of cost {2, 3, 4, 5}
-        self.disable_attack_cards = False # If toggled, Attack cards are not allowed
-        # self.require_plus_two_action = False # If toggled, ensures there is at least one card with '+2 Actions'
-        # self.require_drawer = False # If toggled, ensures there is at least one card with '>= +1 Cards'
-        # self.require_buy = False # If toggled, ensures there is at least one card with '>= +1 Buys'
-        # self.require_trashing = False # If toggled, ensures there is at least one card that allows trashing
+        self.customization = Customization()
+        # TODO: Remove these (they are for debugging specific cards)
+        self.customization.required_card_classes.add(base_cards.Bandit)
 
     def setup(self):
         self.select_treasure_cards()
@@ -41,7 +46,7 @@ class Supply:
 
     def select_treasure_cards(self):
         # Limitless stacks of treasure cards
-        self.treasure_card_classes = [cards.Copper, cards.Silver, cards.Gold]
+        self.treasure_card_classes = [base_cards.Copper, base_cards.Silver, base_cards.Gold]
         for card_class in self.treasure_card_classes:
             self.card_stacks[card_class] = InfiniteSupplyStack(card_class)
 
@@ -51,27 +56,27 @@ class Supply:
             victory_stack_size = 8
         else:
             victory_stack_size = 12
-        self.victory_card_classes = [cards.Estate, cards.Duchy, cards.Province]
+        self.victory_card_classes = [base_cards.Estate, base_cards.Duchy, base_cards.Province]
         for card_class in self.victory_card_classes:
             self.card_stacks[card_class] = FiniteSupplyStack(card_class, victory_stack_size)
 
     def select_curse_cards(self):
         # Curse card stack size depends on number of players
         curse_stack_size = (self.num_players - 1) * 10
-        self.card_stacks[cards.Curse] = FiniteSupplyStack(cards.Curse, curse_stack_size)
+        self.card_stacks[base_cards.Curse] = FiniteSupplyStack(base_cards.Curse, curse_stack_size)
 
     def select_kingdom_cards(self):
         selected_kingdom_card_classes = []
         # Add in required cards
-        for card_class in self.required_card_classes:
+        for card_class in self.customization.required_card_classes:
             selected_kingdom_card_classes.append(card_class)
-        if self.disable_attack_cards:
+        if self.customization.disable_attack_cards:
             # Filter out attack cards
-            possible_kingdom_card_classes = [card_class for card_class in copy.deepcopy(cards.KINGDOM_CARDS) if cards.CardType.ATTACK not in card_class.types]
+            possible_kingdom_card_classes = [card_class for card_class in copy.deepcopy(base_cards.KINGDOM_CARDS) if cards.CardType.ATTACK not in card_class.types]
         else:
             # All cards are viable
-            possible_kingdom_card_classes = copy.deepcopy(cards.KINGDOM_CARDS)
-        if self.distribute_cost:
+            possible_kingdom_card_classes = copy.deepcopy(base_cards.KINGDOM_CARDS)
+        if self.customization.distribute_cost:
             # Make sure at least two cards each of cost {2, 3, 4, 5} (this totals 8 cards)
             possible_kingdom_card_classes_by_cost = {cost: [card_class for card_class in possible_kingdom_card_classes if card_class.cost == cost] for cost in range(2, 6)}
             for cost in range(2, 6):
@@ -81,7 +86,7 @@ class Supply:
                     possible_kingdom_card_classes.remove(card_class)
         # Select the remaining cards at random
         num_cards_remaining = 10 - len(selected_kingdom_card_classes)
-        selected_kingdom_card_classes += random.sample(cards.KINGDOM_CARDS, num_cards_remaining)
+        selected_kingdom_card_classes += random.sample(base_cards.KINGDOM_CARDS, num_cards_remaining)
         # Sort kingdom cards first by cost, then by name
         for card_class in sorted(selected_kingdom_card_classes, key=lambda card_class: (card_class.cost, card_class.name)):
             # Stacks of ten kingdom cards each

@@ -2,7 +2,7 @@ import prettytable
 import random
 from collections import deque
 from copy import deepcopy
-from .cards import cards
+from .cards import cards, base_cards
 from .supply import SupplyStackEmptyError
 
 
@@ -18,8 +18,8 @@ class Player:
         self.hand = deque()
         self.played_cards = deque()
         # Start with seven coppers and three estates
-        self.gain(cards.Copper, quantity=7, from_supply=False)
-        self.gain(cards.Estate, quantity=3, from_supply=False)
+        self.gain(base_cards.Copper, quantity=7, from_supply=False)
+        self.gain(base_cards.Estate, quantity=3, from_supply=False)
         self.shuffle()
         # Draw a hand of five cards
         self.draw(5)

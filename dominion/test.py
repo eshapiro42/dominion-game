@@ -4,7 +4,7 @@ import time
 import traceback
 from contextlib import redirect_stdout, redirect_stderr
 from multiprocessing import Process
-from .cards import cards
+from .cards import base_cards
 from .game import Game
 from .interactions import AutoInteraction
 
@@ -46,9 +46,9 @@ def test_instantiate_cards(logdir):
     stderrfile = os.path.join(logdir, f'test_instantiate_cards_{timestamp}_stderr.txt')
     with open(stdoutfile, 'w') as of, open(stderrfile, 'w') as ef:
         with redirect_stdout(of), redirect_stderr(ef):
-            for card_class in cards.BASIC_CARDS:
+            for card_class in base_cards.BASIC_CARDS:
                 card = card_class()
-            for card_class in cards.KINGDOM_CARDS:
+            for card_class in base_cards.KINGDOM_CARDS:
                 card = card_class()
 
 @with_timeout(60)
