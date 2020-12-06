@@ -36,6 +36,17 @@ class Player:
                     return
             card.owner = self
             self.discard_pile.append(card)
+            # Check if there are any post-gain hooks caused by gaining the card
+            expired_hooks = []
+            if type(card) in self.supply.post_gain_hooks:
+                # Activate any post-gain hooks caused by gaining the card
+                for post_gain_hook in self.supply.post_gain_hooks[type(card)]:
+                    post_gain_hook(self, card)
+                    if not post_gain_hook.persistent:
+                        expired_hooks.append(post_gain_hook)
+                # Remove any non-persistent hooks
+                for hook in expired_hooks:
+                    self.supply.post_gain_hooks[type(card)].remove(hook)
 
     def gain_to_hand(self, card_class, quantity: int = 1, from_supply: bool = True):
         for _ in range(quantity):
@@ -46,8 +57,20 @@ class Player:
                     card = self.supply.draw(card_class)
                 except SupplyStackEmptyError:
                     self.game.broadcast(f'{self.name} could not gain a {card_class} since that supply pile is empty.')
+                    return
             card.owner = self
             self.hand.append(card)
+            # Check if there are any post-gain hooks caused by gaining the card
+            expired_hooks = []
+            if type(card) in self.supply.post_gain_hooks:
+                # Activate any post-gain hooks caused by gaining the card
+                for post_gain_hook in self.supply.post_gain_hooks[type(card)]:
+                    post_gain_hook(self, card)
+                    if not post_gain_hook.persistent:
+                        expired_hooks.append(post_gain_hook)
+                # Remove any non-persistent hooks
+                for hook in expired_hooks:
+                    self.supply.post_gain_hooks[type(card)].remove(hook)
 
     def shuffle(self):
         self.game.broadcast(f'{self.name} shuffled their deck.')

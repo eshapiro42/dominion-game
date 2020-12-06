@@ -1,6 +1,5 @@
 import math
 from .cards import CardType, Card, TreasureCard, ActionCard, AttackCard, ReactionCard, VictoryCard, CurseCard
-from ..turn import PreBuyHook
 
 
 # BASIC CARDS
@@ -64,7 +63,7 @@ class Loan(TreasureCard):
                 cards_revealed.append(card)
         # Ask if they want to discard or trash the revealed Treasure
         if revealed_treasure is not None:
-            prompt = f'You revealed a {revealed_treasure.name}. What would you like to do with it?'
+            prompt = f'{self.owner}: You revealed a {revealed_treasure.name}. What would you like to do with it?'
             options = ['Trash', 'Discard']
             choice = self.interactions.choose_from_options(prompt=prompt, options=list(options), force=True)
             if choice == 'Trash':
@@ -97,9 +96,19 @@ class TradeRoute(ActionCard):
     extra_actions = 0
     extra_buys = 1
     extra_coppers = 0
-
+    
     def action(self):
-        pass
+        # Trash a card from your hand
+        prompt = f'{self.owner}: Choose a card from your hand to trash.'
+        card_to_trash = self.owner.interactions.choose_card_from_hand(prompt=prompt, force=True)
+        if card_to_trash is None:
+            self.game.broadcast(f'{self.owner} has no cards in their hand to trash.')
+        else:
+            self.owner.trash(card_to_trash)
+            self.game.broadcast(f'{self.owner} trashed a {card_to_trash}.')
+        # +1 $ per Coin token on the Trade Route mat
+        self.owner.turn.coppers_remaining += self.supply.trade_route
+        self.game.broadcast(f'{self.owner} gets +{self.supply.trade_route} $ from the Coin tokens on the Trade Route mat.')
 
 
 KINGDOM_CARDS = [

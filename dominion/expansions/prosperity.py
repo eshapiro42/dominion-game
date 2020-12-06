@@ -1,7 +1,7 @@
 import random
 from .expansion import Expansion
-from ..cards import prosperity_cards
-from ..supply import Supply
+from ..cards import cards, prosperity_cards
+from ..supply import PostGainHook
 
 class ProsperityExpansion(Expansion):
     platinum_and_colony = False
@@ -35,21 +35,36 @@ class ProsperityExpansion(Expansion):
         return prosperity_cards.KINGDOM_CARDS
 
     def additional_setup(self):
-        # Trade route mat starts off with no victory tokens
-        self.supply.trade_route = 0
         # Each player starts off with no victory tokens
         for player in self.game.players:
             player.victory_tokens = 0
-
+        # If the Trade Route is in the Supply, there's a lot of additional setup
+        if prosperity_cards.TradeRoute in self.supply.card_stacks:
+            # Trade route mat starts off with no coin tokens
+            self.supply.trade_route = 0
+            # Each Victory card pile in the Supply starts off with one coin token on top (implemented via non-persistent post-gain hooks)
+            victory_card_classes = [card_class for card_class in self.supply.card_stacks if cards.CardType.VICTORY in card_class.types]
+            for victory_card_class in victory_card_classes:
+                post_gain_hook = self.TradeRoutePostGainHook(victory_card_class)
+                self.supply.add_post_gain_hook(post_gain_hook, victory_card_class)
     
     @property
     def game_end_conditions(self):
-        return [
-            self.game_end_condition_colony_pile_empty
-        ]
+        return [self.game_end_condition_colony_pile_empty]
 
     def game_end_condition_colony_pile_empty(self):
+        # The game ends if Colonies are in the game and the Colony supply pile becomes empty
         if self.platinum_and_colony and self.supply.card_stacks[prosperity_cards.Colony].is_empty:
             return True, 'All Colonies have been purchased.'
         else:
             return False, None
+
+
+    class TradeRoutePostGainHook(PostGainHook):
+        persistent = False
+
+        def __call__(self, player, card):
+            game = player.game
+            trade_route_before = game.supply.trade_route
+            game.supply.trade_route += 1
+            game.broadcast(f'{player} gained a {self.card_class.name} and moved a Coin token to the Trade Route mat ({trade_route_before} Coin tokens --> {game.supply.trade_route} Coin tokens).')

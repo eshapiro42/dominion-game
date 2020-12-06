@@ -46,3 +46,6 @@ class BaseExpansion(Expansion):
             return True, f"Three Supply piles are empty:  {', '.join(map(str, empty_piles))}."
         else:
             return False, None
+
+    def additional_setup(self):
+        pass

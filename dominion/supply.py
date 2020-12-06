@@ -19,6 +19,20 @@ class SupplyStackEmptyError(Exception):
         super().__init__(message)
 
 
+class PostGainHook(metaclass=ABCMeta):
+    def __init__(self, card_class):
+        self.card_class = card_class
+
+    @abstractmethod
+    def __call__(self, player):
+        pass
+
+    @property
+    @abstractmethod
+    def persistent(self):
+        pass
+
+
 class Customization:
     expansions = set() # If nonempty, adds cards from these expansions into the possible cards
     required_card_classes = set() # If nonempty, ensures that each card in the list ends up in the supply
@@ -34,10 +48,12 @@ class Supply:
     def __init__(self, num_players):
         self.num_players = num_players
         self.card_stacks = {}
+        self.post_gain_hooks = {}
         self.customization = Customization()
         self.expansions = self.customization.expansions
         # TODO: Remove these (they are for debugging specific cards)
         self.customization.required_card_classes.add(prosperity_cards.Loan)
+        self.customization.required_card_classes.add(prosperity_cards.TradeRoute)
 
     def setup(self):
         self.select_kingdom_cards()
@@ -88,6 +104,11 @@ class Supply:
         # Perform all additional setup actions from the selected expansions
         for expansion in self.expansions:
             expansion.additional_setup()
+
+    def add_post_gain_hook(self, post_gain_hook, card_class):
+        if not card_class in self.post_gain_hooks:
+            self.post_gain_hooks[card_class] = []
+        self.post_gain_hooks[card_class].append(post_gain_hook)
 
     def draw(self, card_class):
         return self.card_stacks[card_class].draw()
