@@ -124,10 +124,9 @@ class AttackCard(ActionCard):
         attack_effect: the effect of an attack on a single other player
     '''
     def attack(self):
-        other_players = [player for player in self.game.players if player is not self.owner]
         immune_players = set()
         self.game.broadcast('Checking if any other players have a Reaction card in their hand...')
-        for player in other_players:
+        for player in self.owner.other_players:
             # First, check if they have a reaction card in their hand
             if any(CardType.REACTION in card.types for card in player.hand):
                 reaction_cards_in_hand = [card for card in player.hand if CardType.REACTION in card.types]

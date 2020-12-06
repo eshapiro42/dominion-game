@@ -11,6 +11,7 @@ class Player:
         self.game = game
         self.name = name
         self.turn = None
+        self.turns_played = 0
         self.supply = self.game.supply
         self.interactions = interactions_class(player=self, socketio=socketio, sid=sid)
         self.deck = deque()
@@ -23,6 +24,16 @@ class Player:
         self.shuffle()
         # Draw a hand of five cards
         self.draw(5)
+
+    def get_other_players(self):
+        '''Gets a list of other players in the correct turn order'''
+        # Find this player's position in the turn order
+        idx = self.game.turn_order.index(self)
+        # Get the order of players whose turns are before and after
+        players_before = self.game.turn_order[:idx]
+        players_after = self.game.turn_order[idx + 1:]
+        # Other players are those after, then those before, in the correct turn order
+        self.other_players = players_after + players_before
 
     def gain(self, card_class, quantity: int = 1, from_supply: bool = True):
         for _ in range(quantity):

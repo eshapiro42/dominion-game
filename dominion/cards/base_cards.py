@@ -589,9 +589,8 @@ class CouncilRoom(ActionCard):
     extra_coppers = 0
 
     def action(self):
-        other_players = [player for player in self.game.players if player is not self.owner]
-        self.game.broadcast(f"Other players ({', '.join(map(str, other_players))}) each draw a card.")
-        for player in other_players:
+        self.game.broadcast(f"Other players ({', '.join(map(str, self.owner.other_players))}) each draw a card.")
+        for player in self.owner.other_players:
             try:
                 card = player.draw(1)[0]
             except IndexError:

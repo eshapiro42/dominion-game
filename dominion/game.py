@@ -69,12 +69,16 @@ class Game:
         # Print out the supply
         for player in self.players:
             player.interactions.display_supply()
+        # Randomly decide turn order
+        self.turn_order = random.sample(self.players, len(self.players))
+        # Each player figures out the turn order of the other players
+        for player in self.players:
+            player.get_other_players()
         # Start the game loop!
         if not debug:
             self.game_loop()
 
     def game_loop(self):
-        self.turn_order = random.sample(self.players, len(self.players))
         for player in itertools.cycle(self.turn_order):
             turn = Turn(player)
             # Check if the game ended after each turn
@@ -83,8 +87,9 @@ class Game:
                 # Game is over. Print out info.
                 self.broadcast(explanation)
                 self.broadcast('Game over!')
-                victory_points_dict, winners = self.scores
+                victory_points_dict, turns_played_dict, winners = self.scores
                 self.broadcast(f'\tScores: {victory_points_dict}')
+                self.broadcast(f'\tTurns played: {turns_played_dict}')
                 self.broadcast(f'\tWinners: {winners}.')
                 for player in self.players:
                     self.broadcast(f"{player}'s cards: {list(player.all_cards)}")
@@ -107,15 +112,20 @@ class Game:
     @property
     def scores(self):
         # Count up victory points for each player
-        victory_points_dict = {player.name: player.current_victory_points for player in self.players}
+        victory_points_dict = {player: player.current_victory_points for player in self.players}
+        # Count up turns played per player
+        turns_played_dict = {player: player.turns_played for player in self.players}
         # Figure out the most victory points attained
         most_victory_points = max(victory_points_dict.values())
         # Figure out which players got that many victory points
-        winners = []
-        for player_name, victory_points in victory_points_dict.items():
+        players_with_most_victory_points = []
+        for player, victory_points in victory_points_dict.items():
             if victory_points == most_victory_points:
-                winners.append(player_name)
-        return victory_points_dict, winners
+                players_with_most_victory_points.append(player)
+        # If there was a tie, the winner is the player with the fewest turns played
+        fewest_turns_played = min(player.turns_played for player in players_with_most_victory_points)
+        winners = [player.name for player in players_with_most_victory_points if player.turns_played == fewest_turns_played]
+        return victory_points_dict, turns_played_dict, winners
 
     @property
     def num_players(self):
@@ -124,6 +134,8 @@ class Game:
 
 if __name__ == '__main__':
     game = Game()
-    game.add_player(name='Eric', interactions_class=interactions.CLIInteraction)
-    game.add_player(name='CPU', interactions_class=interactions.AutoInteraction)
-    game.start()
+    game.add_player()
+    game.add_player()
+    game.add_player()
+    game.add_player()
+    game.start(debug=True)

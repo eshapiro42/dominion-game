@@ -22,6 +22,7 @@ class Turn:
         self.start()
 
     def start(self):
+        self.player.turns_played += 1
         self.game.broadcast(''.join((['*'] * 80)))
         self.game.broadcast(f"{self.player}'s turn!".upper())
         self.player.interactions.display_hand()
