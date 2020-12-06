@@ -49,7 +49,7 @@ class Game:
         if len(self.player_names) == 2:
             self.startable = True
 
-    def start(self):
+    def start(self, debug=False):
         # NOTE: THE ORDER OF EVENTS HERE IS EXTREMELY IMPORTANT!
         self.started = True
         # Create the supply
@@ -70,7 +70,8 @@ class Game:
         for player in self.players:
             player.interactions.display_supply()
         # Start the game loop!
-        # self.game_loop()
+        if not debug:
+            self.game_loop()
 
     def game_loop(self):
         self.turn_order = random.sample(self.players, len(self.players))
@@ -122,7 +123,6 @@ class Game:
 
 
 if __name__ == '__main__':
-    # game = Game()
     game = Game()
     game.add_player(name='Eric', interactions_class=interactions.CLIInteraction)
     game.add_player(name='CPU', interactions_class=interactions.AutoInteraction)
