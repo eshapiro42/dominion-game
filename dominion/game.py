@@ -31,7 +31,7 @@ class Game:
         self.expansions = set()
         self.add_expansion(BaseExpansion)
         # TODO: Remove this and allow customization
-        self.add_expansion(ProsperityExpansion)
+        # self.add_expansion(ProsperityExpansion)
 
     def add_expansion(self, expansion):
         self.expansions.add(expansion)

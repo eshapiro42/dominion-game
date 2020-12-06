@@ -761,7 +761,7 @@ class Sentry(ActionCard):
         for card in cards_revealed:
             prompt = f'You revealed a {card}. What would you like to do with it?'
             options = ['Trash', 'Discard', 'Return to deck']
-            choice = self.interactions.choose_from_options(prompt=prompt, options=list(options), force=True)
+            choice = self.interactions.choose_from_options(prompt=prompt, options=options, force=True)
             if choice == 'Trash':
                 self.game.broadcast(f'{self.owner} trashed a {card}.')
                 self.supply.trash(card)

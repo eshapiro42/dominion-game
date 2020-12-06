@@ -52,8 +52,10 @@ class Supply:
         self.customization = Customization()
         self.expansions = self.customization.expansions
         # TODO: Remove these (they are for debugging specific cards)
-        self.customization.required_card_classes.add(prosperity_cards.Loan)
-        self.customization.required_card_classes.add(prosperity_cards.TradeRoute)
+        self.customization.required_card_classes.add(base_cards.Bandit)
+        self.customization.required_card_classes.add(base_cards.Thief)
+        # self.customization.required_card_classes.add(prosperity_cards.Loan)
+        # self.customization.required_card_classes.add(prosperity_cards.TradeRoute)
 
     def setup(self):
         self.select_kingdom_cards()
