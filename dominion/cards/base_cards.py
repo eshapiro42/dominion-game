@@ -1014,7 +1014,7 @@ class Thief(AttackCard):
             else:
                 # Otherwise, the attacker chooses which treasure to trash
                 prompt = f'{attacker}: Choose a Treasure that {player} revealed to trash.'
-                card_to_trash = player.interactions.choose_from_options(prompt=prompt, options=treasures, force=True)
+                card_to_trash = attacker.interactions.choose_from_options(prompt=prompt, options=treasures, force=True)
                 treasures.remove(card_to_trash)
                 card_to_discard = treasures[0]
             self.game.broadcast(f'{player} trashed a {card_to_trash}.')

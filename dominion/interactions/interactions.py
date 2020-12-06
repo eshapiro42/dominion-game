@@ -1165,7 +1165,10 @@ class BrowserInteraction(Interaction):
             options_table = prettytable.PrettyTable(hrules=prettytable.ALL)
             options_table.field_names = ['Number', 'Option']
             for idx, option in enumerate(options):
-                options_table.add_row([idx + 1, option])
+                if isinstance(option, cards.Card):
+                    options_table.add_row([idx + 1, option.name])
+                else:
+                    options_table.add_row([idx + 1, option])
             try:
                 while True:
                     try:
