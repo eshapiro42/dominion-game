@@ -1,4 +1,3 @@
-import time
 from abc import ABCMeta, abstractmethod
 from dataclasses import dataclass
 from .cards import cards, base_cards
@@ -25,8 +24,6 @@ class Turn:
     def start(self):
         self.game.broadcast(''.join((['*'] * 80)))
         self.game.broadcast(f"{self.player}'s turn!".upper())
-        # if self.game.socketio is not None:
-        #     time.sleep(0.5)
         self.player.interactions.display_hand()
         self.action_phase.start()
         self.buy_phase.start()
@@ -75,8 +72,6 @@ class ActionPhase(Phase):
                 return
             self.play(card)
         self.player.interactions.send('No actions left. Ending action phase.')
-        # if self.game.socketio is not None:
-        #     time.sleep(0.5)
 
     def play(self, card):
         modifier = 'an' if card.name[0] in ['a', 'e', 'i', 'o', 'u'] else 'a'
@@ -87,16 +82,12 @@ class ActionPhase(Phase):
         self.turn.actions_remaining -= 1
         self.game.broadcast(f'-1 action --> {self.turn.actions_remaining} actions.')
         self.walk_through_action_card(card)
-        # if self.game.socketio is not None:
-        #     time.sleep(0.5)
 
     def play_without_side_effects(self, card):
         '''Use this to play a card without losing actions or moving the card to the played cards area'''
         modifier = 'an' if card.name[0] in ['a', 'e', 'i', 'o', 'u'] else 'a'
         self.game.broadcast(f'{self.player} played {modifier} {card}.')
         self.walk_through_action_card(card)
-        # if self.game.socketio is not None:
-        #     time.sleep(0.5)
 
     def walk_through_action_card(self, card):
         # Draw any additional cards specified on the card
@@ -124,19 +115,46 @@ class ActionPhase(Phase):
 
 class BuyPhase(Phase):
     def start(self):
-        # Add up any treasures from player's hand
+        # Find any Treasures in the player's hand
+        treasures_in_hand = []
         for card in self.player.hand:
             if cards.CardType.TREASURE in card.types:
-                expired_hooks = []
+                treasures_in_hand.append(card)
+        treasures_without_side_effects_to_play = []
+        treasures_with_side_effects_to_play = []
+        for treasure in treasures_in_hand:
+            # If a Treasure in the player's hand has a play() method, ask if they want to use it; Otherwise, just assume they do
+            if hasattr(treasure, 'play'):
+                prompt = f'You have a {treasure.name} in your hand which has side effects. Would you like to play it?'
+                if self.player.interactions.choose_yes_or_no(prompt):
+                    treasures_with_side_effects_to_play.append(treasure)
+                    self.player.play(treasure) # Add the treasure to the played cards area and remove from hand
+                    # Activate side effects cause by playing this treasure
+                    self.game.broadcast(f"{self.player} played a Treasure: {treasure.name}.")
+                    treasure.play()
+            else:
+                treasures_without_side_effects_to_play.append(treasure)
+                self.player.play(treasure) # Add the treasure to the played cards area and remove from hand
+        # Broadcast which Treasures were played
+        if treasures_without_side_effects_to_play:
+            self.game.broadcast(f"{self.player} played Treasures: {', '.join(map(lambda card: card.name, treasures_without_side_effects_to_play))}.")
+        treasures_played = treasures_with_side_effects_to_play + treasures_without_side_effects_to_play
+        # Check if there are any pre-buy hooks registered to the played Treasures
+        for treasure in treasures_played:
+            expired_hooks = []
+            if type(treasure) in self.turn.pre_buy_hooks:
                 # Activate any pre-buy hooks caused by playing the Treasure
-                for pre_buy_hook in self.turn.pre_buy_hooks[type(card)]:
+                for pre_buy_hook in self.turn.pre_buy_hooks[type(treasure)]:
                     pre_buy_hook()
                     if not pre_buy_hook.persistent:
                         expired_hooks.append(pre_buy_hook)
                 # Remove any non-persistent hooks
                 for hook in expired_hooks:
-                    self.turn.pre_buy_hooks[type(card)].remove(hook)
-                self.turn.coppers_remaining += card.value
+                    self.turn.pre_buy_hooks[type(treasure)].remove(hook)
+        # Add up any played treasures
+        for treasure in treasures_played:
+            # Add the value of this Treasure
+            self.turn.coppers_remaining += treasure.value
         # Buy cards
         while self.turn.buys_remaining > 0:
             prompt = f'You have {self.turn.coppers_remaining} $ to spend and {self.turn.buys_remaining} buys. Select a card to buy.'
@@ -148,8 +166,6 @@ class BuyPhase(Phase):
             else:
                 self.buy(card_class)
         self.player.interactions.send('No buys left. Ending buy phase.')
-        # if self.game.socketio is not None:
-        #     time.sleep(0.5)
 
     def buy(self, card_class):
         # Buying a card uses one buy
@@ -179,5 +195,3 @@ class CleanupPhase(Phase):
         self.player.cleanup()
         self.player.interactions.send('Your hand for next turn:')
         self.player.interactions.display_hand()
-        # if self.game.socketio is not None:
-        #     time.sleep(0.5)

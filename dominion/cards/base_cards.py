@@ -11,6 +11,7 @@ class Copper(TreasureCard):
     cost = 0
     types = [CardType.TREASURE]
     image_path = ''
+    description = '1 $'
     value = 1
 
 class Silver(TreasureCard):
@@ -18,6 +19,7 @@ class Silver(TreasureCard):
     cost = 3
     types = [CardType.TREASURE]
     image_path = ''
+    description = '2 $'
     value = 2
 
 class Gold(TreasureCard):
@@ -25,6 +27,7 @@ class Gold(TreasureCard):
     cost = 6
     types = [CardType.TREASURE]
     image_path = ''
+    description = '3 $'
     value = 3
 
 class Estate(VictoryCard):
@@ -32,6 +35,7 @@ class Estate(VictoryCard):
     cost = 2
     types = [CardType.VICTORY]
     image_path = ''
+    description = '1 victory point'
     points = 1
 
 class Duchy(VictoryCard):
@@ -39,6 +43,7 @@ class Duchy(VictoryCard):
     cost = 5
     types = [CardType.VICTORY]
     image_path = ''
+    description = '3 victory points'
     points = 3
 
 class Province(VictoryCard):
@@ -46,6 +51,7 @@ class Province(VictoryCard):
     cost = 8
     types = [CardType.VICTORY]
     image_path = ''
+    description = '6 victory points'
     points = 6
 
 class Curse(CurseCard):
@@ -53,6 +59,7 @@ class Curse(CurseCard):
     cost = 0
     types = [CardType.CURSE]
     image_path = ''
+    description = '-1 victory point'
     points = -1
 
 
@@ -101,6 +108,7 @@ class Cellar(ActionCard):
                 self.game.broadcast(f'{self.owner} discarded a {card_to_discard}.')
         drawn_cards = self.owner.draw(discarded_card_count)
         self.game.broadcast(f'+{discarded_card_count} cards --> {drawn_cards}')
+        self.interactions.send(f"You drew: {', '.join(map(str, drawn_cards))}.")
 
 
 class Chapel(ActionCard):

@@ -3,6 +3,7 @@ import random
 import time
 from prettytable import PrettyTable
 from .cards import base_cards
+from .expansions import BaseExpansion, ProsperityExpansion
 from .interactions import interactions
 from .player import Player
 from .supply import Supply
@@ -17,10 +18,6 @@ class GameStartedError(Exception):
 
 
 class Game:
-    class GameEndConditions:
-        NO_MORE_PROVINCES = 1
-        THREE_SUPPLY_PILES_EMPTY = 2
-
     def __init__(self, socketio=None, room=None):
         self.socketio = socketio
         self.room = room
@@ -29,7 +26,15 @@ class Game:
         self.player_interactions_classes = []
         self.players = []
         self.startable = False
-        self.started = False        
+        self.started = False
+        self.game_end_conditions = []
+        self.expansions = set()
+        self.add_expansion(BaseExpansion)
+        # TODO: Remove this and allow customization
+        self.add_expansion(ProsperityExpansion)
+
+    def add_expansion(self, expansion):
+        self.expansions.add(expansion)
 
     def add_player(self, name=None, sid=None, interactions_class=interactions.CLIInteraction):
         # Players can only be added before the game starts
@@ -45,20 +50,25 @@ class Game:
             self.startable = True
 
     def start(self):
+        # NOTE: THE ORDER OF EVENTS HERE IS EXTREMELY IMPORTANT!
         self.started = True
         # Create the supply
         self.supply = Supply(num_players=self.num_players)
-        self.supply.setup()
         # Create each player object
         for player_name, player_sid, player_interactions_class in zip(self.player_names, self.player_sids, self.player_interactions_classes):
             player = Player(game=self, name=player_name, interactions_class=player_interactions_class, socketio=self.socketio, sid=player_sid)
             self.players.append(player)
             player.interactions.start()
+        # Add in the desired expansions
+        for expansion in self.expansions:
+            expansion_instance = expansion(self)
+            self.supply.customization.expansions.add(expansion_instance)
+            self.game_end_conditions += expansion_instance.game_end_conditions
+        # Set up the supply
+        self.supply.setup()
         # Print out the supply
         for player in self.players:
             player.interactions.display_supply()
-        # if self.socketio is not None:
-        #     time.sleep(0.5)
         # Start the game loop!
         self.game_loop()
 
@@ -67,14 +77,10 @@ class Game:
         for player in itertools.cycle(self.turn_order):
             turn = Turn(player)
             # Check if the game ended after each turn
-            ended = self.ended
+            ended, explanation = self.ended
             if ended:
                 # Game is over. Print out info.
-                if ended == self.GameEndConditions.NO_MORE_PROVINCES:
-                    self.broadcast('All provinces have been bought.')
-                elif ended == self.GameEndConditions.THREE_SUPPLY_PILES_EMPTY:
-                    empty_piles = [stack for stack in self.supply.card_stacks.values() if stack.is_empty]
-                    self.broadcast(f"Three supply piles are empty: {', '.join(map(str, empty_piles))}")
+                self.broadcast(explanation)
                 self.broadcast('Game over!')
                 victory_points_dict, winners = self.scores
                 self.broadcast(f'\tScores: {victory_points_dict}')
@@ -89,15 +95,13 @@ class Game:
 
     @property
     def ended(self):
-        # Check if all provinces are gone
-        if self.supply.card_stacks[base_cards.Province].is_empty:
-            return self.GameEndConditions.NO_MORE_PROVINCES
-        # Check if three supply stacks are gone
-        elif self.supply.num_empty_stacks >= 3:
-            return self.GameEndConditions.THREE_SUPPLY_PILES_EMPTY
-        # Otherwise, the game is not over
+        # Check if any game end condition has been met
+        for game_end_condition in self.game_end_conditions:
+            game_ended, explanation = game_end_condition()
+            if game_ended:
+                return True, explanation
         else:
-            return False
+            return False, None
 
     @property
     def scores(self):

@@ -5,7 +5,7 @@ import prettytable
 import random
 from abc import ABCMeta, abstractmethod
 from math import inf
-from .cards import cards, base_cards
+from .cards import cards, base_cards, prosperity_cards
 
 
 class SupplyStackEmptyError(Exception):
@@ -20,6 +20,7 @@ class SupplyStackEmptyError(Exception):
 
 
 class Customization:
+    expansions = set() # If nonempty, adds cards from these expansions into the possible cards
     required_card_classes = set() # If nonempty, ensures that each card in the list ends up in the supply
     distribute_cost = False # If toggled, ensures there are at least two cards each of cost {2, 3, 4, 5}
     disable_attack_cards = False # If toggled, Attack cards are not allowed
@@ -34,48 +35,28 @@ class Supply:
         self.num_players = num_players
         self.card_stacks = {}
         self.customization = Customization()
+        self.expansions = self.customization.expansions
         # TODO: Remove these (they are for debugging specific cards)
-        self.customization.required_card_classes.add(base_cards.Bandit)
+        self.customization.required_card_classes.add(prosperity_cards.Loan)
 
     def setup(self):
-        self.select_treasure_cards()
-        self.select_victory_cards()
-        self.select_curse_cards()
         self.select_kingdom_cards()
+        self.select_basic_cards()
         self.create_trash_pile()
-
-    def select_treasure_cards(self):
-        # Limitless stacks of treasure cards
-        self.treasure_card_classes = [base_cards.Copper, base_cards.Silver, base_cards.Gold]
-        for card_class in self.treasure_card_classes:
-            self.card_stacks[card_class] = InfiniteSupplyStack(card_class)
-
-    def select_victory_cards(self):
-        # Victory card stack sizes depend on number of players
-        if self.num_players == 2:
-            victory_stack_size = 8
-        else:
-            victory_stack_size = 12
-        self.victory_card_classes = [base_cards.Estate, base_cards.Duchy, base_cards.Province]
-        for card_class in self.victory_card_classes:
-            self.card_stacks[card_class] = FiniteSupplyStack(card_class, victory_stack_size)
-
-    def select_curse_cards(self):
-        # Curse card stack size depends on number of players
-        curse_stack_size = (self.num_players - 1) * 10
-        self.card_stacks[base_cards.Curse] = FiniteSupplyStack(base_cards.Curse, curse_stack_size)
+        self.additional_setup()
 
     def select_kingdom_cards(self):
+        # Get all possible kingdom cards from the selected expansions
+        possible_kingdom_card_classes = []
+        for expansion in self.expansions:
+            possible_kingdom_card_classes += expansion.kingdom_card_classes
         selected_kingdom_card_classes = []
         # Add in required cards
         for card_class in self.customization.required_card_classes:
             selected_kingdom_card_classes.append(card_class)
         if self.customization.disable_attack_cards:
             # Filter out attack cards
-            possible_kingdom_card_classes = [card_class for card_class in copy.deepcopy(base_cards.KINGDOM_CARDS) if cards.CardType.ATTACK not in card_class.types]
-        else:
-            # All cards are viable
-            possible_kingdom_card_classes = copy.deepcopy(base_cards.KINGDOM_CARDS)
+            possible_kingdom_card_classes = [card_class for card_class in copy.deepcopy(possible_kingdom_card_classes) if cards.CardType.ATTACK not in card_class.types]
         if self.customization.distribute_cost:
             # Make sure at least two cards each of cost {2, 3, 4, 5} (this totals 8 cards)
             possible_kingdom_card_classes_by_cost = {cost: [card_class for card_class in possible_kingdom_card_classes if card_class.cost == cost] for cost in range(2, 6)}
@@ -92,8 +73,21 @@ class Supply:
             # Stacks of ten kingdom cards each
             self.card_stacks[card_class] = FiniteSupplyStack(card_class, 10)
 
+    def select_basic_cards(self):
+        # Get all possible basic cards from the selected expansions
+        basic_card_piles = []
+        for expansion in self.expansions:
+            basic_card_piles += expansion.basic_card_piles
+        for card_class, pile_size in basic_card_piles:
+            self.card_stacks[card_class] = FiniteSupplyStack(card_class, pile_size)
+
     def create_trash_pile(self):
         self.trash_pile = {card_class: 0 for card_class in self.card_stacks}
+
+    def additional_setup(self):
+        # Perform all additional setup actions from the selected expansions
+        for expansion in self.expansions:
+            expansion.additional_setup()
 
     def draw(self, card_class):
         return self.card_stacks[card_class].draw()

@@ -99,6 +99,7 @@ socket.on('enter choice', function (data, callback) {
         event.preventDefault();
         // Grab the response
         choice = parseInt($("#gameInput").val());
+        append_message(`You entered: ${choice}.`)
         callback(choice);
         // Clear the textbox and hide the input container
         $(this).off('submit');
@@ -120,6 +121,7 @@ socket.on('choose yes or no', function (data, callback) {
         event.preventDefault();
         // Grab the response
         choice = $("#gameInput").val();
+        append_message(`You entered: ${choice}.`)
         callback(choice);
         // Clear the textbox and hide the input container
         $(this).off('submit');
