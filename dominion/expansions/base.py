@@ -1,6 +1,6 @@
 from math import inf
 from .expansion import Expansion
-from ..cards import base_cards
+from ..cards import cards, base_cards
 
 class BaseExpansion(Expansion):
     @property
@@ -49,3 +49,11 @@ class BaseExpansion(Expansion):
 
     def additional_setup(self):
         pass
+
+    def scoring(self, player):
+        victory_points = 0
+        for card in player.all_cards:
+            # Count only if it's a victory or curse card
+            if cards.CardType.VICTORY in card.types or cards.CardType.CURSE in card.types:
+                victory_points += card.points
+        return victory_points

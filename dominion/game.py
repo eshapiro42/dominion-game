@@ -31,7 +31,7 @@ class Game:
         self.expansions = set()
         self.add_expansion(BaseExpansion)
         # TODO: Remove this and allow customization
-        # self.add_expansion(ProsperityExpansion)
+        self.add_expansion(ProsperityExpansion)
 
     def add_expansion(self, expansion):
         self.expansions.add(expansion)
@@ -70,7 +70,7 @@ class Game:
         for player in self.players:
             player.interactions.display_supply()
         # Start the game loop!
-        self.game_loop()
+        # self.game_loop()
 
     def game_loop(self):
         self.turn_order = random.sample(self.players, len(self.players))

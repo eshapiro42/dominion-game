@@ -144,8 +144,7 @@ class Player:
     @property
     def current_victory_points(self):
         victory_points = 0
-        for card in self.all_cards:
-            # Count only if it's a victory or curse card
-            if cards.CardType.VICTORY in card.types or cards.CardType.CURSE in card.types:
-                victory_points += card.points
+        # Add up all different point methods across added expansions
+        for expansion in self.supply.customization.expansions:
+            victory_points += expansion.scoring(self)
         return victory_points

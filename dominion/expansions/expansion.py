@@ -22,3 +22,6 @@ class Expansion(metaclass=ABCMeta):
 
     def additional_setup(self):
         pass
+
+    def scoring(self):
+        return 0

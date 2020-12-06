@@ -48,6 +48,7 @@ class ProsperityExpansion(Expansion):
                 post_gain_hook = self.TradeRoutePostGainHook(victory_card_class)
                 self.supply.add_post_gain_hook(post_gain_hook, victory_card_class)
     
+
     @property
     def game_end_conditions(self):
         return [self.game_end_condition_colony_pile_empty]
@@ -58,6 +59,10 @@ class ProsperityExpansion(Expansion):
             return True, 'All Colonies have been purchased.'
         else:
             return False, None
+
+
+    def scoring(self, player):
+        return player.victory_tokens
 
 
     class TradeRoutePostGainHook(PostGainHook):
