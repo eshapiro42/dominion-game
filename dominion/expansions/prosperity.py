@@ -4,6 +4,8 @@ from ..cards import cards, prosperity_cards
 from ..supply import PostGainHook
 
 class ProsperityExpansion(Expansion):
+    name = 'Prosperity'
+
     platinum_and_colony = False
 
     @property

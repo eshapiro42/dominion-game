@@ -34,7 +34,7 @@ class PostGainHook(metaclass=ABCMeta):
 
 
 class Customization:
-    expansions = set() # If nonempty, adds cards from these expansions into the possible cards
+    expansions = set()
     required_card_classes = set() # If nonempty, ensures that each card in the list ends up in the supply
     distribute_cost = False # If toggled, ensures there are at least two cards each of cost {2, 3, 4, 5}
     disable_attack_cards = False # If toggled, Attack cards are not allowed
@@ -50,12 +50,8 @@ class Supply:
         self.card_stacks = {}
         self.post_gain_hooks = {}
         self.customization = Customization()
-        self.expansions = self.customization.expansions
         # TODO: Remove these (they are for debugging specific cards)
-        self.customization.required_card_classes.add(base_cards.Bandit)
-        self.customization.required_card_classes.add(base_cards.Thief)
-        # self.customization.required_card_classes.add(prosperity_cards.Loan)
-        # self.customization.required_card_classes.add(prosperity_cards.TradeRoute)
+        self.customization.required_card_classes.add(prosperity_cards.Bishop)
 
     def setup(self):
         self.select_kingdom_cards()
@@ -66,7 +62,7 @@ class Supply:
     def select_kingdom_cards(self):
         # Get all possible kingdom cards from the selected expansions
         possible_kingdom_card_classes = []
-        for expansion in self.expansions:
+        for expansion in self.customization.expansions:
             possible_kingdom_card_classes += expansion.kingdom_card_classes
         selected_kingdom_card_classes = []
         # Add in required cards
@@ -94,7 +90,7 @@ class Supply:
     def select_basic_cards(self):
         # Get all possible basic cards from the selected expansions
         basic_card_piles = []
-        for expansion in self.expansions:
+        for expansion in self.customization.expansions:
             basic_card_piles += expansion.basic_card_piles
         for card_class, pile_size in basic_card_piles:
             self.card_stacks[card_class] = FiniteSupplyStack(card_class, pile_size)
@@ -104,7 +100,7 @@ class Supply:
 
     def additional_setup(self):
         # Perform all additional setup actions from the selected expansions
-        for expansion in self.expansions:
+        for expansion in self.customization.expansions:
             expansion.additional_setup()
 
     def add_post_gain_hook(self, post_gain_hook, card_class):

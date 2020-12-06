@@ -172,8 +172,10 @@ class Bishop(ActionCard):
                 self.game.broadcast(f'{self.owner} took a Victory token.')
         # Each other player may trash a card from their hand
         for player in self.owner.other_players:
-            pass
-
+            prompt = f'{player}: You may trash a card from your hand.'
+            card_to_trash = player.interactions.choose_card_from_hand(prompt=prompt, force=False)
+            if card_to_trash is not None:
+                self.game.broadcast(f'{player} trashed a {card_to_trash}.')
 
 
 class Monument(ActionCard):
@@ -639,7 +641,7 @@ KINGDOM_CARDS = [
     Loan,
     TradeRoute,
     # Watchtower,
-    # Bishop,
+    Bishop,
     # Monument,
     # Quarry,
     # Talisman,

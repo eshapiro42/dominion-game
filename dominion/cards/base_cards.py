@@ -1064,10 +1064,12 @@ class Adventurer(ActionCard):
                     revealed_treasures.append(card)
                 else:
                     revealed_other_cards.append(card)
-        self.game.broadcast(f'Revealed treasures: {revealed_treasures}. {self.owner} puts these into their hand.')
-        self.owner.hand.extend(revealed_treasures)
-        self.game.broadcast(f'Other revealed cards: {revealed_other_cards}. {self.owner} discards these.')
-        self.owner.discard_pile.extend(revealed_other_cards)
+        if revealed_treasures:
+            self.game.broadcast(f"Revealed treasures: {', '.join(map(str, revealed_treasures))}. {self.owner} puts these into their hand.")
+            self.owner.hand.extend(revealed_treasures)
+        if revealed_other_cards:
+            self.game.broadcast(f"Other revealed cards: {', '.join(map(str, revealed_other_cards))}. {self.owner} discards these.")
+            self.owner.discard_pile.extend(revealed_other_cards)
 
 
 KINGDOM_CARDS = [

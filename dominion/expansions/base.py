@@ -3,6 +3,8 @@ from .expansion import Expansion
 from ..cards import cards, base_cards
 
 class BaseExpansion(Expansion):
+    name = 'Base'
+    
     @property
     def basic_card_piles(self):
         basic_card_piles = []
