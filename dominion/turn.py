@@ -103,31 +103,33 @@ class ActionPhase(Phase):
 class BuyPhase(Phase):
     def start(self):
         # Find any Treasures in the player's hand
-        treasures_in_hand = []
+        treasures_available = []
         for card in self.player.hand:
             if cards.CardType.TREASURE in card.types:
-                treasures_in_hand.append(card)
-        treasures_without_side_effects_to_play = []
-        treasures_with_side_effects_to_play = []
-        for treasure in treasures_in_hand:
-            # If a Treasure in the player's hand has a play() method, ask if they want to use it; Otherwise, just assume they do
-            if hasattr(treasure, 'play'):
-                prompt = f'You have a {treasure.name} in your hand which has side effects. Would you like to play it?'
-                if self.player.interactions.choose_yes_or_no(prompt):
-                    treasures_with_side_effects_to_play.append(treasure)
-                    self.player.play(treasure) # Add the treasure to the played cards area and remove from hand
-                    # Activate side effects cause by playing this treasure
-                    self.game.broadcast(f"{self.player} played a Treasure: {treasure.name}.")
-                    treasure.play()
+                treasures_available.append(card)
+        # Ask the player which Treasures they would like to play
+        treasures_to_play = []
+        while treasures_available:
+            options = treasures_available + ['Play all Treasures']
+            prompt = f'Which Treasures would you like to play this turn?'
+            choice = self.player.interactions.choose_from_options(prompt, options, force=False)
+            if choice is None:
+                break
+            elif choice == 'Play all Treasures':
+                treasures_to_play += treasures_available
+                break
             else:
-                treasures_without_side_effects_to_play.append(treasure)
-                self.player.play(treasure) # Add the treasure to the played cards area and remove from hand
-        # Broadcast which Treasures were played
-        if treasures_without_side_effects_to_play:
-            self.game.broadcast(f"{self.player} played Treasures: {', '.join(map(lambda card: card.name, treasures_without_side_effects_to_play))}.")
-        treasures_played = treasures_with_side_effects_to_play + treasures_without_side_effects_to_play
+                treasures_available.remove(choice)
+                treasures_to_play.append(choice)
+        for treasure in treasures_to_play:
+            self.game.broadcast(f"{self.player} played a Treasure: {treasure.name}.")
+            # Add the Treasure to the played cards area and remove from hand
+            self.player.play(treasure)
+            # Activate side effects cause by playing this Treasure
+            if hasattr(treasure, 'play'):
+                treasure.play()
         # Check if there are any game-wide pre-buy hooks registered to the played Treasures
-        for treasure in treasures_played:
+        for treasure in treasures_to_play:
             expired_hooks = []
             if type(treasure) in self.game.pre_buy_hooks:
                 # Activate any pre-buy hooks caused by playing the Treasure
@@ -139,7 +141,7 @@ class BuyPhase(Phase):
                 for hook in expired_hooks:
                     self.game.pre_buy_hooks[type(treasure)].remove(hook)
         # Check if there are any turn-wide pre-buy hooks registered to the played Treasures
-        for treasure in treasures_played:
+        for treasure in treasures_to_play:
             expired_hooks = []
             if type(treasure) in self.turn.pre_buy_hooks:
                 # Activate any pre-buy hooks caused by playing the Treasure
@@ -151,7 +153,7 @@ class BuyPhase(Phase):
                 for hook in expired_hooks:
                     self.turn.pre_buy_hooks[type(treasure)].remove(hook)
         # Add up any played treasures
-        for treasure in treasures_played:
+        for treasure in treasures_to_play:
             # Add the value of this Treasure
             self.turn.coppers_remaining += treasure.value
         # Buy cards
