@@ -649,7 +649,7 @@ class AutoInteraction(Interaction):
                 self.display_hand()
                 if force:
                     print(f'Enter choice 1-{len(self.hand)}: ', end='')
-                    choices = range(1, len(self.hand) + 1)
+                    choices = list(range(1, len(self.hand) + 1))
                     # Weight options equally
                     weights = [1 for card in self.hand]
                     card_num = random.choices(choices, weights, k=1)[0]
@@ -658,7 +658,7 @@ class AutoInteraction(Interaction):
                     card_chosen = self.hand[card_num - 1]
                 else:
                     print(f'Enter choice 1-{len(self.hand)} (0 to skip): ', end='')
-                    choices = range(0, len(self.hand) + 1)
+                    choices = list(range(0, len(self.hand) + 1))
                     # Weight options equally
                     weights = [1] + [1 for card in self.hand]
                     card_num = random.choices(choices, weights, k=1)[0]
@@ -709,7 +709,7 @@ class AutoInteraction(Interaction):
                     hand_table.add_row([idx + 1, card.name, types, card.description])
                 print(hand_table)
                 print(f'Enter choice 1-{len(playable_cards)} (0 to skip): ', end='')
-                choices = range(0, len(playable_cards) + 1)
+                choices = list(range(0, len(playable_cards) + 1))
                 # Weight options equally (except for skip)
                 weights = [1 if num == 0 else 100 for num in choices]
                 card_num = random.choices(choices, weights, k=1)[0]
@@ -736,7 +736,7 @@ class AutoInteraction(Interaction):
                 if force:
                     print(f'Enter choice 1-{len(self.discard_pile)}: ', end='')
                     # Weight options by cost
-                    choices = range(1, len(self.discard_pile) + 1)
+                    choices = list(range(1, len(self.discard_pile) + 1))
                     weights = [card.cost * 5 for card in self.discard_pile]
                     card_num = random.choices(choices, weights, k=1)[0]
                     print(card_num)
@@ -744,7 +744,7 @@ class AutoInteraction(Interaction):
                     card_chosen = self.discard_pile[card_num - 1]
                 else:
                     print(f'Enter choice 1-{len(self.discard_pile)} (0 to skip): ', end='')
-                    choices = range(0, len(self.discard_pile) + 1)
+                    choices = list(range(0, len(self.discard_pile) + 1))
                     weights = [1] + [card.cost * 5 for card in self.discard_pile]
                     card_num = random.choices(choices, weights, k=1)[0]
                     print(card_num)
@@ -776,7 +776,7 @@ class AutoInteraction(Interaction):
                 print(supply_table)
                 if force:
                     print(f'Enter choice 1-{len(buyable_card_stacks)}: ', end='')
-                    choices = range(1, len(buyable_card_stacks) + 1)
+                    choices = list(range(1, len(buyable_card_stacks) + 1))
                     # Weight by cost (more expensive are more likely, coppers and estates are unlikely)
                     weights = [
                         0 if cards.CardType.CURSE in card_class.types \
@@ -790,7 +790,7 @@ class AutoInteraction(Interaction):
                     card_to_buy = list(buyable_card_stacks)[card_num - 1]
                 else:
                     print(f'Enter choice 1-{len(buyable_card_stacks)} (0 to skip): ', end='')
-                    choices = range(0, len(buyable_card_stacks) + 1)
+                    choices = list(range(0, len(buyable_card_stacks) + 1))
                     weights = [1] + [
                         0 if cards.CardType.CURSE in card_class.types \
                         else 1 if card_class == base_cards.Copper or card_class == base_cards.Estate \
@@ -827,7 +827,7 @@ class AutoInteraction(Interaction):
                 print(supply_table)
                 if force:
                     print(f'Enter choice 1-{len(buyable_card_stacks)}: ', end='')
-                    choices = range(1, len(buyable_card_stacks) + 1)
+                    choices = list(range(1, len(buyable_card_stacks) + 1))
                     # Weight by cost (more expensive is more likely)
                     weights = [card.cost * 5 for card in buyable_card_stacks]
                     card_num = random.choices(choices, weights, k=1)[0]
@@ -836,7 +836,7 @@ class AutoInteraction(Interaction):
                     card_to_buy = list(buyable_card_stacks)[card_num - 1]
                 else:
                     print(f'Enter choice 1-{len(buyable_card_stacks)} (0 to skip): ', end='')
-                    choices = range(0, len(buyable_card_stacks) + 1)
+                    choices = list(range(0, len(buyable_card_stacks) + 1))
                     weights = [1] + [card.cost * 5 for card in buyable_card_stacks]
                     card_num = random.choices(choices, weights, k=1)[0]
                     print(card_num)
@@ -878,7 +878,7 @@ class AutoInteraction(Interaction):
                 print(options_table)
                 if force:
                     print(f'Enter choice 1-{len(options)}: ', end='')
-                    choices = range(1, len(options) + 1)
+                    choices = list(range(1, len(options) + 1))
                     # Higher options more likely
                     weights = choices
                     response_num = random.choices(choices, weights, k=1)[0]
@@ -887,9 +887,9 @@ class AutoInteraction(Interaction):
                     response = options[response_num - 1]
                 else:
                     print(f'Enter choice 0-{len(options)} (0 to skip): ', end='')
-                    choices = range(0, len(options) + 1)
+                    choices = list(range(0, len(options) + 1))
                     # Higher options more likely
-                    weights = [1] + choices
+                    weights = [1] + choices[1:]
                     response_num = random.choices(choices, weights, k=1)[0]
                     print(response_num)
                     print()

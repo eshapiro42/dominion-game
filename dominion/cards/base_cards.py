@@ -777,7 +777,7 @@ class Sentry(ActionCard):
             card_kept = cards_kept[0]
             self.owner.deck.append(card_kept)
         elif len(cards_kept) == 2:
-            # If more than Put the kept cards back on top in the desired order
+            # If more than one, put the kept cards back on top in the desired order
             prompt = 'You must return these cards to the top of your deck. Which card would you like to be on top?'
             top_card = self.interactions.choose_from_options(prompt=prompt, options=cards_kept, force=True)
             cards_kept.remove(top_card)

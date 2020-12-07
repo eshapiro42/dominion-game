@@ -51,7 +51,7 @@ class Supply:
         self.post_gain_hooks = {}
         self.customization = Customization()
         # TODO: Remove these (they are for debugging specific cards)
-        self.customization.required_card_classes.add(prosperity_cards.Bishop)
+        # self.customization.required_card_classes.add(prosperity_cards.Rabble)
 
     def setup(self):
         self.select_kingdom_cards()
@@ -60,14 +60,15 @@ class Supply:
         self.additional_setup()
 
     def select_kingdom_cards(self):
+        selected_kingdom_card_classes = []
         # Get all possible kingdom cards from the selected expansions
         possible_kingdom_card_classes = []
         for expansion in self.customization.expansions:
             possible_kingdom_card_classes += expansion.kingdom_card_classes
-        selected_kingdom_card_classes = []
         # Add in required cards
         for card_class in self.customization.required_card_classes:
             selected_kingdom_card_classes.append(card_class)
+            possible_kingdom_card_classes.remove(card_class)
         if self.customization.disable_attack_cards:
             # Filter out attack cards
             possible_kingdom_card_classes = [card_class for card_class in copy.deepcopy(possible_kingdom_card_classes) if cards.CardType.ATTACK not in card_class.types]
@@ -81,7 +82,7 @@ class Supply:
                     possible_kingdom_card_classes.remove(card_class)
         # Select the remaining cards at random
         num_cards_remaining = 10 - len(selected_kingdom_card_classes)
-        selected_kingdom_card_classes += random.sample(base_cards.KINGDOM_CARDS, num_cards_remaining)
+        selected_kingdom_card_classes += random.sample(possible_kingdom_card_classes, num_cards_remaining)
         # Sort kingdom cards first by cost, then by name
         for card_class in sorted(selected_kingdom_card_classes, key=lambda card_class: (card_class.cost, card_class.name)):
             # Stacks of ten kingdom cards each

@@ -1,6 +1,6 @@
 import math
 from .cards import CardType, Card, TreasureCard, ActionCard, AttackCard, ReactionCard, VictoryCard, CurseCard
-
+from . import base_cards
 
 # BASIC CARDS
 
@@ -197,7 +197,8 @@ class Monument(ActionCard):
     extra_coppers = 2
     
     def action(self):
-        pass
+        self.owner.victory_tokens += 1
+        self.game.broadcast(f'{self.owner} took a Victory token.')
 
 
 class Quarry(TreasureCard):
@@ -262,7 +263,7 @@ class WorkersVillage(ActionCard):
 
 
 class City(ActionCard):
-    name = 'CardName'
+    name = 'City'
     cost = 5
     types = [CardType.ACTION]
     image_path = ''
@@ -281,7 +282,21 @@ class City(ActionCard):
     extra_coppers = 0
     
     def action(self):
-        pass
+        if self.supply.num_empty_stacks >= 1:
+            drawn_cards = self.owner.draw(1)
+            if not drawn_cards:
+                self.game.broadcast(f'{self.owner} has no more cards to draw from.')
+            else:
+                card = drawn_cards[0]
+                self.game.broadcast(f'{self.owner} drew a card since there are one or more empty Supply piles.')
+                self.game.broadcast(f'+1 cards --> {len(self.owner.hand)} cards in hand.')
+                self.interactions.send(f'You drew: {card}.')
+        if self.supply.num_empty_stacks >= 2:
+            self.game.broadcast(f'{self.owner} gets +1 buy and +1 $ since there are two or more empty Supply piles.')
+            self.owner.turn.buys_remaining += 1
+            self.game.broadcast(f'+1 buy --> {self.owner.turn.buys_remaining} buys.')
+            self.owner.turn.coppers_remaining += 1
+            self.game.broadcast(f'+1 $ --> {self.owner.turn.coppers_remaining} $.')
 
 
 class Contraband(TreasureCard):
@@ -322,7 +337,19 @@ class CountingHouse(ActionCard):
     extra_coppers = 0
     
     def action(self):
-        pass
+        coppers_in_discard_pile = [card for card in self.owner.discard_pile if isinstance(card, base_cards.Copper)]
+        if coppers_in_discard_pile:
+            prompt = f'{self.owner}: You have {len(coppers_in_discard_pile)} Coppers in your discard pile. How many would you like to put into your hand?'
+            options = list(range(1, len(coppers_in_discard_pile) + 1))
+            num_coppers = self.owner.interactions.choose_from_options(prompt, options, force=False)
+            if num_coppers:
+                for _ in range(num_coppers):
+                    copper = coppers_in_discard_pile.pop()
+                    self.owner.discard_pile.remove(copper)
+                    self.owner.hand.append(copper)
+                self.game.broadcast(f'{self.owner} put {num_coppers} Coppers from their discard pile into their hand.')
+            else:
+                self.game.broadcast(f'{self.owner} did not put any Coppers from their discard pile into their hand.')
 
 
 class Mint(ActionCard):
@@ -348,7 +375,7 @@ class Mint(ActionCard):
 
 
 class Mountebank(AttackCard):
-    name = 'CardName'
+    name = 'Mountebank'
     cost = 5
     types = [CardType.ACTION]
     image_path = ''
@@ -356,9 +383,11 @@ class Mountebank(AttackCard):
     description = '\n'.join(
         [
             '+2 $',
-            "Each other player may discard a Curse. If they don't, they gain a Curse and a Copper",
+            "Each other player may discard a Curse. If they don't, they gain a Curse and a Copper.",
         ]
     )
+    prompt = "Each other player may discard a Curse. If they don't, they gain a Curse and a Copper."
+
 
     extra_cards = 0
     extra_actions = 0
@@ -369,8 +398,17 @@ class Mountebank(AttackCard):
         pass
 
     def attack_effect(self, attacker, player):
-        pass
-
+        # Check if the other player has a Curse in their hand
+        curses_in_hand = [card for card in player.hand if isinstance(card, base_cards.Curse)]
+        # If they do, ask if they would like to discard it
+        if curses_in_hand and player.interactions.choose_yes_or_no(prompt=f'{player}: You have a Curse in your hand. Would you like to reveal and discard it?'):
+            curse = curses_in_hand[0]
+            player.discard(curse)
+            self.game.broadcast(f'{player} discarded a Curse.')
+        else:
+            player.gain(base_cards.Curse)
+            player.gain(base_cards.Copper)
+            self.game.broadcast(f'{player} gained a Curse and a Copper.')
 
 
 class Rabble(AttackCard):
@@ -385,8 +423,9 @@ class Rabble(AttackCard):
             'Each other player reveals the top 3 cards of their deck, discards the Actions and Treasures, and puts the rest back in any order they choose.',
         ]
     )
+    prompt = 'Each other player reveals the top 3 cards of their deck, discards the Actions and Treasures, and puts the rest back in any order they choose.'
 
-    extra_cards = 0
+    extra_cards = 3
     extra_actions = 0
     extra_buys = 0
     extra_coppers = 0
@@ -395,7 +434,52 @@ class Rabble(AttackCard):
         pass
 
     def attack_effect(self, attacker, player):
-        pass
+        # Player reveals the top 3 cards of their deck
+        revealed_actions_and_treasures = []
+        revealed_other_cards = []
+        for _ in range(3):
+            card = player.take_from_deck()
+            if card is None:
+                self.game.broadcast(f'{player} has no more cards to draw from.')
+                break
+            else:
+                self.game.broadcast(f'{player} revealed a {card}.')
+                if CardType.TREASURE in card.types or CardType.ACTION in card.types:
+                    revealed_actions_and_treasures.append(card)
+                else:
+                    revealed_other_cards.append(card)
+        # Player discards Actions and Treasures
+        if revealed_actions_and_treasures:
+            player.discard_pile.extend(revealed_actions_and_treasures)
+            self.game.broadcast(f"{player} discarded: {', '.join(map(str, revealed_actions_and_treasures))}.")
+        # Player puts the rest back on their deck in any order they choose
+        if len(revealed_other_cards) == 1:
+            # If there's only one card, put it back on top of the deck
+            card = revealed_other_cards[0]
+            self.game.broadcast(f'{player} put a {card} card back on top of their deck.')
+            player.deck.append(card)
+        elif len(revealed_other_cards) == 2:
+            # If there are two, ask which should be on top
+            prompt = f"You must return these cards to the top of your deck: {', '.join(map(str, revealed_other_cards))}. Which card would you like to be on top?"
+            top_card = player.interactions.choose_from_options(prompt=prompt, options=revealed_other_cards, force=True)
+            revealed_other_cards.remove(top_card)
+            bottom_card = revealed_other_cards[0]
+            player.deck.append(bottom_card)
+            player.deck.append(top_card)
+            self.game.broadcast(f'{player} put a {bottom_card} and a {top_card} back on top of their deck.')
+        elif len(revealed_other_cards) == 3:
+            # If there are three, ask which should be on top and in the middle
+            prompt = f"You must return these cards to the top of your deck: {', '.join(map(str, revealed_other_cards))}. Which card would you like to be on top?"
+            top_card = player.interactions.choose_from_options(prompt=prompt, options=revealed_other_cards, force=True)
+            revealed_other_cards.remove(top_card)
+            prompt = f"Which card would you like to be in the middle?"
+            middle_card = player.interactions.choose_from_options(prompt=prompt, options=revealed_other_cards, force=True)
+            revealed_other_cards.remove(middle_card)
+            bottom_card = revealed_other_cards[0]
+            player.deck.append(bottom_card)
+            player.deck.append(middle_card)
+            player.deck.append(top_card)
+            self.game.broadcast(f'{player} put a {bottom_card}, a {middle_card} and a {top_card} back on top of their deck.')
 
 
 class RoyalSeal(TreasureCard):
@@ -473,6 +557,7 @@ class Goons(AttackCard):
             'While this is in play, when you buy a card, +1 Victory token.'
         ]
     )
+    prompt = 'Each other player discards down to 3 cards in hand.'
 
     extra_cards = 0
     extra_actions = 0
@@ -642,16 +727,16 @@ KINGDOM_CARDS = [
     TradeRoute,
     # Watchtower,
     Bishop,
-    # Monument,
+    Monument,
     # Quarry,
     # Talisman,
     WorkersVillage,
-    # City,
+    City,
     # Contraband,
-    # CountingHouse,
+    CountingHouse,
     # Mint,
-    # Mountebank,
-    # Rabble,
+    Mountebank,
+    Rabble,
     # RoyalSeal,
     # Vault,
     # Venture,
