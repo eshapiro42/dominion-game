@@ -207,7 +207,9 @@ class CLIInteraction(Interaction):
             except (IndexError, ValueError):
                 print('That is not a valid choice.\n')
 
-    def choose_card_class_from_supply(self, prompt, max_cost, force):
+    def choose_card_class_from_supply(self, prompt, max_cost, force, invalid_card_classes=None):
+        if invalid_card_classes is None:
+            invalid_card_classes = []
         print(prompt)
         print()
         while True:
@@ -216,7 +218,7 @@ class CLIInteraction(Interaction):
                 supply_table.field_names = ['Number', 'Card', 'Cost', 'Type', 'Quantity', 'Description']
                 # Only cards you can afford can be chosen (and with non-zero quantity)
                 stacks = self.supply.card_stacks
-                buyable_card_stacks = [card_class for card_class in stacks if card_class.cost <= max_cost and stacks[card_class].cards_remaining > 0]
+                buyable_card_stacks = [card_class for card_class in stacks if card_class.cost <= max_cost and card_class not in invalid_card_classes and stacks[card_class].cards_remaining > 0]
                 # for idx, card_class in enumerate(sorted(buyable_card_stacks, key=lambda x: (x.types[0].value, x.cost))):
                 for idx, card_class in enumerate(buyable_card_stacks):
                     types = ', '.join([type.name.lower().capitalize() for type in card_class.types])
@@ -474,14 +476,16 @@ class NetworkedCLIInteraction(Interaction):
             except (IndexError, ValueError):
                 self.send('That is not a valid choice.')        
 
-    def choose_card_class_from_supply(self, prompt, max_cost, force):
+    def choose_card_class_from_supply(self, prompt, max_cost, force, invalid_card_classes=None):
+        if invalid_card_classes is None:
+            invalid_card_classes = []
         while True:
             try:
                 supply_table = prettytable.PrettyTable(hrules=prettytable.ALL)
                 supply_table.field_names = ['Number', 'Card', 'Cost', 'Type', 'Quantity', 'Description']
                 # Only cards you can afford can be chosen (and with non-zero quantity)
                 stacks = self.supply.card_stacks
-                buyable_card_stacks = [card_class for card_class in stacks if card_class.cost <= max_cost and stacks[card_class].cards_remaining > 0]
+                buyable_card_stacks = [card_class for card_class in stacks if card_class.cost <= max_cost and card_class not in invalid_card_classes and stacks[card_class].cards_remaining > 0]
                 # for idx, card_class in enumerate(sorted(buyable_card_stacks, key=lambda x: (x.types[0].value, x.cost))):
                 for idx, card_class in enumerate(buyable_card_stacks):
                     types = ', '.join([type.name.lower().capitalize() for type in card_class.types])
@@ -610,33 +614,13 @@ class AutoInteraction(Interaction):
         print()
 
     def display_supply(self):
-        supply_table = self.supply.get_table()
-        while True:
-            try:
-                self.send(supply_table.get_string())
-                break
-            except:
-                pass
+        pass
 
     def display_hand(self):
-        print(f"{self.player}'s hand:\n")
-        hand_table = prettytable.PrettyTable(hrules=prettytable.ALL)
-        hand_table.field_names = ['Number', 'Card', 'Type', 'Description']
-        for idx, card in enumerate(self.hand):
-            types = ', '.join([type.name.lower().capitalize() for type in card.types])
-            hand_table.add_row([idx + 1, card.name, types, card.description])
-        print(hand_table)
-        print()
+        pass
 
     def display_discard_pile(self):
-        print(f"{self.player}'s discard pile:\n")
-        discard_table = prettytable.PrettyTable(hrules=prettytable.ALL)
-        discard_table.field_names = ['Number', 'Card', 'Type', 'Description']
-        for idx, card in enumerate(self.discard_pile):
-            types = ', '.join([type.name.lower().capitalize() for type in card.types])
-            discard_table.add_row([idx + 1, card.name, types, card.description])
-        print(discard_table)
-        print()
+        pass
 
     def choose_card_from_hand(self, prompt, force):
         print(prompt)
@@ -702,12 +686,6 @@ class AutoInteraction(Interaction):
             return None
         while True:
             try:
-                hand_table = prettytable.PrettyTable(hrules=prettytable.ALL)
-                hand_table.field_names = ['Number', 'Card', 'Type', 'Description']
-                for idx, card in enumerate(playable_cards):
-                    types = ', '.join([type.name.lower().capitalize() for type in card.types])
-                    hand_table.add_row([idx + 1, card.name, types, card.description])
-                print(hand_table)
                 print(f'Enter choice 1-{len(playable_cards)} (0 to skip): ', end='')
                 choices = list(range(0, len(playable_cards) + 1))
                 # Weight options equally (except for skip)
@@ -758,22 +736,15 @@ class AutoInteraction(Interaction):
                 print('That is not a valid choice.\n')
                 raise
 
-    def choose_card_class_from_supply(self, prompt, max_cost, force):
+    def choose_card_class_from_supply(self, prompt, max_cost, force, invalid_card_classes=None):
         print(prompt)
         print()
+        if invalid_card_classes is None:
+            invalid_card_classes = []
         while True:
             try:
-                supply_table = prettytable.PrettyTable(hrules=prettytable.ALL)
-                supply_table.field_names = ['Number', 'Card', 'Cost', 'Type', 'Quantity', 'Description']
-                # Only cards you can afford can be chosen (and with non-zero quantity)
                 stacks = self.supply.card_stacks
-                buyable_card_stacks = [card_class for card_class in stacks if card_class.cost <= max_cost and stacks[card_class].cards_remaining > 0]
-                # for idx, card_class in enumerate(sorted(buyable_card_stacks, key=lambda x: (x.types[0].value, x.cost))):
-                for idx, card_class in enumerate(buyable_card_stacks):
-                    types = ', '.join([type.name.lower().capitalize() for type in card_class.types])
-                    card_quantity = stacks[card_class].cards_remaining
-                    supply_table.add_row([idx + 1, card_class.name, card_class.cost, types, card_quantity, card_class.description])
-                print(supply_table)
+                buyable_card_stacks = [card_class for card_class in stacks if card_class.cost <= max_cost and card_class not in invalid_card_classes and stacks[card_class].cards_remaining > 0]
                 if force:
                     print(f'Enter choice 1-{len(buyable_card_stacks)}: ', end='')
                     choices = list(range(1, len(buyable_card_stacks) + 1))
@@ -814,17 +785,9 @@ class AutoInteraction(Interaction):
         print()
         while True:
             try:
-                supply_table = prettytable.PrettyTable(hrules=prettytable.ALL)
-                supply_table.field_names = ['Number', 'Card', 'Cost', 'Type', 'Quantity', 'Description']
                 # Only cards you can afford can be chosen (and with non-zero quantity)
                 stacks = self.supply.card_stacks
                 buyable_card_stacks = [card_class for card_class in stacks if card_class.cost <= max_cost and stacks[card_class].cards_remaining > 0 and card_type in card_class.types]
-                # for idx, card_class in enumerate(sorted(buyable_card_stacks, key=lambda x: (x.types[0].value, x.cost))):
-                for idx, card_class in enumerate(buyable_card_stacks):
-                    types = ', '.join([type.name.lower().capitalize() for type in card_class.types])
-                    card_quantity = stacks[card_class].cards_remaining
-                    supply_table.add_row([idx + 1, card_class.name, card_class.cost, types, card_quantity, card_class.description])
-                print(supply_table)
                 if force:
                     print(f'Enter choice 1-{len(buyable_card_stacks)}: ', end='')
                     choices = list(range(1, len(buyable_card_stacks) + 1))
@@ -870,12 +833,7 @@ class AutoInteraction(Interaction):
         print(prompt)
         print()
         while True:
-            options_table = prettytable.PrettyTable(hrules=prettytable.ALL)
-            options_table.field_names = ['Number', 'Option']
-            for idx, option in enumerate(options):
-                options_table.add_row([idx + 1, option])
             try:
-                print(options_table)
                 if force:
                     print(f'Enter choice 1-{len(options)}: ', end='')
                     choices = list(range(1, len(options) + 1))
@@ -1070,14 +1028,16 @@ class BrowserInteraction(Interaction):
             except (IndexError, ValueError):
                 self.send('That is not a valid choice.')        
 
-    def choose_card_class_from_supply(self, prompt, max_cost, force):
+    def choose_card_class_from_supply(self, prompt, max_cost, force, invalid_card_classes=None):
+        if invalid_card_classes is None:
+            invalid_card_classes = []
         while True:
             try:
                 supply_table = prettytable.PrettyTable(hrules=prettytable.ALL)
                 supply_table.field_names = ['Number', 'Card', 'Cost', 'Type', 'Quantity', 'Description']
                 # Only cards you can afford can be chosen (and with non-zero quantity)
                 stacks = self.supply.card_stacks
-                buyable_card_stacks = [card_class for card_class in stacks if card_class.cost <= max_cost and stacks[card_class].cards_remaining > 0]
+                buyable_card_stacks = [card_class for card_class in stacks if card_class.cost <= max_cost and card_class not in invalid_card_classes and stacks[card_class].cards_remaining > 0]
                 # for idx, card_class in enumerate(sorted(buyable_card_stacks, key=lambda x: (x.types[0].value, x.cost))):
                 for idx, card_class in enumerate(buyable_card_stacks):
                     types = ', '.join([type.name.lower().capitalize() for type in card_class.types])

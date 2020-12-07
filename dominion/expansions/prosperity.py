@@ -1,7 +1,7 @@
 import random
 from .expansion import Expansion
-from ..cards import cards, prosperity_cards
-from ..supply import PostGainHook
+from ..cards import cards, base_cards, prosperity_cards
+from ..hooks import PostGainHook
 
 class ProsperityExpansion(Expansion):
     name = 'Prosperity'
@@ -40,16 +40,20 @@ class ProsperityExpansion(Expansion):
         # Each player starts off with no victory tokens
         for player in self.game.players:
             player.victory_tokens = 0
-        # If the Trade Route is in the Supply, there's a lot of additional setup
+        # If the Trade Route is in the Supply, it requires additional setup of the Trade Route mat and Coin tokens
         if prosperity_cards.TradeRoute in self.supply.card_stacks:
             # Trade route mat starts off with no coin tokens
             self.supply.trade_route = 0
             # Each Victory card pile in the Supply starts off with one coin token on top (implemented via non-persistent post-gain hooks)
             victory_card_classes = [card_class for card_class in self.supply.card_stacks if cards.CardType.VICTORY in card_class.types]
             for victory_card_class in victory_card_classes:
-                post_gain_hook = self.TradeRoutePostGainHook(victory_card_class)
-                self.supply.add_post_gain_hook(post_gain_hook, victory_card_class)
-    
+                post_gain_hook = prosperity_cards.TradeRoute.TradeRoutePostGainHook(victory_card_class)
+                self.supply.add_post_gain_hook(post_gain_hook, victory_card_class)  
+        # If the Grand Market is in the Supply, add its pre-buy hook
+        if prosperity_cards.GrandMarket in self.supply.card_stacks:
+            pre_buy_hook = prosperity_cards.GrandMarket.GrandMarketPreBuyHook(self.game)
+            self.game.add_pre_buy_hook(pre_buy_hook, base_cards.Copper)
+
 
     @property
     def game_end_conditions(self):
@@ -62,16 +66,5 @@ class ProsperityExpansion(Expansion):
         else:
             return False, None
 
-
     def scoring(self, player):
         return player.victory_tokens
-
-
-    class TradeRoutePostGainHook(PostGainHook):
-        persistent = False
-
-        def __call__(self, player, card):
-            game = player.game
-            trade_route_before = game.supply.trade_route
-            game.supply.trade_route += 1
-            game.broadcast(f'{player} gained a {self.card_class.name} and moved a Coin token to the Trade Route mat ({trade_route_before} Coin tokens --> {game.supply.trade_route} Coin tokens).')

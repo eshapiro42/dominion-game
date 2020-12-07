@@ -1,6 +1,8 @@
 import math
 from .cards import CardType, Card, TreasureCard, ActionCard, AttackCard, ReactionCard, VictoryCard, CurseCard
 from . import base_cards
+from ..hooks import PreBuyHook, PostGainHook
+
 
 # BASIC CARDS
 
@@ -96,6 +98,15 @@ class TradeRoute(ActionCard):
     extra_actions = 0
     extra_buys = 1
     extra_coppers = 0
+
+    class TradeRoutePostGainHook(PostGainHook):
+        persistent = False
+
+        def __call__(self, player, card):
+            game = player.game
+            trade_route_before = game.supply.trade_route
+            game.supply.trade_route += 1
+            game.broadcast(f'{player} gained a {self.card_class.name} and moved a Coin token to the Trade Route mat ({trade_route_before} Coin tokens --> {game.supply.trade_route} Coin tokens).')
     
     def action(self):
         # Trash a card from your hand
@@ -175,6 +186,7 @@ class Bishop(ActionCard):
             prompt = f'{player}: You may trash a card from your hand.'
             card_to_trash = player.interactions.choose_card_from_hand(prompt=prompt, force=False)
             if card_to_trash is not None:
+                player.trash(card_to_trash)
                 self.game.broadcast(f'{player} trashed a {card_to_trash}.')
 
 
@@ -521,7 +533,39 @@ class Vault(ActionCard):
     extra_coppers = 0
     
     def action(self):
-        pass
+        # Discard any number of cards for +1 $ each
+        discarded_card_count = 0
+        while True:
+            prompt = 'Choose a card from your hand to discard.'
+            card_to_discard = self.interactions.choose_card_from_hand(prompt=prompt, force=False)
+            if card_to_discard is None:
+                break
+            else:
+                discarded_card_count += 1
+                self.owner.discard(card_to_discard)
+                self.game.broadcast(f'{self.owner} discarded a {card_to_discard}.')
+        coppers_before = self.owner.turn.coppers_remaining
+        self.owner.turn.coppers_remaining += discarded_card_count
+        self.game.broadcast(f'+{coppers_before} $ --> {self.owner.turn.coppers_remaining} $.')
+        # Each other player may discard 2 cards, to draw a card.
+        for player in self.owner.other_players:
+            if len(player.hand) < 2:
+                self.game.broadcast(f'{player} does not have 2 cards in their hand.')
+            else:
+                prompt = f'{player}: Would you like to discard 2 cards to draw a card?'
+                if player.interactions.choose_yes_or_no(prompt):
+                    for discard_num in range(2):
+                        prompt = f'{player}: Choose card {discard_num + 1}/2 to discard.'
+                        card_to_discard = player.interactions.choose_card_from_hand(prompt, force=True)
+                        if card_to_discard is not None:
+                            player.discard(card_to_discard)
+                            self.game.broadcast(f'{player} discarded a {card_to_discard}.')
+                    cards_drawn = player.draw(1)
+                    if cards_drawn:
+                        player.interactions.send(f'You drew a {cards_drawn[0]}.')
+                else:
+                    self.game.broadcast(f'{player} chose not to discard 2 cards.')
+
 
 
 class Venture(TreasureCard):
@@ -591,7 +635,17 @@ class GrandMarket(ActionCard):
     extra_actions = 1
     extra_buys = 1
     extra_coppers = 2
-    
+
+    class GrandMarketPreBuyHook(PreBuyHook):
+        persistent = True
+
+        def __call__(self):
+            player = self.game.current_turn.player
+            turn = self.game.current_turn
+            # If the current player has played any Coppers, they cannot buy a Grand Market this turn
+            if any(isinstance(card, base_cards.Copper) for card in player.played_cards):
+                turn.invalid_card_classes.append(GrandMarket)
+
     def action(self):
         pass
 
@@ -738,10 +792,10 @@ KINGDOM_CARDS = [
     Mountebank,
     Rabble,
     # RoyalSeal,
-    # Vault,
+    Vault,
     # Venture,
     # Goons,
-    # GrandMarket,
+    GrandMarket,
     # Hoard,
     # Bank,
     # Expand,

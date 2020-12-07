@@ -1,6 +1,6 @@
 import math
 from .cards import CardType, Card, TreasureCard, ActionCard, AttackCard, ReactionCard, VictoryCard, CurseCard
-from ..turn import PreBuyHook
+from ..hooks import PreBuyHook
 
 
 # BASIC CARDS
@@ -211,14 +211,14 @@ class Merchant(ActionCard):
         persistent = False
 
         def __call__(self):
-            self.game.broadcast(f'{self.player} played a Silver and gets +1 $ from his Merchant.')
-            self.player.turn.coppers_remaining += 1
+            player = self.game.current_turn.player
+            self.game.broadcast(f'{player} played a Silver and gets +1 $ from his Merchant.')
+            player.turn.coppers_remaining += 1
 
 
     def action(self):
-        pre_buy_hook = self.MerchantPreBuyHook(self.owner)
-        self.owner.turn.pre_buy_hooks[Silver].append(pre_buy_hook)
-        print(self.owner.turn.pre_buy_hooks)
+        pre_buy_hook = self.MerchantPreBuyHook(self.game)
+        self.owner.turn.add_pre_buy_hook(pre_buy_hook, Silver)
 
 
 class Vassal(ActionCard):

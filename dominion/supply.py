@@ -4,6 +4,7 @@ import operator
 import prettytable
 import random
 from abc import ABCMeta, abstractmethod
+from collections import defaultdict
 from math import inf
 from .cards import cards, base_cards, prosperity_cards
 
@@ -17,20 +18,6 @@ class SupplyStackEmptyError(Exception):
     def __init__(self, card_class):
         message = f'{card_class.name} supply stack is empty'
         super().__init__(message)
-
-
-class PostGainHook(metaclass=ABCMeta):
-    def __init__(self, card_class):
-        self.card_class = card_class
-
-    @abstractmethod
-    def __call__(self, player):
-        pass
-
-    @property
-    @abstractmethod
-    def persistent(self):
-        pass
 
 
 class Customization:
@@ -48,10 +35,10 @@ class Supply:
     def __init__(self, num_players):
         self.num_players = num_players
         self.card_stacks = {}
-        self.post_gain_hooks = {}
+        self.post_gain_hooks = defaultdict(list)
         self.customization = Customization()
         # TODO: Remove these (they are for debugging specific cards)
-        # self.customization.required_card_classes.add(prosperity_cards.Rabble)
+        self.customization.required_card_classes.add(prosperity_cards.GrandMarket)
 
     def setup(self):
         self.select_kingdom_cards()
@@ -105,8 +92,6 @@ class Supply:
             expansion.additional_setup()
 
     def add_post_gain_hook(self, post_gain_hook, card_class):
-        if not card_class in self.post_gain_hooks:
-            self.post_gain_hooks[card_class] = []
         self.post_gain_hooks[card_class].append(post_gain_hook)
 
     def draw(self, card_class):

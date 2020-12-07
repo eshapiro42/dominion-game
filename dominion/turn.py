@@ -1,4 +1,6 @@
+import copy
 from abc import ABCMeta, abstractmethod
+from collections import defaultdict
 from dataclasses import dataclass
 from .cards import cards, base_cards
 
@@ -14,12 +16,8 @@ class Turn:
         self.action_phase = ActionPhase(turn=self)
         self.buy_phase = BuyPhase(turn=self)
         self.cleanup_phase = CleanupPhase(turn=self)
-        self.pre_buy_hooks = {
-            base_cards.Copper: [],
-            base_cards.Silver: [],
-            base_cards.Gold: [],
-        }
-        self.start()
+        self.pre_buy_hooks = defaultdict(list)
+        self.invalid_card_classes = []
 
     def start(self):
         self.player.turns_played += 1
@@ -30,20 +28,8 @@ class Turn:
         self.buy_phase.start()
         self.cleanup_phase.start()
 
-
-class PreBuyHook(metaclass=ABCMeta):
-    def __init__(self, player):
-        self.player = player
-        self.game = self.player.game
-
-    @abstractmethod
-    def __call__(self):
-        pass
-
-    @property
-    @abstractmethod
-    def persistent(self):
-        pass
+    def add_pre_buy_hook(self, pre_buy_hook, card_class):
+        self.pre_buy_hooks[card_class].append(pre_buy_hook)
 
 
 class Phase(metaclass=ABCMeta):
@@ -140,7 +126,19 @@ class BuyPhase(Phase):
         if treasures_without_side_effects_to_play:
             self.game.broadcast(f"{self.player} played Treasures: {', '.join(map(lambda card: card.name, treasures_without_side_effects_to_play))}.")
         treasures_played = treasures_with_side_effects_to_play + treasures_without_side_effects_to_play
-        # Check if there are any pre-buy hooks registered to the played Treasures
+        # Check if there are any game-wide pre-buy hooks registered to the played Treasures
+        for treasure in treasures_played:
+            expired_hooks = []
+            if type(treasure) in self.game.pre_buy_hooks:
+                # Activate any pre-buy hooks caused by playing the Treasure
+                for pre_buy_hook in self.game.pre_buy_hooks[type(treasure)]:
+                    pre_buy_hook()
+                    if not pre_buy_hook.persistent:
+                        expired_hooks.append(pre_buy_hook)
+                # Remove any non-persistent hooks
+                for hook in expired_hooks:
+                    self.game.pre_buy_hooks[type(treasure)].remove(hook)
+        # Check if there are any turn-wide pre-buy hooks registered to the played Treasures
         for treasure in treasures_played:
             expired_hooks = []
             if type(treasure) in self.turn.pre_buy_hooks:
@@ -159,7 +157,7 @@ class BuyPhase(Phase):
         # Buy cards
         while self.turn.buys_remaining > 0:
             prompt = f'You have {self.turn.coppers_remaining} $ to spend and {self.turn.buys_remaining} buys. Select a card to buy.'
-            card_class = self.player.interactions.choose_card_class_from_supply(prompt=prompt, max_cost=self.turn.coppers_remaining, force=False)
+            card_class = self.player.interactions.choose_card_class_from_supply(prompt=prompt, max_cost=self.turn.coppers_remaining, force=False, invalid_card_classes=self.turn.invalid_card_classes)
             if card_class is None:
                 # The player is forfeiting their buy phase
                 self.player.interactions.send('Buy phase forfeited.')

@@ -1,6 +1,7 @@
 import itertools
 import random
 import time
+from collections import defaultdict
 from prettytable import PrettyTable
 from .cards import base_cards
 from .expansions import BaseExpansion, ProsperityExpansion
@@ -27,11 +28,16 @@ class Game:
         self.players = []
         self.startable = False
         self.started = False
+        self.current_turn = None
+        self.pre_buy_hooks = defaultdict(list)
         self.game_end_conditions = []
         self.expansions = set()
         self.add_expansion(BaseExpansion)
         # TODO: Remove this and allow customization
         self.add_expansion(ProsperityExpansion)
+
+    def add_pre_buy_hook(self, pre_buy_hook, card_class):
+        self.pre_buy_hooks[card_class].append(pre_buy_hook)
 
     def add_expansion(self, expansion):
         self.expansions.add(expansion)
@@ -80,7 +86,8 @@ class Game:
 
     def game_loop(self):
         for player in itertools.cycle(self.turn_order):
-            turn = Turn(player)
+            self.current_turn = Turn(player)
+            self.current_turn.start()
             # Check if the game ended after each turn
             ended, explanation = self.ended
             if ended:
