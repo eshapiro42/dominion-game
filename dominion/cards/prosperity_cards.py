@@ -263,7 +263,10 @@ class Quarry(TreasureCard):
     )
 
     def play(self):
-        pass
+        # Modify Action card costs
+        action_card_classes = [card_class for card_class in self.supply.card_stacks if CardType.ACTION in card_class.types]
+        for card_class in action_card_classes:
+            self.supply.modify_cost(card_class, -2)
 
 
 class Talisman(TreasureCard):
@@ -960,7 +963,7 @@ KINGDOM_CARDS = [
     Watchtower,
     Bishop,
     Monument,
-    # Quarry,
+    Quarry,
     Talisman,
     WorkersVillage,
     City,
