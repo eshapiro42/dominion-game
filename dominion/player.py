@@ -71,6 +71,19 @@ class Player:
                     for hook in expired_hooks:
                         self.turn.post_gain_hooks[type(card)].remove(hook)
 
+    def gain_without_hooks(self, card_class, quantity: int = 1, from_supply: bool = True):
+        for _ in range(quantity):
+            if not from_supply:
+                card = card_class()
+            else:
+                try:
+                    card = self.supply.draw(card_class)
+                except SupplyStackEmptyError:
+                    self.game.broadcast(f'{self.name} could not gain a {card_class} since that supply pile is empty.')
+                    return
+            card.owner = self
+            self.discard_pile.append(card)
+
     def gain_to_hand(self, card_class, quantity: int = 1, from_supply: bool = True):
         for _ in range(quantity):
             if not from_supply:

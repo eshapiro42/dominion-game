@@ -247,8 +247,21 @@ class Talisman(TreasureCard):
         ]
     )
 
+    class TalismanPostGainHook(PostGainHook):
+        persistent = True
+
+        def __call__(self, player, card):
+            game = player.game
+            game.broadcast(f'{player} gains an extra {self.card_class.name} from their Talisman.')
+            player.gain_without_hooks(self.card_class)
+
+
     def play(self):
-        pass
+        # All non-Victorycards costing 4 $ or less get a post gain hook added this turn
+        for card_class in self.supply.card_stacks:
+            if card_class.cost <= 4 and CardType.VICTORY not in card_class.types:
+                post_gain_hook = self.TalismanPostGainHook(card_class)
+                self.owner.turn.add_post_gain_hook(post_gain_hook, card_class) 
 
 
 class WorkersVillage(ActionCard):
@@ -835,7 +848,7 @@ KINGDOM_CARDS = [
     Bishop,
     Monument,
     # Quarry,
-    # Talisman,
+    Talisman,
     WorkersVillage,
     City,
     Contraband,
