@@ -427,7 +427,7 @@ class Mint(ActionCard):
 class Mountebank(AttackCard):
     name = 'Mountebank'
     cost = 5
-    types = [CardType.ACTION]
+    types = [CardType.ACTION, CardType.ATTACK]
     image_path = ''
 
     description = '\n'.join(
@@ -464,7 +464,7 @@ class Mountebank(AttackCard):
 class Rabble(AttackCard):
     name = 'Rabble'
     cost = 5
-    types = [CardType.ACTION]
+    types = [CardType.ACTION, CardType.ATTACK]
     image_path = ''
 
     description = '\n'.join(
@@ -661,7 +661,7 @@ class Venture(TreasureCard):
 class Goons(AttackCard):
     name = 'Goons'
     cost = 5
-    types = [CardType.ACTION]
+    types = [CardType.ACTION, CardType.ATTACK]
     image_path = ''
 
     description = '\n'.join(
@@ -678,12 +678,32 @@ class Goons(AttackCard):
     extra_actions = 0
     extra_buys = 1
     extra_coppers = 2
-    
+
+    class GoonsPostGainHook(PostGainHook):
+        persistent = True
+
+        def __call__(self, player, card):
+            game = player.game
+            game.broadcast(f'{player} takes a Victory token from their Goons.')
+            player.victory_tokens += 1
+
+
     def action(self):
-        pass
+        # All cards get a post gain hook added this turn
+        for card_class in self.supply.card_stacks:
+            post_gain_hook = self.GoonsPostGainHook(card_class)
+            self.owner.turn.add_post_gain_hook(post_gain_hook, card_class) 
 
     def attack_effect(self, attacker, player):
-        pass
+        number_to_discard = len(player.hand) - 3
+        self.game.broadcast(f'{player} must discard {number_to_discard} cards.')
+        discarded_cards = []
+        for card_num in range(number_to_discard):
+            prompt = f'{player}: Choose card {card_num + 1} of {number_to_discard} to discard.'
+            card_to_discard = player.interactions.choose_card_from_hand(prompt=prompt, force=True)
+            player.discard(card_to_discard)
+            discarded_cards.append(card_to_discard)
+        self.game.broadcast(f"{player} discarded {', '.join(map(str, discarded_cards))}.")
 
 
 class GrandMarket(ActionCard):
@@ -908,7 +928,7 @@ KINGDOM_CARDS = [
     RoyalSeal,
     Vault,
     Venture,
-    # Goons,
+    Goons,
     GrandMarket,
     Hoard,
     Bank,
