@@ -675,9 +675,7 @@ class Bank(TreasureCard):
     types = [CardType.TREASURE]
     image_path = ''
 
-    @property
-    def value(self):
-        pass
+    value = None
 
     description = '\n'.join(
         [
@@ -686,7 +684,8 @@ class Bank(TreasureCard):
     )
 
     def play(self):
-        pass
+        # Worth 1 $ per Treasure in play
+        self.value = len([card for card in self.owner.played_cards if CardType.TREASURE in card.types])
 
 
 class Expand(ActionCard):
@@ -828,7 +827,7 @@ KINGDOM_CARDS = [
     # Goons,
     GrandMarket,
     # Hoard,
-    # Bank,
+    Bank,
     Expand,
     Forge,
     KingsCourt,
