@@ -707,7 +707,13 @@ class Expand(ActionCard):
     extra_coppers = 0
     
     def action(self):
-        pass
+        prompt = 'Choose a card from your hand to trash.'
+        card_to_trash = self.interactions.choose_card_from_hand(prompt=prompt, force=True)
+        if card_to_trash is not None:
+            self.owner.trash(card_to_trash)
+            self.game.broadcast(f'{self.owner} trashed a {card_to_trash}.')
+            max_cost = card_to_trash.cost + 3
+            self.owner.turn.buy_phase.buy_without_side_effects(max_cost=max_cost, force=True)
 
 
 class Forge(ActionCard):
@@ -728,8 +734,20 @@ class Forge(ActionCard):
     extra_coppers = 0
     
     def action(self):
-        pass
-
+        current_value = 0
+        # Trash any number of cards from your hand
+        while self.owner.hand:
+            prompt = f'You may choose a card from your hand to trash (current value: {current_value}).'
+            card_to_trash = self.interactions.choose_card_from_hand(prompt=prompt, force=False)
+            if card_to_trash is None:
+                break
+            else:
+                self.game.broadcast(f'{self.owner} trashed a {card_to_trash}.')
+                self.owner.trash(card_to_trash)
+                current_value += card_to_trash.cost
+        # Gain a card with cost exactly equal to the total cost of the trashed cards
+        self.owner.turn.buy_phase.buy_without_side_effects(max_cost=current_value, force=True, exact_cost=True)
+        
 
 class KingsCourt(ActionCard):
     name = "King's Court"
@@ -749,7 +767,20 @@ class KingsCourt(ActionCard):
     extra_coppers = 0
     
     def action(self):
-        pass
+        prompt = 'Select an action card to play three times.'
+        card = self.interactions.choose_specific_card_type_from_hand(prompt=prompt, card_type=CardType.ACTION)
+        if card is not None:
+            # Playing the card should not use any actions, so we use a special method
+            # The first time, add the card to the played cards area
+            self.owner.play(card)
+            self.game.broadcast(f"{self.owner} plays a {card.name} for the first time, thanks to their King's Court.")
+            self.owner.turn.action_phase.play_without_side_effects(card)
+            self.game.broadcast(f"{self.owner} plays a {card.name} for the second time, thanks to their King's Court.")
+            self.owner.turn.action_phase.play_without_side_effects(card)
+            self.game.broadcast(f"{self.owner} plays a {card.name} for the third time, thanks to their King's Court.")
+            self.owner.turn.action_phase.play_without_side_effects(card)
+        else:
+            self.game.broadcast(f"{self.owner} has no other Actions cards to use with their King's Court.")
 
 
 class Peddler(ActionCard):
@@ -798,8 +829,8 @@ KINGDOM_CARDS = [
     GrandMarket,
     # Hoard,
     # Bank,
-    # Expand,
-    # Forge,
-    # KingsCourt,
+    Expand,
+    Forge,
+    KingsCourt,
     # Peddler
 ]

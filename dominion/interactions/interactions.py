@@ -207,7 +207,7 @@ class CLIInteraction(Interaction):
             except (IndexError, ValueError):
                 print('That is not a valid choice.\n')
 
-    def choose_card_class_from_supply(self, prompt, max_cost, force, invalid_card_classes=None):
+    def choose_card_class_from_supply(self, prompt, max_cost, force, invalid_card_classes=None, exact_cost=False):
         if invalid_card_classes is None:
             invalid_card_classes = []
         print(prompt)
@@ -219,6 +219,8 @@ class CLIInteraction(Interaction):
                 # Only cards you can afford can be chosen (and with non-zero quantity)
                 stacks = self.supply.card_stacks
                 buyable_card_stacks = [card_class for card_class in stacks if card_class.cost <= max_cost and card_class not in invalid_card_classes and stacks[card_class].cards_remaining > 0]
+                if exact_cost:
+                    buyable_card_stacks = [card_class for card_class in buyable_card_stacks if card_class.cost == max_cost]
                 # for idx, card_class in enumerate(sorted(buyable_card_stacks, key=lambda x: (x.types[0].value, x.cost))):
                 for idx, card_class in enumerate(buyable_card_stacks):
                     types = ', '.join([type.name.lower().capitalize() for type in card_class.types])
@@ -476,7 +478,7 @@ class NetworkedCLIInteraction(Interaction):
             except (IndexError, ValueError):
                 self.send('That is not a valid choice.')        
 
-    def choose_card_class_from_supply(self, prompt, max_cost, force, invalid_card_classes=None):
+    def choose_card_class_from_supply(self, prompt, max_cost, force, invalid_card_classes=None, exact_cost=False):
         if invalid_card_classes is None:
             invalid_card_classes = []
         while True:
@@ -486,6 +488,8 @@ class NetworkedCLIInteraction(Interaction):
                 # Only cards you can afford can be chosen (and with non-zero quantity)
                 stacks = self.supply.card_stacks
                 buyable_card_stacks = [card_class for card_class in stacks if card_class.cost <= max_cost and card_class not in invalid_card_classes and stacks[card_class].cards_remaining > 0]
+                if exact_cost:
+                    buyable_card_stacks = [card_class for card_class in buyable_card_stacks if card_class.cost == max_cost]
                 # for idx, card_class in enumerate(sorted(buyable_card_stacks, key=lambda x: (x.types[0].value, x.cost))):
                 for idx, card_class in enumerate(buyable_card_stacks):
                     types = ', '.join([type.name.lower().capitalize() for type in card_class.types])
@@ -736,7 +740,7 @@ class AutoInteraction(Interaction):
                 print('That is not a valid choice.\n')
                 raise
 
-    def choose_card_class_from_supply(self, prompt, max_cost, force, invalid_card_classes=None):
+    def choose_card_class_from_supply(self, prompt, max_cost, force, invalid_card_classes=None, exact_cost=False):
         print(prompt)
         print()
         if invalid_card_classes is None:
@@ -745,6 +749,8 @@ class AutoInteraction(Interaction):
             try:
                 stacks = self.supply.card_stacks
                 buyable_card_stacks = [card_class for card_class in stacks if card_class.cost <= max_cost and card_class not in invalid_card_classes and stacks[card_class].cards_remaining > 0]
+                if exact_cost:
+                    buyable_card_stacks = [card_class for card_class in buyable_card_stacks if card_class.cost == max_cost]
                 if force:
                     print(f'Enter choice 1-{len(buyable_card_stacks)}: ', end='')
                     choices = list(range(1, len(buyable_card_stacks) + 1))
@@ -755,7 +761,10 @@ class AutoInteraction(Interaction):
                         else card_class.cost * 5 \
                         for card_class in buyable_card_stacks
                     ]
-                    card_num = random.choices(choices, weights, k=1)[0]
+                    try:
+                        card_num = random.choices(choices, weights, k=1)[0]
+                    except IndexError:
+                        return None
                     print(card_num)
                     print()
                     card_to_buy = list(buyable_card_stacks)[card_num - 1]
@@ -1028,7 +1037,7 @@ class BrowserInteraction(Interaction):
             except (IndexError, ValueError):
                 self.send('That is not a valid choice.')        
 
-    def choose_card_class_from_supply(self, prompt, max_cost, force, invalid_card_classes=None):
+    def choose_card_class_from_supply(self, prompt, max_cost, force, invalid_card_classes=None, exact_cost=False):
         if invalid_card_classes is None:
             invalid_card_classes = []
         while True:
@@ -1038,6 +1047,8 @@ class BrowserInteraction(Interaction):
                 # Only cards you can afford can be chosen (and with non-zero quantity)
                 stacks = self.supply.card_stacks
                 buyable_card_stacks = [card_class for card_class in stacks if card_class.cost <= max_cost and card_class not in invalid_card_classes and stacks[card_class].cards_remaining > 0]
+                if exact_cost:
+                    buyable_card_stacks = [card_class for card_class in buyable_card_stacks if card_class.cost == max_cost]
                 # for idx, card_class in enumerate(sorted(buyable_card_stacks, key=lambda x: (x.types[0].value, x.cost))):
                 for idx, card_class in enumerate(buyable_card_stacks):
                     types = ', '.join([type.name.lower().capitalize() for type in card_class.types])

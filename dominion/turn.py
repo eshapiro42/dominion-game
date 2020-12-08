@@ -110,7 +110,7 @@ class BuyPhase(Phase):
         # Ask the player which Treasures they would like to play
         treasures_to_play = []
         while treasures_available:
-            options = treasures_available + ['Play all Treasures']
+            options = ['Play all Treasures'] + treasures_available
             prompt = f'Which Treasures would you like to play this turn?'
             choice = self.player.interactions.choose_from_options(prompt, options, force=False)
             if choice is None:
@@ -177,10 +177,10 @@ class BuyPhase(Phase):
         self.player.gain(card_class)
         self.turn.coppers_remaining -= card_class.cost
 
-    def buy_without_side_effects(self, max_cost, force):
+    def buy_without_side_effects(self, max_cost, force, exact_cost=False):
         '''Buy a card without affecting coppers_remaining or buys_remaining'''
         prompt = f'You have {max_cost} $ to spend. Select a card to buy.'
-        card_class = self.player.interactions.choose_card_class_from_supply(prompt=prompt, max_cost=max_cost, force=force)
+        card_class = self.player.interactions.choose_card_class_from_supply(prompt=prompt, max_cost=max_cost, force=force, exact_cost=exact_cost)
         if card_class is None:
             self.game.broadcast(f'{self.player} did not buy anything.')
             return
