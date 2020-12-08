@@ -620,7 +620,25 @@ class Venture(TreasureCard):
     )
 
     def play(self):
-        pass
+        cards_to_discard = []
+        revealed_treasure = None
+        while True:
+            card = self.owner.take_from_deck()
+            if card is None:
+                self.game.broadcast(f'{self.owner} has no more cards to draw from.')
+                break
+            else:
+                self.game.broadcast(f'{self.owner} revealed a {card}.')
+            if CardType.TREASURE in card.types:
+                revealed_treasure = card
+                break
+            else:
+                cards_to_discard.append(card)
+        if cards_to_discard:
+            self.owner.discard_pile.extend(cards_to_discard)
+            self.game.broadcast(f"{self.owner} discarded: {', '.join(map(str, cards_to_discard))}.")
+        if revealed_treasure is not None:
+            self.owner.turn.buy_phase.play_treasure(revealed_treasure)
 
 
 class Goons(AttackCard):
@@ -859,7 +877,7 @@ KINGDOM_CARDS = [
     Rabble,
     RoyalSeal,
     Vault,
-    # Venture,
+    Venture,
     # Goons,
     GrandMarket,
     # Hoard,
