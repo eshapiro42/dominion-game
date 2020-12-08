@@ -63,11 +63,11 @@ socket.on('connect', function () {
 });
 
 socket.on('connect_error', function (data) {
-    console.log(`Unable to connect to the server: ${data}.`);
+    alert(`Unable to connect to the server: ${data}.`);
 });
 
 socket.on('disconnect', function () {
-    console.log('You have been disconnected from the server.');
+    alert('You have been disconnected from the server.');
 });
 
 socket.on('game startable', function (data) {
@@ -99,6 +99,7 @@ socket.on('enter choice', function (data, callback) {
         event.preventDefault();
         // Grab the response
         choice = parseInt($("#gameInput").val());
+        append_message(`You entered: ${choice}.`)
         callback(choice);
         // Clear the textbox and hide the input container
         $(this).off('submit');
@@ -120,6 +121,7 @@ socket.on('choose yes or no', function (data, callback) {
         event.preventDefault();
         // Grab the response
         choice = $("#gameInput").val();
+        append_message(`You entered: ${choice}.`)
         callback(choice);
         // Clear the textbox and hide the input container
         $(this).off('submit');
