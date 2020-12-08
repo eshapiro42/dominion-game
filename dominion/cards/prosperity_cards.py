@@ -719,8 +719,22 @@ class Hoard(TreasureCard):
         ]
     )
 
+    class HoardPostGainHook(PostGainHook):
+        persistent = True
+
+        def __call__(self, player, card):
+            game = player.game
+            game.broadcast(f'{player} gains a Gold from their Hoard.')
+            player.gain_without_hooks(base_cards.Gold)
+
+
     def play(self):
-        pass
+        # All Victory cards get a post gain hook added this turn
+        for card_class in self.supply.card_stacks:
+            if CardType.VICTORY in card_class.types:
+                post_gain_hook = self.HoardPostGainHook(card_class)
+                self.owner.turn.add_post_gain_hook(post_gain_hook, card_class) 
+
 
 
 class Bank(TreasureCard):
@@ -880,7 +894,7 @@ KINGDOM_CARDS = [
     Venture,
     # Goons,
     GrandMarket,
-    # Hoard,
+    Hoard,
     Bank,
     Expand,
     Forge,
