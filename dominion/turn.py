@@ -127,40 +127,42 @@ class BuyPhase(Phase):
                 treasures_available.remove(choice)
                 treasures_to_play.append(choice)
         for treasure in treasures_to_play:
-            self.game.broadcast(f"{self.player} played a Treasure: {treasure.name}.")
-            # Add the Treasure to the played cards area and remove from hand
-            self.player.play(treasure)
-            # Activate side effects cause by playing this Treasure
-            if hasattr(treasure, 'play'):
-                treasure.play()
-        # Check if there are any game-wide hooks registered to the played Treasures
-        for treasure in treasures_to_play:
-            expired_hooks = []
-            if type(treasure) in self.game.treasure_hooks:
-                # Activate any hooks caused by playing the Treasure
-                for treasure_hook in self.game.treasure_hooks[type(treasure)]:
-                    treasure_hook()
-                    if not treasure_hook.persistent:
-                        expired_hooks.append(treasure_hook)
-                # Remove any non-persistent hooks
-                for hook in expired_hooks:
-                    self.game.treasure_hooks[type(treasure)].remove(hook)
-        # Check if there are any turn-wide hooks registered to the played Treasures
-        for treasure in treasures_to_play:
-            expired_hooks = []
-            if type(treasure) in self.turn.treasure_hooks:
-                # Activate any hooks caused by playing the Treasure
-                for treasure_hook in self.turn.treasure_hooks[type(treasure)]:
-                    treasure_hook()
-                    if not treasure_hook.persistent:
-                        expired_hooks.append(treasure_hook)
-                # Remove any non-persistent hooks
-                for hook in expired_hooks:
-                    self.turn.treasure_hooks[type(treasure)].remove(hook)
-        # Add up any played treasures
-        for treasure in treasures_to_play:
-            # Add the value of this Treasure
-            self.turn.coppers_remaining += treasure.value
+            self.play_treasure(treasure)
+        # for treasure in treasures_to_play:
+        #     self.game.broadcast(f"{self.player} played a Treasure: {treasure.name}.")
+        #     # Add the Treasure to the played cards area and remove from hand
+        #     self.player.play(treasure)
+        #     # Activate side effects cause by playing this Treasure
+        #     if hasattr(treasure, 'play'):
+        #         treasure.play()
+        # # Check if there are any game-wide hooks registered to the played Treasures
+        # for treasure in treasures_to_play:
+        #     expired_hooks = []
+        #     if type(treasure) in self.game.treasure_hooks:
+        #         # Activate any hooks caused by playing the Treasure
+        #         for treasure_hook in self.game.treasure_hooks[type(treasure)]:
+        #             treasure_hook()
+        #             if not treasure_hook.persistent:
+        #                 expired_hooks.append(treasure_hook)
+        #         # Remove any non-persistent hooks
+        #         for hook in expired_hooks:
+        #             self.game.treasure_hooks[type(treasure)].remove(hook)
+        # # Check if there are any turn-wide hooks registered to the played Treasures
+        # for treasure in treasures_to_play:
+        #     expired_hooks = []
+        #     if type(treasure) in self.turn.treasure_hooks:
+        #         # Activate any hooks caused by playing the Treasure
+        #         for treasure_hook in self.turn.treasure_hooks[type(treasure)]:
+        #             treasure_hook()
+        #             if not treasure_hook.persistent:
+        #                 expired_hooks.append(treasure_hook)
+        #         # Remove any non-persistent hooks
+        #         for hook in expired_hooks:
+        #             self.turn.treasure_hooks[type(treasure)].remove(hook)
+        # # Add up any played treasures
+        # for treasure in treasures_to_play:
+        #     # Add the value of this Treasure
+        #     self.turn.coppers_remaining += treasure.value
         # Buy cards
         while self.turn.buys_remaining > 0:
             prompt = f'You have {self.turn.coppers_remaining} $ to spend and {self.turn.buys_remaining} buys. Select a card to buy.'
@@ -172,6 +174,37 @@ class BuyPhase(Phase):
             else:
                 self.buy(card_class)
         self.player.interactions.send('No buys left. Ending buy phase.')
+
+    def play_treasure(self, treasure):
+        # Add the Treasure to the played cards area and remove from hand
+        self.player.play(treasure)
+        # Activate side effects cause by playing this Treasure
+        if hasattr(treasure, 'play'):
+            treasure.play()
+        # Check if there are any game-wide hooks registered to the played Treasures
+        expired_hooks = []
+        if type(treasure) in self.game.treasure_hooks:
+            # Activate any hooks caused by playing the Treasure
+            for treasure_hook in self.game.treasure_hooks[type(treasure)]:
+                treasure_hook()
+                if not treasure_hook.persistent:
+                    expired_hooks.append(treasure_hook)
+            # Remove any non-persistent hooks
+            for hook in expired_hooks:
+                self.game.treasure_hooks[type(treasure)].remove(hook)
+        # Check if there are any turn-wide hooks registered to the played Treasures
+        expired_hooks = []
+        if type(treasure) in self.turn.treasure_hooks:
+            # Activate any hooks caused by playing the Treasure
+            for treasure_hook in self.turn.treasure_hooks[type(treasure)]:
+                treasure_hook()
+                if not treasure_hook.persistent:
+                    expired_hooks.append(treasure_hook)
+            # Remove any non-persistent hooks
+            for hook in expired_hooks:
+                self.turn.treasure_hooks[type(treasure)].remove(hook)
+        # Add the value of this Treasure
+        self.turn.coppers_remaining += treasure.value
 
     def buy(self, card_class):
         # Buying a card uses one buy

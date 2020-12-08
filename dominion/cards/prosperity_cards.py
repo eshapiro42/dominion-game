@@ -542,10 +542,11 @@ class RoyalSeal(TreasureCard):
                 game.broadcast(f'{player} put the {card} onto their deck.')
 
     def play(self):
-        # All cards get a post gain hook added this turn
+        # All cards get a post gain hook added this turn (but only one!)
         for card_class in self.supply.card_stacks:
-            post_gain_hook = self.RoyalSealPostGainHook(card_class)
-            self.owner.turn.add_post_gain_hook(post_gain_hook, card_class) 
+            if not any(isinstance(hook, self.RoyalSealPostGainHook) for hook in self.owner.turn.post_gain_hooks[card_class]):
+                post_gain_hook = self.RoyalSealPostGainHook(card_class)
+                self.owner.turn.add_post_gain_hook(post_gain_hook, card_class) 
 
 
 class Vault(ActionCard):
