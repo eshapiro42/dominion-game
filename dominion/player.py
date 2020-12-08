@@ -47,7 +47,7 @@ class Player:
                     return
             card.owner = self
             self.discard_pile.append(card)
-            # Check if there are any post-gain hooks caused by gaining the card
+            # Check if there are any game-wide post-gain hooks caused by gaining the card
             expired_hooks = []
             if type(card) in self.supply.post_gain_hooks:
                 # Activate any post-gain hooks caused by gaining the card
@@ -58,6 +58,18 @@ class Player:
                 # Remove any non-persistent hooks
                 for hook in expired_hooks:
                     self.supply.post_gain_hooks[type(card)].remove(hook)
+            if self.turn is not None:
+                # Check if there are turn-wide any post-gain hooks caused by gaining the card
+                expired_hooks = []
+                if type(card) in self.turn.post_gain_hooks:
+                    # Activate any post-gain hooks caused by gaining the card
+                    for post_gain_hook in self.turn.post_gain_hooks[type(card)]:
+                        post_gain_hook(self, card)
+                        if not post_gain_hook.persistent:
+                            expired_hooks.append(post_gain_hook)
+                    # Remove any non-persistent hooks
+                    for hook in expired_hooks:
+                        self.turn.post_gain_hooks[type(card)].remove(hook)
 
     def gain_to_hand(self, card_class, quantity: int = 1, from_supply: bool = True):
         for _ in range(quantity):

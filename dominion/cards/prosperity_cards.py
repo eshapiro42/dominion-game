@@ -521,10 +521,18 @@ class RoyalSeal(TreasureCard):
         persistent = True
 
         def __call__(self, player, card):
-            pass
+            game = player.game
+            prompt = f'{player}: Would you like to put the {card} you just gained onto your deck?'
+            if player.interactions.choose_yes_or_no(prompt):
+                player.discard_pile.remove(card)
+                player.deck.append(card)
+                game.broadcast(f'{player} put the {card} onto their deck.')
 
     def play(self):
-        pass
+        # All cards get a post gain hook added this turn
+        for card_class in self.supply.card_stacks:
+            post_gain_hook = self.RoyalSealPostGainHook(card_class)
+            self.owner.turn.add_post_gain_hook(post_gain_hook, card_class) 
 
 
 class Vault(ActionCard):
@@ -835,7 +843,7 @@ KINGDOM_CARDS = [
     # Mint,
     Mountebank,
     Rabble,
-    # RoyalSeal,
+    RoyalSeal,
     Vault,
     # Venture,
     # Goons,

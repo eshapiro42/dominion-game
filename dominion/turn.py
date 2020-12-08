@@ -17,6 +17,7 @@ class Turn:
         self.buy_phase = BuyPhase(turn=self)
         self.cleanup_phase = CleanupPhase(turn=self)
         self.treasure_hooks = defaultdict(list)
+        self.post_gain_hooks = defaultdict(list)
         self.invalid_card_classes = []
 
     def start(self):
@@ -30,6 +31,10 @@ class Turn:
 
     def add_treasure_hook(self, treasure_hook, card_class):
         self.treasure_hooks[card_class].append(treasure_hook)
+
+    def add_post_gain_hook(self, post_gain_hook, card_class):
+        self.post_gain_hooks[card_class].append(post_gain_hook)
+
 
 
 class Phase(metaclass=ABCMeta):
