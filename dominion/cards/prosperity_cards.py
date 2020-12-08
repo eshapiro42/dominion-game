@@ -328,7 +328,15 @@ class Contraband(TreasureCard):
     )
 
     def play(self):
-        pass
+        # +1 Buy (this must be done manually here since it is a Treasure card)
+        self.owner.turn.buys_remaining += 1
+        self.game.broadcast(f'+1 buy --> {self.owner.turn.buys_remaining} buys.')
+        # The player to your left names a card
+        player_to_left = self.owner.other_players[0]
+        prompt = f'{player_to_left}: Which card should {self.owner} be forbidden from buying this turn?'
+        forbidden_card_class = player_to_left.interactions.choose_card_class_from_supply(prompt, max_cost=math.inf, force=True) # max_cost=math.inf because any card can be named
+        self.owner.turn.invalid_card_classes.append(forbidden_card_class)
+        self.game.broadcast(f'{self.owner} cannot buy a {forbidden_card_class.name} this turn.')
 
 
 class CountingHouse(ActionCard):
@@ -508,6 +516,12 @@ class RoyalSeal(TreasureCard):
             'While this is in play, when you gain a card, you may put that card onto your deck.'
         ]
     )
+
+    class RoyalSealPostGainHook(PostGainHook):
+        persistent = True
+
+        def __call__(self, player, card):
+            pass
 
     def play(self):
         pass
@@ -816,7 +830,7 @@ KINGDOM_CARDS = [
     # Talisman,
     WorkersVillage,
     City,
-    # Contraband,
+    Contraband,
     CountingHouse,
     # Mint,
     Mountebank,
