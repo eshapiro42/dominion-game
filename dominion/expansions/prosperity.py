@@ -57,6 +57,11 @@ class ProsperityExpansion(Expansion):
         if prosperity_cards.Mint in self.supply.card_stacks:
             post_gain_hook = prosperity_cards.Mint.MintPostGainHook(prosperity_cards.Mint)
             self.supply.add_post_gain_hook(post_gain_hook, prosperity_cards.Mint)
+        # If the Watchtower is in the Supply, add its post-gain hook to every card in the Supply
+        if prosperity_cards.Watchtower in self.supply.card_stacks:
+            for card_class in self.supply.card_stacks:
+                post_gain_hook = prosperity_cards.Watchtower.WatchtowerPostGainHook(card_class)
+                self.supply.add_post_gain_hook(post_gain_hook, card_class)
 
 
     @property

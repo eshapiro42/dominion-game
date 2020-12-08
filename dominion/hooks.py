@@ -20,7 +20,7 @@ class PostGainHook(metaclass=ABCMeta):
         self.card_class = card_class
 
     @abstractmethod
-    def __call__(self, player):
+    def __call__(self, player, card, where_it_went):
         pass
 
     @property

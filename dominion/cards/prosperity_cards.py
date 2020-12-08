@@ -102,7 +102,7 @@ class TradeRoute(ActionCard):
     class TradeRoutePostGainHook(PostGainHook):
         persistent = False
 
-        def __call__(self, player, card):
+        def __call__(self, player, card, where_it_went):
             game = player.game
             trade_route_before = game.supply.trade_route
             game.supply.trade_route += 1
@@ -139,8 +139,42 @@ class Watchtower(ReactionCard):
     extra_actions = 0
     extra_buys = 0
     extra_coppers = 0
-    
+
+    class WatchtowerPostGainHook(PostGainHook):
+        persistent = True
+
+        def __call__(self, player, card, where_it_went):
+            if card in where_it_went:
+                game = player.game
+                if any(isinstance(card, Watchtower) for card in player.hand):
+                    prompt = f'You have a Reaction (Watchtower) in your hand. Would you like to play it?'
+                    if player.interactions.choose_yes_or_no(prompt):
+                        game.broadcast(f'{player} revealed a Watchtower. They may trash the {card} they just gained or put it onto their deck.')
+                        prompt = f'Would you like to trash the {card} you just gained or put it onto your deck?'
+                        options = ['Trash', 'Put on deck']
+                        choice = player.interactions.choose_from_options(prompt, options, force=False)
+                        if choice is None:
+                            game.broadcast(f'{player} decided not to use their Watchtower.')
+                        elif choice == 'Trash':
+                            where_it_went.remove(card)
+                            game.supply.trash(card)
+                            game.broadcast(f'{player} trashed the {card}.')
+                        elif choice == 'Put on deck':
+                            where_it_went.remove(card)
+                            player.deck.append(card)
+                            game.broadcast(f'{player} put the {card} onto their deck.')
+
     def action(self):
+        num_cards_to_draw = 6 - len(self.owner.hand)
+        if num_cards_to_draw > 0:
+            cards_drawn = self.owner.draw(num_cards_to_draw)
+            if cards_drawn:
+                self.game.broadcast(f'{self.owner} drew {len(cards_drawn)} cards.')
+                self.interactions.send(f"You drew: {', '.join(map(str, cards_drawn))}.")
+            else:
+                self.game.broadcast(f'{self.owner} has no more cards to draw from.')
+
+    def react(self):
         pass
 
 
@@ -250,7 +284,7 @@ class Talisman(TreasureCard):
     class TalismanPostGainHook(PostGainHook):
         persistent = True
 
-        def __call__(self, player, card):
+        def __call__(self, player, card, where_it_went):
             game = player.game
             game.broadcast(f'{player} gains an extra {self.card_class.name} from their Talisman.')
             player.gain_without_hooks(self.card_class)
@@ -406,7 +440,7 @@ class Mint(ActionCard):
     class MintPostGainHook(PostGainHook):
         persistent = True
 
-        def __call__(self, player, card):
+        def __call__(self, player, card, where_it_went):
             game = player.game
             treasures_in_play = [card for card in player.played_cards if CardType.TREASURE in card.types]
             for treasure in treasures_in_play:
@@ -550,13 +584,14 @@ class RoyalSeal(TreasureCard):
     class RoyalSealPostGainHook(PostGainHook):
         persistent = True
 
-        def __call__(self, player, card):
-            game = player.game
-            prompt = f'{player}: Would you like to put the {card} you just gained onto your deck?'
-            if player.interactions.choose_yes_or_no(prompt):
-                player.discard_pile.remove(card)
-                player.deck.append(card)
-                game.broadcast(f'{player} put the {card} onto their deck.')
+        def __call__(self, player, card, where_it_went):
+            if card in where_it_went: # Need this in case a Watchtower or other card has already moved the card
+                game = player.game
+                prompt = f'{player}: Would you like to put the {card} you just gained onto your deck?'
+                if player.interactions.choose_yes_or_no(prompt):
+                    where_it_went.remove(card)
+                    player.deck.append(card)
+                    game.broadcast(f'{player} put the {card} onto their deck.')
 
     def play(self):
         # All cards get a post gain hook added this turn (but only one!)
@@ -682,7 +717,7 @@ class Goons(AttackCard):
     class GoonsPostGainHook(PostGainHook):
         persistent = True
 
-        def __call__(self, player, card):
+        def __call__(self, player, card, where_it_went):
             game = player.game
             game.broadcast(f'{player} takes a Victory token from their Goons.')
             player.victory_tokens += 1
@@ -759,7 +794,7 @@ class Hoard(TreasureCard):
     class HoardPostGainHook(PostGainHook):
         persistent = True
 
-        def __call__(self, player, card):
+        def __call__(self, player, card, where_it_went):
             game = player.game
             game.broadcast(f'{player} gains a Gold from their Hoard.')
             player.gain_without_hooks(base_cards.Gold)
@@ -913,7 +948,7 @@ class Peddler(ActionCard):
 KINGDOM_CARDS = [
     Loan,
     TradeRoute,
-    # Watchtower,
+    Watchtower,
     Bishop,
     Monument,
     # Quarry,

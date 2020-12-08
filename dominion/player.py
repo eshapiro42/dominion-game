@@ -35,6 +35,31 @@ class Player:
         # Other players are those after, then those before, in the correct turn order
         self.other_players = players_after + players_before
 
+    def process_post_gain_hooks(self, card, where_it_went):
+        # Check if there are any game-wide post-gain hooks caused by gaining the card
+        expired_hooks = []
+        if type(card) in self.supply.post_gain_hooks:
+            # Activate any post-gain hooks caused by gaining the card
+            for post_gain_hook in self.supply.post_gain_hooks[type(card)]:
+                post_gain_hook(self, card, where_it_went)
+                if not post_gain_hook.persistent:
+                    expired_hooks.append(post_gain_hook)
+            # Remove any non-persistent hooks
+            for hook in expired_hooks:
+                self.supply.post_gain_hooks[type(card)].remove(hook)
+        if self.turn is not None:
+            # Check if there are any turn-wide post-gain hooks caused by gaining the card
+            expired_hooks = []
+            if type(card) in self.turn.post_gain_hooks:
+                # Activate any post-gain hooks caused by gaining the card
+                for post_gain_hook in self.turn.post_gain_hooks[type(card)]:
+                    post_gain_hook(self, card, where_it_went)
+                    if not post_gain_hook.persistent:
+                        expired_hooks.append(post_gain_hook)
+                # Remove any non-persistent hooks
+                for hook in expired_hooks:
+                    self.turn.post_gain_hooks[type(card)].remove(hook)
+
     def gain(self, card_class, quantity: int = 1, from_supply: bool = True):
         for _ in range(quantity):
             if not from_supply:
@@ -47,29 +72,7 @@ class Player:
                     return
             card.owner = self
             self.discard_pile.append(card)
-            # Check if there are any game-wide post-gain hooks caused by gaining the card
-            expired_hooks = []
-            if type(card) in self.supply.post_gain_hooks:
-                # Activate any post-gain hooks caused by gaining the card
-                for post_gain_hook in self.supply.post_gain_hooks[type(card)]:
-                    post_gain_hook(self, card)
-                    if not post_gain_hook.persistent:
-                        expired_hooks.append(post_gain_hook)
-                # Remove any non-persistent hooks
-                for hook in expired_hooks:
-                    self.supply.post_gain_hooks[type(card)].remove(hook)
-            if self.turn is not None:
-                # Check if there are turn-wide any post-gain hooks caused by gaining the card
-                expired_hooks = []
-                if type(card) in self.turn.post_gain_hooks:
-                    # Activate any post-gain hooks caused by gaining the card
-                    for post_gain_hook in self.turn.post_gain_hooks[type(card)]:
-                        post_gain_hook(self, card)
-                        if not post_gain_hook.persistent:
-                            expired_hooks.append(post_gain_hook)
-                    # Remove any non-persistent hooks
-                    for hook in expired_hooks:
-                        self.turn.post_gain_hooks[type(card)].remove(hook)
+            self.process_post_gain_hooks(card, self.discard_pile)
 
     def gain_without_hooks(self, card_class, quantity: int = 1, from_supply: bool = True):
         for _ in range(quantity):
@@ -96,17 +99,7 @@ class Player:
                     return
             card.owner = self
             self.hand.append(card)
-            # Check if there are any post-gain hooks caused by gaining the card
-            expired_hooks = []
-            if type(card) in self.supply.post_gain_hooks:
-                # Activate any post-gain hooks caused by gaining the card
-                for post_gain_hook in self.supply.post_gain_hooks[type(card)]:
-                    post_gain_hook(self, card)
-                    if not post_gain_hook.persistent:
-                        expired_hooks.append(post_gain_hook)
-                # Remove any non-persistent hooks
-                for hook in expired_hooks:
-                    self.supply.post_gain_hooks[type(card)].remove(hook)
+            self.process_post_gain_hooks(card, self.hand)
 
     def shuffle(self):
         self.game.broadcast(f'{self.name} shuffled their deck.')
