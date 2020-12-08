@@ -53,6 +53,10 @@ class ProsperityExpansion(Expansion):
         if prosperity_cards.GrandMarket in self.supply.card_stacks:
             treasure_hook = prosperity_cards.GrandMarket.GrandMarketTreasureHook(self.game)
             self.game.add_treasure_hook(treasure_hook, base_cards.Copper)
+        # If the Mint is in the Supply, add its post-gain hook
+        if prosperity_cards.Mint in self.supply.card_stacks:
+            post_gain_hook = prosperity_cards.Mint.MintPostGainHook(prosperity_cards.Mint)
+            self.supply.add_post_gain_hook(post_gain_hook, prosperity_cards.Mint)
 
 
     @property

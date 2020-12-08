@@ -403,9 +403,26 @@ class Mint(ActionCard):
     extra_buys = 0
     extra_coppers = 0
     
-    def action(self):
-        pass
+    class MintPostGainHook(PostGainHook):
+        persistent = True
 
+        def __call__(self, player, card):
+            game = player.game
+            treasures_in_play = [card for card in player.played_cards if CardType.TREASURE in card.types]
+            for treasure in treasures_in_play:
+                player.trash_played_card(treasure)
+            game.broadcast(f"{player} trashed all Treasures they had in play: {', '.join(map(str, treasures_in_play))}.")
+
+    def action(self):
+        # You may reveal a Treasure card from your hand.
+        prompt = f'{self.owner}: You may reveal a Treasure card from your hand to gain a copy of it.'
+        treasure_card = self.owner.interactions.choose_specific_card_type_from_hand(prompt, CardType.TREASURE)
+        if treasure_card is not None:
+            treasure_card_class = type(treasure_card)
+            self.owner.gain_without_hooks(treasure_card_class)
+            self.game.broadcast(f'{self.owner} revealed a {treasure_card} and gained a copy of it.')
+
+        
 
 class Mountebank(AttackCard):
     name = 'Mountebank'
@@ -736,7 +753,6 @@ class Hoard(TreasureCard):
                 self.owner.turn.add_post_gain_hook(post_gain_hook, card_class) 
 
 
-
 class Bank(TreasureCard):
     name = 'Bank'
     cost = 7
@@ -886,7 +902,7 @@ KINGDOM_CARDS = [
     City,
     Contraband,
     CountingHouse,
-    # Mint,
+    Mint,
     Mountebank,
     Rabble,
     RoyalSeal,
