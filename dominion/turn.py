@@ -129,7 +129,6 @@ class BuyPhase(Phase):
         for treasure in treasures_to_play:
             self.play_treasure(treasure)
         # for treasure in treasures_to_play:
-        #     self.game.broadcast(f"{self.player} played a Treasure: {treasure.name}.")
         #     # Add the Treasure to the played cards area and remove from hand
         #     self.player.play(treasure)
         #     # Activate side effects cause by playing this Treasure
@@ -176,6 +175,7 @@ class BuyPhase(Phase):
         self.player.interactions.send('No buys left. Ending buy phase.')
 
     def play_treasure(self, treasure):
+        self.game.broadcast(f"{self.player} played a Treasure: {treasure.name}.")
         # Add the Treasure to the played cards area and remove from hand
         self.player.play(treasure)
         # Activate side effects cause by playing this Treasure
