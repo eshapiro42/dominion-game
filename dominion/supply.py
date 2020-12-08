@@ -38,7 +38,8 @@ class Supply:
         self.post_gain_hooks = defaultdict(list)
         self.customization = Customization()
         # TODO: Remove these (they are for debugging specific cards)
-        self.customization.required_card_classes.add(prosperity_cards.Watchtower)
+        self.customization.required_card_classes.add(prosperity_cards.Peddler)
+        self.customization.required_card_classes.add(base_cards.Village)
 
     def setup(self):
         self.select_kingdom_cards()
@@ -101,13 +102,23 @@ class Supply:
         card_class = type(card)
         self.trash_pile[card_class] += 1
 
+    def modify_cost(self, card_class, increment):
+        self.card_stacks[card_class].modified_cost += increment
+        # Don't ever let the cost go below zero
+        if self.card_stacks[card_class].modified_cost < 0:
+            self.card_stacks[card_class].modified_cost = 0
+
+    def reset_costs(self):
+        for card_class in self.card_stacks:
+            self.card_stacks[card_class].modified_cost = self.card_stacks[card_class].base_cost
+
     def get_table(self):
         supply_table = prettytable.PrettyTable(hrules=prettytable.ALL)
         supply_table.field_names = ['Number', 'Card', 'Cost', 'Type', 'Quantity', 'Description']
         for idx, card_class in enumerate(sorted(self.card_stacks.keys(), key=lambda x: (x.types[0].value, x.cost))):
             quantity = self.card_stacks[card_class].cards_remaining
             types = ', '.join([type.name.lower().capitalize() for type in card_class.types])
-            supply_table.add_row([idx + 1, card_class.name, card_class.cost, types, quantity, card_class.description])
+            supply_table.add_row([idx + 1, card_class.name, self.card_stacks[card_class].modified_cost, types, quantity, card_class.description])
         return supply_table
 
     def __str__(self):
@@ -156,6 +167,8 @@ class InfiniteSupplyStack(SupplyStack):
 class FiniteSupplyStack(SupplyStack):
     def __init__(self, card_class, size):
         self.card_class = card_class
+        self.base_cost = card_class.cost
+        self.modified_cost = card_class.cost
         self._cards_remaining = size
 
     def draw(self):

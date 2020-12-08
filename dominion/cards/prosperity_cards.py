@@ -1,7 +1,7 @@
 import math
 from .cards import CardType, Card, TreasureCard, ActionCard, AttackCard, ReactionCard, VictoryCard, CurseCard
 from . import base_cards
-from ..hooks import TreasureHook, PostGainHook
+from ..hooks import TreasureHook, PreBuyHook, PostGainHook
 
 
 # BASIC CARDS
@@ -940,7 +940,16 @@ class Peddler(ActionCard):
     extra_actions = 1
     extra_buys = 0
     extra_coppers = 1
-    
+
+    class PeddlerPreBuyHook(PreBuyHook):
+        persistent = True
+
+        def __call__(self):
+            player = self.game.current_turn.player
+            turn = self.game.current_turn
+            num_actions = len([card for card in player.played_cards if CardType.ACTION in card.types])
+            self.game.supply.modify_cost(Peddler, -2 * num_actions)
+
     def action(self):
         pass
 
@@ -970,5 +979,5 @@ KINGDOM_CARDS = [
     Expand,
     Forge,
     KingsCourt,
-    # Peddler
+    Peddler
 ]

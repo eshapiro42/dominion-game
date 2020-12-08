@@ -218,14 +218,14 @@ class CLIInteraction(Interaction):
                 supply_table.field_names = ['Number', 'Card', 'Cost', 'Type', 'Quantity', 'Description']
                 # Only cards you can afford can be chosen (and with non-zero quantity)
                 stacks = self.supply.card_stacks
-                buyable_card_stacks = [card_class for card_class in stacks if card_class.cost <= max_cost and card_class not in invalid_card_classes and stacks[card_class].cards_remaining > 0]
+                buyable_card_stacks = [card_class for card_class in stacks if stacks[card_class].modified_cost <= max_cost and card_class not in invalid_card_classes and stacks[card_class].cards_remaining > 0]
                 if exact_cost:
-                    buyable_card_stacks = [card_class for card_class in buyable_card_stacks if card_class.cost == max_cost]
+                    buyable_card_stacks = [card_class for card_class in buyable_card_stacks if stacks[card_class].modified_cost == max_cost]
                 # for idx, card_class in enumerate(sorted(buyable_card_stacks, key=lambda x: (x.types[0].value, x.cost))):
                 for idx, card_class in enumerate(buyable_card_stacks):
                     types = ', '.join([type.name.lower().capitalize() for type in card_class.types])
                     card_quantity = stacks[card_class].cards_remaining
-                    supply_table.add_row([idx + 1, card_class.name, card_class.cost, types, card_quantity, card_class.description])
+                    supply_table.add_row([idx + 1, card_class.name, stacks[card_class].modified_cost, types, card_quantity, card_class.description])
                 print(supply_table)
                 if force:
                     card_num = int(input(f'Enter choice 1-{len(buyable_card_stacks)}: '))
@@ -255,12 +255,12 @@ class CLIInteraction(Interaction):
                 supply_table.field_names = ['Number', 'Card', 'Cost', 'Type', 'Quantity', 'Description']
                 # Only cards you can afford can be chosen (and with non-zero quantity)
                 stacks = self.supply.card_stacks
-                buyable_card_stacks = [card_class for card_class in stacks if card_class.cost <= max_cost and stacks[card_class].cards_remaining > 0 and card_type in card_class.types]
+                buyable_card_stacks = [card_class for card_class in stacks if stacks[card_class].modified_cost <= max_cost and stacks[card_class].cards_remaining > 0 and card_type in card_class.types]
                 # for idx, card_class in enumerate(sorted(buyable_card_stacks, key=lambda x: (x.types[0].value, x.cost))):
                 for idx, card_class in enumerate(buyable_card_stacks):
                     types = ', '.join([type.name.lower().capitalize() for type in card_class.types])
                     card_quantity = stacks[card_class].cards_remaining
-                    supply_table.add_row([idx + 1, card_class.name, card_class.cost, types, card_quantity, card_class.description])
+                    supply_table.add_row([idx + 1, card_class.name, stacks[card_class].modified_cost, types, card_quantity, card_class.description])
                 print(supply_table)
                 if force:
                     card_num = int(input(f'Enter choice 1-{len(buyable_card_stacks)}: '))
@@ -487,14 +487,14 @@ class NetworkedCLIInteraction(Interaction):
                 supply_table.field_names = ['Number', 'Card', 'Cost', 'Type', 'Quantity', 'Description']
                 # Only cards you can afford can be chosen (and with non-zero quantity)
                 stacks = self.supply.card_stacks
-                buyable_card_stacks = [card_class for card_class in stacks if card_class.cost <= max_cost and card_class not in invalid_card_classes and stacks[card_class].cards_remaining > 0]
+                buyable_card_stacks = [card_class for card_class in stacks if stacks[card_class].modified_cost <= max_cost and card_class not in invalid_card_classes and stacks[card_class].cards_remaining > 0]
                 if exact_cost:
-                    buyable_card_stacks = [card_class for card_class in buyable_card_stacks if card_class.cost == max_cost]
+                    buyable_card_stacks = [card_class for card_class in buyable_card_stacks if stacks[card_class].modified_cost == max_cost]
                 # for idx, card_class in enumerate(sorted(buyable_card_stacks, key=lambda x: (x.types[0].value, x.cost))):
                 for idx, card_class in enumerate(buyable_card_stacks):
                     types = ', '.join([type.name.lower().capitalize() for type in card_class.types])
                     card_quantity = stacks[card_class].cards_remaining
-                    supply_table.add_row([idx + 1, card_class.name, card_class.cost, types, card_quantity, card_class.description])
+                    supply_table.add_row([idx + 1, card_class.name, stacks[card_class].modified_cost, types, card_quantity, card_class.description])
                 while True:
                     try:
                         _prompt = f'{prompt}\n{supply_table.get_string()}'
@@ -528,12 +528,12 @@ class NetworkedCLIInteraction(Interaction):
                 supply_table.field_names = ['Number', 'Card', 'Cost', 'Type', 'Quantity', 'Description']
                 # Only cards you can afford can be chosen (and with non-zero quantity)
                 stacks = self.supply.card_stacks
-                buyable_card_stacks = [card_class for card_class in stacks if card_class.cost <= max_cost and stacks[card_class].cards_remaining > 0 and card_type in card_class.types]
+                buyable_card_stacks = [card_class for card_class in stacks if stacks[card_class].modified_cost <= max_cost and stacks[card_class].cards_remaining > 0 and card_type in card_class.types]
                 # for idx, card_class in enumerate(sorted(buyable_card_stacks, key=lambda x: (x.types[0].value, x.cost))):
                 for idx, card_class in enumerate(buyable_card_stacks):
                     types = ', '.join([type.name.lower().capitalize() for type in card_class.types])
                     card_quantity = stacks[card_class].cards_remaining
-                    supply_table.add_row([idx + 1, card_class.name, card_class.cost, types, card_quantity, card_class.description])
+                    supply_table.add_row([idx + 1, card_class.name, stacks[card_class].modified_cost, types, card_quantity, card_class.description])
                 while True:
                     try:
                         _prompt = f'{prompt}\n{supply_table.get_string()}'
@@ -748,9 +748,9 @@ class AutoInteraction(Interaction):
         while True:
             try:
                 stacks = self.supply.card_stacks
-                buyable_card_stacks = [card_class for card_class in stacks if card_class.cost <= max_cost and card_class not in invalid_card_classes and stacks[card_class].cards_remaining > 0]
+                buyable_card_stacks = [card_class for card_class in stacks if stacks[card_class].modified_cost <= max_cost and card_class not in invalid_card_classes and stacks[card_class].cards_remaining > 0]
                 if exact_cost:
-                    buyable_card_stacks = [card_class for card_class in buyable_card_stacks if card_class.cost == max_cost]
+                    buyable_card_stacks = [card_class for card_class in buyable_card_stacks if stacks[card_class].modified_cost == max_cost]
                 if force:
                     print(f'Enter choice 1-{len(buyable_card_stacks)}: ', end='')
                     choices = list(range(1, len(buyable_card_stacks) + 1))
@@ -796,7 +796,7 @@ class AutoInteraction(Interaction):
             try:
                 # Only cards you can afford can be chosen (and with non-zero quantity)
                 stacks = self.supply.card_stacks
-                buyable_card_stacks = [card_class for card_class in stacks if card_class.cost <= max_cost and stacks[card_class].cards_remaining > 0 and card_type in card_class.types]
+                buyable_card_stacks = [card_class for card_class in stacks if stacks[card_class].modified_cost <= max_cost and stacks[card_class].cards_remaining > 0 and card_type in card_class.types]
                 if force:
                     print(f'Enter choice 1-{len(buyable_card_stacks)}: ', end='')
                     choices = list(range(1, len(buyable_card_stacks) + 1))
@@ -1046,14 +1046,14 @@ class BrowserInteraction(Interaction):
                 supply_table.field_names = ['Number', 'Card', 'Cost', 'Type', 'Quantity', 'Description']
                 # Only cards you can afford can be chosen (and with non-zero quantity)
                 stacks = self.supply.card_stacks
-                buyable_card_stacks = [card_class for card_class in stacks if card_class.cost <= max_cost and card_class not in invalid_card_classes and stacks[card_class].cards_remaining > 0]
+                buyable_card_stacks = [card_class for card_class in stacks if stacks[card_class].modified_cost <= max_cost and card_class not in invalid_card_classes and stacks[card_class].cards_remaining > 0]
                 if exact_cost:
-                    buyable_card_stacks = [card_class for card_class in buyable_card_stacks if card_class.cost == max_cost]
+                    buyable_card_stacks = [card_class for card_class in buyable_card_stacks if stacks[card_class].modified_cost == max_cost]
                 # for idx, card_class in enumerate(sorted(buyable_card_stacks, key=lambda x: (x.types[0].value, x.cost))):
                 for idx, card_class in enumerate(buyable_card_stacks):
                     types = ', '.join([type.name.lower().capitalize() for type in card_class.types])
                     card_quantity = stacks[card_class].cards_remaining
-                    supply_table.add_row([idx + 1, card_class.name, card_class.cost, types, card_quantity, card_class.description])
+                    supply_table.add_row([idx + 1, card_class.name, stacks[card_class].modified_cost, types, card_quantity, card_class.description])
                 while True:
                     try:
                         _prompt = f'{prompt}\n{supply_table.get_html_string()}'
@@ -1086,12 +1086,12 @@ class BrowserInteraction(Interaction):
                 supply_table.field_names = ['Number', 'Card', 'Cost', 'Type', 'Quantity', 'Description']
                 # Only cards you can afford can be chosen (and with non-zero quantity)
                 stacks = self.supply.card_stacks
-                buyable_card_stacks = [card_class for card_class in stacks if card_class.cost <= max_cost and stacks[card_class].cards_remaining > 0 and card_type in card_class.types]
+                buyable_card_stacks = [card_class for card_class in stacks if stacks[card_class].modified_cost <= max_cost and stacks[card_class].cards_remaining > 0 and card_type in card_class.types]
                 # for idx, card_class in enumerate(sorted(buyable_card_stacks, key=lambda x: (x.types[0].value, x.cost))):
                 for idx, card_class in enumerate(buyable_card_stacks):
                     types = ', '.join([type.name.lower().capitalize() for type in card_class.types])
                     card_quantity = stacks[card_class].cards_remaining
-                    supply_table.add_row([idx + 1, card_class.name, card_class.cost, types, card_quantity, card_class.description])
+                    supply_table.add_row([idx + 1, card_class.name, stacks[card_class].modified_cost, types, card_quantity, card_class.description])
                 while True:
                     try:
                         _prompt = f'{prompt}\n{supply_table.get_html_string()}'
