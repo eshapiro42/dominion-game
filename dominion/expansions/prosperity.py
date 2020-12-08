@@ -51,8 +51,8 @@ class ProsperityExpansion(Expansion):
                 self.supply.add_post_gain_hook(post_gain_hook, victory_card_class)  
         # If the Grand Market is in the Supply, add its pre-buy hook
         if prosperity_cards.GrandMarket in self.supply.card_stacks:
-            pre_buy_hook = prosperity_cards.GrandMarket.GrandMarketPreBuyHook(self.game)
-            self.game.add_pre_buy_hook(pre_buy_hook, base_cards.Copper)
+            treasure_hook = prosperity_cards.GrandMarket.GrandMarketTreasureHook(self.game)
+            self.game.add_treasure_hook(treasure_hook, base_cards.Copper)
 
 
     @property

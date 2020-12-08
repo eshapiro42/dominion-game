@@ -1,7 +1,7 @@
 import math
 from .cards import CardType, Card, TreasureCard, ActionCard, AttackCard, ReactionCard, VictoryCard, CurseCard
 from . import base_cards
-from ..hooks import PreBuyHook, PostGainHook
+from ..hooks import TreasureHook, PostGainHook
 
 
 # BASIC CARDS
@@ -636,7 +636,7 @@ class GrandMarket(ActionCard):
     extra_buys = 1
     extra_coppers = 2
 
-    class GrandMarketPreBuyHook(PreBuyHook):
+    class GrandMarketTreasureHook(TreasureHook):
         persistent = True
 
         def __call__(self):

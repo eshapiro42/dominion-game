@@ -1,7 +1,7 @@
 from abc import ABCMeta, abstractmethod
 
 
-class PreBuyHook(metaclass=ABCMeta):
+class TreasureHook(metaclass=ABCMeta):
     def __init__(self, game):
         self.game = game
 

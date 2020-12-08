@@ -16,7 +16,7 @@ class Turn:
         self.action_phase = ActionPhase(turn=self)
         self.buy_phase = BuyPhase(turn=self)
         self.cleanup_phase = CleanupPhase(turn=self)
-        self.pre_buy_hooks = defaultdict(list)
+        self.treasure_hooks = defaultdict(list)
         self.invalid_card_classes = []
 
     def start(self):
@@ -28,8 +28,8 @@ class Turn:
         self.buy_phase.start()
         self.cleanup_phase.start()
 
-    def add_pre_buy_hook(self, pre_buy_hook, card_class):
-        self.pre_buy_hooks[card_class].append(pre_buy_hook)
+    def add_treasure_hook(self, treasure_hook, card_class):
+        self.treasure_hooks[card_class].append(treasure_hook)
 
 
 class Phase(metaclass=ABCMeta):
@@ -128,30 +128,30 @@ class BuyPhase(Phase):
             # Activate side effects cause by playing this Treasure
             if hasattr(treasure, 'play'):
                 treasure.play()
-        # Check if there are any game-wide pre-buy hooks registered to the played Treasures
+        # Check if there are any game-wide hooks registered to the played Treasures
         for treasure in treasures_to_play:
             expired_hooks = []
-            if type(treasure) in self.game.pre_buy_hooks:
-                # Activate any pre-buy hooks caused by playing the Treasure
-                for pre_buy_hook in self.game.pre_buy_hooks[type(treasure)]:
-                    pre_buy_hook()
-                    if not pre_buy_hook.persistent:
-                        expired_hooks.append(pre_buy_hook)
+            if type(treasure) in self.game.treasure_hooks:
+                # Activate any hooks caused by playing the Treasure
+                for treasure_hook in self.game.treasure_hooks[type(treasure)]:
+                    treasure_hook()
+                    if not treasure_hook.persistent:
+                        expired_hooks.append(treasure_hook)
                 # Remove any non-persistent hooks
                 for hook in expired_hooks:
-                    self.game.pre_buy_hooks[type(treasure)].remove(hook)
-        # Check if there are any turn-wide pre-buy hooks registered to the played Treasures
+                    self.game.treasure_hooks[type(treasure)].remove(hook)
+        # Check if there are any turn-wide hooks registered to the played Treasures
         for treasure in treasures_to_play:
             expired_hooks = []
-            if type(treasure) in self.turn.pre_buy_hooks:
-                # Activate any pre-buy hooks caused by playing the Treasure
-                for pre_buy_hook in self.turn.pre_buy_hooks[type(treasure)]:
-                    pre_buy_hook()
-                    if not pre_buy_hook.persistent:
-                        expired_hooks.append(pre_buy_hook)
+            if type(treasure) in self.turn.treasure_hooks:
+                # Activate any hooks caused by playing the Treasure
+                for treasure_hook in self.turn.treasure_hooks[type(treasure)]:
+                    treasure_hook()
+                    if not treasure_hook.persistent:
+                        expired_hooks.append(treasure_hook)
                 # Remove any non-persistent hooks
                 for hook in expired_hooks:
-                    self.turn.pre_buy_hooks[type(treasure)].remove(hook)
+                    self.turn.treasure_hooks[type(treasure)].remove(hook)
         # Add up any played treasures
         for treasure in treasures_to_play:
             # Add the value of this Treasure

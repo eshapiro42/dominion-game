@@ -29,15 +29,15 @@ class Game:
         self.startable = False
         self.started = False
         self.current_turn = None
-        self.pre_buy_hooks = defaultdict(list)
+        self.treasure_hooks = defaultdict(list)
         self.game_end_conditions = []
         self.expansions = set()
         self.add_expansion(BaseExpansion)
         # TODO: Remove this and allow customization
         self.add_expansion(ProsperityExpansion)
 
-    def add_pre_buy_hook(self, pre_buy_hook, card_class):
-        self.pre_buy_hooks[card_class].append(pre_buy_hook)
+    def add_treasure_hook(self, treasure_hook, card_class):
+        self.treasure_hooks[card_class].append(treasure_hook)
 
     def add_expansion(self, expansion):
         self.expansions.add(expansion)
