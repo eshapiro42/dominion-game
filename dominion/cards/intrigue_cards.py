@@ -168,7 +168,17 @@ class ShantyTown(ActionCard):
     extra_coppers = 0
 
     def action(self):
-        pass
+        self.game.broadcast(f"{self.owner} reveals their hand: {', '.join(map(str, self.owner.hand))}")
+        if not any(CardType.ACTION in card.types for card in self.owner.hand):
+            self.game.broadcast(f'{self.owner} has no Action cards in their hand, so they draw 2 cards.')
+            cards_drawn = self.owner.draw(2)
+            if cards_drawn:
+                self.game.broadcast(f'{self.owner} drew {len(cards_drawn)} cards.')
+                self.interactions.send(f"You drew: {', '.join(map(str, cards_drawn))}.")
+            else:
+                self.game.broadcast(f'{self.owner} has no more cards to draw from.')
+        else:
+            self.game.broadcast(f'{self.owner} has Action cards in their hand.')
 
 
 class Steward(ActionCard):
@@ -666,7 +676,7 @@ KINGDOM_CARDS = [
     # Lurker,
     Pawn,
     # Masquerade,
-    # ShantyTown,
+    ShantyTown,
     # Steward,
     # Swindler,
     # WishingWell,

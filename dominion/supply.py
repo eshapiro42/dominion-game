@@ -47,7 +47,7 @@ class Supply:
         self.post_gain_hooks = defaultdict(list)
         self.customization = Customization()
         # TODO: Remove these (they are for debugging specific cards)
-        self.customization.required_card_classes.add(intrigue_cards.Pawn)
+        self.customization.required_card_classes.add(intrigue_cards.ShantyTown)
 
     def setup(self):
         self.select_kingdom_cards()
