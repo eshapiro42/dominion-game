@@ -25,7 +25,14 @@ class Courtyard(ActionCard):
     extra_coppers = 0
 
     def action(self):
-        pass
+        # Choose a card from your hand
+        prompt = f'Choose a card from your hand to put onto your deck.'
+        card = self.interactions.choose_card_from_hand(prompt, force=True)
+        # Put that card onto your deck
+        if card is not None:
+            self.owner.hand.remove(card)
+            self.owner.deck.append(card)
+            self.game.broadcast(f'{self.owner} put a card from their hand onto their deck.')
 
 
 class Lurker(ActionCard):
@@ -47,8 +54,24 @@ class Lurker(ActionCard):
     extra_coppers = 0
 
     def action(self):
-        pass
-
+        # Choose one
+        prompt = f'Which would you like to do?'
+        options = [
+            'Trash an Action card from the Supply',
+            'Gain an Action card from the trash'
+        ]
+        choice = self.interactions.choose_from_options(prompt, options, force=True)
+        if choice == 'Trash an Action card from the Supply':
+            prompt = f'Choose an Action card from the Supply to trash.'
+            card_class = self.interactions.choose_specific_card_type_from_supply(prompt, max_cost=math.inf, card_type=CardType.ACTION, force=True)
+            if card_class is not None:
+                card_to_trash = self.supply.draw(card_class)
+                self.supply.trash(card_to_trash)
+                self.game.broadcast(f'{self.owner} trashed a {card_to_trash} from the Supply.')
+        elif choice == 'Gain an Action card from the trash':
+            prompt = f'Choose an Action card from the trash to gain.'
+            # TODO: FINISH IMPLEMENTING THIS
+        
 
 class Pawn(ActionCard):
     name = 'Pawn'
@@ -68,7 +91,39 @@ class Pawn(ActionCard):
     extra_coppers = 0
 
     def action(self):
-        pass
+        options = [
+            '+1 Card',
+            '+1 Action',
+            '+1 Buy',
+            '1 $'
+        ]
+        # First, the choices are selected
+        choices = []
+        prompt = f'Which would you like to choose first?'
+        choice = self.interactions.choose_from_options(prompt, options, force=True)
+        choices.append(choice)
+        options.remove(choice) # The same option cannot be chosen again
+        prompt = f'Which would you like to choose second?'
+        choice = self.interactions.choose_from_options(prompt, options, force=True)
+        choices.append(choice)
+        self.game.broadcast(f"{self.owner} chose: {', '.join(choices)}.")
+        # Then the selected choices are executed
+        for choice in choices:
+            if choice == '+1 Card':
+                cards_drawn = self.owner.draw(1)
+                if cards_drawn:
+                    card = cards_drawn[0]
+                    self.game.broadcast(f'+1 card --> {len(self.owner.hand)} cards in hand.')
+                    self.interactions.send(f'You drew: {card}.')
+            elif choice == '+1 Action':
+                self.owner.turn.actions_remaining += 1
+                self.game.broadcast(f'+1 action --> {self.owner.turn.actions_remaining} actions.')
+            elif choice == '+1 Buy':
+                self.owner.turn.buys_remaining += 1
+                self.game.broadcast(f'+1 buy --> {self.owner.turn.buys_remaining} buys.')
+            elif choice == '1 $':
+                self.owner.turn.coppers_remaining += 1
+                self.game.broadcast(f'+1 $ --> {self.owner.turn.coppers_remaining} $.')
 
 
 class Masquerade(ActionCard):
@@ -607,9 +662,9 @@ class Nobles(ActionCard, VictoryCard):
 
 
 KINGDOM_CARDS = [
-    # Courtyard,
+    Courtyard,
     # Lurker,
-    # Pawn,
+    Pawn,
     # Masquerade,
     # ShantyTown,
     # Steward,

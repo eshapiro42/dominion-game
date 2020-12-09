@@ -6,7 +6,7 @@ import random
 from abc import ABCMeta, abstractmethod
 from collections import defaultdict
 from math import inf
-from .cards import cards, base_cards, prosperity_cards
+from .cards import cards, base_cards, prosperity_cards, intrigue_cards
 
 
 class SupplyStackEmptyError(Exception):
@@ -47,7 +47,7 @@ class Supply:
         self.post_gain_hooks = defaultdict(list)
         self.customization = Customization()
         # TODO: Remove these (they are for debugging specific cards)
-        # self.customization.required_card_classes.add(prosperity_cards.Quarry)
+        self.customization.required_card_classes.add(intrigue_cards.Pawn)
 
     def setup(self):
         self.select_kingdom_cards()
