@@ -47,7 +47,7 @@ class Supply:
         self.post_gain_hooks = defaultdict(list)
         self.customization = Customization()
         # TODO: Remove these (they are for debugging specific cards)
-        self.customization.required_card_classes.add(intrigue_cards.ShantyTown)
+        self.customization.required_card_classes.add(intrigue_cards.Lurker)
 
     def setup(self):
         self.select_kingdom_cards()
@@ -93,7 +93,7 @@ class Supply:
             self.card_stacks[card_class] = FiniteSupplyStack(card_class, pile_size)
 
     def create_trash_pile(self):
-        self.trash_pile = {card_class: 0 for card_class in self.card_stacks}
+        self.trash_pile = {card_class: [] for card_class in self.card_stacks}
 
     def additional_setup(self):
         # Perform all additional setup actions from the selected expansions
@@ -108,7 +108,7 @@ class Supply:
 
     def trash(self, card):
         card_class = type(card)
-        self.trash_pile[card_class] += 1
+        self.trash_pile[card_class].append(card)
 
     def modify_cost(self, card_class, increment):
         self.card_stacks[card_class].modified_cost += increment

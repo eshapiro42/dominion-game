@@ -149,6 +149,20 @@ class Player:
         except ValueError:
             pass
 
+    def take_from_trash(self, card_class):
+        try:
+            card = self.supply.trash_pile[card_class].pop()
+            card.owner = self
+        except IndexError: # If a card cannot be taken, there are none left
+            card = None
+        return card
+
+    def gain_from_trash(self, card_class):
+        card = self.take_from_trash(card_class)
+        if card is not None:
+            self.discard_pile.append(card)
+            self.process_post_gain_hooks(card, self.discard_pile)
+
     def cleanup(self):
         # Discard hand from this turn
         self.discard_pile.extend(self.hand)

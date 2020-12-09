@@ -70,8 +70,15 @@ class Lurker(ActionCard):
                 self.game.broadcast(f'{self.owner} trashed a {card_to_trash} from the Supply.')
         elif choice == 'Gain an Action card from the trash':
             prompt = f'Choose an Action card from the trash to gain.'
-            # TODO: FINISH IMPLEMENTING THIS
-        
+            options = [card_class for card_class in self.supply.trash_pile if CardType.ACTION in card_class.types and self.supply.trash_pile[card_class]]
+            if options:
+                card_class_to_gain = self.interactions.choose_specific_card_type_from_trash(prompt, max_cost=math.inf, card_type=CardType.ACTION, force=True)
+                if card_class_to_gain is not None:
+                    self.owner.gain_from_trash(card_class_to_gain)
+                    self.game.broadcast(f'{self.owner} gained a {card_class_to_gain.name} from the trash.')
+            else:
+                self.game.broadcast('There are no Action cards in the trash to gain.')
+
 
 class Pawn(ActionCard):
     name = 'Pawn'
@@ -673,7 +680,7 @@ class Nobles(ActionCard, VictoryCard):
 
 KINGDOM_CARDS = [
     Courtyard,
-    # Lurker,
+    Lurker,
     Pawn,
     # Masquerade,
     ShantyTown,

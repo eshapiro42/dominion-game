@@ -57,6 +57,10 @@ class Interaction(metaclass=ABCMeta):
         pass
 
     @abstractmethod
+    def choose_specific_card_type_from_trash(self, prompt, max_cost, card_type, force):
+        pass
+
+    @abstractmethod
     def choose_yes_or_no(self, prompt):
         pass
 
@@ -278,6 +282,41 @@ class CLIInteraction(Interaction):
                     else:
                         card_to_buy = list(buyable_card_stacks)[card_num - 1]
                 return card_to_buy
+            except (IndexError, ValueError):
+                print('That is not a valid choice.\n')
+
+    def choose_specific_card_type_from_trash(self, prompt, max_cost, card_type, force):
+        print(prompt)
+        print()
+        while True:
+            try:
+                trash_table = prettytable.PrettyTable(hrules=prettytable.ALL)
+                trash_table.field_names = ['Number', 'Card', 'Cost', 'Type', 'Quantity', 'Description']
+                # Only cards you can afford can be chosen (and with non-zero quantity)
+                trash_pile = self.supply.trash_pile
+                gainable_card_classes = [card_class for card_class in trash_pile if trash_pile[card_class] and card_type in card_class.types]
+                # for idx, card_class in enumerate(sorted(buyable_card_stacks, key=lambda x: (x.types[0].value, x.cost))):
+                for idx, card_class in enumerate(gainable_card_classes):
+                    types = ', '.join([type.name.lower().capitalize() for type in card_class.types])
+                    card_quantity = len(trash_pile[card_class])
+                    trash_table.add_row([idx + 1, card_class.name, card_class.cost, types, card_quantity, card_class.description])
+                print(trash_table)
+                if force:
+                    card_num = int(input(f'Enter choice 1-{len(gainable_card_classes)}: '))
+                    print()
+                    if card_num < 1:
+                        raise ValueError
+                    card_to_gain = list(gainable_card_classes)[card_num - 1]
+                else:
+                    card_num = int(input(f'Enter choice 1-{len(gainable_card_classes)} (0 to skip): '))
+                    print()
+                    if card_num < 0:
+                        raise ValueError
+                    elif card_num == 0:
+                        return None
+                    else:
+                        card_to_gain = list(gainable_card_classes)[card_num - 1]
+                return card_to_gain
             except (IndexError, ValueError):
                 print('That is not a valid choice.\n')
 
@@ -557,7 +596,45 @@ class NetworkedCLIInteraction(Interaction):
                         card_to_buy = list(buyable_card_stacks)[card_num - 1]
                 return card_to_buy
             except (IndexError, ValueError):
-                self.send('That is not a valid choice.')        
+                self.send('That is not a valid choice.')     
+
+    def choose_specific_card_type_from_trash(self, prompt, max_cost, card_type, force):
+        while True:
+            try:
+                trash_table = prettytable.PrettyTable(hrules=prettytable.ALL)
+                trash_table.field_names = ['Number', 'Card', 'Cost', 'Type', 'Quantity', 'Description']
+                # Only cards you can afford can be chosen (and with non-zero quantity)
+                trash_pile = self.supply.trash_pile
+                gainable_card_classes = [card_class for card_class in trash_pile if trash_pile[card_class] and card_type in card_class.types]
+                # for idx, card_class in enumerate(sorted(buyable_card_stacks, key=lambda x: (x.types[0].value, x.cost))):
+                for idx, card_class in enumerate(gainable_card_classes):
+                    types = ', '.join([type.name.lower().capitalize() for type in card_class.types])
+                    card_quantity = len(trash_pile[card_class])
+                    trash_table.add_row([idx + 1, card_class.name, card_class.cost, types, card_quantity, card_class.description])
+                while True:
+                    try:
+                        _prompt = f'{prompt}\n{trash_table.get_string()}'
+                        break
+                    except:
+                        pass
+                if force:
+                    _prompt += f'Enter choice 1-{len(gainable_card_classes)}: '
+                    card_num = self.enter_choice(_prompt)
+                    if card_num < 1:
+                        raise ValueError
+                    card_to_gain = list(gainable_card_classes)[card_num - 1]
+                else:
+                    _prompt += f'Enter choice 1-{len(gainable_card_classes)} (0 to skip): '
+                    card_num = self.enter_choice(_prompt)
+                    if card_num < 0:
+                        raise ValueError
+                    elif card_num == 0:
+                        return None
+                    else:
+                        card_to_gain = list(gainable_card_classes)[card_num - 1]
+                return card_to_gain
+            except (IndexError, ValueError):
+                self.send('That is not a valid choice.\n')   
 
     def choose_yes_or_no(self, prompt):
         while True:
@@ -818,6 +895,41 @@ class AutoInteraction(Interaction):
                     else:
                         card_to_buy = list(buyable_card_stacks)[card_num - 1]
                 return card_to_buy
+            except (IndexError, ValueError):
+                print('That is not a valid choice.\n')
+                raise
+
+    def choose_specific_card_type_from_trash(self, prompt, max_cost, card_type, force):
+        print(prompt)
+        print()
+        while True:
+            try:
+                # Only cards you can afford can be chosen (and with non-zero quantity)
+                trash_pile = self.supply.trash_pile
+                gainable_card_classes = [card_class for card_class in trash_pile if trash_pile[card_class] and card_type in card_class.types]
+                # for idx, card_class in enumerate(sorted(buyable_card_stacks, key=lambda x: (x.types[0].value, x.cost))):
+                if force:
+                    print(f'Enter choice 1-{len(gainable_card_classes)}: ')
+                    choices = list(range(1, len(gainable_card_classes) + 1))
+                    # Weight equally
+                    weights = [1 for card in gainable_card_classes]
+                    card_num = random.choices(choices, weights, k=1)[0]
+                    print(card_num)
+                    print()
+                    card_to_gain = list(gainable_card_classes)[card_num - 1]
+                else:
+                    print(f'Enter choice 1-{len(gainable_card_classes)} (0 to skip): ')
+                    choices = list(range(0, len(gainable_card_classes)))
+                    # Weight equally
+                    weights = [1] + [1 for card in gainable_card_classes]
+                    card_num = random.choices(choices, weights, k=1)[0]
+                    print(card_num)
+                    print()
+                    if card_num == 0:
+                        return None
+                    else:
+                        card_to_gain = list(gainable_card_classes)[card_num - 1]
+                return card_to_gain
             except (IndexError, ValueError):
                 print('That is not a valid choice.\n')
                 raise
@@ -1115,7 +1227,45 @@ class BrowserInteraction(Interaction):
                         card_to_buy = list(buyable_card_stacks)[card_num - 1]
                 return card_to_buy
             except (IndexError, ValueError):
-                self.send('That is not a valid choice.')        
+                self.send('That is not a valid choice.')    
+
+    def choose_specific_card_type_from_trash(self, prompt, max_cost, card_type, force):
+        while True:
+            try:
+                trash_table = prettytable.PrettyTable(hrules=prettytable.ALL)
+                trash_table.field_names = ['Number', 'Card', 'Cost', 'Type', 'Quantity', 'Description']
+                # Only cards you can afford can be chosen (and with non-zero quantity)
+                trash_pile = self.supply.trash_pile
+                gainable_card_classes = [card_class for card_class in trash_pile if trash_pile[card_class] and card_type in card_class.types]
+                # for idx, card_class in enumerate(sorted(buyable_card_stacks, key=lambda x: (x.types[0].value, x.cost))):
+                for idx, card_class in enumerate(gainable_card_classes):
+                    types = ', '.join([type.name.lower().capitalize() for type in card_class.types])
+                    card_quantity = len(trash_pile[card_class])
+                    trash_table.add_row([idx + 1, card_class.name, card_class.cost, types, card_quantity, card_class.description])
+                while True:
+                    try:
+                        _prompt = f'{prompt}\n{trash_table.get_html_string()}'
+                        break
+                    except TypeError:
+                        pass
+                if force:
+                    _prompt += f'\nEnter choice 1-{len(gainable_card_classes)}: '
+                    card_num = self.enter_choice(_prompt)
+                    if card_num < 1:
+                        raise ValueError
+                    card_to_gain = list(gainable_card_classes)[card_num - 1]
+                else:
+                    _prompt += f'\nEnter choice 1-{len(gainable_card_classes)} (0 to skip): '
+                    card_num = self.enter_choice(_prompt)
+                    if card_num < 0:
+                        raise ValueError
+                    elif card_num == 0:
+                        return None
+                    else:
+                        card_to_gain = list(gainable_card_classes)[card_num - 1]
+                return card_to_gain
+            except (IndexError, ValueError):
+                self.send('That is not a valid choice.')
 
     def choose_yes_or_no(self, prompt):
         while True:
