@@ -294,7 +294,7 @@ class Talisman(TreasureCard):
 
 
     def play(self):
-        # All non-Victorycards costing 4 $ or less get a post gain hook added this turn
+        # All non-Victory cards costing 4 $ or less get a post gain hook added this turn
         for card_class in self.supply.card_stacks:
             if card_class.cost <= 4 and CardType.VICTORY not in card_class.types:
                 post_gain_hook = self.TalismanPostGainHook(card_class)

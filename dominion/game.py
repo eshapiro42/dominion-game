@@ -4,7 +4,7 @@ import time
 from collections import defaultdict
 from prettytable import PrettyTable
 from .cards import base_cards
-from .expansions import BaseExpansion, ProsperityExpansion
+from .expansions import BaseExpansion, ProsperityExpansion, IntrigueExpansion
 from .interactions import interactions
 from .player import Player
 from .supply import Supply
@@ -59,6 +59,7 @@ class Game:
         self.add_expansion(BaseExpansion)
         # TODO: Remove this and allow customization
         self.add_expansion(ProsperityExpansion)
+        self.add_expansion(IntrigueExpansion)
 
     def add_treasure_hook(self, treasure_hook, card_class):
         '''
