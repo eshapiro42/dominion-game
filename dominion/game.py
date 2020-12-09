@@ -19,6 +19,29 @@ class GameStartedError(Exception):
 
 
 class Game:
+    '''Dominion Game object.
+
+    All components of the game are instantiated by this class.
+    The game loop is also run from here.
+
+    Args:
+        socketio (:obj:`socketio.Server`, optional): A Socket.IO server instance.
+        room (:obj:`str`, optional): The room ID for this game.
+
+    Attributes:
+        player_names (:obj:`list` of :obj:`str`): A list of the names of players in the game.
+        player_sids (:obj:`list` of :obj:`str`): A list of SIDs corresponding to each player in the game (these lists share an index).
+        player_interaction_classes (:obj:`list` of :obj:`.interactions.Interaction`): A list of interaction classes corresponding to each player in the game (these lists share an index).
+        players (:obj:`list` of :obj:`.player.Player`): A list of Player objects.
+        startable (:obj:`bool`): Whether the game can be started. This changes to True automatically when two players have joined.
+        started (:obj:`bool`): Whether the game has been started. This changes to True automatically when the game starts.
+        current_turn (:obj:`.turn.Turn`): The Turn object corresponding to the current turn of the game.
+        treasure_hooks (:obj:`dict` with keys :obj:`type(cards.Card)` and values :obj:`list` of :obj:`.hooks.TreasureHook`): A dictionary of game-wide TreasureHook instances, indexed by card_class.
+        pre_buy_hooks (:obj:`dict` with keys :obj:`type(cards.Card)` and values :obj:`list` of :obj:`.hooks.PreBuyHook`): A dictionary of game-wide PreBuyHook instances, indexed by card_class.
+        game_end_conditions (:obj:`list` of :obj:`func`): A list of functions to run which each determine a specific game-end criterion.
+        expansions (:obj:`set` of :obj:`.expansion.Expansion`): A set of Expansion classes. This must always include :obj:`.expansion.BaseExpansion` for the game to work. 
+        supply (:obj:`.supply.Supply`): The Supply for this game.
+    '''
     def __init__(self, socketio=None, room=None):
         self.socketio = socketio
         self.room = room
@@ -38,15 +61,47 @@ class Game:
         self.add_expansion(ProsperityExpansion)
 
     def add_treasure_hook(self, treasure_hook, card_class):
+        '''
+        Add a Game-wide Treasure Hook to a specific card_class.
+
+        Args:
+            treasure_hook (:obj:`.hooks.TreasureHook`): The Treasure Hook to add.
+            card_class (:obj:`type(cards.Card)`): The card_class which should activate the Treasure Hook.
+        '''
         self.treasure_hooks[card_class].append(treasure_hook)
 
     def add_pre_buy_hook(self, pre_buy_hook, card_class):
+        '''
+        Add a Game-wide Pre Buy Hook to a specific card_class.
+
+        Args:
+            treasure_hook (:obj:`.hooks.PreBuyHook`): The Pre Buy Hook to add.
+            card_class (:obj:`type(cards.Card)`): The card_class which should activate the Treasure Hook.
+        '''
         self.pre_buy_hooks[card_class].append(pre_buy_hook)
 
     def add_expansion(self, expansion):
+        '''
+        Add an expansion into the game.
+
+        Args:
+            expansion (:obj:`type(expansion.Expansion)`): The Expansion class to add into the game.
+        '''
         self.expansions.add(expansion)
 
     def add_player(self, name=None, sid=None, interactions_class=interactions.CLIInteraction):
+        '''
+        Add a new player into the game.
+        
+        Will fail if the game has already started.
+
+        Will set :obj:`Game.startable` to :obj:`True` when the second player is added.
+
+        Args:
+            name (:obj:`str`, optional): The player's name.
+            sid (:obj:`str`, optional): The player's socketio SID. Required for networked play.
+            interactions_class (:obj:`type(interactions.Interaction)`): The player's Interaction class.
+        '''
         # Players can only be added before the game starts
         if self.started:
             raise GameStartedError()
@@ -60,6 +115,15 @@ class Game:
             self.startable = True
 
     def start(self, debug=False):
+        '''
+        Start the game.
+
+        This method creates and sets up the supply, player objects, adds in desired expansions,
+        decides turn order and runs the game loop.
+
+        Args:
+            debug (:obj:`bool`): Defaults to :obj:`False`. If :obj:`True`, does not run the game loop.
+        '''
         # NOTE: THE ORDER OF EVENTS HERE IS EXTREMELY IMPORTANT!
         self.started = True
         # Create the supply
@@ -89,6 +153,10 @@ class Game:
             self.game_loop()
 
     def game_loop(self):
+        '''
+        The main game loop. Cycles through turns for each player and checks for
+        game end conditions after each turn.
+        '''
         for player in itertools.cycle(self.turn_order):
             self.current_turn = Turn(player)
             self.current_turn.start()
@@ -107,11 +175,24 @@ class Game:
                 break
 
     def broadcast(self, message):
+        '''
+        Broadcast a message to each player in the game.
+
+        Args:
+            message (:obj:`str`): The message to broadcast to each player.
+        '''
         for player in self.players:
             player.interactions.send(message)
 
     @property
     def ended(self):
+        '''
+        Check whether the game has ended.
+        
+        Returns:
+            game_ended (:obj:`bool`): :obj:`True` if the game has ended, :obj:`False` otherwise.
+            explanation (:obj:`str`): An explanation for why the game has ended, or :obj:`None` if the game has not ended.
+        '''
         # Check if any game end condition has been met
         for game_end_condition in self.game_end_conditions:
             game_ended, explanation = game_end_condition()
@@ -122,6 +203,14 @@ class Game:
 
     @property
     def scores(self):
+        '''
+        The scores of each player.
+
+        Returns:
+            victory_points_dict (:obj:`dict` with keys :obj:`.player.Player` and values :obj:`int`): A dictionary of scores indexed by Player.
+            turns_played_dict (:obj:`dict` with keys :obj:`.player.Player` and values :obj:`int`): A dictionary of turns played indexed by Player.
+            winners (:obj:`list` of :obj:`str`): A list of Player's names who won the game.
+        '''
         # Count up victory points for each player
         victory_points_dict = {player: player.current_victory_points for player in self.players}
         # Count up turns played per player
@@ -140,6 +229,11 @@ class Game:
 
     @property
     def num_players(self):
+        '''The number of players in the game.
+        
+        Returns:
+            num_players (:obj:`int`): The number of players in the game.
+        '''
         return len(self.player_names)
 
 

@@ -6,6 +6,25 @@ from .cards import cards, base_cards
 
 
 class Turn:
+    '''Dominion Turn object.
+
+    All components of a player's turn are instantiated by this class.
+
+    Args:
+        player (:obj:`player.Player`): The Player whose turn it currently is.
+
+    Attributes:
+        game (:obj:`.game.Game`): The Game which is currently being played.
+        actions_remaining (:obj:`int`): The number of Actions the player has left this turn. Starts at 1.
+        buys_remaining (:obj:`int`): The number of Buys the player has left this turn. Starts at 1.
+        coppers_remaining (:obj:`int`): The number of Coins the player has left to spend this turn. Starts at 0.
+        action_phase (:obj:`ActionPhase`): This Turn's Action phase.
+        buy_phase (:obj:`BuyPhase`): This Turn's Buy phase.
+        cleanup_phase (:obj:`CleanupPhase`): This Turn's Cleanup phase.
+        treasure_hooks (:obj:`dict` with keys :obj:`type(cards.Card)` and values :obj:`hooks.TreasureHook`): Turn-wide Treasure hooks registered for this turn.
+        post_gain_hooks (:obj:`dict` with keys :obj:`type(cards.Card)` and values :obj:`hooks.PostGainHook`): Turn-wide post gain hooks registered for this turn.
+        invalid_card_classes (:obj:`list` of :obj:`type(cards.Card)`): A list of card classes that cannot be purchased this turn.
+    '''
     def __init__(self, player):
         self.player = player
         self.player.turn = self
@@ -21,6 +40,12 @@ class Turn:
         self.invalid_card_classes = []
 
     def start(self):
+        '''
+        Start the Turn.
+
+        This increments the current Player's number of turns played.
+        It then runs the Action, Buy and Cleanup phases in that order.
+        '''
         self.player.turns_played += 1
         self.game.broadcast(''.join((['*'] * 80)))
         self.game.broadcast(f"{self.player}'s turn!".upper())
@@ -30,14 +55,38 @@ class Turn:
         self.cleanup_phase.start()
 
     def add_treasure_hook(self, treasure_hook, card_class):
+        '''
+        Add a Turn-wide Treasure Hook to a specific card_class.
+
+        Args:
+            treasure_hook (:obj:`.hooks.TreasureHook`): The Treasure Hook to add.
+            card_class (:obj:`type(cards.Card)`): The card_class which should activate the Treasure Hook.
+        '''
         self.treasure_hooks[card_class].append(treasure_hook)
 
     def add_post_gain_hook(self, post_gain_hook, card_class):
+        '''
+        Add a Turn-wide Pre Buy Hook to a specific card_class.
+
+        Args:
+            treasure_hook (:obj:`.hooks.PreBuyHook`): The Pre Buy Hook to add.
+            card_class (:obj:`type(cards.Card)`): The card_class which should activate the Treasure Hook.
+        '''
         self.post_gain_hooks[card_class].append(post_gain_hook)
 
 
-
 class Phase(metaclass=ABCMeta):
+    '''
+    Base class for the various different Phases of a turn.
+
+    Args:
+        turn (:obj:`Turn`): The current turn.
+    
+    Attributes:
+        player (:obj:`.player.Player`): The player whose turn it currently is.
+        game (:obj:`.game.Game`): The game which is currently being played.
+        supply (:obj:`.supply.Supply`): The supply for this game.
+    '''
     def __init__(self, turn):
         self.turn = turn
         self.player = self.turn.player
@@ -46,11 +95,27 @@ class Phase(metaclass=ABCMeta):
 
     @abstractmethod
     def start(self):
+        '''Start the phase.'''
         pass
 
 
 class ActionPhase(Phase):
+    '''
+    Action phase of the current Turn.
+
+    Args:
+        turn (:obj:`Turn`): The current turn.
+    
+    Attributes:
+        player (:obj:`.player.Player`): The player whose turn it currently is.
+        game (:obj:`.game.Game`): The game which is currently being played.
+        supply (:obj:`.supply.Supply`): The supply for this game.
+    '''    
     def start(self):
+        '''
+        Start the Action phase. While the player has Actions remaining and Action cards
+        in their hand, ask them which Action cards they would like to play (then play them).     
+        '''
         while self.turn.actions_remaining > 0:
             # If there are no action cards in the player's hand, move on
             if not any(cards.CardType.ACTION in card.types for card in self.player.hand):
@@ -66,6 +131,15 @@ class ActionPhase(Phase):
         self.player.interactions.send('No actions left. Ending action phase.')
 
     def play(self, card):
+        '''
+        Play an Action card.
+
+        This adds the Action card to the player's played cards area, subtracts
+        one from the turn's remaining actions, and steps through the Action card's effects.
+
+        Args:
+            card (:obj:`cards.ActionCard`): The Action card to play.
+        '''
         modifier = 'an' if card.name[0] in ['a', 'e', 'i', 'o', 'u'] else 'a'
         self.game.broadcast(f'{self.player} played {modifier} {card}.')
         # Add the card to the played cards area
@@ -76,12 +150,24 @@ class ActionPhase(Phase):
         self.walk_through_action_card(card)
 
     def play_without_side_effects(self, card):
-        '''Use this to play a card without losing actions or moving the card to the played cards area'''
+        '''
+        Play a card without losing actions or moving the card to the played cards area.
+
+        Args:
+            card (:obj:`cards.ActionCard`): The Action card to play.
+        '''
         modifier = 'an' if card.name[0] in ['a', 'e', 'i', 'o', 'u'] else 'a'
         self.game.broadcast(f'{self.player} played {modifier} {card}.')
         self.walk_through_action_card(card)
 
     def walk_through_action_card(self, card):
+        '''
+        First tally up all effects of playing an Action card (+cards, +actions, +buys, +$),
+        then play the card.
+
+        Args:
+            card (:obj:`cards.ActionCard`): The Action card to play.        
+        '''
         # Draw any additional cards specified on the card
         drawn_cards = None
         if card.extra_cards != 0:
@@ -106,7 +192,33 @@ class ActionPhase(Phase):
 
 
 class BuyPhase(Phase):
+    '''
+    Buy phase of the current Turn.
+
+    Args:
+        turn (:obj:`Turn`): The current turn.
+    
+    Attributes:
+        player (:obj:`.player.Player`): The player whose turn it currently is.
+        game (:obj:`.game.Game`): The game which is currently being played.
+        supply (:obj:`.supply.Supply`): The supply for this game.
+    '''
     def start(self):
+        '''
+        Start the Buy phase. 
+
+        First, ask the player which Treasures they would like to play this turn.
+
+        When a Treasure is played, any side effects and treasure hooks registered to that
+        Treasure will be activated.
+
+        Before cards are bought, any pre-buy hooks registered to cards in the Supply will
+        be activated.
+
+        While the player has Buys remaining, ask them which cards 
+        they would like to buy (then gain them).
+
+        '''
         # Find any Treasures in the player's hand
         treasures_available = []
         for card in self.player.hand:
@@ -143,6 +255,12 @@ class BuyPhase(Phase):
         self.player.interactions.send('No buys left. Ending buy phase.')
 
     def process_treasure_hooks(self, treasure):
+        '''
+        Activate any treasure hooks registered to a Treasure.
+
+        Args:
+            treasure (:obj:`cards.TreasureCard`): The Treasure whose hooks to activate.
+        '''
         # Check if there are any game-wide hooks registered to the played Treasures
         expired_hooks = []
         if type(treasure) in self.game.treasure_hooks:
@@ -167,6 +285,16 @@ class BuyPhase(Phase):
                 self.turn.treasure_hooks[type(treasure)].remove(hook)
 
     def play_treasure(self, treasure):
+        '''
+        Play a Treasure.
+
+        This will activate any side effects caused by playing the Treasure.
+
+        It will then activate any treasure hooks registered to the Treasure.
+
+        Args:
+            treasure (:obj:`cards.TreasureCard`): The Treasure whose hooks to activate.
+        '''
         self.game.broadcast(f"{self.player} played a Treasure: {treasure.name}.")
         # Add the Treasure to the played cards area and remove from hand
         self.player.play(treasure)
@@ -174,10 +302,14 @@ class BuyPhase(Phase):
         if hasattr(treasure, 'play'):
             treasure.play()
         # Process any Treasure hooks
+        self.process_treasure_hooks(treasure)
         # Add the value of this Treasure
         self.turn.coppers_remaining += treasure.value
 
     def process_pre_buy_hooks(self):
+        '''
+        Activate any game-wide pre buy hooks registered to cards in the Supply.
+        '''
         # Activate any game-wide pre-buy hooks registered to cards in the Supply
         expired_hooks = []
         for card_class in self.supply.card_stacks:
@@ -190,6 +322,17 @@ class BuyPhase(Phase):
                 self.game.treasure_hooks[card_class].remove(hook)
 
     def buy(self, card_class):
+        '''
+        Buy a card from the Supply.
+
+        First, the remaining buys for this turn are decremented by one.
+
+        The current player will gain the card and its modified cost will be subtracted from
+        their remaining coins to spend this turn.
+
+        Args:
+            card_class(:obj:`type(cards.Card)`): The class of card to buy. 
+        '''
         # Buying a card uses one buy
         self.turn.buys_remaining -= 1
         # Gain the desired card
@@ -199,7 +342,16 @@ class BuyPhase(Phase):
         self.turn.coppers_remaining -= self.supply.card_stacks[card_class].modified_cost
 
     def buy_without_side_effects(self, max_cost, force, exact_cost=False):
-        '''Buy a card without affecting coppers_remaining or buys_remaining'''
+        '''
+        Buy a card from the Supply.
+
+        The current player will gain the card.
+
+        Remaining buys and coins for this turn are not affected.
+
+        Args:
+            card_class(:obj:`type(cards.Card)`): The class of card to buy. 
+        '''
         prompt = f'You have {max_cost} $ to spend. Select a card to buy.'
         card_class = self.player.interactions.choose_card_class_from_supply(prompt=prompt, max_cost=max_cost, force=force, exact_cost=exact_cost)
         if card_class is None:
@@ -213,7 +365,27 @@ class BuyPhase(Phase):
 
 
 class CleanupPhase(Phase):
+    '''
+    Cleanup phase of the current Turn.
+
+    Args:
+        turn (:obj:`Turn`): The current turn.
+    
+    Attributes:
+        player (:obj:`.player.Player`): The player whose turn it currently is.
+        game (:obj:`.game.Game`): The game which is currently being played.
+        supply (:obj:`.supply.Supply`): The supply for this game.
+    ''' 
     def start(self):
+        '''
+        Start the cleanup phase.
+
+        First, the player's played cards and hand are moved to their discard pile.
+        The player draws a new hand, shuffling if necessary. Their new hand for
+        the next turn is displayed.
+
+        All cards in the Supply have their cost modifiers reset to the default.
+        '''
         # Clean up the player's mat
         self.player.cleanup()
         self.player.interactions.send('Your hand for next turn:')
