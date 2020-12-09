@@ -10,10 +10,10 @@ from .cards import cards, base_cards, prosperity_cards
 
 
 class SupplyStackEmptyError(Exception):
-    '''Raised when a supply stack is empty
+    '''Raised when a supply stack is empty.
     
     Attributes:
-        card_class: class of card whose supply stack is empty
+        card_class (:opt:`type(cards.Card)`): Class of card whose supply stack is empty
     '''
     def __init__(self, card_class):
         message = f'{card_class.name} supply stack is empty'
@@ -21,6 +21,15 @@ class SupplyStackEmptyError(Exception):
 
 
 class Customization:
+    '''
+    Customization options for the Supply
+
+    Attributes:
+        expansions (:obj:`set` of :obj:`expansion.Expansion`): Set of Expansions to be chosen from in the Supply.
+        required_card_classes (:obj:`set` of :obj:`type(card.Card)`): Set of card classes to require in the Supply.
+        distribute_cost (:obj:`bool`): If :obj:`True`, ensures that there are at least two cards each of cost 2, 3, 4 and 5 in the Supply.
+        distribute_attack_cards (:obj:`bool`): If :obj:`True`, Attack cards are not allowed in the Supply.
+    '''
     expansions = set()
     required_card_classes = set() # If nonempty, ensures that each card in the list ends up in the supply
     distribute_cost = False # If toggled, ensures there are at least two cards each of cost {2, 3, 4, 5}
