@@ -1,5 +1,5 @@
 import math
-from .cards import CardType, Card, TreasureCard, ActionCard, AttackCard, ReactionCard, VictoryCard, CurseCard
+from .cards import CardType, ReactionType, Card, TreasureCard, ActionCard, AttackCard, ReactionCard, VictoryCard, CurseCard
 from ..hooks import TreasureHook
 
 
@@ -155,8 +155,12 @@ class Moat(ReactionCard):
     def action(self):
         pass
 
+    @property
+    def can_react(self):
+        return True
+
     def react(self):
-        pass
+        return ReactionType.IMMUNITY, True # Will make the owner immune to attacks and prevents the Moat from being played twice
 
 
 class Harbinger(ActionCard):
@@ -365,13 +369,10 @@ class Militia(AttackCard):
     def attack_effect(self, attacker, player):
         number_to_discard = len(player.hand) - 3
         self.game.broadcast(f'{player} must discard {number_to_discard} cards.')
-        discarded_cards = []
         for card_num in range(number_to_discard):
             prompt = f'{player}: Choose card {card_num + 1} of {number_to_discard} to discard.'
             card_to_discard = player.interactions.choose_card_from_hand(prompt=prompt, force=True)
             player.discard(card_to_discard)
-            discarded_cards.append(card_to_discard)
-        self.game.broadcast(f"{player} discarded {', '.join(map(str, discarded_cards))}.")
 
     def action(self):
         pass

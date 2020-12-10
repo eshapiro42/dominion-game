@@ -163,6 +163,13 @@ class Watchtower(ReactionCard):
                             player.deck.append(card)
                             game.broadcast(f'{player} put the {card} onto their deck.')
 
+    @property
+    def can_react(self):
+        return False # This card's reaction is governed by a post-gain hook
+
+    def react(self):
+        pass
+
     def action(self):
         num_cards_to_draw = 6 - len(self.owner.hand)
         if num_cards_to_draw > 0:
@@ -172,9 +179,6 @@ class Watchtower(ReactionCard):
                 self.interactions.send(f"You drew: {', '.join(map(str, cards_drawn))}.")
             else:
                 self.game.broadcast(f'{self.owner} has no more cards to draw from.')
-
-    def react(self):
-        pass
 
 
 class Bishop(ActionCard):

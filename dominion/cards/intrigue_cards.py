@@ -439,11 +439,31 @@ class Diplomat(ReactionCard):
     extra_buys = 0
     extra_coppers = 0
 
+    @property
+    def can_react(self):
+        if len(self.owner.hand) >= 5:
+            return True
+        else:
+            return False
+
     def react(self):
-        pass
+        # Draw 2 cards
+        cards_drawn = self.owner.draw(2)
+        if cards_drawn:
+            self.game.broadcast(f'{self.owner} drew {len(cards_drawn)} cards.')
+            self.interactions.send(f"You drew: {', '.join(map(str, cards_drawn))}.")
+        # Discard 3 cards
+        for discard_num in range(3):
+            prompt = f'Choose a card to discard ({discard_num + 1}/3).'
+            card_to_discard = self.interactions.choose_card_from_hand(prompt, force=True)
+            self.owner.discard(card_to_discard)
+        return None, True # Can be used again 
 
     def action(self):
-        pass
+        # If you have 5 or fewer cards in hand, +2 Actions
+        if len(self.owner.hand) <= 5:
+            self.owner.turn.actions_remaining += 2
+            self.game.broadcast(f'+2 action --> {self.owner.turn.actions_remaining} actions.')
 
 
 class Ironworks(ActionCard):
@@ -971,7 +991,7 @@ KINGDOM_CARDS = [
     Baron,
     Bridge,
     Conspirator,
-    # Diplomat,
+    Diplomat,
     Ironworks,
     Mill,
     MiningVillage,
