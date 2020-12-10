@@ -11,6 +11,10 @@ class CardType(Enum):
     ATTACK = auto()
 
 
+class ReactionType(Enum):
+    IMMUNITY = auto()
+
+
 class Card(metaclass=ABCMeta):
     '''Base card class.
 
@@ -123,33 +127,39 @@ class AttackCard(ActionCard):
         prompt: a description of the attack on other players
         attack_effect: the effect of an attack on a single other player
     '''
+    attacking = True
+
     def attack(self):
-        immune_players = set()
-        self.game.broadcast('Checking if any other players have a Reaction card in their hand...')
-        for player in self.owner.other_players:
-            # First, check if they have a reaction card in their hand
-            if any(CardType.REACTION in card.types for card in player.hand):
-                reaction_cards_in_hand = [card for card in player.hand if CardType.REACTION in card.types]
-                reaction_card_classes_to_ignore = set() # We don't want to keep asking about reaction card classes that have already been played/ignored
-                for reaction_card in reaction_cards_in_hand:
-                    if type(reaction_card) in reaction_card_classes_to_ignore:
-                        continue
-                    else:
-                        prompt = f'{player}: You have a Reaction card ({reaction_card.name}) in your hand. Play it?'
-                        if player.interactions.choose_yes_or_no(prompt=prompt):
-                            self.game.broadcast(f'{player} revealed a {reaction_card.name}.')
-                            immune_players.add(player)
-                        reaction_card_classes_to_ignore.add(type(reaction_card))
-            # Now force non-immune players to endure the attack effect
-            if player in immune_players:
-                self.game.broadcast(f'{player} is immune to the effects.')
-                continue
-            else:
-                self.attack_effect(self.owner, player)
+        if self.attacking:
+            if self.prompt is not None:
+                self.game.broadcast(self.prompt)
+            immune_players = set()
+            self.game.broadcast('Checking if any other players have a Reaction card in their hand...')
+            for player in self.owner.other_players:
+                # First, check if they have a reaction card in their hand
+                if any(CardType.REACTION in card.types for card in player.hand):
+                    reaction_cards_in_hand = [card for card in player.hand if CardType.REACTION in card.types]
+                    reaction_card_classes_to_ignore = set() # We don't want to keep asking about reaction card classes that have already been played/ignored
+                    for reaction_card in reaction_cards_in_hand:
+                        if type(reaction_card) in reaction_card_classes_to_ignore or not reaction_card.can_react:
+                            continue
+                        else:
+                            prompt = f'{player}: You have a Reaction card ({reaction_card.name}) in your hand. Play it?'
+                            if player.interactions.choose_yes_or_no(prompt=prompt):
+                                self.game.broadcast(f'{player} revealed a {reaction_card.name}.')
+                                reaction_type, ignore_again = reaction_card.react()
+                                if reaction_type == ReactionType.IMMUNITY:
+                                    immune_players.add(player)
+                                if ignore_again:
+                                    reaction_card_classes_to_ignore.add(type(reaction_card))
+                # Now force non-immune players to endure the attack effect
+                if player in immune_players:
+                    self.game.broadcast(f'{player} is immune to the effects.')
+                    continue
+                else:
+                    self.attack_effect(self.owner, player)
 
     def play(self):
-        if self.prompt is not None:
-            self.game.broadcast(self.prompt)
         self.action()
         self.attack()
 
@@ -167,8 +177,13 @@ class ReactionCard(ActionCard):
     '''Base reaction card class.
 
     Abstract methods:
-        react: complete the reactive directions on the card
+        react (optional): complete the reactive directions on the card
     '''
+    @property
+    @abstractmethod
+    def can_react(self):
+        pass
+
     @abstractmethod
     def react(self):
         pass

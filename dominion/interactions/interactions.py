@@ -1,3 +1,4 @@
+import inspect
 import prettytable
 import random
 import time
@@ -25,6 +26,10 @@ class Interaction(metaclass=ABCMeta):
         pass
 
     @abstractmethod
+    def display_supply(self):
+        pass
+
+    @abstractmethod
     def display_hand(self):
         pass
 
@@ -49,7 +54,7 @@ class Interaction(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def choose_card_class_from_supply(self, prompt, max_cost, force):
+    def choose_card_class_from_supply(self, prompt, max_cost, force, invalid_card_classes=None, exact_cost=False):
         pass
 
     @abstractmethod
@@ -57,7 +62,15 @@ class Interaction(metaclass=ABCMeta):
         pass
 
     @abstractmethod
+    def choose_specific_card_type_from_trash(self, prompt, max_cost, card_type, force):
+        pass
+
+    @abstractmethod
     def choose_yes_or_no(self, prompt):
+        pass
+
+    @abstractmethod
+    def choose_from_range(self, prompt, minimum, maximum, force):
         pass
 
     @abstractmethod
@@ -221,6 +234,9 @@ class CLIInteraction(Interaction):
                 buyable_card_stacks = [card_class for card_class in stacks if stacks[card_class].modified_cost <= max_cost and card_class not in invalid_card_classes and stacks[card_class].cards_remaining > 0]
                 if exact_cost:
                     buyable_card_stacks = [card_class for card_class in buyable_card_stacks if stacks[card_class].modified_cost == max_cost]
+                if not buyable_card_stacks:
+
+                    return None
                 # for idx, card_class in enumerate(sorted(buyable_card_stacks, key=lambda x: (x.types[0].value, x.cost))):
                 for idx, card_class in enumerate(buyable_card_stacks):
                     types = ', '.join([type.name.lower().capitalize() for type in card_class.types])
@@ -281,6 +297,41 @@ class CLIInteraction(Interaction):
             except (IndexError, ValueError):
                 print('That is not a valid choice.\n')
 
+    def choose_specific_card_type_from_trash(self, prompt, max_cost, card_type, force):
+        print(prompt)
+        print()
+        while True:
+            try:
+                trash_table = prettytable.PrettyTable(hrules=prettytable.ALL)
+                trash_table.field_names = ['Number', 'Card', 'Cost', 'Type', 'Quantity', 'Description']
+                # Only cards you can afford can be chosen (and with non-zero quantity)
+                trash_pile = self.supply.trash_pile
+                gainable_card_classes = [card_class for card_class in trash_pile if trash_pile[card_class] and card_type in card_class.types]
+                # for idx, card_class in enumerate(sorted(buyable_card_stacks, key=lambda x: (x.types[0].value, x.cost))):
+                for idx, card_class in enumerate(gainable_card_classes):
+                    types = ', '.join([type.name.lower().capitalize() for type in card_class.types])
+                    card_quantity = len(trash_pile[card_class])
+                    trash_table.add_row([idx + 1, card_class.name, card_class.cost, types, card_quantity, card_class.description])
+                print(trash_table)
+                if force:
+                    card_num = int(input(f'Enter choice 1-{len(gainable_card_classes)}: '))
+                    print()
+                    if card_num < 1:
+                        raise ValueError
+                    card_to_gain = list(gainable_card_classes)[card_num - 1]
+                else:
+                    card_num = int(input(f'Enter choice 1-{len(gainable_card_classes)} (0 to skip): '))
+                    print()
+                    if card_num < 0:
+                        raise ValueError
+                    elif card_num == 0:
+                        return None
+                    else:
+                        card_to_gain = list(gainable_card_classes)[card_num - 1]
+                return card_to_gain
+            except (IndexError, ValueError):
+                print('That is not a valid choice.\n')
+
     def choose_yes_or_no(self, prompt):
         print(prompt)
         print()
@@ -293,6 +344,28 @@ class CLIInteraction(Interaction):
             return True
         else:
             return False
+
+    def choose_from_range(self, prompt, minimum, maximum, force):
+        options = list(range(minimum, maximum + 1))
+        print(prompt)
+        print()
+        while True:
+            try:
+                if force:
+                    response = int(input(f'Enter choice {minimum}-{maximum}: '))
+                    print()
+                    if response < minimum or response > maximum:
+                        raise ValueError
+                else:
+                    response = int(input(f'Enter choice {minimum}-{maximum} (0 to skip): '))
+                    print()
+                    if response == 0:
+                        return None
+                    elif response < minimum or response > maximum:
+                        raise ValueError
+                return response
+            except (IndexError, ValueError):
+                self.send('That is not a valid choice.')
 
     def choose_from_options(self, prompt, options, force):
         print(prompt)
@@ -490,6 +563,8 @@ class NetworkedCLIInteraction(Interaction):
                 buyable_card_stacks = [card_class for card_class in stacks if stacks[card_class].modified_cost <= max_cost and card_class not in invalid_card_classes and stacks[card_class].cards_remaining > 0]
                 if exact_cost:
                     buyable_card_stacks = [card_class for card_class in buyable_card_stacks if stacks[card_class].modified_cost == max_cost]
+                if not buyable_card_stacks:
+                    return None
                 # for idx, card_class in enumerate(sorted(buyable_card_stacks, key=lambda x: (x.types[0].value, x.cost))):
                 for idx, card_class in enumerate(buyable_card_stacks):
                     types = ', '.join([type.name.lower().capitalize() for type in card_class.types])
@@ -557,7 +632,45 @@ class NetworkedCLIInteraction(Interaction):
                         card_to_buy = list(buyable_card_stacks)[card_num - 1]
                 return card_to_buy
             except (IndexError, ValueError):
-                self.send('That is not a valid choice.')        
+                self.send('That is not a valid choice.')     
+
+    def choose_specific_card_type_from_trash(self, prompt, max_cost, card_type, force):
+        while True:
+            try:
+                trash_table = prettytable.PrettyTable(hrules=prettytable.ALL)
+                trash_table.field_names = ['Number', 'Card', 'Cost', 'Type', 'Quantity', 'Description']
+                # Only cards you can afford can be chosen (and with non-zero quantity)
+                trash_pile = self.supply.trash_pile
+                gainable_card_classes = [card_class for card_class in trash_pile if trash_pile[card_class] and card_type in card_class.types]
+                # for idx, card_class in enumerate(sorted(buyable_card_stacks, key=lambda x: (x.types[0].value, x.cost))):
+                for idx, card_class in enumerate(gainable_card_classes):
+                    types = ', '.join([type.name.lower().capitalize() for type in card_class.types])
+                    card_quantity = len(trash_pile[card_class])
+                    trash_table.add_row([idx + 1, card_class.name, card_class.cost, types, card_quantity, card_class.description])
+                while True:
+                    try:
+                        _prompt = f'{prompt}\n{trash_table.get_string()}'
+                        break
+                    except:
+                        pass
+                if force:
+                    _prompt += f'Enter choice 1-{len(gainable_card_classes)}: '
+                    card_num = self.enter_choice(_prompt)
+                    if card_num < 1:
+                        raise ValueError
+                    card_to_gain = list(gainable_card_classes)[card_num - 1]
+                else:
+                    _prompt += f'Enter choice 1-{len(gainable_card_classes)} (0 to skip): '
+                    card_num = self.enter_choice(_prompt)
+                    if card_num < 0:
+                        raise ValueError
+                    elif card_num == 0:
+                        return None
+                    else:
+                        card_to_gain = list(gainable_card_classes)[card_num - 1]
+                return card_to_gain
+            except (IndexError, ValueError):
+                self.send('That is not a valid choice.\n')   
 
     def choose_yes_or_no(self, prompt):
         while True:
@@ -567,11 +680,31 @@ class NetworkedCLIInteraction(Interaction):
                 if response.lower() in ['yes', 'y', 'no', 'n']:
                     break
             except AttributeError:
-                self.send(f'{response} is not a valid choice. WTF???')
+                self.send(f'{response} is not a valid choice.')
         if response.lower() in ['yes', 'y']:
             return True
         else:
             return False
+
+    def choose_from_range(self, prompt, minimum, maximum, force):
+        options = list(range(minimum, maximum + 1))
+        while True:
+            try:
+                if force:
+                    _prompt = f'{prompt}\nEnter choice {minimum}-{maximum}: '
+                    response = self.enter_choice(_prompt)
+                    if response < minimum or response > maximum:
+                        raise ValueError
+                else:
+                    _prompt = f'{prompt}\nEnter choice {minimum}-{maximum} (0 to skip): '
+                    response = self.enter_choice(_prompt)
+                    if response == 0:
+                        return None
+                    elif response < minimum or response > maximum:
+                        raise ValueError
+                return response
+            except (IndexError, ValueError):
+                self.send('That is not a valid choice.')
 
     def choose_from_options(self, prompt, options, force):
         while True:
@@ -751,6 +884,8 @@ class AutoInteraction(Interaction):
                 buyable_card_stacks = [card_class for card_class in stacks if stacks[card_class].modified_cost <= max_cost and card_class not in invalid_card_classes and stacks[card_class].cards_remaining > 0]
                 if exact_cost:
                     buyable_card_stacks = [card_class for card_class in buyable_card_stacks if stacks[card_class].modified_cost == max_cost]
+                if not buyable_card_stacks:
+                    return None
                 if force:
                     print(f'Enter choice 1-{len(buyable_card_stacks)}: ', end='')
                     choices = list(range(1, len(buyable_card_stacks) + 1))
@@ -822,6 +957,41 @@ class AutoInteraction(Interaction):
                 print('That is not a valid choice.\n')
                 raise
 
+    def choose_specific_card_type_from_trash(self, prompt, max_cost, card_type, force):
+        print(prompt)
+        print()
+        while True:
+            try:
+                # Only cards you can afford can be chosen (and with non-zero quantity)
+                trash_pile = self.supply.trash_pile
+                gainable_card_classes = [card_class for card_class in trash_pile if trash_pile[card_class] and card_type in card_class.types]
+                # for idx, card_class in enumerate(sorted(buyable_card_stacks, key=lambda x: (x.types[0].value, x.cost))):
+                if force:
+                    print(f'Enter choice 1-{len(gainable_card_classes)}: ')
+                    choices = list(range(1, len(gainable_card_classes) + 1))
+                    # Weight equally
+                    weights = [1 for card in gainable_card_classes]
+                    card_num = random.choices(choices, weights, k=1)[0]
+                    print(card_num)
+                    print()
+                    card_to_gain = list(gainable_card_classes)[card_num - 1]
+                else:
+                    print(f'Enter choice 1-{len(gainable_card_classes)} (0 to skip): ')
+                    choices = list(range(0, len(gainable_card_classes)))
+                    # Weight equally
+                    weights = [1] + [1 for card in gainable_card_classes]
+                    card_num = random.choices(choices, weights, k=1)[0]
+                    print(card_num)
+                    print()
+                    if card_num == 0:
+                        return None
+                    else:
+                        card_to_gain = list(gainable_card_classes)[card_num - 1]
+                return card_to_gain
+            except (IndexError, ValueError):
+                print('That is not a valid choice.\n')
+                raise
+
     def choose_yes_or_no(self, prompt):
         print(prompt)
         print()
@@ -837,6 +1007,31 @@ class AutoInteraction(Interaction):
             return True
         else:
             return False
+
+    def choose_from_range(self, prompt, minimum, maximum, force):
+        options = list(range(minimum, maximum + 1))
+        print(prompt)
+        print()
+        while True:
+            try:
+                if force:
+                    print(f'Enter choice {minimum}-{maximum}: ', end='')
+                    response = random.choice(options)
+                    print(response)
+                    print()
+                    if response < minimum or response > maximum:
+                        raise ValueError
+                else:
+                    print(f'Enter choice {minimum}-{maximum} (0 to skip): ', end='')
+                    response = random.choice([0] + options)
+                    print(response)
+                    if response == 0:
+                        return None
+                    elif response < minimum or response > maximum:
+                        raise ValueError
+                return response
+            except (IndexError, ValueError):
+                self.send('That is not a valid choice.')
 
     def choose_from_options(self, prompt, options, force):
         print(prompt)
@@ -1049,6 +1244,9 @@ class BrowserInteraction(Interaction):
                 buyable_card_stacks = [card_class for card_class in stacks if stacks[card_class].modified_cost <= max_cost and card_class not in invalid_card_classes and stacks[card_class].cards_remaining > 0]
                 if exact_cost:
                     buyable_card_stacks = [card_class for card_class in buyable_card_stacks if stacks[card_class].modified_cost == max_cost]
+                if not buyable_card_stacks:
+                    self.send('There are no cards in the Supply that you can buy.')
+                    return None
                 # for idx, card_class in enumerate(sorted(buyable_card_stacks, key=lambda x: (x.types[0].value, x.cost))):
                 for idx, card_class in enumerate(buyable_card_stacks):
                     types = ', '.join([type.name.lower().capitalize() for type in card_class.types])
@@ -1115,7 +1313,45 @@ class BrowserInteraction(Interaction):
                         card_to_buy = list(buyable_card_stacks)[card_num - 1]
                 return card_to_buy
             except (IndexError, ValueError):
-                self.send('That is not a valid choice.')        
+                self.send('That is not a valid choice.')    
+
+    def choose_specific_card_type_from_trash(self, prompt, max_cost, card_type, force):
+        while True:
+            try:
+                trash_table = prettytable.PrettyTable(hrules=prettytable.ALL)
+                trash_table.field_names = ['Number', 'Card', 'Cost', 'Type', 'Quantity', 'Description']
+                # Only cards you can afford can be chosen (and with non-zero quantity)
+                trash_pile = self.supply.trash_pile
+                gainable_card_classes = [card_class for card_class in trash_pile if trash_pile[card_class] and card_type in card_class.types]
+                # for idx, card_class in enumerate(sorted(buyable_card_stacks, key=lambda x: (x.types[0].value, x.cost))):
+                for idx, card_class in enumerate(gainable_card_classes):
+                    types = ', '.join([type.name.lower().capitalize() for type in card_class.types])
+                    card_quantity = len(trash_pile[card_class])
+                    trash_table.add_row([idx + 1, card_class.name, card_class.cost, types, card_quantity, card_class.description])
+                while True:
+                    try:
+                        _prompt = f'{prompt}\n{trash_table.get_html_string()}'
+                        break
+                    except TypeError:
+                        pass
+                if force:
+                    _prompt += f'\nEnter choice 1-{len(gainable_card_classes)}: '
+                    card_num = self.enter_choice(_prompt)
+                    if card_num < 1:
+                        raise ValueError
+                    card_to_gain = list(gainable_card_classes)[card_num - 1]
+                else:
+                    _prompt += f'\nEnter choice 1-{len(gainable_card_classes)} (0 to skip): '
+                    card_num = self.enter_choice(_prompt)
+                    if card_num < 0:
+                        raise ValueError
+                    elif card_num == 0:
+                        return None
+                    else:
+                        card_to_gain = list(gainable_card_classes)[card_num - 1]
+                return card_to_gain
+            except (IndexError, ValueError):
+                self.send('That is not a valid choice.')
 
     def choose_yes_or_no(self, prompt):
         while True:
@@ -1125,18 +1361,38 @@ class BrowserInteraction(Interaction):
                 if response.lower() in ['yes', 'y', 'no', 'n']:
                     break
             except AttributeError:
-                self.send(f'{response} is not a valid choice. WTF???')
+                self.send(f'{response} is not a valid choice.')
         if response.lower() in ['yes', 'y']:
             return True
         else:
             return False
+
+    def choose_from_range(self, prompt, minimum, maximum, force):
+        options = list(range(minimum, maximum + 1))
+        while True:
+            try:
+                if force:
+                    _prompt = f'{prompt}\nEnter choice {minimum}-{maximum}: '
+                    response = self.enter_choice(_prompt)
+                    if response < minimum or response > maximum:
+                        raise ValueError
+                else:
+                    _prompt = f'{prompt}\nEnter choice {minimum}-{maximum} (0 to skip): '
+                    response = self.enter_choice(_prompt)
+                    if response == 0:
+                        return None
+                    elif response < minimum or response > maximum:
+                        raise ValueError
+                return response
+            except (IndexError, ValueError):
+                self.send('That is not a valid choice.')
 
     def choose_from_options(self, prompt, options, force):
         while True:
             options_table = prettytable.PrettyTable(hrules=prettytable.ALL)
             options_table.field_names = ['Number', 'Option']
             for idx, option in enumerate(options):
-                if isinstance(option, cards.Card):
+                if isinstance(option, cards.Card) or inspect.isclass(option):
                     options_table.add_row([idx + 1, option.name])
                 else:
                     options_table.add_row([idx + 1, option])

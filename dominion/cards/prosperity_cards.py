@@ -116,7 +116,6 @@ class TradeRoute(ActionCard):
             self.game.broadcast(f'{self.owner} has no cards in their hand to trash.')
         else:
             self.owner.trash(card_to_trash)
-            self.game.broadcast(f'{self.owner} trashed a {card_to_trash}.')
         # +1 $ per Coin token on the Trade Route mat
         self.owner.turn.coppers_remaining += self.supply.trade_route
         self.game.broadcast(f'{self.owner} gets +{self.supply.trade_route} $ from the Coin tokens on the Trade Route mat.')
@@ -164,6 +163,13 @@ class Watchtower(ReactionCard):
                             player.deck.append(card)
                             game.broadcast(f'{player} put the {card} onto their deck.')
 
+    @property
+    def can_react(self):
+        return False # This card's reaction is governed by a post-gain hook
+
+    def react(self):
+        pass
+
     def action(self):
         num_cards_to_draw = 6 - len(self.owner.hand)
         if num_cards_to_draw > 0:
@@ -173,9 +179,6 @@ class Watchtower(ReactionCard):
                 self.interactions.send(f"You drew: {', '.join(map(str, cards_drawn))}.")
             else:
                 self.game.broadcast(f'{self.owner} has no more cards to draw from.')
-
-    def react(self):
-        pass
 
 
 class Bishop(ActionCard):
@@ -208,7 +211,6 @@ class Bishop(ActionCard):
             self.game.broadcast(f'{self.owner} has no cards in their hand to trash.')
         else:
             self.owner.trash(card_to_trash)
-            self.game.broadcast(f'{self.owner} trashed a {card_to_trash}.')
             victory_tokens = math.floor(card_to_trash.cost / 2)
             self.owner.victory_tokens += victory_tokens
             if victory_tokens > 1:
@@ -221,7 +223,6 @@ class Bishop(ActionCard):
             card_to_trash = player.interactions.choose_card_from_hand(prompt=prompt, force=False)
             if card_to_trash is not None:
                 player.trash(card_to_trash)
-                self.game.broadcast(f'{player} trashed a {card_to_trash}.')
 
 
 class Monument(ActionCard):
@@ -294,7 +295,7 @@ class Talisman(TreasureCard):
 
 
     def play(self):
-        # All non-Victorycards costing 4 $ or less get a post gain hook added this turn
+        # All non-Victory cards costing 4 $ or less get a post gain hook added this turn
         for card_class in self.supply.card_stacks:
             if card_class.cost <= 4 and CardType.VICTORY not in card_class.types:
                 post_gain_hook = self.TalismanPostGainHook(card_class)
@@ -448,7 +449,6 @@ class Mint(ActionCard):
             treasures_in_play = [card for card in player.played_cards if CardType.TREASURE in card.types]
             for treasure in treasures_in_play:
                 player.trash_played_card(treasure)
-            game.broadcast(f"{player} trashed all Treasures they had in play: {', '.join(map(str, treasures_in_play))}.")
 
     def action(self):
         # You may reveal a Treasure card from your hand.
@@ -456,7 +456,7 @@ class Mint(ActionCard):
         treasure_card = self.owner.interactions.choose_specific_card_type_from_hand(prompt, CardType.TREASURE)
         if treasure_card is not None:
             treasure_card_class = type(treasure_card)
-            self.owner.gain_without_hooks(treasure_card_class)
+            self.owner.gain_without_hooks(treasure_card_class, message=False)
             self.game.broadcast(f'{self.owner} revealed a {treasure_card} and gained a copy of it.')
 
         
@@ -491,11 +491,9 @@ class Mountebank(AttackCard):
         if curses_in_hand and player.interactions.choose_yes_or_no(prompt=f'{player}: You have a Curse in your hand. Would you like to reveal and discard it?'):
             curse = curses_in_hand[0]
             player.discard(curse)
-            self.game.broadcast(f'{player} discarded a Curse.')
         else:
             player.gain(base_cards.Curse)
             player.gain(base_cards.Copper)
-            self.game.broadcast(f'{player} gained a Curse and a Copper.')
 
 
 class Rabble(AttackCard):
@@ -634,7 +632,6 @@ class Vault(ActionCard):
             else:
                 discarded_card_count += 1
                 self.owner.discard(card_to_discard)
-                self.game.broadcast(f'{self.owner} discarded a {card_to_discard}.')
         coppers_before = self.owner.turn.coppers_remaining
         self.owner.turn.coppers_remaining += discarded_card_count
         self.game.broadcast(f'+{coppers_before} $ --> {self.owner.turn.coppers_remaining} $.')
@@ -650,10 +647,10 @@ class Vault(ActionCard):
                         card_to_discard = player.interactions.choose_card_from_hand(prompt, force=True)
                         if card_to_discard is not None:
                             player.discard(card_to_discard)
-                            self.game.broadcast(f'{player} discarded a {card_to_discard}.')
                     cards_drawn = player.draw(1)
                     if cards_drawn:
                         player.interactions.send(f'You drew a {cards_drawn[0]}.')
+                        self.game.broadcast(f'{player} drew a card.')
                 else:
                     self.game.broadcast(f'{player} chose not to discard 2 cards.')
 
@@ -735,13 +732,10 @@ class Goons(AttackCard):
     def attack_effect(self, attacker, player):
         number_to_discard = len(player.hand) - 3
         self.game.broadcast(f'{player} must discard {number_to_discard} cards.')
-        discarded_cards = []
         for card_num in range(number_to_discard):
             prompt = f'{player}: Choose card {card_num + 1} of {number_to_discard} to discard.'
             card_to_discard = player.interactions.choose_card_from_hand(prompt=prompt, force=True)
             player.discard(card_to_discard)
-            discarded_cards.append(card_to_discard)
-        self.game.broadcast(f"{player} discarded {', '.join(map(str, discarded_cards))}.")
 
 
 class GrandMarket(ActionCard):
@@ -852,7 +846,6 @@ class Expand(ActionCard):
         card_to_trash = self.interactions.choose_card_from_hand(prompt=prompt, force=True)
         if card_to_trash is not None:
             self.owner.trash(card_to_trash)
-            self.game.broadcast(f'{self.owner} trashed a {card_to_trash}.')
             max_cost = card_to_trash.cost + 3
             self.owner.turn.buy_phase.buy_without_side_effects(max_cost=max_cost, force=True)
 
@@ -883,7 +876,6 @@ class Forge(ActionCard):
             if card_to_trash is None:
                 break
             else:
-                self.game.broadcast(f'{self.owner} trashed a {card_to_trash}.')
                 self.owner.trash(card_to_trash)
                 current_value += card_to_trash.cost
         # Gain a card with cost exactly equal to the total cost of the trashed cards

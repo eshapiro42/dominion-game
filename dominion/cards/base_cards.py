@@ -1,5 +1,5 @@
 import math
-from .cards import CardType, Card, TreasureCard, ActionCard, AttackCard, ReactionCard, VictoryCard, CurseCard
+from .cards import CardType, ReactionType, Card, TreasureCard, ActionCard, AttackCard, ReactionCard, VictoryCard, CurseCard
 from ..hooks import TreasureHook
 
 
@@ -105,7 +105,6 @@ class Cellar(ActionCard):
             else:
                 discarded_card_count += 1
                 self.owner.discard(card_to_discard)
-                self.game.broadcast(f'{self.owner} discarded a {card_to_discard}.')
         drawn_cards = self.owner.draw(discarded_card_count)
         self.game.broadcast(f'+{discarded_card_count} cards --> {drawn_cards}')
         self.interactions.send(f"You drew: {', '.join(map(str, drawn_cards))}.")
@@ -156,8 +155,12 @@ class Moat(ReactionCard):
     def action(self):
         pass
 
+    @property
+    def can_react(self):
+        return True
+
     def react(self):
-        pass
+        return ReactionType.IMMUNITY, True # Will make the owner immune to attacks and prevents the Moat from being played twice
 
 
 class Harbinger(ActionCard):
@@ -244,8 +247,8 @@ class Vassal(ActionCard):
         if card is None:
             self.game.broadcast(f'{self.owner} has no cards left to draw from.')
             return
-        self.game.broadcast(f'{self.owner} discarded a {card}.')
         self.owner.discard_pile.append(card)
+        self.game.broadcast(f'{self.owner} discarded a {card}.')
         if CardType.ACTION in card.types:
             prompt = f'You revealed a {card.name}. Would you like to play it?'
             if self.interactions.choose_yes_or_no(prompt=prompt):
@@ -326,10 +329,7 @@ class Bureaucrat(AttackCard):
 
     def action(self):
         # Gain a Silver and put onto deck
-        silver = self.supply.draw(Silver)
-        silver.owner = self.owner
-        self.owner.deck.append(silver)
-        self.game.broadcast(f'{self.owner} gained a Silver onto their deck.')
+        self.owner.gain_to_deck(Silver)
 
 
 class Gardens(VictoryCard):
@@ -369,13 +369,10 @@ class Militia(AttackCard):
     def attack_effect(self, attacker, player):
         number_to_discard = len(player.hand) - 3
         self.game.broadcast(f'{player} must discard {number_to_discard} cards.')
-        discarded_cards = []
         for card_num in range(number_to_discard):
             prompt = f'{player}: Choose card {card_num + 1} of {number_to_discard} to discard.'
             card_to_discard = player.interactions.choose_card_from_hand(prompt=prompt, force=True)
             player.discard(card_to_discard)
-            discarded_cards.append(card_to_discard)
-        self.game.broadcast(f"{player} discarded {', '.join(map(str, discarded_cards))}.")
 
     def action(self):
         pass
@@ -565,7 +562,6 @@ class Bandit(AttackCard):
             player.discard_pile.append(card_to_discard)
 
     def action(self):
-        self.game.broadcast(f'{self.owner} gained a Gold.')
         self.owner.gain(Gold)
 
 
@@ -725,7 +721,6 @@ class Mine(ActionCard):
             prompt = f'Choose a Treasure card costing up to {max_cost} $ to gain to your hand.'
             card_class_to_gain = self.interactions.choose_specific_card_type_from_supply(prompt=prompt, max_cost=max_cost, card_type=CardType.TREASURE, force=True)
             self.owner.gain_to_hand(card_class_to_gain)
-            self.game.broadcast(f'{self.owner} trashed a {card_to_trash} and gained a {card_class_to_gain.name} to their hand.')
 
 
 class Sentry(ActionCard):
@@ -808,7 +803,6 @@ class Witch(AttackCard):
 
     def attack_effect(self, attacker, player):
         player.gain(Curse)
-        self.game.broadcast(f'{player} gained a Curse')
 
     def action(self):
         pass
@@ -836,7 +830,6 @@ class Artisan(ActionCard):
         prompt = 'Gain a card to your hand costing up to 5 $.'
         card_class = self.interactions.choose_card_class_from_supply(prompt=prompt, max_cost=5, force=True)
         self.owner.gain_to_hand(card_class)
-        self.game.broadcast(f'{self.owner} gained a {card_class.name} to their hand.')
         prompt = 'Put a card from your hand onto your deck.'
         card = self.interactions.choose_card_from_hand(prompt=prompt, force=True)
         self.owner.hand.remove(card)
@@ -911,7 +904,6 @@ class Feast(ActionCard):
 
     def action(self):
         self.owner.trash_played_card(self)
-        self.game.broadcast(f'{self.owner} trashed a {self.name}.')
         self.owner.turn.buy_phase.buy_without_side_effects(max_cost=5, force=True)
 
 
