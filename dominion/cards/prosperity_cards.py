@@ -654,6 +654,7 @@ class Vault(ActionCard):
                     cards_drawn = player.draw(1)
                     if cards_drawn:
                         player.interactions.send(f'You drew a {cards_drawn[0]}.')
+                        self.game.broadcast(f'{player} drew a card.')
                 else:
                     self.game.broadcast(f'{player} chose not to discard 2 cards.')
 
