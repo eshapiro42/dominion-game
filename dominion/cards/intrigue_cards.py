@@ -631,11 +631,42 @@ class Minion(AttackCard):
     extra_buys = 0
     extra_coppers = 0
 
-    def attack_effect(self):
-        pass
+    def attack_effect(self, attacker, player):
+        if len(player.hand) >= 5:
+            # Discard your hand
+            discarded_cards = list(player.hand) # Make a shallow copy
+            for card in discarded_cards:
+                player.discard(card)
+            self.game.broadcast(f"{player} discarded: {', '.join(map(str, discarded_cards))}.")
+            # Draw four cards
+            cards_drawn = player.draw(4)
+            if cards_drawn:
+                self.game.broadcast(f'{player} drew {len(cards_drawn)} cards --> {len(player.hand)} cards in hand.')
+                player.interactions.send(f"You drew: {', '.join(map(str, cards_drawn))}.")        
 
     def action(self):
-        pass
+        options = [
+            '+2 $',
+            'Discard your hand, +4 Cards, and each other player with at least 5 cards in hand discards their hand and draws 4 cards'
+        ]
+        prompt = 'Which would you like to choose?'
+        choice = self.interactions.choose_from_options(prompt, options, force=True)
+        if choice == '+2 $':
+            self.attacking = False # do not activate the attack_effect
+            self.owner.turn.coppers_remaining += 2
+            self.game.broadcast(f'+2 $ --> {self.owner.turn.coppers_remaining} $.')
+        elif choice == 'Discard your hand, +4 Cards, and each other player with at least 5 cards in hand discards their hand and draws 4 cards':
+            self.attacking = True # activate the attack_effect
+            # Discard your hand
+            discarded_cards = list(self.owner.hand) # Make a shallow copy
+            for card in discarded_cards:
+                self.owner.discard(card)
+            self.game.broadcast(f"{self.owner} discarded: {', '.join(map(str, discarded_cards))}.")
+            # Draw four cards
+            cards_drawn = self.owner.draw(4)
+            if cards_drawn:
+                self.game.broadcast(f'+{len(cards_drawn)} cards --> {len(self.owner.hand)} cards in hand.')
+                self.interactions.send(f"You drew: {', '.join(map(str, cards_drawn))}.")
 
 
 class Patrol(ActionCard):
@@ -678,7 +709,7 @@ class Replace(AttackCard):
     extra_buys = 0
     extra_coppers = 0
 
-    def attack_effect(self):
+    def attack_effect(self, attacker, player):
         pass
 
     def action(self):
@@ -704,7 +735,7 @@ class Torturer(AttackCard):
     extra_buys = 0
     extra_coppers = 0
 
-    def attack_effect(self):
+    def attack_effect(self, attacker, player):
         pass
 
     def action(self):
@@ -814,7 +845,7 @@ KINGDOM_CARDS = [
     # SecretPassage,
     Courtier,
     Duke,
-    # Minion,
+    Minion,
     # Patrol,
     # Replace,
     # Torturer,
