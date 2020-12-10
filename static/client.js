@@ -6,9 +6,8 @@ var room = null;
 var room_creator = false;
 var joined = false;
 var startable = false;
-var messages = '';
 var choice = null;
-
+var last_message = null;
 
 class Option {
     constructor(number, option) 
@@ -19,13 +18,13 @@ class Option {
 }
 
 function append_message(message) {
-    if (message == "********************************************************************************") {
-        $("#gameMessages").append(`<hr>`);
+    // Add the 'active' light class to the last child of the message board
+    if (last_message != null) {
+        last_message.addClass('list-group-item-light');
     }
-    else {
-        // Add the message to the message board
-        $("#gameMessages").append(`<li>${message}</li>`);
-    }
+    // Add the message to the message board
+    last_message = $(`<li class="list-group-item">${message}</li>`);
+    $("#gameMessages").append(last_message);
     // Scroll to the bottom of the message board
     $("html, body").scrollTop($(document).height());
 }
@@ -122,6 +121,16 @@ socket.on('choose yes or no', function (data, callback) {
         $("#gameInput").val('');
         $("#gameInputContainer").hide();
     });
+});
+
+socket.on('new turn', function (data, callback) {
+    player = data['player'];
+    // Add a horizontal rule to the message board
+    $("#gameMessages").append(`<hr/>`);
+    // Print out the player's name
+    append_message(`<strong>${player}'s turn!</strong>`);
+    // Scroll to the bottom of the message board
+    $("html, body").scrollTop($(document).height());
 });
 
 
