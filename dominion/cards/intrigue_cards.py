@@ -760,7 +760,17 @@ class TradingPost(ActionCard):
     extra_coppers = 0
 
     def action(self):
-        pass
+        trashed_cards = []
+        for trash_num in range(2):
+            prompt = f'Choose a card from your hand to trash ({trash_num + 1}/2).'
+            card_to_trash = self.interactions.choose_card_from_hand(prompt, force=True)
+            if card_to_trash is not None:
+                trashed_cards.append(card_to_trash)
+                self.owner.trash(card_to_trash)
+                self.game.broadcast(f'{self.owner} trashed a {card_to_trash}.')
+        if len(trashed_cards) == 2:
+            self.owner.gain(base_cards.Silver)
+            self.game.broadcast(f'{self.owner} gained a Silver.')
 
 
 class Upgrade(ActionCard):
@@ -785,14 +795,15 @@ class Upgrade(ActionCard):
     def action(self):
         prompt = f'Choose a card from your hand to trash.'
         card_to_trash = self.interactions.choose_card_from_hand(prompt, force=True)
-        self.owner.trash(card_to_trash)
-        self.game.broadcast(f'{self.owner} trashed a {card_to_trash}.')
-        cost = card_to_trash.cost + 1
-        prompt = f'Choose a card costing exactly {cost} to gain.'
-        card_class_to_gain = self.interactions.choose_card_class_from_supply(prompt, cost, force=True, exact_cost=True)
-        if card_class_to_gain is not None:
-            self.owner.gain(card_class_to_gain)
-            self.game.broadcast(f'{self.owner} gained a {card_class_to_gain.name}.')
+        if card_to_trash is not None:
+            self.owner.trash(card_to_trash)
+            self.game.broadcast(f'{self.owner} trashed a {card_to_trash}.')
+            cost = card_to_trash.cost + 1
+            prompt = f'Choose a card costing exactly {cost} to gain.'
+            card_class_to_gain = self.interactions.choose_card_class_from_supply(prompt, cost, force=True, exact_cost=True)
+            if card_class_to_gain is not None:
+                self.owner.gain(card_class_to_gain)
+                self.game.broadcast(f'{self.owner} gained a {card_class_to_gain.name}.')
 
 
 class Harem(TreasureCard, VictoryCard):
@@ -858,7 +869,7 @@ KINGDOM_CARDS = [
     # Patrol,
     # Replace,
     # Torturer,
-    # TradingPost,
+    TradingPost,
     Upgrade,
     Harem,
     # Nobles
