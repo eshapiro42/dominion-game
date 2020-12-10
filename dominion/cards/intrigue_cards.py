@@ -473,7 +473,22 @@ class Ironworks(ActionCard):
     extra_coppers = 0
 
     def action(self):
-        pass
+        prompt = f'Gain a card costing up to 4 $.'
+        card_class_to_gain = self.interactions.choose_card_class_from_supply(prompt, max_cost=4, force=True)
+        self.owner.gain(card_class_to_gain)
+        self.game.broadcast(f'{self.owner} gained a {card_class_to_gain.name}.')
+        if CardType.ACTION in card_class_to_gain.types:
+            self.owner.turn.actions_remaining += 1
+            self.game.broadcast(f'+1 action --> {self.owner.turn.actions_remaining} actions.')
+        if CardType.TREASURE in card_class_to_gain.types:
+            self.owner.turn.coppers_remaining += 1
+            self.game.broadcast(f'+1 $ --> {self.owner.turn.coppers_remaining} $.')
+        if CardType.VICTORY in card_class_to_gain.types:
+            cards_drawn = self.owner.draw(1)
+            if cards_drawn:
+                card = cards_drawn[0]
+                self.game.broadcast(f'+1 card --> {len(self.owner.hand)} cards in hand.')
+                self.interactions.send(f'You drew: {card}.')
 
 
 class Mill(ActionCard, VictoryCard):
@@ -899,7 +914,7 @@ KINGDOM_CARDS = [
     Bridge,
     Conspirator,
     # Diplomat,
-    # Ironworks,
+    Ironworks,
     Mill,
     MiningVillage,
     # SecretPassage,
