@@ -661,13 +661,13 @@ class Library(ActionCard):
                 break
             self.interactions.send(f'You drew a {card_drawn}.')
             if CardType.ACTION in card_drawn.types:
-                prompt = "It's an action card. Would you like to skip and discard it?"
+                prompt = f"It's an Action card. You have {self.owner.turn.actions_remaining} actions remaining. Would you like to keep it?"
                 if self.interactions.choose_yes_or_no(prompt=prompt):
-                    self.owner.discard_pile.append(card_drawn)
-                    self.game.broadcast(f'{self.owner} discarded a {card_drawn}.')
-                else:
                     self.interactions.send('Adding it to your hand.')
                     self.owner.hand.append(card_drawn)
+                else:
+                    self.owner.discard_pile.append(card_drawn)
+                    self.game.broadcast(f'{self.owner} discarded a {card_drawn}.')
             else:
                 self.interactions.send('Adding it to your hand.')
                 self.owner.hand.append(card_drawn)
