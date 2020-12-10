@@ -55,7 +55,7 @@ class Lurker(ActionCard):
 
     def action(self):
         # Choose one
-        prompt = f'Which would you like to do?'
+        prompt = f'Which would you like to choose?'
         options = [
             'Trash an Action card from the Supply',
             'Gain an Action card from the trash'
@@ -189,7 +189,7 @@ class ShantyTown(ActionCard):
 
 
 class Steward(ActionCard):
-    name = ''
+    name = 'Steward'
     cost = 3
     types = [CardType.ACTION]
     image_path = 'Steward'
@@ -206,7 +206,28 @@ class Steward(ActionCard):
     extra_coppers = 0
 
     def action(self):
-        pass
+        # Choose one
+        options = [
+            '+2 Cards',
+            '2 $',
+            'Trash 2 cards from your hand'
+        ]
+        prompt = f'Which would you like to choose?'
+        choice = self.interactions.choose_from_options(prompt, options, force=True)
+        if choice == '+2 Cards':
+            cards_drawn = self.owner.draw(2)
+            if cards_drawn:
+                self.game.broadcast(f'+{len(cards_drawn)} cards --> {len(self.owner.hand)} cards in hand.')
+                self.interactions.send(f"You drew: {', '.join(map(str, cards_drawn))}.")
+        elif choice == '2 $':
+            self.owner.turn.coppers_remaining += 2
+            self.game.broadcast(f'+2 $ --> {self.owner.turn.coppers_remaining} $.')
+        elif choice == 'Trash 2 cards from your hand':
+            for trash_num in range(2):
+                prompt = f'Choose a card from your hand to trash ({trash_num + 1}/2).'
+                card_to_trash = self.interactions.choose_card_from_hand(prompt, force=True)
+                self.owner.trash(card_to_trash)
+                self.game.broadcast(f'{self.owner} trashed a {card_to_trash} from their hand.')
 
 
 class Swindler(AttackCard):
@@ -684,7 +705,7 @@ KINGDOM_CARDS = [
     Pawn,
     # Masquerade,
     ShantyTown,
-    # Steward,
+    Steward,
     # Swindler,
     # WishingWell,
     # Baron,
