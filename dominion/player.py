@@ -19,8 +19,8 @@ class Player:
         self.hand = deque()
         self.played_cards = deque()
         # Start with seven coppers and three estates
-        self.gain(base_cards.Copper, quantity=7, from_supply=False)
-        self.gain(base_cards.Estate, quantity=3, from_supply=False)
+        self.gain(base_cards.Copper, quantity=7, from_supply=False, message=False)
+        self.gain(base_cards.Estate, quantity=3, from_supply=False, message=False)
         self.shuffle()
         # Draw a hand of five cards
         self.draw(5)
