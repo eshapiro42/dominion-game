@@ -75,7 +75,6 @@ class Lurker(ActionCard):
                 card_class_to_gain = self.interactions.choose_specific_card_type_from_trash(prompt, max_cost=math.inf, card_type=CardType.ACTION, force=True)
                 if card_class_to_gain is not None:
                     self.owner.gain_from_trash(card_class_to_gain)
-                    self.game.broadcast(f'{self.owner} gained a {card_class_to_gain.name} from the trash.')
             else:
                 self.game.broadcast('There are no Action cards in the trash to gain.')
 
@@ -179,7 +178,6 @@ class Masquerade(ActionCard):
         card_to_trash = self.interactions.choose_card_from_hand(prompt, force=False)
         if card_to_trash is not None:
             self.owner.trash(card_to_trash)
-            self.game.broadcast(f'{self.owner} trashed a {card_to_trash}.')
 
 
 class ShantyTown(ActionCard):
@@ -254,7 +252,6 @@ class Steward(ActionCard):
                 card_to_trash = self.interactions.choose_card_from_hand(prompt, force=True)
                 if card_to_trash is not None:
                     self.owner.trash(card_to_trash)
-                    self.game.broadcast(f'{self.owner} trashed a {card_to_trash} from their hand.')
 
 
 class Swindler(AttackCard):
@@ -290,7 +287,6 @@ class Swindler(AttackCard):
             card_class_to_gain = attacker.interactions.choose_card_class_from_supply(prompt, max_cost=cost, force=True, exact_cost=True)
             if card_class_to_gain is not None:
                 player.gain(card_class_to_gain)
-                self.game.broadcast(f'{player} gained a {card_class_to_gain}.')
             else:
                 self.game.broadcast(f'There are no cards costing {cost} $ in the Supply, so {player} did not gain a card.')
         else:
@@ -362,12 +358,10 @@ class Baron(ActionCard):
         if any(isinstance(card, base_cards.Estate) for card in self.owner.hand) and self.interactions.choose_yes_or_no(prompt):
             estate_to_discard = [card for card in self.owner.hand if isinstance(card, base_cards.Estate)][0]
             self.owner.discard(estate_to_discard)
-            self.game.broadcast(f'{self.owner} discarded an Estate.')
             self.owner.turn.coppers_remaining += 4
             self.game.broadcast(f'+4 $ --> {self.owner.turn.coppers_remaining} $.')
         else:
             self.owner.gain(base_cards.Estate)
-            self.game.broadcast(f'{self.owner} gained an Estate.')
 
 
 class Bridge(ActionCard):
@@ -476,7 +470,6 @@ class Ironworks(ActionCard):
         prompt = f'Gain a card costing up to 4 $.'
         card_class_to_gain = self.interactions.choose_card_class_from_supply(prompt, max_cost=4, force=True)
         self.owner.gain(card_class_to_gain)
-        self.game.broadcast(f'{self.owner} gained a {card_class_to_gain.name}.')
         if CardType.ACTION in card_class_to_gain.types:
             self.owner.turn.actions_remaining += 1
             self.game.broadcast(f'+1 action --> {self.owner.turn.actions_remaining} actions.')
@@ -523,7 +516,6 @@ class Mill(ActionCard, VictoryCard):
                 if card_to_discard is not None:
                     discarded_cards.append(card_to_discard)
                     self.owner.discard(card_to_discard)
-                    self.game.broadcast(f'{self.owner} discarded a {card_to_discard}.')
             if len(discarded_cards) == 2:
                 self.owner.turn.coppers_remaining += 2
                 self.game.broadcast(f'+2 $ --> {self.owner.turn.coppers_remaining} $.')
@@ -552,7 +544,6 @@ class MiningVillage(ActionCard):
         prompt = 'Would you like to trash this Mining Village for +2 $?'
         if self.interactions.choose_yes_or_no(prompt):
             self.owner.trash_played_card(self)
-            self.game.broadcast(f'{self.owner} trashed a {self.name}.')
             self.owner.turn.coppers_remaining += 2
             self.game.broadcast(f'+2 $ --> {self.owner.turn.coppers_remaining} $.')
 
@@ -635,7 +626,6 @@ class Courtier(ActionCard):
                     self.game.broadcast(f'+3 $ --> {self.owner.turn.coppers_remaining} $.')
                 elif choice == 'Gain a Gold':
                     self.owner.gain(base_cards.Gold)
-                    self.game.broadcast(f'{self.owner} gained a Gold.')
 
 
 class Duke(VictoryCard):
@@ -683,10 +673,9 @@ class Minion(AttackCard):
     def attack_effect(self, attacker, player):
         if len(player.hand) >= 5:
             # Discard your hand
-            discarded_cards = list(player.hand) # Make a shallow copy
-            for card in discarded_cards:
+            cards_to_discard = list(player.hand) # Make a shallow copy
+            for card in cards_to_discard:
                 player.discard(card)
-            self.game.broadcast(f"{player} discarded: {', '.join(map(str, discarded_cards))}.")
             # Draw four cards
             cards_drawn = player.draw(4)
             if cards_drawn:
@@ -707,10 +696,9 @@ class Minion(AttackCard):
         elif choice == 'Discard your hand, +4 Cards, and each other player with at least 5 cards in hand discards their hand and draws 4 cards':
             self.attacking = True # activate the attack_effect
             # Discard your hand
-            discarded_cards = list(self.owner.hand) # Make a shallow copy
-            for card in discarded_cards:
+            cards_to_discard = list(self.owner.hand) # Make a shallow copy
+            for card in cards_to_discard:
                 self.owner.discard(card)
-            self.game.broadcast(f"{self.owner} discarded: {', '.join(map(str, discarded_cards))}.")
             # Draw four cards
             cards_drawn = self.owner.draw(4)
             if cards_drawn:
@@ -791,7 +779,6 @@ class Replace(AttackCard):
 
     def attack_effect(self, attacker, player):
         player.gain(base_cards.Curse)
-        self.game.broadcast(f'{player} gained a Curse')
 
     def action(self):
         self.attacking = False # attack_effect is only activated if the owner gains a Victory card
@@ -800,18 +787,15 @@ class Replace(AttackCard):
         card_to_trash = self.interactions.choose_card_from_hand(prompt, force=True)
         if card_to_trash is not None:
             self.owner.trash(card_to_trash)
-            self.game.broadcast(f'{self.owner} trashed a {card_to_trash}.')
             # Gain a card costing up to 2 $ more than it
             max_cost = card_to_trash.cost + 2
             card_class_to_gain = self.interactions.choose_card_class_from_supply(prompt, max_cost, force=True)
             # If it's an action or a treasure, gain to deck
             if CardType.ACTION in card_class_to_gain.types or CardType.TREASURE in card_class_to_gain.types:
                 self.owner.gain_to_deck(card_class_to_gain)
-                self.game.broadcast(f'{self.owner} gained a {card_class_to_gain.name} and put it onto their deck.')
             # Otherwise they gain it normally
             else:
                 self.owner.gain(card_class_to_gain)
-                self.game.broadcast(f'{self.owner} gained a {card_class_to_gain.name}.')
             # If the gained card is a Victory card, activate the attack_effect
             if CardType.VICTORY in card_class_to_gain.types:
                 self.attacking = True
@@ -837,7 +821,25 @@ class Torturer(AttackCard):
     extra_coppers = 0
 
     def attack_effect(self, attacker, player):
-        pass
+        prompt = f'{player}: Which would you like to choose?'
+        num_cards_in_hand = len(player.hand)
+        num_curses_in_supply = self.supply.card_stacks[base_cards.Curse].cards_remaining
+        options = [
+            f'Discard 2 cards ({num_cards_in_hand} in your hand)',
+            f'Gain a Curse to your hand ({num_curses_in_supply} in the Supply)'
+        ]
+        choice = player.interactions.choose_from_options(prompt, options, force=True)
+        self.game.broadcast(f'{player} chose: {choice}.')
+        if choice == f'Discard 2 cards ({num_cards_in_hand} in your hand)':
+            for card_num in range(2):
+                prompt = f'{player}: Choose card {card_num + 1} of 2 to discard.'
+                card_to_discard = player.interactions.choose_card_from_hand(prompt=prompt, force=True)
+                if card_to_discard is not None:
+                    player.discard(card_to_discard)
+                else:
+                    self.game.broadcast(f'{player} has no more cards to discard.')
+        elif choice == f'Gain a Curse to your hand ({num_curses_in_supply} in the Supply)':
+            player.gain_to_hand(base_cards.Curse)
 
     def action(self):
         pass
@@ -868,10 +870,8 @@ class TradingPost(ActionCard):
             if card_to_trash is not None:
                 trashed_cards.append(card_to_trash)
                 self.owner.trash(card_to_trash)
-                self.game.broadcast(f'{self.owner} trashed a {card_to_trash}.')
         if len(trashed_cards) == 2:
             self.owner.gain(base_cards.Silver)
-            self.game.broadcast(f'{self.owner} gained a Silver.')
 
 
 class Upgrade(ActionCard):
@@ -898,13 +898,11 @@ class Upgrade(ActionCard):
         card_to_trash = self.interactions.choose_card_from_hand(prompt, force=True)
         if card_to_trash is not None:
             self.owner.trash(card_to_trash)
-            self.game.broadcast(f'{self.owner} trashed a {card_to_trash}.')
             cost = card_to_trash.cost + 1
             prompt = f'Choose a card costing exactly {cost} to gain.'
             card_class_to_gain = self.interactions.choose_card_class_from_supply(prompt, cost, force=True, exact_cost=True)
             if card_class_to_gain is not None:
                 self.owner.gain(card_class_to_gain)
-                self.game.broadcast(f'{self.owner} gained a {card_class_to_gain.name}.')
 
 
 class Harem(TreasureCard, VictoryCard):
@@ -983,7 +981,7 @@ KINGDOM_CARDS = [
     Minion,
     Patrol,
     Replace,
-    # Torturer,
+    Torturer,
     TradingPost,
     Upgrade,
     Harem,

@@ -60,7 +60,7 @@ class Player:
                 for hook in expired_hooks:
                     self.turn.post_gain_hooks[type(card)].remove(hook)
 
-    def gain(self, card_class, quantity: int = 1, from_supply: bool = True):
+    def gain(self, card_class, quantity: int = 1, from_supply: bool = True, message=True):
         for _ in range(quantity):
             if not from_supply:
                 card = card_class()
@@ -72,9 +72,11 @@ class Player:
                     return
             card.owner = self
             self.discard_pile.append(card)
+            if message:
+                self.game.broadcast(f'{self.name} gained a {card_class.name}.')
             self.process_post_gain_hooks(card, self.discard_pile)
 
-    def gain_without_hooks(self, card_class, quantity: int = 1, from_supply: bool = True):
+    def gain_without_hooks(self, card_class, quantity: int = 1, from_supply: bool = True, message=True):
         for _ in range(quantity):
             if not from_supply:
                 card = card_class()
@@ -86,8 +88,10 @@ class Player:
                     return
             card.owner = self
             self.discard_pile.append(card)
+            if message:
+                self.game.broadcast(f'{self.name} gained a {card_class.name}.')
 
-    def gain_to_hand(self, card_class, quantity: int = 1, from_supply: bool = True):
+    def gain_to_hand(self, card_class, quantity: int = 1, from_supply: bool = True, message=True):
         for _ in range(quantity):
             if not from_supply:
                 card = card_class()
@@ -99,9 +103,11 @@ class Player:
                     return
             card.owner = self
             self.hand.append(card)
+            if message:
+                self.game.broadcast(f'{self.name} gained a {card_class.name} into their hand.')
             self.process_post_gain_hooks(card, self.hand)
 
-    def gain_to_deck(self, card_class, quantity: int = 1, from_supply: bool = True):
+    def gain_to_deck(self, card_class, quantity: int = 1, from_supply: bool = True, message=True):
         for _ in range(quantity):
             if not from_supply:
                 card = card_class()
@@ -113,6 +119,8 @@ class Player:
                     return
             card.owner = self
             self.deck.append(card)
+            if message:
+                self.game.broadcast(f'{self.name} gained a {card_class.name} onto their deck.')
             self.process_post_gain_hooks(card, self.deck)
 
     def shuffle(self):
@@ -148,18 +156,24 @@ class Player:
         except ValueError:
             pass
 
-    def discard(self, card):
+    def discard(self, card, message=True):
         self.discard_pile.append(card)
         self.hand.remove(card)
+        if message:
+            self.game.broadcast(f'{self.name} discarded a {card}.')
 
-    def trash(self, card):
+    def trash(self, card, message=True):
         self.supply.trash(card)
         self.hand.remove(card)
+        if message:
+            self.game.broadcast(f'{self.name} trashed a {card}.')
 
-    def trash_played_card(self, card):
+    def trash_played_card(self, card, message=True):
         self.supply.trash(card)
         try:
             self.played_cards.remove(card)
+            if message:
+                self.game.broadcast(f'{self.name} trashed a {card}.')
         except ValueError:
             pass
 
@@ -171,11 +185,13 @@ class Player:
             card = None
         return card
 
-    def gain_from_trash(self, card_class):
+    def gain_from_trash(self, card_class, message=True):
         card = self.take_from_trash(card_class)
         if card is not None:
             self.discard_pile.append(card)
             self.process_post_gain_hooks(card, self.discard_pile)
+            if message:
+                self.game.broadcast(f'{self.name} gained a {card} from the trash.')
 
     def cleanup(self):
         # Discard hand from this turn
