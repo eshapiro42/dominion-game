@@ -27,10 +27,6 @@ function append_message(message) {
         $("#gameMessages").append(`<li>${message}</li>`);
     }
     // Scroll to the bottom of the message board
-    // $("html, body").animate({ 
-    //     scrollTop: $( 
-    //       'html, body').get(0).scrollHeight 
-    // }, 0); 
     $("html, body").scrollTop($(document).height());
 }
 
@@ -54,8 +50,6 @@ function joined_room(success) {
         alert('Invalid room ID.');
     }
 }
-
-
 
 
 socket.on('connect', function () {
@@ -166,7 +160,21 @@ $("#gameStartButton").on('click', function () {
         alert('The game cannot be started without at least two players.');
     }
     else {
-        socket.emit('start game', {username: username, room: room});
+        var intrigue = $('#intrigueCheckbox').prop('checked');
+        var prosperity = $('#prosperityCheckbox').prop('checked');
+        var distributeCost = $('#distributeCostCheckbox').prop('checked');
+        var disableAttacks = $('#disableAttacksCheckbox').prop('checked');
+        socket.emit(
+            'start game', 
+            {
+                username: username, 
+                room: room,
+                intrigue: intrigue, 
+                prosperity: prosperity,
+                distributeCost: distributeCost,
+                disableAttacks: disableAttacks,
+            }
+        );
     }
 });
 

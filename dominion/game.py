@@ -56,10 +56,11 @@ class Game:
         self.pre_buy_hooks = defaultdict(list)
         self.game_end_conditions = []
         self.expansions = set()
-        self.add_expansion(BaseExpansion)
-        # TODO: Remove this and allow customization
-        self.add_expansion(ProsperityExpansion)
-        self.add_expansion(IntrigueExpansion)
+        self.distribute_cost = False # If toggled, ensures there are at least two cards each of cost {2, 3, 4, 5}
+        self.disable_attack_cards = False # If toggled, Attack cards are not allowed
+        self.add_expansion(BaseExpansion) # This must always be here or the game will not work
+        # self.add_expansion(IntrigueExpansion)
+        # self.add_expansion(ProsperityExpansion)
 
     def add_treasure_hook(self, treasure_hook, card_class):
         '''
@@ -139,6 +140,9 @@ class Game:
             expansion_instance = expansion(self)
             self.supply.customization.expansions.add(expansion_instance)
             self.game_end_conditions += expansion_instance.game_end_conditions
+        # Add in other supply customizations
+        self.supply.customization.distribute_cost = self.distribute_cost
+        self.supply.customization.disable_attack_cards = self.disable_attack_cards
         # Set up the supply
         self.supply.setup()
         # Print out the supply

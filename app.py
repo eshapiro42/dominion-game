@@ -1,6 +1,7 @@
 import random
 import string
 import time
+from dominion.expansions import IntrigueExpansion, ProsperityExpansion
 from dominion.game import Game
 from dominion.interactions import NetworkedCLIInteraction, BrowserInteraction, AutoInteraction
 from socketio import Server, WSGIApp
@@ -103,11 +104,25 @@ def add_cpu(sid, data):
 def start_game(sid, data):
     username = data['username']
     room = data['room']
-    # Start the game
+    intrigue = data['intrigue']
+    prosperity = data['prosperity']
+    distribute_cost = data['distributeCost']
+    disable_attack_cards = data['disableAttacks']
+    # Send the game started event
     socketio.send(f'{username} has started the game.\n', room=room)
     socketio.emit('game started', room=room)
-    time.sleep(1)
+    # time.sleep(1) # I'm not sure why this was in here
     game = games[room]
+    # Add in customization options
+    if intrigue:
+        game.add_expansion(IntrigueExpansion)
+    if prosperity:
+        game.add_expansion(ProsperityExpansion)
+    if distribute_cost:
+        game.distribute_cost = True
+    if disable_attack_cards:
+        game.disable_attack_cards = True
+    # Start the game (nothing can happen after this)
     game.start()
 
 @socketio.on('message')
