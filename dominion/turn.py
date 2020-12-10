@@ -338,7 +338,7 @@ class BuyPhase(Phase):
         # Gain the desired card
         modifier = 'an' if card_class.name[0] in ['a', 'e', 'i', 'o', 'u'] else 'a'
         self.game.broadcast(f'{self.player} bought {modifier} {card_class.name}.')
-        self.player.gain(card_class)
+        self.player.gain(card_class, message=False)
         self.turn.coppers_remaining -= self.supply.card_stacks[card_class].modified_cost
 
     def buy_without_side_effects(self, max_cost, force, exact_cost=False):
@@ -361,7 +361,7 @@ class BuyPhase(Phase):
             # Gain the desired card
             modifier = 'an' if card_class.name[0] in ['a', 'e', 'i', 'o', 'u'] else 'a'
             self.game.broadcast(f'{self.player} bought {modifier} {card_class.name}.')
-            self.player.gain(card_class)
+            self.player.gain(card_class, message=False)
 
 
 class CleanupPhase(Phase):
