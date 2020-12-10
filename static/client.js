@@ -18,7 +18,7 @@ class Option {
 }
 
 function append_message(message) {
-    // Add the 'active' light class to the last child of the message board
+    // Add the 'light' class to the last child of the message board
     if (last_message != null) {
         last_message.addClass('list-group-item-light');
     }
