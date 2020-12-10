@@ -387,7 +387,17 @@ class Conspirator(ActionCard):
     extra_coppers = 2
 
     def action(self):
-        pass
+        if len([card for card in self.owner.played_cards if CardType.ACTION in card.types]) >= 3:
+            self.game.broadcast(f'{self.owner} has played 3 or more Actions this turn.')
+            drawn_cards = self.owner.draw(1)
+            if drawn_cards:
+                card = drawn_cards[0]
+                self.game.broadcast(f'+1 card --> {len(self.owner.hand)} cards in hand.')
+                self.interactions.send(f'You drew: {card}.')
+            self.owner.turn.actions_remaining += 1
+            self.game.broadcast(f'+1 action --> {self.owner.turn.actions_remaining} actions.')
+        else:
+            self.game.broadcast(f'{self.owner} has played fewer than 3 Actions this turn.')
 
 
 class Diplomat(ReactionCard):
@@ -751,7 +761,7 @@ KINGDOM_CARDS = [
     WishingWell,
     Baron,
     Bridge,
-    # Conspirator,
+    Conspirator,
     # Diplomat,
     # Ironworks,
     # Mill,
