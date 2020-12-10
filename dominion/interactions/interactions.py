@@ -26,6 +26,10 @@ class Interaction(metaclass=ABCMeta):
         pass
 
     @abstractmethod
+    def display_supply(self):
+        pass
+
+    @abstractmethod
     def display_hand(self):
         pass
 
@@ -50,7 +54,7 @@ class Interaction(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def choose_card_class_from_supply(self, prompt, max_cost, force):
+    def choose_card_class_from_supply(self, prompt, max_cost, force, invalid_card_classes=None, exact_cost=False):
         pass
 
     @abstractmethod
@@ -63,6 +67,10 @@ class Interaction(metaclass=ABCMeta):
 
     @abstractmethod
     def choose_yes_or_no(self, prompt):
+        pass
+
+    @abstractmethod
+    def choose_from_range(self, prompt, minimum, maximum, force):
         pass
 
     @abstractmethod
@@ -336,6 +344,28 @@ class CLIInteraction(Interaction):
             return True
         else:
             return False
+
+    def choose_from_range(self, prompt, minimum, maximum, force):
+        options = list(range(minimum, maximum + 1))
+        print(prompt)
+        print()
+        while True:
+            try:
+                if force:
+                    response = int(input(f'Enter choice {minimum}-{maximum}: '))
+                    print()
+                    if response < minimum or response > maximum:
+                        raise ValueError
+                else:
+                    response = int(input(f'Enter choice {minimum}-{maximum} (0 to skip): '))
+                    print()
+                    if response == 0:
+                        return None
+                    elif response < minimum or response > maximum:
+                        raise ValueError
+                return response
+            except (IndexError, ValueError):
+                self.send('That is not a valid choice.')
 
     def choose_from_options(self, prompt, options, force):
         print(prompt)
@@ -650,11 +680,31 @@ class NetworkedCLIInteraction(Interaction):
                 if response.lower() in ['yes', 'y', 'no', 'n']:
                     break
             except AttributeError:
-                self.send(f'{response} is not a valid choice. WTF???')
+                self.send(f'{response} is not a valid choice.')
         if response.lower() in ['yes', 'y']:
             return True
         else:
             return False
+
+    def choose_from_range(self, prompt, minimum, maximum, force):
+        options = list(range(minimum, maximum + 1))
+        while True:
+            try:
+                if force:
+                    _prompt = f'{prompt}\nEnter choice {minimum}-{maximum}: '
+                    response = self.enter_choice(_prompt)
+                    if response < minimum or response > maximum:
+                        raise ValueError
+                else:
+                    _prompt = f'{prompt}\nEnter choice {minimum}-{maximum} (0 to skip): '
+                    response = self.enter_choice(_prompt)
+                    if response == 0:
+                        return None
+                    elif response < minimum or response > maximum:
+                        raise ValueError
+                return response
+            except (IndexError, ValueError):
+                self.send('That is not a valid choice.')
 
     def choose_from_options(self, prompt, options, force):
         while True:
@@ -957,6 +1007,31 @@ class AutoInteraction(Interaction):
             return True
         else:
             return False
+
+    def choose_from_range(self, prompt, minimum, maximum, force):
+        options = list(range(minimum, maximum + 1))
+        print(prompt)
+        print()
+        while True:
+            try:
+                if force:
+                    print(f'Enter choice {minimum}-{maximum}: ', end='')
+                    response = random.choice(options)
+                    print(response)
+                    print()
+                    if response < minimum or response > maximum:
+                        raise ValueError
+                else:
+                    print(f'Enter choice {minimum}-{maximum} (0 to skip): ', end='')
+                    response = random.choice([0] + options)
+                    print(response)
+                    if response == 0:
+                        return None
+                    elif response < minimum or response > maximum:
+                        raise ValueError
+                return response
+            except (IndexError, ValueError):
+                self.send('That is not a valid choice.')
 
     def choose_from_options(self, prompt, options, force):
         print(prompt)
@@ -1286,11 +1361,31 @@ class BrowserInteraction(Interaction):
                 if response.lower() in ['yes', 'y', 'no', 'n']:
                     break
             except AttributeError:
-                self.send(f'{response} is not a valid choice. WTF???')
+                self.send(f'{response} is not a valid choice.')
         if response.lower() in ['yes', 'y']:
             return True
         else:
             return False
+
+    def choose_from_range(self, prompt, minimum, maximum, force):
+        options = list(range(minimum, maximum + 1))
+        while True:
+            try:
+                if force:
+                    _prompt = f'{prompt}\nEnter choice {minimum}-{maximum}: '
+                    response = self.enter_choice(_prompt)
+                    if response < minimum or response > maximum:
+                        raise ValueError
+                else:
+                    _prompt = f'{prompt}\nEnter choice {minimum}-{maximum} (0 to skip): '
+                    response = self.enter_choice(_prompt)
+                    if response == 0:
+                        return None
+                    elif response < minimum or response > maximum:
+                        raise ValueError
+                return response
+            except (IndexError, ValueError):
+                self.send('That is not a valid choice.')
 
     def choose_from_options(self, prompt, options, force):
         while True:

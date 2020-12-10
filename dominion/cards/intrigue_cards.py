@@ -577,7 +577,15 @@ class SecretPassage(ActionCard):
     extra_coppers = 0
 
     def action(self):
-        pass
+        prompt = f'Choose a card from your hand to put in your deck.'
+        card = self.interactions.choose_card_from_hand(prompt, force=True)
+        if card is not None:
+            minimum = 1
+            maximum = len(self.owner.deck) + 1
+            prompt = f'Where in your deck would you like to put your {card}? (1: on top, {maximum}: on bottom).'
+            index = self.interactions.choose_from_range(prompt, minimum, maximum, force=True) - 1
+            self.owner.deck.insert(len(self.owner.deck) - index, card)
+            self.game.broadcast(f'{self.owner} put a card from his hand into position {index + 1} in his deck.')
 
 
 class Courtier(ActionCard):
@@ -917,7 +925,7 @@ KINGDOM_CARDS = [
     Ironworks,
     Mill,
     MiningVillage,
-    # SecretPassage,
+    SecretPassage,
     Courtier,
     Duke,
     Minion,
