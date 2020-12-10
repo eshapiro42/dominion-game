@@ -608,7 +608,8 @@ class Duke(VictoryCard):
 
     @property
     def points(self):
-        pass
+        num_duchies = len([card for card in self.owner.all_cards if isinstance(card, base_cards.Duchy)])
+        return num_duchies
 
 
 class Minion(AttackCard):
@@ -812,7 +813,7 @@ KINGDOM_CARDS = [
     MiningVillage,
     # SecretPassage,
     Courtier,
-    # Duke,
+    Duke,
     # Minion,
     # Patrol,
     # Replace,
