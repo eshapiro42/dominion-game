@@ -1,3 +1,4 @@
+import inspect
 import prettytable
 import random
 import time
@@ -1294,7 +1295,7 @@ class BrowserInteraction(Interaction):
             options_table = prettytable.PrettyTable(hrules=prettytable.ALL)
             options_table.field_names = ['Number', 'Option']
             for idx, option in enumerate(options):
-                if isinstance(option, cards.Card):
+                if isinstance(option, cards.Card) or inspect.isclass(option):
                     options_table.add_row([idx + 1, option.name])
                 else:
                     options_table.add_row([idx + 1, option])

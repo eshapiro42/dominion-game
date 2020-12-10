@@ -294,7 +294,22 @@ class WishingWell(ActionCard):
     extra_coppers = 0
 
     def action(self):
-        pass
+        # Name a card
+        all_cards = [card_class for card_class in self.supply.card_stacks]
+        prompt = 'Name a card.'
+        named_card_class = self.interactions.choose_from_options(prompt, options=all_cards, force=True)
+        self.game.broadcast(f'{self.owner} named {named_card_class.name}.')
+        # Reveal the top card of your deck
+        revealed_card = self.owner.take_from_deck()
+        self.game.broadcast(f'{self.owner} revealed a {revealed_card}.')
+        if isinstance(revealed_card, named_card_class):
+            # If you named it, put it into your hand.
+            self.owner.hand.append(revealed_card)
+            self.game.broadcast(f'{self.owner} put the {revealed_card} into their hand.')
+        else:
+            # Otherwise it goes back on your deck
+            self.owner.deck.append(revealed_card)
+            self.game.broadcast(f'{self.owner} put the {revealed_card} back onto their deck.')
 
 
 class Baron(ActionCard):
@@ -722,7 +737,7 @@ KINGDOM_CARDS = [
     ShantyTown,
     Steward,
     Swindler,
-    # WishingWell,
+    WishingWell,
     # Baron,
     # Bridge,
     # Conspirator,
