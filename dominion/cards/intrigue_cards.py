@@ -790,10 +790,31 @@ class Replace(AttackCard):
     extra_coppers = 0
 
     def attack_effect(self, attacker, player):
-        pass
+        player.gain(base_cards.Curse)
+        self.game.broadcast(f'{player} gained a Curse')
 
     def action(self):
-        pass
+        self.attacking = False # attack_effect is only activated if the owner gains a Victory card
+        # Trash a card from your hand
+        prompt = 'Choose a card from your hand to trash.'
+        card_to_trash = self.interactions.choose_card_from_hand(prompt, force=True)
+        if card_to_trash is not None:
+            self.owner.trash(card_to_trash)
+            self.game.broadcast(f'{self.owner} trashed a {card_to_trash}.')
+            # Gain a card costing up to 2 $ more than it
+            max_cost = card_to_trash.cost + 2
+            card_class_to_gain = self.interactions.choose_card_class_from_supply(prompt, max_cost, force=True)
+            # If it's an action or a treasure, gain to deck
+            if CardType.ACTION in card_class_to_gain.types or CardType.TREASURE in card_class_to_gain.types:
+                self.owner.gain_to_deck(card_class_to_gain)
+                self.game.broadcast(f'{self.owner} gained a {card_class_to_gain.name} and put it onto their deck.')
+            # Otherwise they gain it normally
+            else:
+                self.owner.gain(card_class_to_gain)
+                self.game.broadcast(f'{self.owner} gained a {card_class_to_gain.name}.')
+            # If the gained card is a Victory card, activate the attack_effect
+            if CardType.VICTORY in card_class_to_gain.types:
+                self.attacking = True
 
 
 class Torturer(AttackCard):
@@ -961,7 +982,7 @@ KINGDOM_CARDS = [
     Duke,
     Minion,
     Patrol,
-    # Replace,
+    Replace,
     # Torturer,
     TradingPost,
     Upgrade,
