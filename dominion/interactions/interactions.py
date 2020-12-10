@@ -227,6 +227,7 @@ class CLIInteraction(Interaction):
                 if exact_cost:
                     buyable_card_stacks = [card_class for card_class in buyable_card_stacks if stacks[card_class].modified_cost == max_cost]
                 if not buyable_card_stacks:
+
                     return None
                 # for idx, card_class in enumerate(sorted(buyable_card_stacks, key=lambda x: (x.types[0].value, x.cost))):
                 for idx, card_class in enumerate(buyable_card_stacks):
@@ -1169,6 +1170,7 @@ class BrowserInteraction(Interaction):
                 if exact_cost:
                     buyable_card_stacks = [card_class for card_class in buyable_card_stacks if stacks[card_class].modified_cost == max_cost]
                 if not buyable_card_stacks:
+                    self.send('There are no cards in the Supply that you can buy.')
                     return None
                 # for idx, card_class in enumerate(sorted(buyable_card_stacks, key=lambda x: (x.types[0].value, x.cost))):
                 for idx, card_class in enumerate(buyable_card_stacks):

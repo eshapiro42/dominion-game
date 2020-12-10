@@ -783,7 +783,16 @@ class Upgrade(ActionCard):
     extra_coppers = 0
 
     def action(self):
-        pass
+        prompt = f'Choose a card from your hand to trash.'
+        card_to_trash = self.interactions.choose_card_from_hand(prompt, force=True)
+        self.owner.trash(card_to_trash)
+        self.game.broadcast(f'{self.owner} trashed a {card_to_trash}.')
+        cost = card_to_trash.cost + 1
+        prompt = f'Choose a card costing exactly {cost} to gain.'
+        card_class_to_gain = self.interactions.choose_card_class_from_supply(prompt, cost, force=True, exact_cost=True)
+        if card_class_to_gain is not None:
+            self.owner.gain(card_class_to_gain)
+            self.game.broadcast(f'{self.owner} gained a {card_class_to_gain.name}.')
 
 
 class Harem(TreasureCard, VictoryCard):
@@ -850,7 +859,7 @@ KINGDOM_CARDS = [
     # Replace,
     # Torturer,
     # TradingPost,
-    # Upgrade,
-    # Harem,
+    Upgrade,
+    Harem,
     # Nobles
 ]
