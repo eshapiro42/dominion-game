@@ -364,7 +364,8 @@ class Bridge(ActionCard):
     extra_coppers = 1
 
     def action(self):
-        pass
+        for card_class in self.supply.card_stacks:
+            self.supply.modify_cost(card_class, -1)
 
 
 class Conspirator(ActionCard):
@@ -749,7 +750,7 @@ KINGDOM_CARDS = [
     Swindler,
     WishingWell,
     Baron,
-    # Bridge,
+    Bridge,
     # Conspirator,
     # Diplomat,
     # Ironworks,
