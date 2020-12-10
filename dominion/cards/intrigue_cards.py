@@ -508,7 +508,12 @@ class MiningVillage(ActionCard):
     extra_coppers = 0
 
     def action(self):
-        pass
+        prompt = 'Would you like to trash this Mining Village for +2 $?'
+        if self.interactions.choose_yes_or_no(prompt):
+            self.owner.trash_played_card(self)
+            self.game.broadcast(f'{self.owner} trashed a {self.name}.')
+            self.owner.turn.coppers_remaining += 2
+            self.game.broadcast(f'+2 $ --> {self.owner.turn.coppers_remaining} $.')
 
 
 class SecretPassage(ActionCard):
@@ -775,7 +780,7 @@ KINGDOM_CARDS = [
     # Diplomat,
     # Ironworks,
     Mill,
-    # MiningVillage,
+    MiningVillage,
     # SecretPassage,
     # Courtier,
     # Duke,
