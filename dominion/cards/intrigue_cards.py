@@ -331,7 +331,17 @@ class Baron(ActionCard):
     extra_coppers = 0
 
     def action(self):
-        pass
+        # You may discard an Estate for +4 $
+        prompt = 'You have an Estate in your hand. Would you like to discard it for +4 $?'
+        if any(isinstance(card, base_cards.Estate) for card in self.owner.hand) and self.interactions.choose_yes_or_no(prompt):
+            estate_to_discard = [card for card in self.owner.hand if isinstance(card, base_cards.Estate)][0]
+            self.owner.discard(estate_to_discard)
+            self.game.broadcast(f'{self.owner} discarded an Estate.')
+            self.owner.turn.coppers_remaining += 4
+            self.game.broadcast(f'+4 $ --> {self.owner.turn.coppers_remaining} $.')
+        else:
+            self.owner.gain(base_cards.Estate)
+            self.game.broadcast(f'{self.owner} gained an Estate.')
 
 
 class Bridge(ActionCard):
@@ -738,7 +748,7 @@ KINGDOM_CARDS = [
     Steward,
     Swindler,
     WishingWell,
-    # Baron,
+    Baron,
     # Bridge,
     # Conspirator,
     # Diplomat,
