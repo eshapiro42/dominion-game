@@ -225,6 +225,8 @@ class CLIInteraction(Interaction):
                 buyable_card_stacks = [card_class for card_class in stacks if stacks[card_class].modified_cost <= max_cost and card_class not in invalid_card_classes and stacks[card_class].cards_remaining > 0]
                 if exact_cost:
                     buyable_card_stacks = [card_class for card_class in buyable_card_stacks if stacks[card_class].modified_cost == max_cost]
+                if not buyable_card_stacks:
+                    return None
                 # for idx, card_class in enumerate(sorted(buyable_card_stacks, key=lambda x: (x.types[0].value, x.cost))):
                 for idx, card_class in enumerate(buyable_card_stacks):
                     types = ', '.join([type.name.lower().capitalize() for type in card_class.types])
@@ -529,6 +531,8 @@ class NetworkedCLIInteraction(Interaction):
                 buyable_card_stacks = [card_class for card_class in stacks if stacks[card_class].modified_cost <= max_cost and card_class not in invalid_card_classes and stacks[card_class].cards_remaining > 0]
                 if exact_cost:
                     buyable_card_stacks = [card_class for card_class in buyable_card_stacks if stacks[card_class].modified_cost == max_cost]
+                if not buyable_card_stacks:
+                    return None
                 # for idx, card_class in enumerate(sorted(buyable_card_stacks, key=lambda x: (x.types[0].value, x.cost))):
                 for idx, card_class in enumerate(buyable_card_stacks):
                     types = ', '.join([type.name.lower().capitalize() for type in card_class.types])
@@ -828,6 +832,8 @@ class AutoInteraction(Interaction):
                 buyable_card_stacks = [card_class for card_class in stacks if stacks[card_class].modified_cost <= max_cost and card_class not in invalid_card_classes and stacks[card_class].cards_remaining > 0]
                 if exact_cost:
                     buyable_card_stacks = [card_class for card_class in buyable_card_stacks if stacks[card_class].modified_cost == max_cost]
+                if not buyable_card_stacks:
+                    return None
                 if force:
                     print(f'Enter choice 1-{len(buyable_card_stacks)}: ', end='')
                     choices = list(range(1, len(buyable_card_stacks) + 1))
@@ -1161,6 +1167,8 @@ class BrowserInteraction(Interaction):
                 buyable_card_stacks = [card_class for card_class in stacks if stacks[card_class].modified_cost <= max_cost and card_class not in invalid_card_classes and stacks[card_class].cards_remaining > 0]
                 if exact_cost:
                     buyable_card_stacks = [card_class for card_class in buyable_card_stacks if stacks[card_class].modified_cost == max_cost]
+                if not buyable_card_stacks:
+                    return None
                 # for idx, card_class in enumerate(sorted(buyable_card_stacks, key=lambda x: (x.types[0].value, x.cost))):
                 for idx, card_class in enumerate(buyable_card_stacks):
                     types = ', '.join([type.name.lower().capitalize() for type in card_class.types])

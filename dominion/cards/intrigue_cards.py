@@ -226,8 +226,9 @@ class Steward(ActionCard):
             for trash_num in range(2):
                 prompt = f'Choose a card from your hand to trash ({trash_num + 1}/2).'
                 card_to_trash = self.interactions.choose_card_from_hand(prompt, force=True)
-                self.owner.trash(card_to_trash)
-                self.game.broadcast(f'{self.owner} trashed a {card_to_trash} from their hand.')
+                if card_to_trash is not None:
+                    self.owner.trash(card_to_trash)
+                    self.game.broadcast(f'{self.owner} trashed a {card_to_trash} from their hand.')
 
 
 class Swindler(AttackCard):
@@ -253,7 +254,21 @@ class Swindler(AttackCard):
         return f'Each other player trashes the top card of their deck and gains a card with the same cost that {self.owner} chooses.'
 
     def attack_effect(self, attacker, player):
-        pass
+        # Trash the top card of their deck
+        card_to_trash = player.take_from_deck()
+        if card_to_trash is not None:
+            self.supply.trash(card_to_trash)
+            # Gain a card with the same cost that the attacker chooses
+            cost = card_to_trash.cost
+            prompt = f'{attacker}: choose a card costing {cost} $ for {player} to gain.'
+            card_class_to_gain = attacker.interactions.choose_card_class_from_supply(prompt, max_cost=cost, force=True, exact_cost=True)
+            if card_class_to_gain is not None:
+                player.gain(card_class_to_gain)
+                self.game.broadcast(f'{player} gained a {card_class_to_gain}.')
+            else:
+                self.game.broadcast(f'There are no cards costing {cost} $ in the Supply, so {player} did not gain a card.')
+        else:
+            self.game.broadcast(f'{player} has no cards in their deck.')
 
     def action(self):
         pass
@@ -706,7 +721,7 @@ KINGDOM_CARDS = [
     # Masquerade,
     ShantyTown,
     Steward,
-    # Swindler,
+    Swindler,
     # WishingWell,
     # Baron,
     # Bridge,
