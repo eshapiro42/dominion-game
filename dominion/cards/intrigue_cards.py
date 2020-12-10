@@ -557,7 +557,36 @@ class Courtier(ActionCard):
     extra_coppers = 0
 
     def action(self):
-        pass
+        prompt = 'Choose a card from your hand to reveal.'
+        revealed_card = self.interactions.choose_card_from_hand(prompt, force=True)
+        if revealed_card is not None:
+            num_types = len(revealed_card.types)
+            self.game.broadcast(f'{self.owner} may choose {num_types} of the available options.')
+            options = [
+                '+1 Action',
+                '+1 Buy',
+                '+3 $',
+                'Gain a Gold'
+            ]
+            choices = []
+            for choice_num in range(num_types):
+                prompt = f'Which would you like to choose? ({choice_num + 1}/{num_types})'
+                choice = self.interactions.choose_from_options(prompt, options, force=True)
+                choices.append(choice)
+                options.remove(choice) # the same option cannot be chosen twice
+            for choice in choices:
+                if choice == '+1 Action':
+                    self.owner.turn.actions_remaining += 1
+                    self.game.broadcast(f'+1 action --> {self.owner.turn.actions_remaining} actions.')
+                elif choice == '+1 Buy':
+                    self.owner.turn.buys_remaining += 1
+                    self.game.broadcast(f'+1 buy --> {self.owner.turn.buys_remaining} buys.')
+                elif choice == '+3 $':
+                    self.owner.turn.coppers_remaining += 3
+                    self.game.broadcast(f'+3 $ --> {self.owner.turn.coppers_remaining} $.')
+                elif choice == 'Gain a Gold':
+                    self.owner.gain(base_cards.Gold)
+                    self.game.broadcast(f'{self.owner} gained a Gold.')
 
 
 class Duke(VictoryCard):
@@ -782,7 +811,7 @@ KINGDOM_CARDS = [
     Mill,
     MiningVillage,
     # SecretPassage,
-    # Courtier,
+    Courtier,
     # Duke,
     # Minion,
     # Patrol,
