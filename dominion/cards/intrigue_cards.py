@@ -470,12 +470,22 @@ class Mill(ActionCard, VictoryCard):
     extra_buys = 0
     extra_coppers = 0
 
-    def action(self):
-        pass
+    points = 1
 
-    @property
-    def points(self):
-        pass
+    def action(self):
+        prompt = 'Would you like to discard 2 cards for +2 $?'
+        if self.interactions.choose_yes_or_no(prompt):
+            discarded_cards = []
+            for discard_num in range(2):
+                prompt = f'Choose a card to discard ({discard_num + 1}/2).'
+                card_to_discard = self.interactions.choose_card_from_hand(prompt, force=False)
+                if card_to_discard is not None:
+                    discarded_cards.append(card_to_discard)
+                    self.owner.discard(card_to_discard)
+                    self.game.broadcast(f'{self.owner} discarded a {card_to_discard}.')
+            if len(discarded_cards) == 2:
+                self.owner.turn.coppers_remaining += 2
+                self.game.broadcast(f'+2 $ --> {self.owner.turn.coppers_remaining} $.')
 
 
 class MiningVillage(ActionCard):
@@ -764,7 +774,7 @@ KINGDOM_CARDS = [
     Conspirator,
     # Diplomat,
     # Ironworks,
-    # Mill,
+    Mill,
     # MiningVillage,
     # SecretPassage,
     # Courtier,
