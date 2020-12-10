@@ -857,7 +857,7 @@ class Nobles(ActionCard, VictoryCard):
 
     description = '\n'.join(
         [
-            'Choose one: +3 Card; or +2 Actions.'
+            'Choose one: +3 Cards; or +2 Actions.'
         ]
     )
 
@@ -869,7 +869,21 @@ class Nobles(ActionCard, VictoryCard):
     points = 2
 
     def action(self):
-        pass
+        options = [
+            '+3 Cards',
+            '+2 Actions',
+        ]
+        prompt = f'Which would you like to choose?'
+        choice = self.interactions.choose_from_options(prompt, options, force=True)
+        self.game.broadcast(f"{self.owner} chose: {choice}.")
+        if choice == '+3 Cards':
+            cards_drawn = self.owner.draw(3)
+            if cards_drawn:
+                self.game.broadcast(f'+3 cards --> {len(self.owner.hand)} cards in hand.')
+                self.interactions.send(f"You drew: {', '.join(map(str, cards_drawn))}.")
+        elif choice == '+2 Actions':
+            self.owner.turn.actions_remaining += 2
+            self.game.broadcast(f'+2 actions --> {self.owner.turn.actions_remaining} actions.')
 
 
 KINGDOM_CARDS = [
@@ -898,5 +912,5 @@ KINGDOM_CARDS = [
     TradingPost,
     Upgrade,
     Harem,
-    # Nobles
+    Nobles
 ]
