@@ -737,7 +737,38 @@ class Patrol(ActionCard):
     extra_coppers = 0
 
     def action(self):
-        pass
+        # Reveal the top 4 cards of your deck
+        revealed_cards = []
+        for _ in range(4):
+            card = self.owner.take_from_deck()
+            if card is not None:
+                revealed_cards.append(card)
+            else:
+                break
+        if revealed_cards:
+            if len(revealed_cards) < 4:
+                self.game.broadcast(f'{self.owner} only had {len(revealed_cards)} in their deck.')
+            self.game.broadcast(f"{self.owner} revealed: {', '.join(map(str, revealed_cards))}.")
+        else:
+            self.game.broadcast(f'{self.owner} had no cards in their deck.')
+        remaining_cards = list(revealed_cards) # make a shallow copy
+        # Put the Victory cards and Curses into your hand
+        victory_and_curse_cards = [card for card in revealed_cards if CardType.VICTORY in card.types or CardType.CURSE in card.types]
+        for card in revealed_cards:
+            if card in victory_and_curse_cards:
+                remaining_cards.remove(card)
+        self.owner.hand.extend(victory_and_curse_cards)
+        self.game.broadcast(f"{self.owner} put card into their hand: {', '.join(map(str, victory_and_curse_cards))}.")
+        # Put the rest back in any order
+        choice_num = 0
+        choice_count = len(remaining_cards)
+        while remaining_cards:
+            prompt = f'Which card would you like to put on your deck next? ({choice_num + 1}/{choice_count}).'
+            choice = self.interactions.choose_from_options(prompt, remaining_cards, force=True)
+            choice_num += 1
+            self.owner.deck.append(choice)
+            self.game.broadcast(f'{self.owner} put a {choice} onto their deck.')
+            remaining_cards.remove(choice)    
 
 
 class Replace(AttackCard):
@@ -929,7 +960,7 @@ KINGDOM_CARDS = [
     Courtier,
     Duke,
     Minion,
-    # Patrol,
+    Patrol,
     # Replace,
     # Torturer,
     TradingPost,
