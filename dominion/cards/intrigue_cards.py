@@ -199,7 +199,7 @@ class ShantyTown(ActionCard):
     extra_coppers = 0
 
     def action(self):
-        self.game.broadcast(f"{self.owner} reveals their hand: {', '.join(map(str, self.owner.hand))}")
+        self.game.broadcast(f"{self.owner} reveals their hand: {', '.join(map(str, self.owner.hand))}.")
         if not any(CardType.ACTION in card.types for card in self.owner.hand):
             self.game.broadcast(f'{self.owner} has no Action cards in their hand, so they draw 2 cards.')
             cards_drawn = self.owner.draw(2)
