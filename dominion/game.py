@@ -183,7 +183,7 @@ class Game:
                 winners_str = ', '.join(map(str, winners))
                 self.broadcast(f'Winners: {winners_str}.')
                 for player in self.players:
-                    self.broadcast(f"{player}'s cards: {', '.join(map(str, list(player.all_cards)))} cards in hand.")
+                    self.broadcast(f"{player}'s cards: {', '.join(map(str, list(player.all_cards)))}.")
                 break
 
     def broadcast(self, message):

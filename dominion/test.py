@@ -70,6 +70,7 @@ def test_stability(logdir, num_players):
                 os.remove(stdoutfile)
                 os.remove(stderrfile)
             except Exception as e:
+                # Pipe any exceptions to error file
                 ef.write(str(e))
                 ef.write(traceback.format_exc())
 
