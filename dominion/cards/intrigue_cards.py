@@ -891,7 +891,7 @@ class TradingPost(ActionCard):
                 trashed_cards.append(card_to_trash)
                 self.owner.trash(card_to_trash)
         if len(trashed_cards) == 2:
-            self.owner.gain(base_cards.Silver)
+            self.owner.gain_to_hand(base_cards.Silver)
 
 
 class Upgrade(ActionCard):
