@@ -18,6 +18,7 @@ class Player:
         self.discard_pile = deque()
         self.hand = deque()
         self.played_cards = deque()
+        self.victory_tokens = 0
         # Start with seven coppers and three estates
         self.gain(base_cards.Copper, quantity=7, from_supply=False, message=False)
         self.gain(base_cards.Estate, quantity=3, from_supply=False, message=False)
