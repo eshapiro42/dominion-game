@@ -176,7 +176,7 @@ class Game:
                 self.broadcast(f'\tTurns played: {turns_played_dict}')
                 self.broadcast(f'\tWinners: {winners}.')
                 for player in self.players:
-                    self.broadcast(f"{player}'s cards: {list(player.all_cards)}")
+                    self.broadcast(f"{player}'s cards: {list(player.all_cards)} cards in hand.")
                 break
 
     def broadcast(self, message):

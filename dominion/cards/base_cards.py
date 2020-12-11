@@ -106,7 +106,7 @@ class Cellar(ActionCard):
                 discarded_card_count += 1
                 self.owner.discard(card_to_discard)
         drawn_cards = self.owner.draw(discarded_card_count)
-        self.game.broadcast(f'+{discarded_card_count} cards --> {drawn_cards}')
+        self.game.broadcast(f'+{discarded_card_count} cards --> {len(self.owner.hand)}.')
         self.interactions.send(f"You drew: {', '.join(map(str, drawn_cards))}.")
 
 
@@ -450,7 +450,6 @@ class Remodel(ActionCard):
         card_to_trash = self.interactions.choose_card_from_hand(prompt=prompt, force=True)
         if card_to_trash is not None:
             self.owner.trash(card_to_trash)
-            self.game.broadcast(f'{self.owner} trashed a {card_to_trash}.')
             max_cost = card_to_trash.cost + 2
             self.owner.turn.buy_phase.buy_without_side_effects(max_cost=max_cost, force=True)
 
