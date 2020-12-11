@@ -153,6 +153,10 @@ class Game:
         # Each player figures out the turn order of the other players
         for player in self.players:
             player.get_other_players()
+        # Print out each player's hand (other than the starting player)
+        for player in self.turn_order[1:]:
+            player.interactions.send('Your hand for next turn:')
+            player.interactions.display_hand()
         # Start the game loop!
         if not debug:
             self.game_loop()
@@ -172,11 +176,14 @@ class Game:
                 self.broadcast(explanation)
                 self.broadcast('Game over!')
                 victory_points_dict, turns_played_dict, winners = self.scores
-                self.broadcast(f'\tScores: {victory_points_dict}')
-                self.broadcast(f'\tTurns played: {turns_played_dict}')
-                self.broadcast(f'\tWinners: {winners}.')
+                scores_str = ', '.join([f'{k}: {v}' for k, v in victory_points_dict.items()])
+                self.broadcast(f'Scores: {scores_str}')
+                turns_str = ', '.join([f'{k}: {v}' for k, v in turns_played_dict.items()])
+                self.broadcast(f'Turns played: {turns_str}')
+                winners_str = ', '.join(map(str, winners))
+                self.broadcast(f'Winners: {winners_str}.')
                 for player in self.players:
-                    self.broadcast(f"{player}'s cards: {list(player.all_cards)} cards in hand.")
+                    self.broadcast(f"{player}'s cards: {', '.join(map(str, list(player.all_cards)))} cards in hand.")
                 break
 
     def broadcast(self, message):

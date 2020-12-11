@@ -47,7 +47,8 @@ class Turn:
         It then runs the Action, Buy and Cleanup phases in that order.
         '''
         self.player.turns_played += 1
-        self.game.socketio.emit('new turn', {'player': self.player.name}, room=self.game.room)
+        if self.game.socketio is not None:
+            self.game.socketio.emit('new turn', {'player': self.player.name}, room=self.game.room)
         self.player.interactions.display_hand()
         self.action_phase.start()
         self.buy_phase.start()
@@ -387,8 +388,8 @@ class CleanupPhase(Phase):
         '''
         # Clean up the player's mat
         self.player.cleanup()
-        self.player.interactions.send('Your hand for next turn:')
         # Show their hand for next turn
+        self.player.interactions.send('Your hand for next turn:')
         self.player.interactions.display_hand()
         # Reset all card's cost modifiers
         self.supply.reset_costs()

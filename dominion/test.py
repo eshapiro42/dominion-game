@@ -5,6 +5,7 @@ import traceback
 from contextlib import redirect_stdout, redirect_stderr
 from multiprocessing import Process
 from .cards import base_cards
+from .expansions import IntrigueExpansion, ProsperityExpansion
 from .game import Game
 from .interactions import AutoInteraction
 
@@ -60,16 +61,18 @@ def test_stability(logdir, num_players):
         with redirect_stdout(of), redirect_stderr(ef):
             try:
                 game = Game()
+                game.add_expansion(IntrigueExpansion)
+                game.add_expansion(ProsperityExpansion)
                 for _ in range(num_players):
                     game.add_player(interactions_class=AutoInteraction)
                 game.start()
+                # If there were no errors, discard the log files
+                os.remove(stdoutfile)
+                os.remove(stderrfile)
             except Exception as e:
                 ef.write(str(e))
                 ef.write(traceback.format_exc())
-    # If there were no errors, discard the log files
-    if os.stat(stderrfile).st_size == 0:
-        os.remove(stdoutfile)
-        os.remove(stderrfile)
+
 
 
 if __name__ == '__main__':
