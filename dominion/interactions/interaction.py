@@ -70,3 +70,7 @@ class Interaction(metaclass=ABCMeta):
     @abstractmethod
     def choose_from_options(self, prompt, options, force):
         pass
+
+    @abstractmethod
+    def new_turn(self):
+        pass

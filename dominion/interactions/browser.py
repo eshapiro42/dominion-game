@@ -357,3 +357,6 @@ class BrowserInteraction(Interaction):
                 return response
             except (IndexError, ValueError):
                 self.send('That is not a valid choice.')
+
+    def new_turn(self):
+        self.socketio.emit('new turn', {'player': self.player.name}, room=self.room)

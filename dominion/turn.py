@@ -47,8 +47,7 @@ class Turn:
         It then runs the Action, Buy and Cleanup phases in that order.
         '''
         self.player.turns_played += 1
-        if self.game.socketio is not None:
-            self.game.socketio.emit('new turn', {'player': self.player.name}, room=self.game.room)
+        self.player.interactions.new_turn()
         self.player.interactions.display_hand()
         self.action_phase.start()
         self.buy_phase.start()

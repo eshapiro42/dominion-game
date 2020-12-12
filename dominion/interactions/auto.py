@@ -322,3 +322,7 @@ class AutoInteraction(Interaction):
             except (IndexError, ValueError):
                 print('That is not a valid choice.\n')
                 raise
+
+    def new_turn(self):
+        if self.socketio is not None:
+            self.socketio.emit('new turn', {'player': self.player.name}, room=self.room)

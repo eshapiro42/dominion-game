@@ -338,3 +338,7 @@ class NetworkedCLIInteraction(Interaction):
                 return response
             except (IndexError, ValueError):
                 self.send('That is not a valid choice.')
+
+    def new_turn(self):
+        if self.socketio is not None:
+            self.socketio.emit('new turn', {'player': self.player.name}, room=self.room)

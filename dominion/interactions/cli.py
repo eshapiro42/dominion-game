@@ -315,3 +315,7 @@ class CLIInteraction(Interaction):
                 return response
             except (IndexError, ValueError):
                 print('That is not a valid choice.\n')
+
+    def new_turn(self):
+        print(''.join(['*']*80))
+        print(f"{self.player.name}'s turn!")
