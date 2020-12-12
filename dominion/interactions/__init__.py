@@ -1,2 +1,4 @@
-from . import interactions
-from .interactions import AutoInteraction, CLIInteraction, NetworkedCLIInteraction, BrowserInteraction
+from .auto import AutoInteraction
+from .cli import CLIInteraction
+from .networked_cli import NetworkedCLIInteraction
+from .browser import BrowserInteraction

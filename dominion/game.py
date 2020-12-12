@@ -5,7 +5,7 @@ from collections import defaultdict
 from prettytable import PrettyTable
 from .cards import base_cards
 from .expansions import BaseExpansion, ProsperityExpansion, IntrigueExpansion
-from .interactions import interactions
+from .interactions import CLIInteraction
 from .player import Player
 from .supply import Supply
 from .turn import Turn
@@ -91,7 +91,7 @@ class Game:
         '''
         self.expansions.add(expansion)
 
-    def add_player(self, name=None, sid=None, interactions_class=interactions.CLIInteraction):
+    def add_player(self, name=None, sid=None, interactions_class=CLIInteraction):
         '''
         Add a new player into the game.
         
