@@ -342,8 +342,8 @@ class City(ActionCard):
             self.owner.draw(1)
         if self.supply.num_empty_stacks >= 2:
             self.game.broadcast(f'{self.owner} gets +1 buy and +1 $ since there are two or more empty Supply piles.')
-            self.turn.plus_buys(1)
-            self.turn.plus_coppers(1)
+            self.owner.turn.plus_buys(1)
+            self.owner.turn.plus_coppers(1)
 
 
 class Contraband(TreasureCard):
@@ -364,7 +364,7 @@ class Contraband(TreasureCard):
 
     def play(self):
         # +1 Buy (this must be done manually here since it is a Treasure card)
-        self.turn.plus_buys(1)
+        self.owner.turn.plus_buys(1)
         # The player to your left names a card
         player_to_left = self.owner.other_players[0]
         prompt = f'{player_to_left}: Which card should {self.owner} be forbidden from buying this turn?'
@@ -616,7 +616,7 @@ class Vault(ActionCard):
                 discarded_card_count += 1
                 self.owner.discard(card_to_discard)
         coppers_before = self.owner.turn.coppers_remaining
-        self.turn.plus_coppers(discarded_card_count)
+        self.owner.turn.plus_coppers(discarded_card_count)
         # Each other player may discard 2 cards, to draw a card.
         for player in self.owner.other_players:
             if len(player.hand) < 2:

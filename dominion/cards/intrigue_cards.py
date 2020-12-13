@@ -118,11 +118,11 @@ class Pawn(ActionCard):
             if choice == '+1 Card':
                 self.owner.draw(1)
             elif choice == '+1 Action':
-                self.turn.plus_actions(1)
+                self.owner.turn.plus_actions(1)
             elif choice == '+1 Buy':
-                self.turn.plus_buys(1)
+                self.owner.turn.plus_buys(1)
             elif choice == '1 $':
-                self.turn.plus_coppers(1)
+                self.owner.turn.plus_coppers(1)
 
 
 class Masquerade(ActionCard):
@@ -229,7 +229,7 @@ class Steward(ActionCard):
         if choice == '+2 Cards':
             self.owner.draw(2)
         elif choice == '2 $':
-            self.turn.plus_coppers(2)
+            self.owner.turn.plus_coppers(2)
         elif choice == 'Trash 2 cards from your hand':
             for trash_num in range(2):
                 prompt = f'Choose a card from your hand to trash ({trash_num + 1}/2).'
@@ -342,7 +342,7 @@ class Baron(ActionCard):
         if any(isinstance(card, base_cards.Estate) for card in self.owner.hand) and self.interactions.choose_yes_or_no(prompt):
             estate_to_discard = [card for card in self.owner.hand if isinstance(card, base_cards.Estate)][0]
             self.owner.discard(estate_to_discard)
-            self.turn.plus_coppers(4)
+            self.owner.turn.plus_coppers(4)
         else:
             self.owner.gain(base_cards.Estate)
 
@@ -393,7 +393,7 @@ class Conspirator(ActionCard):
         if len([card for card in self.owner.played_cards if CardType.ACTION in card.types]) >= 3:
             self.game.broadcast(f'{self.owner} has played 3 or more Actions this turn.')
             self.owner.draw(1)
-            self.turn.plus_actions(1)
+            self.owner.turn.plus_actions(1)
         else:
             self.game.broadcast(f'{self.owner} has played fewer than 3 Actions this turn.')
 
@@ -437,7 +437,7 @@ class Diplomat(ReactionCard):
     def action(self):
         # If you have 5 or fewer cards in hand, +2 Actions
         if len(self.owner.hand) <= 5:
-            self.turn.plus_actions(2)
+            self.owner.turn.plus_actions(2)
 
 
 class Ironworks(ActionCard):
@@ -465,9 +465,9 @@ class Ironworks(ActionCard):
         card_class_to_gain = self.interactions.choose_card_class_from_supply(prompt, max_cost=4, force=True)
         self.owner.gain(card_class_to_gain)
         if CardType.ACTION in card_class_to_gain.types:
-            self.turn.plus_actions(1)
+            self.owner.turn.plus_actions(1)
         if CardType.TREASURE in card_class_to_gain.types:
-            self.turn.plus_coppers(1)
+            self.owner.turn.plus_coppers(1)
         if CardType.VICTORY in card_class_to_gain.types:
             self.owner.draw(1)
 
@@ -505,7 +505,7 @@ class Mill(ActionCard, VictoryCard):
                     discarded_cards.append(card_to_discard)
                     self.owner.discard(card_to_discard)
             if len(discarded_cards) == 2:
-                self.turn.plus_coppers(2)
+                self.owner.turn.plus_coppers(2)
 
 
 class MiningVillage(ActionCard):
@@ -531,7 +531,7 @@ class MiningVillage(ActionCard):
         prompt = 'Would you like to trash this Mining Village for +2 $?'
         if self.interactions.choose_yes_or_no(prompt):
             self.owner.trash_played_card(self)
-            self.turn.plus_coppers(2)
+            self.owner.turn.plus_coppers(2)
 
 
 class SecretPassage(ActionCard):
@@ -602,11 +602,11 @@ class Courtier(ActionCard):
                 options.remove(choice) # the same option cannot be chosen twice
             for choice in choices:
                 if choice == '+1 Action':
-                    self.turn.plus_actions(1)
+                    self.owner.turn.plus_actions(1)
                 elif choice == '+1 Buy':
-                    self.turn.plus_buys(1)
+                    self.owner.turn.plus_buys(1)
                 elif choice == '+3 $':
-                    self.turn.plus_coppers(3)
+                    self.owner.turn.plus_coppers(3)
                 elif choice == 'Gain a Gold':
                     self.owner.gain(base_cards.Gold)
 
@@ -671,7 +671,7 @@ class Minion(AttackCard):
         choice = self.interactions.choose_from_options(prompt, options, force=True)
         if choice == '+2 $':
             self.attacking = False # do not activate the attack_effect
-            self.turn.plus_coppers(2)
+            self.owner.turn.plus_coppers(2)
         elif choice == 'Discard your hand, +4 Cards, and each other player with at least 5 cards in hand discards their hand and draws 4 cards':
             self.attacking = True # activate the attack_effect
             # Discard your hand
@@ -928,7 +928,7 @@ class Nobles(ActionCard, VictoryCard):
         if choice == '+3 Cards':
             self.owner.draw(3)
         elif choice == '+2 Actions':
-            self.turn.plus_actions(2)
+            self.owner.turn.plus_actions(2)
 
 
 KINGDOM_CARDS = [

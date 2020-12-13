@@ -395,7 +395,7 @@ class Moneylender(ActionCard):
         copper_to_trash = self.interactions.choose_specific_card_class_from_hand(prompt=prompt, force=False, card_class=Copper)
         if copper_to_trash is not None:
             self.owner.trash(copper_to_trash)
-            self.turn.plus_coppers(3)
+            self.owner.turn.plus_coppers(3)
 
 
 class Poacher(ActionCard):

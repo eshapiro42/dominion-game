@@ -74,26 +74,29 @@ class Turn:
         '''
         self.post_gain_hooks[card_class].append(post_gain_hook)
 
-    def plus_actions(self, num_actions):
+    def plus_actions(self, num_actions, message=True):
         self.actions_remaining += num_actions
-        if num_actions > 0:
-            self.game.broadcast(f"+{s(num_actions, 'action')} → {s(self.actions_remaining, 'action')}.")
-        elif num_actions < 0:
-            self.game.broadcast(f"-{s(-num_actions, 'action')} → {s(self.actions_remaining, 'action')}.")
+        if message:
+            if num_actions > 0:
+                self.game.broadcast(f"+{s(num_actions, 'action')} → {s(self.actions_remaining, 'action')}.")
+            elif num_actions < 0:
+                self.game.broadcast(f"-{s(-num_actions, 'action')} → {s(self.actions_remaining, 'action')}.")
 
-    def plus_buys(self, num_buys):
+    def plus_buys(self, num_buys, message=True):
         self.buys_remaining += num_buys
-        if num_buys > 0:
-            self.game.broadcast(f"+{s(num_buys, 'buy')} → {s(self.buys_remaining, 'buy')}.")
-        elif num_buys < 0:
-            self.buys_remaining(f"-{s(-num_buys, 'buy')} → {s(self.buys_remaining,'buy')}.")
+        if message:
+            if num_buys > 0:
+                self.game.broadcast(f"+{s(num_buys, 'buy')} → {s(self.buys_remaining, 'buy')}.")
+            elif num_buys < 0:
+                self.buys_remaining(f"-{s(-num_buys, 'buy')} → {s(self.buys_remaining,'buy')}.")
 
-    def plus_coppers(self, num_coppers):
+    def plus_coppers(self, num_coppers, message=True):
         self.coppers_remaining += num_coppers
-        if num_coppers > 0:
-            self.game.broadcast(f'+{num_coppers} $ → {self.coppers_remaining} $.')
-        elif num_coppers < 0:
-            self.game.broadcast(f'-{-num_coppers} $ → {self.coppers_remaining} $.')
+        if message:
+            if num_coppers > 0:
+                self.game.broadcast(f'+{num_coppers} $ → {self.coppers_remaining} $.')
+            elif num_coppers < 0:
+                self.game.broadcast(f'-{-num_coppers} $ → {self.coppers_remaining} $.')
 
 
 class Phase(metaclass=ABCMeta):

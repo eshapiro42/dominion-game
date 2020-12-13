@@ -41,7 +41,6 @@ class Card(metaclass=ABCMeta):
     @owner.setter
     def owner(self, owner):
         self._owner = owner
-        self.turn = self.owner.turn
         self.interactions = self.owner.interactions
         self.game = self.owner.game
         self.supply = self.owner.game.supply
