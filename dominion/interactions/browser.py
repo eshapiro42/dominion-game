@@ -7,18 +7,8 @@ from .interaction import Interaction
 
 
 class BrowserInteraction(Interaction):
-    choice = None
-
-    def get_choice(self, choice):
-        self.choice = choice
-
     def enter_choice(self, prompt):
-        self.socketio.emit('enter choice', {'prompt': prompt}, to=self.sid, callback=self.get_choice)
-        while self.choice is None:
-            self.socketio.sleep(0.1)
-        choice = deepcopy(self.choice)
-        self.choice = None
-        return choice
+        return self.socketio.call('enter choice', {'prompt': prompt}, to=self.sid, timeout=None)
 
     def send(self, message):
         message = f'\n{message}\n'
