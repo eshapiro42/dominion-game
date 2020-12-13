@@ -153,11 +153,11 @@ class Player:
             if quantity == 0:
                 pass
             elif len(drawn_cards) == quantity:
-                self.game.broadcast(f"+{s(quantity, 'card')} --> {s(len(self.hand), 'card')} in hand.")
+                self.game.broadcast(f"+{s(quantity, 'card')} → {s(len(self.hand), 'card')} in hand.")
                 self.interactions.send(f"You drew: {', '.join(map(str, drawn_cards))}.")
             elif 1 <= len(drawn_cards) < quantity:
                 self.game.broadcast(f"{self} had only {s(len(drawn_cards), 'card')} left to draw from.")
-                self.game.broadcast(f"+{s(len(drawn_cards), 'card')} --> {s(len(self.hand), 'card')} in hand.")
+                self.game.broadcast(f"+{s(len(drawn_cards), 'card')} → {s(len(self.hand), 'card')} in hand.")
                 self.interactions.send(f"You drew: {', '.join(map(str, drawn_cards))}.")
             elif not drawn_cards:
                 self.game.broadcast(f'{self} had no cards left to draw from.')

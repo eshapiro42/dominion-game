@@ -77,23 +77,23 @@ class Turn:
     def plus_actions(self, num_actions):
         self.actions_remaining += num_actions
         if num_actions > 0:
-            self.game.broadcast(f"+{s(num_actions, 'action')} --> {s(self.actions_remaining, 'action')}.")
+            self.game.broadcast(f"+{s(num_actions, 'action')} → {s(self.actions_remaining, 'action')}.")
         elif num_actions < 0:
-            self.game.broadcast(f"-{s(-num_actions, 'action')} --> {s(self.actions_remaining, 'action')}.")
+            self.game.broadcast(f"-{s(-num_actions, 'action')} → {s(self.actions_remaining, 'action')}.")
 
     def plus_buys(self, num_buys):
         self.buys_remaining += num_buys
         if num_buys > 0:
-            self.game.broadcast(f"+{s(num_buys, 'buy')} --> {s(self.buys_remaining, 'buy')}.")
+            self.game.broadcast(f"+{s(num_buys, 'buy')} → {s(self.buys_remaining, 'buy')}.")
         elif num_buys < 0:
-            self.buys_remaining(f"-{s(-num_buys, 'buy')} --> {s(self.buys_remaining,'buy')}.")
+            self.buys_remaining(f"-{s(-num_buys, 'buy')} → {s(self.buys_remaining,'buy')}.")
 
     def plus_coppers(self, num_coppers):
         self.coppers_remaining += num_coppers
         if num_coppers > 0:
-            self.game.broadcast(f'+{num_coppers} $ --> {self.coppers_remaining} $.')
+            self.game.broadcast(f'+{num_coppers} $ → {self.coppers_remaining} $.')
         elif num_coppers < 0:
-            self.game.broadcast(f'-{-num_coppers} $ --> {self.coppers_remaining} $.')
+            self.game.broadcast(f'-{-num_coppers} $ → {self.coppers_remaining} $.')
 
 
 class Phase(metaclass=ABCMeta):

@@ -657,14 +657,14 @@ class Library(ActionCard):
                 if self.interactions.choose_yes_or_no(prompt=prompt):
                     self.interactions.send('Adding it to your hand.')
                     self.owner.hand.append(card_drawn)
-                    self.game.broadcast(f"+1 card --> {s(len(self.owner.hand), 'card')} in hand.")
+                    self.game.broadcast(f"+1 card → {s(len(self.owner.hand), 'card')} in hand.")
                 else:
                     self.owner.discard_pile.append(card_drawn)
                     self.game.broadcast(f'{self.owner} discarded {a(card_drawn)}.')
             else:
                 self.interactions.send('Adding it to your hand.')
                 self.owner.hand.append(card_drawn)
-                self.game.broadcast(f"+1 card --> {s(len(self.owner.hand), 'card')} in hand.")
+                self.game.broadcast(f"+1 card → {s(len(self.owner.hand), 'card')} in hand.")
 
 
 class Market(ActionCard):

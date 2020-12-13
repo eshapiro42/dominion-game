@@ -107,7 +107,7 @@ class TradeRoute(ActionCard):
             game = player.game
             trade_route_before = game.supply.trade_route
             game.supply.trade_route += 1
-            game.broadcast(f'{player} gained {a(self.card_class.name)} and moved a Coin token to the Trade Route mat ({trade_route_before} Coin tokens --> {game.supply.trade_route} Coin tokens).')
+            game.broadcast(f'{player} gained {a(self.card_class.name)} and moved a Coin token to the Trade Route mat ({trade_route_before} Coin tokens → {game.supply.trade_route} Coin tokens).')
     
     def action(self):
         # Trash a card from your hand
