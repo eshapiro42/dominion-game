@@ -25,7 +25,7 @@ class Player:
         self.gain(base_cards.Estate, quantity=3, from_supply=False, message=False)
         self.shuffle()
         # Draw a hand of five cards
-        self.draw(5)
+        self.draw(5, message=False)
 
     def get_other_players(self):
         '''Gets a list of other players in the correct turn order'''
