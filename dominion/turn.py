@@ -3,6 +3,7 @@ from abc import ABCMeta, abstractmethod
 from collections import defaultdict
 from dataclasses import dataclass
 from .cards import cards, base_cards
+from .grammar import a, s
 
 
 class Turn:
@@ -73,6 +74,27 @@ class Turn:
         '''
         self.post_gain_hooks[card_class].append(post_gain_hook)
 
+    def plus_actions(self, num_actions):
+        self.actions_remaining += num_actions
+        if num_actions > 0:
+            self.game.broadcast(f"+{s(num_actions, 'action')} --> {s(self.actions_remaining, 'action')}.")
+        elif num_actions < 0:
+            self.game.broadcast(f"-{s(-num_actions, 'action')} --> {s(self.actions_remaining, 'action')}.")
+
+    def plus_buys(self, num_buys):
+        self.buys_remaining += num_buys
+        if num_buys > 0:
+            self.game.broadcast(f"+{s(num_buys, 'buy')} --> {s(self.buys_remaining, 'buy')}.")
+        elif num_buys < 0:
+            self.buys_remaining(f"-{s(-num_buys, 'buy')} --> {s(self.buys_remaining,'buy')}.")
+
+    def plus_coppers(self, num_coppers):
+        self.coppers_remaining += num_coppers
+        if num_coppers > 0:
+            self.game.broadcast(f'+{num_coppers} $ --> {self.coppers_remaining} $.')
+        elif num_coppers < 0:
+            self.game.broadcast(f'-{-num_coppers} $ --> {self.coppers_remaining} $.')
+
 
 class Phase(metaclass=ABCMeta):
     '''
@@ -120,7 +142,7 @@ class ActionPhase(Phase):
             if not any(cards.CardType.ACTION in card.types for card in self.player.hand):
                 self.player.interactions.send('No Action cards to play. Ending action phase.')
                 return
-            prompt = f'You have {self.turn.actions_remaining} actions. Select an Action card to play.'
+            prompt = f"You have {s(self.turn.actions_remaining, 'action')}. Select an Action card to play."
             card = self.player.interactions.choose_specific_card_type_from_hand(prompt=prompt, card_type=cards.CardType.ACTION)
             if card is None:
                 # The player is forfeiting their action phase
@@ -139,13 +161,11 @@ class ActionPhase(Phase):
         Args:
             card (:obj:`cards.ActionCard`): The Action card to play.
         '''
-        modifier = 'an' if card.name[0] in ['a', 'e', 'i', 'o', 'u'] else 'a'
-        self.game.broadcast(f'{self.player} played {modifier} {card}.')
+        self.game.broadcast(f'{self.player} played {a(card)}.')
         # Add the card to the played cards area
         self.player.play(card)
         # Playing an action card uses one action
-        self.turn.actions_remaining -= 1
-        self.game.broadcast(f'-1 action --> {self.turn.actions_remaining} actions.')
+        self.turn.plus_actions(-1)
         self.walk_through_action_card(card)
 
     def play_without_side_effects(self, card):
@@ -155,8 +175,7 @@ class ActionPhase(Phase):
         Args:
             card (:obj:`cards.ActionCard`): The Action card to play.
         '''
-        modifier = 'an' if card.name[0] in ['a', 'e', 'i', 'o', 'u'] else 'a'
-        self.game.broadcast(f'{self.player} played {modifier} {card}.')
+        self.game.broadcast(f'{self.player} played {a(card)}.')
         self.walk_through_action_card(card)
 
     def walk_through_action_card(self, card):
@@ -168,24 +187,13 @@ class ActionPhase(Phase):
             card (:obj:`cards.ActionCard`): The Action card to play.        
         '''
         # Draw any additional cards specified on the card
-        drawn_cards = None
-        if card.extra_cards != 0:
-            drawn_cards = self.player.draw(quantity=card.extra_cards)
-            self.game.broadcast(f'+{card.extra_cards} cards --> {len(self.player.hand)} cards in hand.')
+        self.player.draw(card.extra_cards)
         # Add back any additional actions on the card
-        if card.extra_actions != 0:
-            self.turn.actions_remaining += card.extra_actions
-            self.game.broadcast(f'+{card.extra_actions} actions --> {self.turn.actions_remaining} actions.')
+        self.turn.plus_actions(card.extra_actions)
         # Add any additional buys on the card
-        if card.extra_buys != 0:
-            self.turn.buys_remaining += card.extra_buys
-            self.game.broadcast(f'+{card.extra_buys} buys --> {self.turn.buys_remaining} buys.')
+        self.turn.plus_buys(card.extra_buys)
         # Add any additional coppers on the card
-        if card.extra_coppers != 0:
-            self.turn.coppers_remaining += card.extra_coppers
-            self.game.broadcast(f'+{card.extra_coppers} $ --> {self.turn.coppers_remaining} $.')
-        if drawn_cards:
-            self.player.interactions.send(f"You drew: {', '.join(map(str, drawn_cards))}.")
+        self.turn.plus_coppers(card.extra_coppers)
         # Do whatever the card is supposed to do
         card.play()
 
@@ -243,7 +251,7 @@ class BuyPhase(Phase):
         self.process_pre_buy_hooks()
         # Buy cards
         while self.turn.buys_remaining > 0:
-            prompt = f'You have {self.turn.coppers_remaining} $ to spend and {self.turn.buys_remaining} buys. Select a card to buy.'
+            prompt = f"You have {self.turn.coppers_remaining} $ to spend and {s(self.turn.buys_remaining, 'buy')}. Select a card to buy."
             card_class = self.player.interactions.choose_card_class_from_supply(prompt=prompt, max_cost=self.turn.coppers_remaining, force=False, invalid_card_classes=self.turn.invalid_card_classes)
             if card_class is None:
                 # The player is forfeiting their buy phase
@@ -335,8 +343,7 @@ class BuyPhase(Phase):
         # Buying a card uses one buy
         self.turn.buys_remaining -= 1
         # Gain the desired card
-        modifier = 'an' if card_class.name[0] in ['a', 'e', 'i', 'o', 'u'] else 'a'
-        self.game.broadcast(f'{self.player} bought {modifier} {card_class.name}.')
+        self.game.broadcast(f'{self.player} bought {a(card_class.name)}.')
         self.player.gain(card_class, message=False)
         self.turn.coppers_remaining -= self.supply.card_stacks[card_class].modified_cost
 
@@ -358,8 +365,7 @@ class BuyPhase(Phase):
             return
         else:
             # Gain the desired card
-            modifier = 'an' if card_class.name[0] in ['a', 'e', 'i', 'o', 'u'] else 'a'
-            self.game.broadcast(f'{self.player} bought {modifier} {card_class.name}.')
+            self.game.broadcast(f'{self.player} bought {a(card_class.name)}.')
             self.player.gain(card_class, message=False)
 
 

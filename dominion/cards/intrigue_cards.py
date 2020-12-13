@@ -2,6 +2,7 @@ import math
 from .cards import CardType, Card, TreasureCard, ActionCard, AttackCard, ReactionCard, VictoryCard, CurseCard
 from . import base_cards
 from ..hooks import TreasureHook, PreBuyHook, PostGainHook
+from ..grammar import a, s
 
 
 # KINGDOM CARDS
@@ -29,10 +30,9 @@ class Courtyard(ActionCard):
         prompt = f'Choose a card from your hand to put onto your deck.'
         card = self.interactions.choose_card_from_hand(prompt, force=True)
         # Put that card onto your deck
-        if card is not None:
-            self.owner.hand.remove(card)
-            self.owner.deck.append(card)
-            self.game.broadcast(f'{self.owner} put a card from their hand onto their deck.')
+        self.owner.hand.remove(card)
+        self.owner.deck.append(card)
+        self.game.broadcast(f'{self.owner} put a card from their hand onto their deck.')
 
 
 class Lurker(ActionCard):
@@ -67,7 +67,7 @@ class Lurker(ActionCard):
             if card_class is not None:
                 card_to_trash = self.supply.draw(card_class)
                 self.supply.trash(card_to_trash)
-                self.game.broadcast(f'{self.owner} trashed a {card_to_trash} from the Supply.')
+                self.game.broadcast(f'{self.owner} trashed {a(card_to_trash)} from the Supply.')
         elif choice == 'Gain an Action card from the trash':
             prompt = f'Choose an Action card from the trash to gain.'
             options = [card_class for card_class in self.supply.trash_pile if CardType.ACTION in card_class.types and self.supply.trash_pile[card_class]]
@@ -116,20 +116,13 @@ class Pawn(ActionCard):
         # Then the selected choices are executed
         for choice in choices:
             if choice == '+1 Card':
-                cards_drawn = self.owner.draw(1)
-                if cards_drawn:
-                    card = cards_drawn[0]
-                    self.game.broadcast(f'+1 card --> {len(self.owner.hand)} cards in hand.')
-                    self.interactions.send(f'You drew: {card}.')
+                self.owner.draw(1)
             elif choice == '+1 Action':
-                self.owner.turn.actions_remaining += 1
-                self.game.broadcast(f'+1 action --> {self.owner.turn.actions_remaining} actions.')
+                self.turn.plus_actions(1)
             elif choice == '+1 Buy':
-                self.owner.turn.buys_remaining += 1
-                self.game.broadcast(f'+1 buy --> {self.owner.turn.buys_remaining} buys.')
+                self.turn.plus_buys(1)
             elif choice == '1 $':
-                self.owner.turn.coppers_remaining += 1
-                self.game.broadcast(f'+1 $ --> {self.owner.turn.coppers_remaining} $.')
+                self.turn.plus_coppers(1)
 
 
 class Masquerade(ActionCard):
@@ -165,14 +158,14 @@ class Masquerade(ActionCard):
                 player_to_left = players_with_cards[0]
             prompt = f'{player}: Choose a card from your hand to pass to {player_to_left}.'
             card_to_pass = player.interactions.choose_card_from_hand(prompt, force=True)
-            player.interactions.send(f'{player}: You passed {player_to_left} a {card_to_pass}.')
+            player.interactions.send(f'{player}: You passed {player_to_left} {a(card_to_pass)}.')
             cards_passed.append((card_to_pass, player, player_to_left))
         # Cards get passed
         for card_received, old_owner, new_owner in cards_passed:
             old_owner.hand.remove(card_received)
             new_owner.hand.append(card_received)
             card_received.owner = new_owner # Set .owner attribute of each card after they trade hands
-            new_owner.interactions.send(f'{new_owner}: {old_owner} passed you a {card_received}.')
+            new_owner.interactions.send(f'{new_owner}: {old_owner} passed you {a(card_received)}.')
         # You may trash a card from your hand
         prompt = f'You may trash a card from your hand.'
         card_to_trash = self.interactions.choose_card_from_hand(prompt, force=False)
@@ -202,12 +195,7 @@ class ShantyTown(ActionCard):
         self.game.broadcast(f"{self.owner} reveals their hand: {', '.join(map(str, self.owner.hand))}.")
         if not any(CardType.ACTION in card.types for card in self.owner.hand):
             self.game.broadcast(f'{self.owner} has no Action cards in their hand, so they draw 2 cards.')
-            cards_drawn = self.owner.draw(2)
-            if cards_drawn:
-                self.game.broadcast(f'{self.owner} drew {len(cards_drawn)} cards.')
-                self.interactions.send(f"You drew: {', '.join(map(str, cards_drawn))}.")
-            else:
-                self.game.broadcast(f'{self.owner} has no more cards to draw from.')
+            self.owner.draw(2)
         else:
             self.game.broadcast(f'{self.owner} has Action cards in their hand.')
 
@@ -239,13 +227,9 @@ class Steward(ActionCard):
         prompt = f'Which would you like to choose?'
         choice = self.interactions.choose_from_options(prompt, options, force=True)
         if choice == '+2 Cards':
-            cards_drawn = self.owner.draw(2)
-            if cards_drawn:
-                self.game.broadcast(f'+{len(cards_drawn)} cards --> {len(self.owner.hand)} cards in hand.')
-                self.interactions.send(f"You drew: {', '.join(map(str, cards_drawn))}.")
+            self.owner.draw(2)
         elif choice == '2 $':
-            self.owner.turn.coppers_remaining += 2
-            self.game.broadcast(f'+2 $ --> {self.owner.turn.coppers_remaining} $.')
+            self.turn.plus_coppers(2)
         elif choice == 'Trash 2 cards from your hand':
             for trash_num in range(2):
                 prompt = f'Choose a card from your hand to trash ({trash_num + 1}/2).'
@@ -323,7 +307,7 @@ class WishingWell(ActionCard):
         self.game.broadcast(f'{self.owner} named {named_card_class.name}.')
         # Reveal the top card of your deck
         revealed_card = self.owner.take_from_deck()
-        self.game.broadcast(f'{self.owner} revealed a {revealed_card}.')
+        self.game.broadcast(f'{self.owner} revealed {a(revealed_card)}.')
         if isinstance(revealed_card, named_card_class):
             # If you named it, put it into your hand.
             self.owner.hand.append(revealed_card)
@@ -358,8 +342,7 @@ class Baron(ActionCard):
         if any(isinstance(card, base_cards.Estate) for card in self.owner.hand) and self.interactions.choose_yes_or_no(prompt):
             estate_to_discard = [card for card in self.owner.hand if isinstance(card, base_cards.Estate)][0]
             self.owner.discard(estate_to_discard)
-            self.owner.turn.coppers_remaining += 4
-            self.game.broadcast(f'+4 $ --> {self.owner.turn.coppers_remaining} $.')
+            self.turn.plus_coppers(4)
         else:
             self.owner.gain(base_cards.Estate)
 
@@ -409,13 +392,8 @@ class Conspirator(ActionCard):
     def action(self):
         if len([card for card in self.owner.played_cards if CardType.ACTION in card.types]) >= 3:
             self.game.broadcast(f'{self.owner} has played 3 or more Actions this turn.')
-            drawn_cards = self.owner.draw(1)
-            if drawn_cards:
-                card = drawn_cards[0]
-                self.game.broadcast(f'+1 card --> {len(self.owner.hand)} cards in hand.')
-                self.interactions.send(f'You drew: {card}.')
-            self.owner.turn.actions_remaining += 1
-            self.game.broadcast(f'+1 action --> {self.owner.turn.actions_remaining} actions.')
+            self.owner.draw(1)
+            self.turn.plus_actions(1)
         else:
             self.game.broadcast(f'{self.owner} has played fewer than 3 Actions this turn.')
 
@@ -448,10 +426,7 @@ class Diplomat(ReactionCard):
 
     def react(self):
         # Draw 2 cards
-        cards_drawn = self.owner.draw(2)
-        if cards_drawn:
-            self.game.broadcast(f'{self.owner} drew {len(cards_drawn)} cards.')
-            self.interactions.send(f"You drew: {', '.join(map(str, cards_drawn))}.")
+        self.owner.draw(2)
         # Discard 3 cards
         for discard_num in range(3):
             prompt = f'Choose a card to discard ({discard_num + 1}/3).'
@@ -462,8 +437,7 @@ class Diplomat(ReactionCard):
     def action(self):
         # If you have 5 or fewer cards in hand, +2 Actions
         if len(self.owner.hand) <= 5:
-            self.owner.turn.actions_remaining += 2
-            self.game.broadcast(f'+2 action --> {self.owner.turn.actions_remaining} actions.')
+            self.turn.plus_actions(2)
 
 
 class Ironworks(ActionCard):
@@ -491,17 +465,11 @@ class Ironworks(ActionCard):
         card_class_to_gain = self.interactions.choose_card_class_from_supply(prompt, max_cost=4, force=True)
         self.owner.gain(card_class_to_gain)
         if CardType.ACTION in card_class_to_gain.types:
-            self.owner.turn.actions_remaining += 1
-            self.game.broadcast(f'+1 action --> {self.owner.turn.actions_remaining} actions.')
+            self.turn.plus_actions(1)
         if CardType.TREASURE in card_class_to_gain.types:
-            self.owner.turn.coppers_remaining += 1
-            self.game.broadcast(f'+1 $ --> {self.owner.turn.coppers_remaining} $.')
+            self.turn.plus_coppers(1)
         if CardType.VICTORY in card_class_to_gain.types:
-            cards_drawn = self.owner.draw(1)
-            if cards_drawn:
-                card = cards_drawn[0]
-                self.game.broadcast(f'+1 card --> {len(self.owner.hand)} cards in hand.')
-                self.interactions.send(f'You drew: {card}.')
+            self.owner.draw(1)
 
 
 class Mill(ActionCard, VictoryCard):
@@ -537,8 +505,7 @@ class Mill(ActionCard, VictoryCard):
                     discarded_cards.append(card_to_discard)
                     self.owner.discard(card_to_discard)
             if len(discarded_cards) == 2:
-                self.owner.turn.coppers_remaining += 2
-                self.game.broadcast(f'+2 $ --> {self.owner.turn.coppers_remaining} $.')
+                self.turn.plus_coppers(2)
 
 
 class MiningVillage(ActionCard):
@@ -564,8 +531,7 @@ class MiningVillage(ActionCard):
         prompt = 'Would you like to trash this Mining Village for +2 $?'
         if self.interactions.choose_yes_or_no(prompt):
             self.owner.trash_played_card(self)
-            self.owner.turn.coppers_remaining += 2
-            self.game.broadcast(f'+2 $ --> {self.owner.turn.coppers_remaining} $.')
+            self.turn.plus_coppers(2)
 
 
 class SecretPassage(ActionCard):
@@ -636,14 +602,11 @@ class Courtier(ActionCard):
                 options.remove(choice) # the same option cannot be chosen twice
             for choice in choices:
                 if choice == '+1 Action':
-                    self.owner.turn.actions_remaining += 1
-                    self.game.broadcast(f'+1 action --> {self.owner.turn.actions_remaining} actions.')
+                    self.turn.plus_actions(1)
                 elif choice == '+1 Buy':
-                    self.owner.turn.buys_remaining += 1
-                    self.game.broadcast(f'+1 buy --> {self.owner.turn.buys_remaining} buys.')
+                    self.turn.plus_buys(1)
                 elif choice == '+3 $':
-                    self.owner.turn.coppers_remaining += 3
-                    self.game.broadcast(f'+3 $ --> {self.owner.turn.coppers_remaining} $.')
+                    self.turn.plus_coppers(3)
                 elif choice == 'Gain a Gold':
                     self.owner.gain(base_cards.Gold)
 
@@ -697,10 +660,7 @@ class Minion(AttackCard):
             for card in cards_to_discard:
                 player.discard(card)
             # Draw four cards
-            cards_drawn = player.draw(4)
-            if cards_drawn:
-                self.game.broadcast(f'{player} drew {len(cards_drawn)} cards --> {len(player.hand)} cards in hand.')
-                player.interactions.send(f"You drew: {', '.join(map(str, cards_drawn))}.")        
+            player.draw(4)   
 
     def action(self):
         options = [
@@ -711,8 +671,7 @@ class Minion(AttackCard):
         choice = self.interactions.choose_from_options(prompt, options, force=True)
         if choice == '+2 $':
             self.attacking = False # do not activate the attack_effect
-            self.owner.turn.coppers_remaining += 2
-            self.game.broadcast(f'+2 $ --> {self.owner.turn.coppers_remaining} $.')
+            self.turn.plus_coppers(2)
         elif choice == 'Discard your hand, +4 Cards, and each other player with at least 5 cards in hand discards their hand and draws 4 cards':
             self.attacking = True # activate the attack_effect
             # Discard your hand
@@ -720,10 +679,7 @@ class Minion(AttackCard):
             for card in cards_to_discard:
                 self.owner.discard(card)
             # Draw four cards
-            cards_drawn = self.owner.draw(4)
-            if cards_drawn:
-                self.game.broadcast(f'+{len(cards_drawn)} cards --> {len(self.owner.hand)} cards in hand.')
-                self.interactions.send(f"You drew: {', '.join(map(str, cards_drawn))}.")
+            self.owner.draw(4)
 
 
 class Patrol(ActionCard):
@@ -755,7 +711,7 @@ class Patrol(ActionCard):
                 break
         if revealed_cards:
             if len(revealed_cards) < 4:
-                self.game.broadcast(f'{self.owner} only had {len(revealed_cards)} in their deck.')
+                self.game.broadcast(f"{self.owner} only had {s(len(revealed_cards), 'card')} in their deck.")
             self.game.broadcast(f"{self.owner} revealed: {', '.join(map(str, revealed_cards))}.")
         else:
             self.game.broadcast(f'{self.owner} had no cards in their deck.')
@@ -766,7 +722,7 @@ class Patrol(ActionCard):
             if card in victory_and_curse_cards:
                 remaining_cards.remove(card)
         self.owner.hand.extend(victory_and_curse_cards)
-        self.game.broadcast(f"{self.owner} put card into their hand: {', '.join(map(str, victory_and_curse_cards))}.")
+        self.game.broadcast(f"{self.owner} put {s(len(victory_and_curse_cards), 'card')} into their hand: {', '.join(map(str, victory_and_curse_cards))}.")
         # Put the rest back in any order
         choice_num = 0
         choice_count = len(remaining_cards)
@@ -775,7 +731,7 @@ class Patrol(ActionCard):
             choice = self.interactions.choose_from_options(prompt, remaining_cards, force=True)
             choice_num += 1
             self.owner.deck.append(choice)
-            self.game.broadcast(f'{self.owner} put a {choice} onto their deck.')
+            self.game.broadcast(f'{self.owner} put {a(choice)} onto their deck.')
             remaining_cards.remove(choice)    
 
 
@@ -970,13 +926,9 @@ class Nobles(ActionCard, VictoryCard):
         choice = self.interactions.choose_from_options(prompt, options, force=True)
         self.game.broadcast(f"{self.owner} chose: {choice}.")
         if choice == '+3 Cards':
-            cards_drawn = self.owner.draw(3)
-            if cards_drawn:
-                self.game.broadcast(f'+3 cards --> {len(self.owner.hand)} cards in hand.')
-                self.interactions.send(f"You drew: {', '.join(map(str, cards_drawn))}.")
+            self.owner.draw(3)
         elif choice == '+2 Actions':
-            self.owner.turn.actions_remaining += 2
-            self.game.broadcast(f'+2 actions --> {self.owner.turn.actions_remaining} actions.')
+            self.turn.plus_actions(2)
 
 
 KINGDOM_CARDS = [

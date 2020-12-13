@@ -3,6 +3,7 @@ import random
 from collections import deque
 from copy import deepcopy
 from .cards import cards, base_cards
+from .grammar import a, s
 from .supply import SupplyStackEmptyError
 
 
@@ -69,12 +70,12 @@ class Player:
                 try:
                     card = self.supply.draw(card_class)
                 except SupplyStackEmptyError:
-                    self.game.broadcast(f'{self.name} could not gain a {card_class} since that supply pile is empty.')
+                    self.game.broadcast(f'{self.name} could not gain {a(card_class.name)} since that supply pile is empty.')
                     return
             card.owner = self
             self.discard_pile.append(card)
             if message:
-                self.game.broadcast(f'{self.name} gained a {card_class.name}.')
+                self.game.broadcast(f'{self.name} gained {a(card_class.name)}.')
             self.process_post_gain_hooks(card, self.discard_pile)
 
     def gain_without_hooks(self, card_class, quantity: int = 1, from_supply: bool = True, message=True):
@@ -85,12 +86,12 @@ class Player:
                 try:
                     card = self.supply.draw(card_class)
                 except SupplyStackEmptyError:
-                    self.game.broadcast(f'{self.name} could not gain a {card_class} since that supply pile is empty.')
+                    self.game.broadcast(f'{self.name} could not gain {a(card_class.name)} since that supply pile is empty.')
                     return
             card.owner = self
             self.discard_pile.append(card)
             if message:
-                self.game.broadcast(f'{self.name} gained a {card_class.name}.')
+                self.game.broadcast(f'{self.name} gained {a(card_class.name)}.')
 
     def gain_to_hand(self, card_class, quantity: int = 1, from_supply: bool = True, message=True):
         for _ in range(quantity):
@@ -100,12 +101,12 @@ class Player:
                 try:
                     card = self.supply.draw(card_class)
                 except SupplyStackEmptyError:
-                    self.game.broadcast(f'{self.name} could not gain a {card_class} since that supply pile is empty.')
+                    self.game.broadcast(f'{self.name} could not gain {a(card_class.name)} since that supply pile is empty.')
                     return
             card.owner = self
             self.hand.append(card)
             if message:
-                self.game.broadcast(f'{self.name} gained a {card_class.name} into their hand.')
+                self.game.broadcast(f'{self.name} gained {a(card_class.name)} into their hand.')
             self.process_post_gain_hooks(card, self.hand)
 
     def gain_to_deck(self, card_class, quantity: int = 1, from_supply: bool = True, message=True):
@@ -116,12 +117,12 @@ class Player:
                 try:
                     card = self.supply.draw(card_class)
                 except SupplyStackEmptyError:
-                    self.game.broadcast(f'{self.name} could not gain a {card_class} since that supply pile is empty.')
+                    self.game.broadcast(f'{self.name} could not gain {a(card_class.name)} since that supply pile is empty.')
                     return
             card.owner = self
             self.deck.append(card)
             if message:
-                self.game.broadcast(f'{self.name} gained a {card_class.name} onto their deck.')
+                self.game.broadcast(f'{self.name} gained {a(card_class.name)} onto their deck.')
             self.process_post_gain_hooks(card, self.deck)
 
     def shuffle(self):
@@ -141,13 +142,25 @@ class Player:
                 card = None
         return card
 
-    def draw(self, quantity: int = 1):
+    def draw(self, quantity: int = 1, message=True):
         drawn_cards = []
         for _ in range(quantity):
             card = self.take_from_deck()
             if card is not None:
                 self.hand.append(card)
                 drawn_cards.append(card)
+        if message:
+            if quantity == 0:
+                pass
+            elif len(drawn_cards) == quantity:
+                self.game.broadcast(f"+{quantity} cards --> {s(len(self.hand), 'card')} in hand.")
+                self.interactions.send(f"You drew: {', '.join(map(str, drawn_cards))}.")
+            elif 1 <= len(drawn_cards) < quantity:
+                self.game.broadcast(f"{self} had only {s(len(drawn_cards), 'card')} left to draw from.")
+                self.game.broadcast(f"+{s(len(drawn_cards), 'card')} --> {s(len(self.hand), 'card')} in hand.")
+                self.interactions.send(f"You drew: {', '.join(map(str, drawn_cards))}.")
+            elif not drawn_cards:
+                self.game.broadcast(f'{self} had no cards left to draw from.')
         return drawn_cards
 
     def play(self, card):
@@ -161,20 +174,20 @@ class Player:
         self.discard_pile.append(card)
         self.hand.remove(card)
         if message:
-            self.game.broadcast(f'{self.name} discarded a {card}.')
+            self.game.broadcast(f'{self.name} discarded {a(card)}.')
 
     def trash(self, card, message=True):
         self.supply.trash(card)
         self.hand.remove(card)
         if message:
-            self.game.broadcast(f'{self.name} trashed a {card}.')
+            self.game.broadcast(f'{self.name} trashed {a(card)}.')
 
     def trash_played_card(self, card, message=True):
         self.supply.trash(card)
         try:
             self.played_cards.remove(card)
             if message:
-                self.game.broadcast(f'{self.name} trashed a {card}.')
+                self.game.broadcast(f'{self.name} trashed {a(card)}.')
         except ValueError:
             pass
 
@@ -192,7 +205,7 @@ class Player:
             self.discard_pile.append(card)
             self.process_post_gain_hooks(card, self.discard_pile)
             if message:
-                self.game.broadcast(f'{self.name} gained a {card} from the trash.')
+                self.game.broadcast(f'{self.name} gained {a(card)} from the trash.')
 
     def cleanup(self):
         # Discard hand from this turn
@@ -202,7 +215,7 @@ class Player:
         self.discard_pile.extend(self.played_cards)
         self.played_cards.clear()
         # Draw a new hand of five cards
-        self.draw(5)
+        self.draw(5, message=False)
  
     def __repr__(self):
         return f'Player({self.name})'

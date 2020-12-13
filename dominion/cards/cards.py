@@ -1,5 +1,6 @@
 from abc import ABCMeta, abstractmethod
 from enum import Enum, auto
+from ..grammar import a
 
 
 class CardType(Enum):
@@ -40,6 +41,7 @@ class Card(metaclass=ABCMeta):
     @owner.setter
     def owner(self, owner):
         self._owner = owner
+        self.turn = self.owner.turn
         self.interactions = self.owner.interactions
         self.game = self.owner.game
         self.supply = self.owner.game.supply
@@ -146,7 +148,7 @@ class AttackCard(ActionCard):
                         else:
                             prompt = f'{player}: You have a Reaction card ({reaction_card.name}) in your hand. Play it?'
                             if player.interactions.choose_yes_or_no(prompt=prompt):
-                                self.game.broadcast(f'{player} revealed a {reaction_card.name}.')
+                                self.game.broadcast(f'{player} revealed {a(reaction_card.name)}.')
                                 reaction_type, ignore_again = reaction_card.react()
                                 if reaction_type == ReactionType.IMMUNITY:
                                     immune_players.add(player)

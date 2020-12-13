@@ -2,6 +2,7 @@ import math
 from .cards import CardType, Card, TreasureCard, ActionCard, AttackCard, ReactionCard, VictoryCard, CurseCard
 from . import base_cards
 from ..hooks import TreasureHook, PreBuyHook, PostGainHook
+from ..grammar import a, s
 
 
 # BASIC CARDS
@@ -57,15 +58,15 @@ class Loan(TreasureCard):
                 revealed_treasure = None
                 break
             elif CardType.TREASURE in card.types:
-                self.game.broadcast(f'{self.owner} revealed a {card}.')
+                self.game.broadcast(f'{self.owner} revealed {a(card)}.')
                 revealed_treasure = card
                 break
             else:
-                self.game.broadcast(f'{self.owner} revealed a {card}.')
+                self.game.broadcast(f'{self.owner} revealed {a(card)}.')
                 cards_revealed.append(card)
         # Ask if they want to discard or trash the revealed Treasure
         if revealed_treasure is not None:
-            prompt = f'{self.owner}: You revealed a {revealed_treasure.name}. What would you like to do with it?'
+            prompt = f'{self.owner}: You revealed {a(revealed_treasure.name)}. What would you like to do with it?'
             options = ['Trash', 'Discard']
             choice = self.interactions.choose_from_options(prompt=prompt, options=list(options), force=True)
             if choice == 'Trash':
@@ -106,7 +107,7 @@ class TradeRoute(ActionCard):
             game = player.game
             trade_route_before = game.supply.trade_route
             game.supply.trade_route += 1
-            game.broadcast(f'{player} gained a {self.card_class.name} and moved a Coin token to the Trade Route mat ({trade_route_before} Coin tokens --> {game.supply.trade_route} Coin tokens).')
+            game.broadcast(f'{player} gained {a(self.card_class.name)} and moved a Coin token to the Trade Route mat ({trade_route_before} Coin tokens --> {game.supply.trade_route} Coin tokens).')
     
     def action(self):
         # Trash a card from your hand
@@ -172,13 +173,7 @@ class Watchtower(ReactionCard):
 
     def action(self):
         num_cards_to_draw = 6 - len(self.owner.hand)
-        if num_cards_to_draw > 0:
-            cards_drawn = self.owner.draw(num_cards_to_draw)
-            if cards_drawn:
-                self.game.broadcast(f'{self.owner} drew {len(cards_drawn)} cards.')
-                self.interactions.send(f"You drew: {', '.join(map(str, cards_drawn))}.")
-            else:
-                self.game.broadcast(f'{self.owner} has no more cards to draw from.')
+        self.owner.draw(num_cards_to_draw)
 
 
 class Bishop(ActionCard):
@@ -213,10 +208,7 @@ class Bishop(ActionCard):
             self.owner.trash(card_to_trash)
             victory_tokens = math.floor(card_to_trash.cost / 2)
             self.owner.victory_tokens += victory_tokens
-            if victory_tokens > 1:
-                self.game.broadcast(f'{self.owner} took {victory_tokens} Victory tokens.')
-            elif victory_tokens == 1:
-                self.game.broadcast(f'{self.owner} took a Victory token.')
+            self.game.broadcast(f"{self.owner} took {s(victory_tokens, 'Victory token')}.")
         # Each other player may trash a card from their hand
         for player in self.owner.other_players:
             prompt = f'{player}: You may trash a card from your hand.'
@@ -346,20 +338,12 @@ class City(ActionCard):
     
     def action(self):
         if self.supply.num_empty_stacks >= 1:
-            drawn_cards = self.owner.draw(1)
-            if not drawn_cards:
-                self.game.broadcast(f'{self.owner} has no more cards to draw from.')
-            else:
-                card = drawn_cards[0]
-                self.game.broadcast(f'{self.owner} drew a card since there are one or more empty Supply piles.')
-                self.game.broadcast(f'+1 cards --> {len(self.owner.hand)} cards in hand.')
-                self.interactions.send(f'You drew: {card}.')
+            self.game.broadcast(f'{self.owner} draws a card since there are one or more empty Supply piles.')
+            self.owner.draw(1)
         if self.supply.num_empty_stacks >= 2:
             self.game.broadcast(f'{self.owner} gets +1 buy and +1 $ since there are two or more empty Supply piles.')
-            self.owner.turn.buys_remaining += 1
-            self.game.broadcast(f'+1 buy --> {self.owner.turn.buys_remaining} buys.')
-            self.owner.turn.coppers_remaining += 1
-            self.game.broadcast(f'+1 $ --> {self.owner.turn.coppers_remaining} $.')
+            self.turn.plus_buys(1)
+            self.turn.plus_coppers(1)
 
 
 class Contraband(TreasureCard):
@@ -380,14 +364,13 @@ class Contraband(TreasureCard):
 
     def play(self):
         # +1 Buy (this must be done manually here since it is a Treasure card)
-        self.owner.turn.buys_remaining += 1
-        self.game.broadcast(f'+1 buy --> {self.owner.turn.buys_remaining} buys.')
+        self.turn.plus_buys(1)
         # The player to your left names a card
         player_to_left = self.owner.other_players[0]
         prompt = f'{player_to_left}: Which card should {self.owner} be forbidden from buying this turn?'
         forbidden_card_class = player_to_left.interactions.choose_card_class_from_supply(prompt, max_cost=math.inf, force=True) # max_cost=math.inf because any card can be named
         self.owner.turn.invalid_card_classes.append(forbidden_card_class)
-        self.game.broadcast(f'{self.owner} cannot buy a {forbidden_card_class.name} this turn.')
+        self.game.broadcast(f'{self.owner} cannot buy {a(forbidden_card_class.name)} this turn.')
 
 
 class CountingHouse(ActionCard):
@@ -410,7 +393,7 @@ class CountingHouse(ActionCard):
     def action(self):
         coppers_in_discard_pile = [card for card in self.owner.discard_pile if isinstance(card, base_cards.Copper)]
         if coppers_in_discard_pile:
-            prompt = f'{self.owner}: You have {len(coppers_in_discard_pile)} Coppers in your discard pile. How many would you like to put into your hand?'
+            prompt = f"{self.owner}: You have {s(len(coppers_in_discard_pile), 'Copper')} in your discard pile. How many would you like to put into your hand?"
             options = list(range(1, len(coppers_in_discard_pile) + 1))
             num_coppers = self.owner.interactions.choose_from_options(prompt, options, force=False)
             if num_coppers:
@@ -418,7 +401,7 @@ class CountingHouse(ActionCard):
                     copper = coppers_in_discard_pile.pop()
                     self.owner.discard_pile.remove(copper)
                     self.owner.hand.append(copper)
-                self.game.broadcast(f'{self.owner} put {num_coppers} Coppers from their discard pile into their hand.')
+                self.game.broadcast(f"{self.owner} put {s(num_coppers, 'Copper')} from their discard pile into their hand.")
             else:
                 self.game.broadcast(f'{self.owner} did not put any Coppers from their discard pile into their hand.')
 
@@ -457,7 +440,7 @@ class Mint(ActionCard):
         if treasure_card is not None:
             treasure_card_class = type(treasure_card)
             self.owner.gain_without_hooks(treasure_card_class, message=False)
-            self.game.broadcast(f'{self.owner} revealed a {treasure_card} and gained a copy of it.')
+            self.game.broadcast(f'{self.owner} revealed {a(treasure_card)} and gained a copy of it.')
 
         
 
@@ -528,7 +511,7 @@ class Rabble(AttackCard):
                 self.game.broadcast(f'{player} has no more cards to draw from.')
                 break
             else:
-                self.game.broadcast(f'{player} revealed a {card}.')
+                self.game.broadcast(f'{player} revealed {a(card)}.')
                 if CardType.TREASURE in card.types or CardType.ACTION in card.types:
                     revealed_actions_and_treasures.append(card)
                 else:
@@ -541,7 +524,7 @@ class Rabble(AttackCard):
         if len(revealed_other_cards) == 1:
             # If there's only one card, put it back on top of the deck
             card = revealed_other_cards[0]
-            self.game.broadcast(f'{player} put a {card} card back on top of their deck.')
+            self.game.broadcast(f'{player} put {a(card)} back on top of their deck.')
             player.deck.append(card)
         elif len(revealed_other_cards) == 2:
             # If there are two, ask which should be on top
@@ -551,7 +534,7 @@ class Rabble(AttackCard):
             bottom_card = revealed_other_cards[0]
             player.deck.append(bottom_card)
             player.deck.append(top_card)
-            self.game.broadcast(f'{player} put a {bottom_card} and a {top_card} back on top of their deck.')
+            self.game.broadcast(f'{player} put {a(bottom_card)} and {a(top_card)} back on top of their deck.')
         elif len(revealed_other_cards) == 3:
             # If there are three, ask which should be on top and in the middle
             prompt = f"You must return these cards to the top of your deck: {', '.join(map(str, revealed_other_cards))}. Which card would you like to be on top?"
@@ -564,7 +547,7 @@ class Rabble(AttackCard):
             player.deck.append(bottom_card)
             player.deck.append(middle_card)
             player.deck.append(top_card)
-            self.game.broadcast(f'{player} put a {bottom_card}, a {middle_card} and a {top_card} back on top of their deck.')
+            self.game.broadcast(f'{player} put {a(bottom_card)}, {a(middle_card)} and {a(top_card)} back on top of their deck.')
 
 
 class RoyalSeal(TreasureCard):
@@ -633,8 +616,7 @@ class Vault(ActionCard):
                 discarded_card_count += 1
                 self.owner.discard(card_to_discard)
         coppers_before = self.owner.turn.coppers_remaining
-        self.owner.turn.coppers_remaining += discarded_card_count
-        self.game.broadcast(f'+{coppers_before} $ --> {self.owner.turn.coppers_remaining} $.')
+        self.turn.plus_coppers(discarded_card_count)
         # Each other player may discard 2 cards, to draw a card.
         for player in self.owner.other_players:
             if len(player.hand) < 2:
@@ -647,10 +629,7 @@ class Vault(ActionCard):
                         card_to_discard = player.interactions.choose_card_from_hand(prompt, force=True)
                         if card_to_discard is not None:
                             player.discard(card_to_discard)
-                    cards_drawn = player.draw(1)
-                    if cards_drawn:
-                        player.interactions.send(f'You drew a {cards_drawn[0]}.')
-                        self.game.broadcast(f'{player} drew a card.')
+                    player.draw(1)
                 else:
                     self.game.broadcast(f'{player} chose not to discard 2 cards.')
 
@@ -680,7 +659,7 @@ class Venture(TreasureCard):
                 self.game.broadcast(f'{self.owner} has no more cards to draw from.')
                 break
             else:
-                self.game.broadcast(f'{self.owner} revealed a {card}.')
+                self.game.broadcast(f'{self.owner} revealed {a(card)}.')
             if CardType.TREASURE in card.types:
                 revealed_treasure = card
                 break
@@ -731,7 +710,7 @@ class Goons(AttackCard):
 
     def attack_effect(self, attacker, player):
         number_to_discard = len(player.hand) - 3
-        self.game.broadcast(f'{player} must discard {number_to_discard} cards.')
+        self.game.broadcast(f"{player} must discard {s(number_to_discard, 'card')}.")
         for card_num in range(number_to_discard):
             prompt = f'{player}: Choose card {card_num + 1} of {number_to_discard} to discard.'
             card_to_discard = player.interactions.choose_card_from_hand(prompt=prompt, force=True)
@@ -906,11 +885,11 @@ class KingsCourt(ActionCard):
             # Playing the card should not use any actions, so we use a special method
             # The first time, add the card to the played cards area
             self.owner.play(card)
-            self.game.broadcast(f"{self.owner} plays a {card.name} for the first time, thanks to their King's Court.")
+            self.game.broadcast(f"{self.owner} plays {a(card.name)} for the first time, thanks to their King's Court.")
             self.owner.turn.action_phase.play_without_side_effects(card)
-            self.game.broadcast(f"{self.owner} plays a {card.name} for the second time, thanks to their King's Court.")
+            self.game.broadcast(f"{self.owner} plays {a(card.name)} for the second time, thanks to their King's Court.")
             self.owner.turn.action_phase.play_without_side_effects(card)
-            self.game.broadcast(f"{self.owner} plays a {card.name} for the third time, thanks to their King's Court.")
+            self.game.broadcast(f"{self.owner} plays {a(card.name)} for the third time, thanks to their King's Court.")
             self.owner.turn.action_phase.play_without_side_effects(card)
         else:
             self.game.broadcast(f"{self.owner} has no other Actions cards to use with their King's Court.")
