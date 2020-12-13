@@ -283,7 +283,7 @@ class Talisman(TreasureCard):
         def __call__(self, player, card, where_it_went):
             game = player.game
             game.broadcast(f'{player} gains an extra {self.card_class.name} from their Talisman.')
-            player.gain_without_hooks(self.card_class)
+            player.gain_without_hooks(self.card_class, message=False)
 
 
     def play(self):
