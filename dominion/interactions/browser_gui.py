@@ -5,7 +5,7 @@ from ..cards import cards
 from .interaction import Interaction
 
 
-class BrowserInteraction(Interaction):
+class BrowserGUIInteraction(Interaction):
     def enter_choice(self, prompt):
         return self.socketio.call('enter choice', {'prompt': prompt}, to=self.sid, timeout=None)
 
@@ -14,6 +14,9 @@ class BrowserInteraction(Interaction):
         self.socketio.send(message, to=self.sid)
 
     def get_supply_string(self):
+        for card_class in self.supply.card_stacks:
+            print(cards.Card.to_dict(card_class))
+
         supply_table = self.supply.get_table()
         while True:
             try:

@@ -3,7 +3,7 @@ import string
 import time
 from dominion.expansions import IntrigueExpansion, ProsperityExpansion
 from dominion.game import Game
-from dominion.interactions import NetworkedCLIInteraction, BrowserInteraction, AutoInteraction
+from dominion.interactions import NetworkedCLIInteraction, BrowserGUIInteraction, AutoInteraction
 from socketio import Server, WSGIApp
 
 
@@ -36,7 +36,7 @@ def join_room(sid, data):
     room = data['room']
     try:
         if data['client_type'] == 'browser':
-            interaction_class = BrowserInteraction
+            interaction_class = BrowserGuiInteraction
     except KeyError:
         interaction_class = NetworkedCLIInteraction
     # Add the user to the room
@@ -61,7 +61,7 @@ def create_room(sid, data):
     username = data['username']
     try:
         if data['client_type'] == 'browser':
-            interaction_class = BrowserInteraction
+            interaction_class = BrowserGUIInteraction
     except KeyError:
         interaction_class = NetworkedCLIInteraction
     characters = string.ascii_uppercase + string.digits

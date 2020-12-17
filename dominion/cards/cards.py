@@ -68,6 +68,17 @@ class Card(metaclass=ABCMeta):
     def __repr__(self):
         return self.name
 
+    @staticmethod
+    def to_dict(obj):
+        return {
+            "name": obj.name,
+            "types": [type_enum.name for type_enum in obj.types],
+            "description": obj.description,
+            "cost": obj.cost,
+            "value": obj.value if hasattr(obj, 'value') else None,
+            "points": obj.points if hasattr(obj, 'points') else None,
+        }
+
 
 class TreasureCard(Card):
     '''Base treasure card class.
