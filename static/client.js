@@ -153,7 +153,7 @@ socket.on("new turn", function (data, callback) {
     // Add a horizontal rule to the message board
     $("#gameMessages").append(`<hr/>`);
     // Print out the player"s name
-    append_message(`<strong>${player}"s turn!</strong>`);
+    append_message(`<strong>${player}'s turn!</strong>`);
     // Scroll to the bottom of the message board
     $("html, body").scrollTop($(document).height());
 });
