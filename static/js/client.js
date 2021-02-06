@@ -378,3 +378,45 @@ for (i = 0; i < acc.length; i++) {
     }
   });
 }
+
+
+// Scrollable card-containers
+
+var speed = 0;
+var scroll = 0;
+var current_container = null;
+var multiplier = 6;
+
+$('.card-container').on('mousemove', function(e) {
+    current_container = $(this);
+    var container_w = $(this).width();
+    var mouse_x = e.pageX - $(this).offset().left;
+    // console.log(mouse_x, mouse_x < 100, mouse_x > container_w - 100);
+    if (mouse_x < 100 || mouse_x > container_w - 100) {
+        var mouse_percent = mouse_x / container_w;
+        speed = (mouse_percent - 0.5) * 2;
+    }
+    else {
+        speed = 0;
+    }
+}).on ('mouseleave', function() {
+    speed = 0;
+});
+
+function updatescroll(e) {
+    if (current_container != null) {
+        var max_scroll = current_container[0].scrollWidth - current_container.outerWidth();
+        if (speed !== 0) {
+            scroll += speed * multiplier;
+            if (scroll < 0) {
+                scroll = 0;
+            }
+            if (scroll > max_scroll) { 
+                scroll = max_scroll;
+            }
+            current_container.scrollLeft(scroll);
+        }
+    }
+    window.requestAnimationFrame(updatescroll);
+}
+window.requestAnimationFrame(updatescroll);

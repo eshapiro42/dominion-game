@@ -157,7 +157,7 @@ body {
   display: flex;
   flex-direction: column;
   padding: $card_padding;
-  margin: $card_margin;
+  margin-right: $card_margin;
   border-radius: $card_round;
   box-shadow: $card-shadow;
   transition: 0.4s ease-out;
