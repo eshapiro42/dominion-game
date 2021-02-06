@@ -16,12 +16,16 @@ body {
 @media (min-width: 1300px) and (max-width: 1600px) {
   #game-grid {
     grid-template-areas: 'log log' 'supply trash' 'turn turn' 'hand discard';
-    grid-template-columns: 3fr 1fr; } }
+    grid-template-columns: 3fr 1fr; }
+  .section__log {
+    height: 300px; } }
 
 @media (max-width: 1300px) {
   #game-grid {
     grid-template-areas: 'log' 'supply' 'trash' 'turn' 'hand' 'discard';
-    grid-template-columns: 1fr; } }
+    grid-template-columns: 1fr; }
+  .section__log {
+    height: 300px; } }
 
 .section {
   color: #343338;
@@ -120,6 +124,10 @@ body {
     font-style: normal;
     font-size: 14px;
     color: #343338; }
+  .card .card-header {
+    display: flex;
+    justify-content: space-between;
+    width: 200px; }
   .card .card-effects {
     font-family: minion-pro, serif;
     font-weight: 700;

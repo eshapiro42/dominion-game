@@ -50,6 +50,9 @@ body {
       'hand discard';
     grid-template-columns: 3fr 1fr;
   }
+  .section__log {
+    height: 300px;
+  }
 }
 
 @media (max-width: 1300px) {
@@ -62,6 +65,9 @@ body {
       'hand'
       'discard';
     grid-template-columns: 1fr;
+  }
+  .section__log {
+    height: 300px;
   }
 }
 
@@ -178,6 +184,11 @@ body {
     color: $background-color;
   }
 
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    width: $card-width;
+ }
   
   .card-effects {
     font-family: minion-pro, serif;

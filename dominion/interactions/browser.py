@@ -1,4 +1,5 @@
 import inspect
+import math
 import prettytable
 from copy import deepcopy
 from ..cards import cards
@@ -14,9 +15,21 @@ class BrowserInteraction(Interaction):
         self.socketio.send(message, to=self.sid)
 
     def get_supply_json(self):
+        supply_list = []
+        for card in self.supply.card_stacks:
+            card_json = cards.card_to_json(card)
+            quantity = self.supply.card_stacks[card].cards_remaining
+            card_json['quantity'] = quantity if not math.isinf(quantity) else None
+            supply_list.append(card_json)
         return {
-            "supply_cards": [cards.card_to_json(card) for card in self.supply.card_stacks],
+            "supply_cards": supply_list,
         }
+
+    # def get_supply_json(self):
+    #     return json.dumps({
+    #         "supply_cards": [cards.card_to_json(card) for card in self.supply.card_stacks],
+    #         "supply_card_quantities": [self.supply.card_stacks[card].cards_remaining  for card in self.supply.card_stacks],
+    #     })
 
     def get_hand_json(self):
         return {

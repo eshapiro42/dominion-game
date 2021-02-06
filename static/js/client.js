@@ -19,8 +19,12 @@ class Option {
 }
 
 class Card {
-    constructor(name, effects, description, cost, type) {
+    constructor(name, effects, description, cost, type, quantity=null) {
         this.name = name;
+        this.cost = cost;
+        this.type = type;
+        this.quantity = quantity;
+        // Replace $ and victory points with symbols
         this.effects = effects
             .replace("$", "<i class='fas fa-coins'></i>")
             .replace("victory points", "<i class='fas fa-shield-alt'></i>")
@@ -29,8 +33,7 @@ class Card {
             .replace("$", "<i class='fas fa-coins'></i>")
             .replace("victory points", "<i class='fas fa-shield-alt'></i>")
             .replace("victory point", "<i class='fas fa-shield-alt'></i>");
-        this.cost = cost;
-        this.type = type;
+        // Determine card background color
         if (this.type.includes('TREASURE')) {
             this.color = "#fff0b3";
         }
@@ -40,12 +43,27 @@ class Card {
         else if (this.type.includes('CURSE')) {
             this.color = "#dab3ff";
         }
+        else if (this.type.includes('ATTACK')) {
+            this.color = "#ffcccc";
+        }
+        else if (this.type.includes('REACTION')) {
+            this.color = "#80bfff";
+        }
+        // Only Supply cards have quantities
+        if (this.quantity == null) {
+            this.quantity = "";
+        }
     }
     getHTML() {
         return `
             <div class="card" style="background-color: ${this.color}">
                 <div class="card-header">
-                    <h2>${this.name}</h2>
+                    <div class="card-title">
+                        <h2>${this.name}</h2>
+                    </div>
+                    <div class="card-quantity">
+                        <h3>${this.quantity}</h3>
+                    </div>
                 </div>
                 <div class="card-effects">
                     <p>${this.effects}</p>
@@ -103,7 +121,12 @@ function joined_room(success) {
 
 function add_card(card_data, grid) {
     // Add a card to the specified grid
-    var card_html = new Card(card_data.name, card_data.effects, card_data.description, card_data.cost, card_data.type)
+    if ("quantity" in card_data) {
+        var card_html = new Card(card_data.name, card_data.effects, card_data.description, card_data.cost, card_data.type, card_data.quantity);
+    }
+    else {
+        var card_html = new Card(card_data.name, card_data.effects, card_data.description, card_data.cost, card_data.type);
+    }
     grid.append(card_html);
 }
 
@@ -139,11 +162,12 @@ socket.on("message", function(data) {
 });
 
 socket.on("display supply", function(data) {
+    console.log(data);
     // Clear out old stuff
     $("#supply").empty()
     // Add new stuff
     data.supply_cards.forEach(card_data => {
-        var card = new Card(card_data.name, card_data.effects, card_data.description, card_data.cost, card_data.type);
+        var card = new Card(card_data.name, card_data.effects, card_data.description, card_data.cost, card_data.type, card_data.quantity);
         $("#supply").append(card.getHTML());
     });
 });
@@ -180,7 +204,7 @@ socket.on("display discard", function(data) {
 
 socket.on("enter choice", function (data, callback) {
     message = data["prompt"];
-    alert(message);
+    append_message(message);
     $(".card").on("click", function (event) {
         choice = $(this).index() + 1;
         console.log(choice);
