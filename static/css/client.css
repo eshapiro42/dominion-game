@@ -158,12 +158,14 @@ body {
 
 .card:hover {
   transform: translateY(-20px);
-  transition: 0.4s ease-out; }
+  transition: 0.4s ease-out;
+  transition-delay: 0.1s; }
 
 .card:hover ~ .card {
   position: relative;
   left: 100px;
-  transition: 0.4s ease-out; }
+  transition: 0.4s ease-out;
+  transition-delay: 0.1s; }
 
 /* Works on Firefox */
 * {

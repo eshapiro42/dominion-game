@@ -385,20 +385,25 @@ for (i = 0; i < acc.length; i++) {
 var speed = 0;
 var scroll = 0;
 var current_container = null;
-var multiplier = 6;
+var multiplier = 10;
 
 $('.card-container').on('mousemove', function(e) {
     current_container = $(this);
     var container_w = $(this).width();
     var mouse_x = e.pageX - $(this).offset().left;
     // console.log(mouse_x, mouse_x < 100, mouse_x > container_w - 100);
-    if (mouse_x < 100 || mouse_x > container_w - 100) {
-        var mouse_percent = mouse_x / container_w;
-        speed = (mouse_percent - 0.5) * 2;
+    if (mouse_x < 100) {
+        var mouse_percent = 100 - mouse_x;
+        speed = -(mouse_percent) / 100;
+    }
+    else if (mouse_x > container_w - 100) {
+        var mouse_percent = 100 - (container_w - mouse_x);
+        speed = (mouse_percent) / 100;
     }
     else {
         speed = 0;
     }
+    // console.log(speed);
 }).on ('mouseleave', function() {
     speed = 0;
 });
