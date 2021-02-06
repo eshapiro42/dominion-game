@@ -19,7 +19,7 @@ class BrowserInteraction(Interaction):
         for card in self.supply.card_stacks:
             card_json = cards.card_to_json(card)
             quantity = self.supply.card_stacks[card].cards_remaining
-            card_json['quantity'] = quantity if not math.isinf(quantity) else None
+            card_json['quantity'] = quantity if not math.isinf(quantity) else 'inf'
             supply_list.append(card_json)
         return {
             "supply_cards": supply_list,

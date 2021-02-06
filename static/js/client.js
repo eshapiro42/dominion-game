@@ -53,6 +53,10 @@ class Card {
         if (this.quantity == null) {
             this.quantity = "";
         }
+        // Fix infinite quantities
+        else if (this.quantity == "inf") {
+            this.quantity = "∞";
+        }
     }
     getHTML() {
         return `

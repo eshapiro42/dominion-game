@@ -221,13 +221,13 @@ def card_to_json(card):
     extra_coppers = card.extra_coppers if hasattr(card, 'extra_coppers') else 0
     effects = []
     if extra_cards:
-        effects.append(s(extra_cards, 'Card'))
+        effects.append(f"+{s(extra_cards, 'Card')}")
     if extra_actions:
-        effects.append(s(extra_actions, 'Action'))
+        effects.append(f"+{s(extra_actions, 'Action')}")
     if extra_buys:
-        effects.append(s(extra_buys, 'Buy'))
+        effects.append(f"+{s(extra_buys, 'Buy')}")
     if extra_coppers:
-        effects.append(f'{extra_coppers} $')
+        effects.append(f"+{extra_coppers} $")
     effects = '<br>'.join(effects)
     return {
         'name': card.name,
