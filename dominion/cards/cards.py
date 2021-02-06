@@ -1,6 +1,6 @@
 from abc import ABCMeta, abstractmethod
 from enum import Enum, auto
-from ..grammar import a
+from ..grammar import a, s
 
 
 class CardType(Enum):
@@ -212,3 +212,27 @@ class CurseCard(Card):
     @abstractmethod
     def points(self):
         pass
+
+
+def card_to_json(card):
+    extra_cards = card.extra_cards if hasattr(card, 'extra_cards') else 0
+    extra_actions = card.extra_actions if hasattr(card, 'extra_actions') else 0
+    extra_buys = card.extra_buys if hasattr(card, 'extra_buys') else 0
+    extra_coppers = card.extra_coppers if hasattr(card, 'extra_coppers') else 0
+    effects = []
+    if extra_cards:
+        effects.append(s(extra_cards, 'Card'))
+    if extra_actions:
+        effects.append(s(extra_actions, 'Action'))
+    if extra_buys:
+        effects.append(s(extra_buys, 'Buy'))
+    if extra_coppers:
+        effects.append(f'{extra_coppers} $')
+    effects = '<br>'.join(effects)
+    return {
+        'name': card.name,
+        'effects': effects,
+        'description': card.description,
+        'cost': card.cost,
+        'type': ', '.join([t.name for t in card.types])
+    }

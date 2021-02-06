@@ -167,18 +167,24 @@ class Player:
         try:
             self.hand.remove(card)
             self.played_cards.append(card)
+            self.interactions.display_hand()
+            self.interactions.display_played()
         except ValueError:
             pass
 
     def discard(self, card, message=True):
-        self.discard_pile.append(card)
         self.hand.remove(card)
+        self.discard_pile.append(card)
+        self.interactions.display_hand()
+        self.interactions.display_discard_pile()
         if message:
             self.game.broadcast(f'{self.name} discarded {a(card)}.')
 
     def trash(self, card, message=True):
-        self.supply.trash(card)
         self.hand.remove(card)
+        self.supply.trash(card)
+        self.interactions.display_hand()
+        self.interactions.display_trash()
         if message:
             self.game.broadcast(f'{self.name} trashed {a(card)}.')
 
@@ -216,6 +222,10 @@ class Player:
         self.played_cards.clear()
         # Draw a new hand of five cards
         self.draw(5, message=False)
+        # Send all events to client
+        self.interactions.display_played()
+        self.interactions.display_discard_pile()
+        self.interactions.display_hand()
  
     def __repr__(self):
         return f'Player({self.name})'

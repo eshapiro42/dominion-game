@@ -1,0 +1,169 @@
+<!doctype html>
+
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Dominion</title>
+
+    <!-- <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous"> -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css"
+        integrity="sha512-HK5fgLBL+xu6dm/Ii3z4xhlSUyZgTT9tuc/hSrtw6uzJOvgRr2a9jyxxT1ely+B+xFAmJKVSTbpM/CuL7qxO8w=="
+        crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css"
+        integrity="sha512-HK5fgLBL+xu6dm/Ii3z4xhlSUyZgTT9tuc/hSrtw6uzJOvgRr2a9jyxxT1ely+B+xFAmJKVSTbpM/CuL7qxO8w=="
+        crossorigin="anonymous" />
+    <link rel="stylesheet" href="static/css/client.css">
+</head>
+
+<body>
+
+    <header class="masthead">
+        <div class="container h-100">
+            <div class="row h-100 align-items-center">
+                <div class="col-12 text-center">
+                    <h1>Dominion</h1>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Game Join Buttons -->
+    <div id="gameJoinContainer" class="container">
+        <button class="accordion">Join a Game</button>
+        <div class="panel">
+            <form id="joinGameForm">
+                <div class="form-group">
+                    <input id="joinGamePlayerNameInput" type="text" class="form-control" placeholder="Your Name"
+                        id="joinGameName" autocomplete="off" required autofocus>
+                </div>
+                <div class="form-group">
+                    <input type="text" class="form-control" placeholder="Room ID" id="joinGameRoomID" autocomplete="off"
+                        required>
+                </div>
+                <button id="joinGameSubmitButton" class="btn btn-dark">Let's Move It</button>
+            </form>
+        </div>
+        <button class="accordion">Create a New Game</button>
+        <div class="panel">
+            <form id="createGameForm">
+                <div class="form-group">
+                    <input id="createGamePlayerNameInput" type="text" class="form-control" placeholder="Your Name"
+                        id="createGameName" autocomplete="off" required>
+                </div>
+                <button id="createGameSubmitButton" class="btn btn-dark">Let's Groove It</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="gameRoomIDContainer" class="container text-center" style="display: none">
+        <span id="gameRoomID"></span>
+    </div>
+
+    <div id="gameMessagesContainer" class="container">
+        <span id="gameMessages" class="table"></span>
+    </div>
+
+    <div id="gameSetupContainer" class="container text-center" style="display: none">
+        <div class="row">
+            <button id="gameStartButton" type="button" class="btn btn-primary btn-lg btn-block">Start Game</button>
+            <button id="addCPUButton" type="button" class="btn btn-secondary btn-lg btn-block">Add CPU</button>
+            <div id="expansionsContainer" class="col form-group container text-left">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="" id="intrigueCheckbox">
+                    <label class="form-check-label" for="intrigueCheckbox">Intrigue Expansion</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="" id="prosperityCheckbox">
+                    <label class="form-check-label" for="prosperityCheckbox">Prosperity Expansion</label>
+                </div>
+            </div>
+            <div id="supplyCustomizationsContainer" class="col form-group container text-left">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="" id="distributeCostCheckbox">
+                    <label class="form-check-label" for="distributeCostCheckbox">Distribute Cost</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="" id="disableAttacksCheckbox">
+                    <label class="form-check-label" for="disableAttacksCheckbox">Disable Attacks</label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- <div id="gameInputContainer" class="container text-center" style="display: none">
+            <form id="gameInputForm">
+                <div class="form-group">
+                    <input id="gameInput" type="text" class="form-control" placeholder="Your Choice" id="gameInput" autocomplete="off" autofocus>
+                    <button style="display: none"></button>
+                </div>
+            </form>
+        </div> -->
+
+    <div id='game-grid' style="display: none;">
+        <div class="section section__supply">
+            <div class="section-title">
+                <h1>Supply</h1>
+            </div>
+            <div id="supply" class="card-container">
+            </div>
+        </div>
+
+
+        <div class="section section__trash">
+            <div class="section-title">
+                <h1>Trash</h1>
+            </div>
+            <div id="trash" class="card-container">
+            </div>
+        </div>
+
+
+        <div class="section section__turn">
+            <div id="turn-title" class="section-title">
+                <!-- <h1>{Player}'s Turn</h1> -->
+            </div>
+            <div id="turn" class="card-container">
+            </div>
+        </div>
+
+
+        <div class="section section__hand">
+            <div class="section-title">
+                <h1>Hand<h1>
+            </div>
+            <div id="hand" class="card-container">
+            </div>
+        </div>
+
+        <div class="section section__discard">
+            <div class="section-title">
+                <h1>Discard<h1>
+            </div>
+            <div id="discard" class="card-container">
+            </div>
+        </div>
+
+        <div class="section section__log">
+            <div class="section-title">
+                <h1>Game Log</h1>
+            </div>
+            <div id="log-container">
+                <div id="log">
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"
+        integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+    <!-- <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script> -->
+    <script src="static/js/socket.io.js"></script>
+    <script src="static/js/client.js"></script>
+</body>
+
+</html>

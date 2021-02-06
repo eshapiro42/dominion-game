@@ -5,7 +5,6 @@ from ..cards import cards
 from .interaction import Interaction
 
 
-
 class BrowserInteraction(Interaction):
     def enter_choice(self, prompt):
         return self.socketio.call('enter choice', {'prompt': prompt}, to=self.sid, timeout=None)
@@ -14,49 +13,37 @@ class BrowserInteraction(Interaction):
         message = f'\n{message}\n'
         self.socketio.send(message, to=self.sid)
 
-    def get_supply_string(self):
-        supply_table = self.supply.get_table()
-        while True:
-            try:
-                return supply_table.get_html_string()
-            except TypeError: 
-                pass
+    def get_supply_json(self):
+        return {
+            "supply_cards": [cards.card_to_json(card) for card in self.supply.card_stacks],
+        }
 
-    def get_hand_string(self):
-        hand_table = prettytable.PrettyTable(hrules=prettytable.ALL)
-        hand_table.field_names = ['Number', 'Card', 'Type', 'Description']
-        for idx, card in enumerate(self.hand):
-            types = ', '.join([type.name.lower().capitalize() for type in card.types])
-            hand_table.add_row([idx + 1, card.name, types, card.description])
-        while True:
-            try:
-                return hand_table.get_html_string()
-            except TypeError:
-                pass
+    def get_hand_json(self):
+        return {
+            "hand_cards": [cards.card_to_json(card) for card in self.hand],
+        }
 
-    def get_discard_pile_string(self):
-        discard_table = prettytable.PrettyTable(hrules=prettytable.ALL)
-        discard_table.field_names = ['Number', 'Card', 'Type', 'Description']
-        for idx, card in enumerate(self.discard_pile):
-            types = ', '.join([type.name.lower().capitalize() for type in card.types])
-            discard_table.add_row([idx + 1, card.name, types, card.description])
-        while True:
-            try:
-                return discard_table.get_html_string()
-            except TypeError:
-                pass
+    def get_played_json(self):
+        return {
+            "played_cards": [cards.card_to_json(card) for card in self.played_cards],
+        }
+    
+    def get_discard_json(self):
+        return {
+            "discard_cards": [cards.card_to_json(card) for card in self.discard_pile],
+        }
 
     def display_supply(self):
-        supply_string = f'Supply:\n{self.get_supply_string()}'
-        self.send(supply_string)
+        self.socketio.emit('display supply', self.get_supply_json(), room=self.room)
 
     def display_hand(self):
-        hand_string = f'Your hand:\n{self.get_hand_string()}'
-        self.send(hand_string)
+        self.socketio.emit('display hand', self.get_hand_json(), to=self.sid)
+
+    def display_played(self):
+        self.socketio.emit('display played', self.get_played_json(), room=self.room)
 
     def display_discard_pile(self):
-        discard_string = f'Your discard pile:\n{self.get_discard_pile_string()}'
-        self.send(discard_string)
+        self.socketio.emit('display discard', self.get_discard_json(), to=self.sid)
 
     def choose_card_from_hand(self, prompt, force):
         if not self.hand:

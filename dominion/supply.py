@@ -45,6 +45,8 @@ class Supply:
     def __init__(self, num_players):
         self.num_players = num_players
         self.card_stacks = {}
+        self.basic_card_stacks = {}
+        self.kingdom_card_stacks = {}
         self.post_gain_hooks = defaultdict(list)
         self.customization = Customization()
         # TODO: Remove these (they are for debugging specific cards)
@@ -83,7 +85,9 @@ class Supply:
         # Sort kingdom cards first by cost, then by name
         for card_class in sorted(selected_kingdom_card_classes, key=lambda card_class: (card_class.cost, card_class.name)):
             # Stacks of ten kingdom cards each
-            self.card_stacks[card_class] = FiniteSupplyStack(card_class, 10)
+            card_stack = FiniteSupplyStack(card_class, 10)
+            self.kingdom_card_stacks[card_class] = card_stack
+            self.card_stacks[card_class] = card_stack
 
     def select_basic_cards(self):
         # Get all possible basic cards from the selected expansions
@@ -91,7 +95,9 @@ class Supply:
         for expansion in self.customization.expansions:
             basic_card_piles += expansion.basic_card_piles
         for card_class, pile_size in basic_card_piles:
-            self.card_stacks[card_class] = FiniteSupplyStack(card_class, pile_size)
+            card_stack = FiniteSupplyStack(card_class, pile_size)
+            self.basic_card_stacks[card_class] = card_stack
+            self.card_stacks[card_class] = card_stack
 
     def create_trash_pile(self):
         self.trash_pile = {card_class: [] for card_class in self.card_stacks}

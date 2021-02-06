@@ -11,11 +11,12 @@ from socketio import Server, WSGIApp
 socketio = Server(async_mode='eventlet', async_handlers=True)
 
 static_files = {
-    '/': 'static/index.html',
-    '/static/socket.io.js': 'static/socket.io.js',
-    '/static/socket.io.js.map': 'static/socket.io.js.map',
-    '/static/client.js': 'static/client.js',
-    # '/static/style.css': 'static/style.css',
+    '/': 'static/html/index.html',
+    '/static/html/card.html': '/static/html/card.html',
+    '/static/js/socket.io.js': 'static/js/socket.io.js',
+    '/static/js/socket.io.js.map': 'static/js/socket.io.js.map',
+    '/static/js/client.js': 'static/js/client.js',
+    '/static/css/client.css': 'static/css/client.css',
 }
 
 app = WSGIApp(socketio, static_files=static_files)
