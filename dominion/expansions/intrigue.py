@@ -4,7 +4,7 @@ from ..cards import cards, base_cards, intrigue_cards
 from ..hooks import PostGainHook
 
 class IntrigueExpansion(Expansion):
-    name = 'Prosperity'
+    name = 'Intrigue'
 
     @property
     def basic_card_piles(self):
