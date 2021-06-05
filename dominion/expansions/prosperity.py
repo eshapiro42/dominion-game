@@ -6,7 +6,9 @@ from ..hooks import PostGainHook
 class ProsperityExpansion(Expansion):
     name = 'Prosperity'
 
-    platinum_and_colony = False
+    def __init__(self, game):
+        super().__init__(game)
+        self.platinum_and_colony = False
 
     @property
     def basic_card_piles(self):
