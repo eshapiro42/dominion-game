@@ -12,8 +12,6 @@ socketio = Server(async_mode='eventlet', async_handlers=True)
 
 static_files = {
     '/': 'static/index.html',
-    '/static/socket.io.js': 'static/socket.io.js',
-    '/static/socket.io.js.map': 'static/socket.io.js.map',
     '/static/client.js': 'static/client.js',
     # '/static/style.css': 'static/style.css',
 }
