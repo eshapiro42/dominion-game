@@ -1,22 +1,27 @@
+import eventlet
+import flask_socketio
 import random
 import string
-import time
+from flask import Flask, request, send_from_directory
 from dominion.expansions import IntrigueExpansion, ProsperityExpansion
 from dominion.game import Game
 from dominion.interactions import NetworkedCLIInteraction, BrowserInteraction, AutoInteraction
-from socketio import Server, WSGIApp
 
 
-# socketio = Server(async_mode='eventlet', async_handlers=True, cors_allowed_origins='*')
-socketio = Server(async_mode='eventlet', async_handlers=True)
+eventlet.monkey_patch()
+app = Flask(__name__)
+app.config.from_object("config.Config")
+socketio = flask_socketio.SocketIO(app)
 
-static_files = {
-    '/': 'static/index.html',
-    '/static/client.js': 'static/client.js',
-    # '/static/style.css': 'static/style.css',
-}
 
-app = WSGIApp(socketio, static_files=static_files)
+@app.route("/")
+def base():
+    return send_from_directory("static", "index.html")
+
+@app.route("/<path:path>")
+def home(path):
+    return send_from_directory("static", path)
+
 
 # Global dictionary of games, indexed by room ID
 games = {}
@@ -29,7 +34,7 @@ cpus = {}
 
 
 @socketio.on('join room')
-def join_room(sid, data):
+def join_room(data):
     username = data['username']
     room = data['room']
     try:
@@ -38,7 +43,8 @@ def join_room(sid, data):
     except KeyError:
         interaction_class = NetworkedCLIInteraction
     # Add the user to the room
-    socketio.enter_room(sid, room)
+    flask_socketio.join_room(room)
+    sid = request.sid
     sids[sid] = (room, data)
     try:
         # Add the player to the game
@@ -55,7 +61,7 @@ def join_room(sid, data):
         return False
 
 @socketio.on('create room')
-def create_room(sid, data):
+def create_room(data):
     username = data['username']
     try:
         if data['client_type'] == 'browser':
@@ -68,7 +74,8 @@ def create_room(sid, data):
     while room in games:
         room = ''.join(random.choice(characters) for i in range(4))
     # Add the user to the room
-    socketio.enter_room(sid, room)
+    flask_socketio.join_room(room)
+    sid = request.sid
     sids[sid] = (room, data)
     # Create the game object
     game = Game(socketio=socketio, room=room)
@@ -80,7 +87,7 @@ def create_room(sid, data):
     return room # This activates the client's set_room() callback
 
 @socketio.on('add cpu')
-def add_cpu(sid, data):
+def add_cpu(data):
     room = data['room']
     # Add the CPU to the global dictionary of CPUs
     if room not in cpus:
@@ -99,7 +106,7 @@ def add_cpu(sid, data):
         socketio.emit('game startable', room=room)
 
 @socketio.on('start game')
-def start_game(sid, data):
+def start_game(data):
     username = data['username']
     room = data['room']
     intrigue = data['intrigue']
@@ -124,23 +131,23 @@ def start_game(sid, data):
     game.start()
 
 @socketio.on('message')
-def send_message(sid, data):
+def send_message(data):
     username = data['username']
     room = data['room']
     message = data['message']
     socketio.send(f'{username}: {message}\n', room=f'{room}_message_board')
 
-@socketio.event
-def disconnect(sid):
+@socketio.on("disconnect")
+def disconnect():
     try:
+        sid = request.sid
         room, data = sids[sid]
         username = data['username']
-        socketio.leave_room(sid, room)
+        flask_socketio.leave_room(room)
         socketio.send(f'{username} has left the room.\n', room=room)
     except KeyError:
         pass
 
 
 if __name__ == '__main__':
-    import eventlet
-    eventlet.wsgi.server(eventlet.listen(('0.0.0.0', 5000)), app)
+    socketio.run(app, host="0.0.0.0", port=5000)

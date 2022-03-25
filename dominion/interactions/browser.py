@@ -1,6 +1,6 @@
 import inspect
 import prettytable
-from copy import deepcopy
+from threading import Event
 from ..cards import cards
 from .interaction import Interaction
 
@@ -8,7 +8,23 @@ from .interaction import Interaction
 
 class BrowserInteraction(Interaction):
     def enter_choice(self, prompt):
-        return self.socketio.call('enter choice', {'prompt': prompt}, to=self.sid, timeout=None)
+        event = Event()
+        response = None
+
+        def ack(data):
+            nonlocal event
+            nonlocal response
+            response = data
+            event.set()
+        
+        self.socketio.emit(
+            'enter choice', {'prompt': prompt}, 
+            broadcast=False,
+            callback=ack,
+        )
+        event.wait()
+        print(response)
+        return response
 
     def send(self, message):
         message = f'\n{message}\n'
@@ -280,10 +296,24 @@ class BrowserInteraction(Interaction):
                 self.send('That is not a valid choice.')
 
     def choose_yes_or_no(self, prompt):
+        _prompt = f'{prompt}\nEnter choice (Yes/No): '
+        event = Event()
+        response = None
+
+        def ack(data):
+            nonlocal event
+            nonlocal response
+            response = data
+            event.set()
+        
         while True:
             try:
-                _prompt = f'{prompt}\nEnter choice (Yes/No): '
-                response = self.socketio.call('choose yes or no', {'prompt': _prompt}, to=self.sid, timeout=None)
+                self.socketio.emit(
+                    'choose yes or no', {'prompt': _prompt}, 
+                    broadcast=False,
+                    callback=ack,
+                )
+                event.wait()
                 if response.lower() in ['yes', 'y', 'no', 'n']:
                     break
             except AttributeError:
