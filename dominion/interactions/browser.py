@@ -19,7 +19,7 @@ class BrowserInteraction(Interaction):
         
         self.socketio.emit(
             'enter choice', {'prompt': prompt}, 
-            broadcast=False,
+            to=self.sid,
             callback=ack,
         )
         event.wait()
@@ -310,7 +310,7 @@ class BrowserInteraction(Interaction):
             try:
                 self.socketio.emit(
                     'choose yes or no', {'prompt': _prompt}, 
-                    broadcast=False,
+                    to=self.sid,
                     callback=ack,
                 )
                 event.wait()
