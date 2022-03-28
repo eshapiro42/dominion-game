@@ -15,7 +15,7 @@ class Courtyard(ActionCard):
 
     description = '\n'.join(
         [
-            '+3 Cards',
+            # '+3 Cards',
             'Put a card from your hand onto your deck.'
         ]
     )
@@ -43,7 +43,7 @@ class Lurker(ActionCard):
 
     description = '\n'.join(
         [
-            '+1 Action',
+            # '+1 Action',
             'Choose one: Trash an Action card from the Supply; or gain an Action card from the trash.'
         ]
     )
@@ -133,7 +133,7 @@ class Masquerade(ActionCard):
 
     description = '\n'.join(
         [
-            '+2 Cards',
+            # '+2 Cards',
             'Each player with any cards in hand passes one to the next such player to their left at once. Then you may trash a card from your hand.'
         ]
     )
@@ -181,7 +181,7 @@ class ShantyTown(ActionCard):
 
     description = '\n'.join(
         [
-            '+2 Actions',
+            # '+2 Actions',
             'Reveal your hand. If you have no Action cards in hand, +2 Cards.'
         ]
     )
@@ -246,7 +246,7 @@ class Swindler(AttackCard):
 
     description = '\n'.join(
         [
-            '+2 $',
+            # '+2 $',
             'Each other player trashes the top card of their deck and gains a card with the same cost that you choose.'
         ]
     )
@@ -288,8 +288,8 @@ class WishingWell(ActionCard):
 
     description = '\n'.join(
         [
-            '+1 Card',
-            '+1 Action',
+            # '+1 Card',
+            # '+1 Action',
             'Name a card, then reveal the top card of your deck. If you named it, put it into your hand.'
         ]
     )
@@ -326,7 +326,7 @@ class Baron(ActionCard):
 
     description = '\n'.join(
         [
-            '+1 Buy',
+            # '+1 Buy',
             "You may discard an Estate for +4 $. If you don't, gain an Estate."
         ]
     )
@@ -355,8 +355,8 @@ class Bridge(ActionCard):
 
     description = '\n'.join(
         [
-            '+1 Buy',
-            '+1 $',
+            # '+1 Buy',
+            # '+1 $',
             'This turn, cards (everywhere) cost 1 $ less, but not less than 0 $.'
         ]
     )
@@ -379,7 +379,7 @@ class Conspirator(ActionCard):
 
     description = '\n'.join(
         [
-            '+2 $',
+            # '+2 $',
             "If you've played 3 or more Actions this turn (counting this), +1 Card and +1 Action."
         ]
     )
@@ -406,7 +406,7 @@ class Diplomat(ReactionCard):
 
     description = '\n'.join(
         [
-            '+2 Cards',
+            # '+2 Cards',
             'If you have 5 or fewer cards in hand (after drawing), +2 Actions.',
             'When another player plays an Attack card, you may first reveal this from a hand of 5 or more cards, to draw 2 cards then discard 3.'
         ]
@@ -480,8 +480,8 @@ class Mill(ActionCard, VictoryCard):
 
     description = '\n'.join(
         [
-            '+1 Card',
-            '+1 Action',
+            # '+1 Card',
+            # '+1 Action',
             'You may discard 2 cards, for +2 $',
             '1 victory point'
         ]
@@ -516,8 +516,8 @@ class MiningVillage(ActionCard):
 
     description = '\n'.join(
         [
-            '+1 Card',
-            '+2 Actions',
+            # '+1 Card',
+            # '+2 Actions',
             'You may trash this for +2 $.'
         ]
     )
@@ -542,8 +542,8 @@ class SecretPassage(ActionCard):
 
     description = '\n'.join(
         [
-            '+2 Cards',
-            '+1 Action',
+            # '+2 Cards',
+            # '+1 Action',
             'Take a card from your hand and put it anywhere in your deck.'
         ]
     )
@@ -642,7 +642,7 @@ class Minion(AttackCard):
 
     description = '\n'.join(
         [
-            '+1 Action',
+            # '+1 Action',
             'Choose one: +2 $; or discard your hand, +4 Cards, and each other player with at least 5 cards in hand discards their hand and draws 4 cards.'
         ]
     )
@@ -690,7 +690,7 @@ class Patrol(ActionCard):
 
     description = '\n'.join(
         [
-            '+3 Cards',
+            # '+3 Cards',
             'Reveal the top 4 cards of your deck. Put the Victory cards and Curses into your hand. Put the rest back in any order.'
         ]
     )
@@ -785,7 +785,7 @@ class Torturer(AttackCard):
 
     description = '\n'.join(
         [
-            '+3 Cards',
+            # '+3 Cards',
             "Each other player either discards 2 cards or gains a Curse to their hand, their choice. (They may pick an option they can't do)."
         ]
     )
@@ -858,8 +858,8 @@ class Upgrade(ActionCard):
 
     description = '\n'.join(
         [
-            '+1 Card',
-            '+1 Action',
+            # '+1 Card',
+            # '+1 Action',
             'Trash a card from your hand. Gain a card costing exactly 1 $ more than it.'
         ]
     )

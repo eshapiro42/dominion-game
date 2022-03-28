@@ -16,11 +16,11 @@ socketio = flask_socketio.SocketIO(app)
 
 @app.route("/")
 def base():
-    return send_from_directory("static", "index.html")
+    return send_from_directory("client/public", "index.html")
 
 @app.route("/<path:path>")
 def home(path):
-    return send_from_directory("static", path)
+    return send_from_directory("client/public", path)
 
 
 # Global dictionary of games, indexed by room ID

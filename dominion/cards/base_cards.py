@@ -86,7 +86,7 @@ class Cellar(ActionCard):
 
     description = '\n'.join(
         [
-            '+1 Action',
+            # '+1 Action',
             'Discard any number of cards, then draw that many.'
         ]
     )
@@ -141,7 +141,7 @@ class Moat(ReactionCard):
 
     description = '\n'.join(
         [
-            '+2 Cards',
+            # '+2 Cards',
             'When another player plays an Attack card, you may first reveal this from your hand, to be unaffected by it.'
         ]
     )
@@ -170,8 +170,8 @@ class Harbinger(ActionCard):
 
     description = '\n'.join(
         [
-            '+1 Card',
-            '+1 Action',
+            # '+1 Card',
+            # '+1 Action',
             'Look through your discard pile. You may put a card from it onto your deck.'
         ]
     )
@@ -197,8 +197,8 @@ class Merchant(ActionCard):
 
     description = '\n'.join(
         [
-            '+1 Card',
-            '+1 Action',
+            # '+1 Card',
+            # '+1 Action',
             'The first time you play a Silver this turn, +1 $.'
         ]
     )
@@ -231,7 +231,7 @@ class Vassal(ActionCard):
 
     description = '\n'.join(
         [
-            '+2 $',
+            # '+2 $',
             "Discard the top card of your deck. If it's an Action card, you may play it."
         ]
     )
@@ -262,8 +262,8 @@ class Village(ActionCard):
 
     description = '\n'.join(
         [
-            '+1 Card',
-            '+2 Actions'
+            # '+1 Card',
+            # '+2 Actions'
         ]
     )
     
@@ -353,7 +353,7 @@ class Militia(AttackCard):
 
     description = '\n'.join(
         [
-            '+2 $',
+            # '+2 $',
             'Each other player discards down to 3 cards in hand.'
         ]
     )
@@ -406,9 +406,9 @@ class Poacher(ActionCard):
 
     description = '\n'.join(
         [
-            '+1 Card',
-            '+1 Action',
-            '+1 $',
+            # '+1 Card',
+            # '+1 Action',
+            # '+1 $',
             'Discard a card per empty Supply pile.'
         ]
     )
@@ -457,7 +457,11 @@ class Smithy(ActionCard):
     types = [CardType.ACTION]
     image_path = ''
 
-    description = '+3 Cards'
+    description = '\n'.join(
+        [
+            # '+3 Cards'
+        ]
+    )
 
     extra_cards = 3
     extra_actions = 0
@@ -569,8 +573,8 @@ class CouncilRoom(ActionCard):
 
     description = '\n'.join(
         [
-            '+4 Cards',
-            '+1 Buy',
+            # '+4 Cards',
+            # '+1 Buy',
             'Each other player draws a card.'
         ]
     )
@@ -595,9 +599,9 @@ class Festival(ActionCard):
 
     description = '\n'.join(
         [
-            '+2 Actions',
-            '+1 Buy',
-            '+2 $'
+            # '+2 Actions',
+            # '+1 Buy',
+            # '+2 $'
         ]
     )
 
@@ -618,8 +622,8 @@ class Laboratory(ActionCard):
 
     description = '\n'.join(
         [
-            '+2 Cards',
-            '+1 Action',
+            # '+2 Cards',
+            # '+1 Action',
         ]
     )
 
@@ -675,10 +679,10 @@ class Market(ActionCard):
 
     description = '\n'.join(
         [
-            '+1 Card',
-            '+1 Action',
-            '+1 Buy',
-            '+1 $'
+            # '+1 Card',
+            # '+1 Action',
+            # '+1 Buy',
+            # '+1 $'
         ]
     )
 
@@ -725,8 +729,8 @@ class Sentry(ActionCard):
 
     description = '\n'.join(
         [
-            '+1 Card',
-            '+1 Action',
+            # '+1 Card',
+            # '+1 Action',
             'Look at the top 2 cards of your deck. Trash and/or discard any number of them. Put the rest back on top in any order.'
         ]
     )
@@ -784,7 +788,7 @@ class Witch(AttackCard):
 
     description = '\n'.join(
         [
-            '+2 Cards',
+            # '+2 Cards',
             'Each other player gains a Curse.'
         ]
     )
@@ -839,7 +843,7 @@ class Chancellor(ActionCard):
 
     description = '\n'.join(
         [
-            '+2 $',
+            # '+2 $',
             'You may immediately put your deck into your discard pile.'
         ]
     )
@@ -864,8 +868,8 @@ class Woodcutter(ActionCard):
 
     description = '\n'.join(
         [
-            '+1 Buy',
-            '+2 $'
+            # '+1 Buy',
+            # '+2 $'
         ]
     )
 
@@ -909,8 +913,8 @@ class Spy(AttackCard):
 
     description = '\n'.join(
         [
-            '+1 Card',
-            '+1 Action',
+            # '+1 Card',
+            # '+1 Action',
             'Each player (including you) reveals the top card of his deck and either discards it or puts it back, your choice.'
         ]
     )

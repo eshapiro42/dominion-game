@@ -1,6 +1,9 @@
 from abc import ABCMeta, abstractmethod
 from enum import Enum, auto
-from ..grammar import a
+from ..grammar import a, s
+
+
+LOWEST_ID = 0
 
 
 class CardType(Enum):
@@ -32,7 +35,10 @@ class Card(metaclass=ABCMeta):
     description = ''
 
     def __init__(self, owner=None):
+        global LOWEST_ID
         self._owner = owner
+        self.id = LOWEST_ID
+        LOWEST_ID += 1
 
     @property
     def owner(self):
@@ -64,6 +70,30 @@ class Card(metaclass=ABCMeta):
     @abstractmethod
     def image_path(self):
         pass
+
+    @property
+    def json(self):
+        extra_cards = self.extra_cards if hasattr(self, 'extra_cards') else 0
+        extra_actions = self.extra_actions if hasattr(self, 'extra_actions') else 0
+        extra_buys = self.extra_buys if hasattr(self, 'extra_buys') else 0
+        extra_coppers = self.extra_coppers if hasattr(self, 'extra_coppers') else 0
+        effects = []
+        if extra_cards:
+            effects.append(f"+{s(extra_cards, 'Card')}")
+        if extra_actions:
+            effects.append(f"+{s(extra_actions, 'Action')}")
+        if extra_buys:
+            effects.append(f"+{s(extra_buys, 'Buy')}")
+        if extra_coppers:
+            effects.append(f"+{extra_coppers} $")
+        return {
+            'name': self.name,
+            'effects': effects,
+            'description': self.description.replace("\n", "<br>"),
+            'cost': self.cost,
+            'type': ', '.join([t.name.capitalize() for t in self.types]),
+            'id': self.id,
+        }
 
     def __repr__(self):
         return self.name

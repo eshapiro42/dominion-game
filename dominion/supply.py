@@ -154,6 +154,19 @@ class SupplyStack(metaclass=ABCMeta):
     def is_empty(self):
         pass
 
+    @property
+    def json(self):
+        quantity = "inf" if self.cards_remaining == inf else self.cards_remaining
+        card_stack_json = self.example.json
+        card_stack_json["quantity"] = quantity
+        print(card_stack_json)
+        return card_stack_json
+
+    @property
+    def example(self):
+        # An orphaned example card that data can be pulled from
+        return self.card_class()
+
 
 class InfiniteSupplyStack(SupplyStack):
     def __init__(self, card_class):

@@ -9,13 +9,6 @@ var startable = false;
 var choice = null;
 var last_message = null;
 
-class Option {
-    constructor(number, option) 
-    {
-        this.number = number;
-        this.option = option;
-    }
-}
 
 function append_message(message) {
     // Add the "light" class to the last child of the message board

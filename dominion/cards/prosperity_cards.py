@@ -89,7 +89,7 @@ class TradeRoute(ActionCard):
 
     description = '\n'.join(
         [
-            '+1 Buy',
+            # '+1 Buy',
             'Trash a card from your hand.',
             '+1 $ per Coin token on the Trade Route mat.'
         ]
@@ -184,7 +184,7 @@ class Bishop(ActionCard):
 
     description = '\n'.join(
         [
-            '+1 $',
+            # '+1 $',
             '+1 Victory token',
             'Trash a card from your hand. +1 Victory token per 2 $ it costs (round down). Each other player may trash a card from their hand.'
         ]
@@ -225,7 +225,7 @@ class Monument(ActionCard):
 
     description = '\n'.join(
         [
-            '+2 $',
+            # '+2 $',
             '+1 Victory token',
         ]
     )
@@ -302,9 +302,9 @@ class WorkersVillage(ActionCard):
 
     description = '\n'.join(
         [
-            '+1 Card',
-            '+2 Actions',
-            '+1 Buy'
+            # '+1 Card',
+            # '+2 Actions',
+            # '+1 Buy'
         ]
     )
 
@@ -325,8 +325,8 @@ class City(ActionCard):
 
     description = '\n'.join(
         [
-            '+1 Card',
-            '+2 Actions',
+            # '+1 Card',
+            # '+2 Actions',
             'If there are one or more empty Supply piles, +1 Card. If there are two or more, +1 Buy and +1 $.'
         ]
     )
@@ -357,7 +357,7 @@ class Contraband(TreasureCard):
     description = '\n'.join(
         [
             '3 $',
-            '+1 Buy',
+            # '+1 Buy',
             "When you play this, the player to your left names a card. You can't buy that card this turn."
         ]
     )
@@ -452,7 +452,7 @@ class Mountebank(AttackCard):
 
     description = '\n'.join(
         [
-            '+2 $',
+            # '+2 $',
             "Each other player may discard a Curse. If they don't, they gain a Curse and a Copper.",
         ]
     )
@@ -487,7 +487,7 @@ class Rabble(AttackCard):
 
     description = '\n'.join(
         [
-            '+3 Cards',
+            # '+3 Cards',
             'Each other player reveals the top 3 cards of their deck, discards the Actions and Treasures, and puts the rest back in any order they choose.',
         ]
     )
@@ -593,7 +593,7 @@ class Vault(ActionCard):
 
     description = '\n'.join(
         [
-            '+2 Cards',
+            # '+2 Cards',
             'Discard any number of cards for +1 $ each.',
             'Each other player may discard 2 cards, to draw a card.'
         ]
@@ -680,8 +680,8 @@ class Goons(AttackCard):
 
     description = '\n'.join(
         [
-            '+1 Buy',
-            '+2 $',
+            # '+1 Buy',
+            # '+2 $',
             'Each other player discards down to 3 cards in hand.',
             'While this is in play, when you buy a card, +1 Victory token.'
         ]
@@ -725,10 +725,10 @@ class GrandMarket(ActionCard):
 
     description = '\n'.join(
         [
-            '+1 Card',
-            '+1 Action',
-            '+1 Buy',
-            '+2 $',
+            # '+1 Card',
+            # '+1 Action',
+            # '+1 Buy',
+            # '+2 $',
             "You can't buy this if you have any Coppers in play."
         ]
     )
@@ -903,9 +903,9 @@ class Peddler(ActionCard):
 
     description = '\n'.join(
         [
-            '+1 Card',
-            '+1 Action',
-            '+1 $',
+            # '+1 Card',
+            # '+1 Action',
+            # '+1 $',
             'During your Buy phase, this costs 2 $ less per Action card you have in play, but not less than 0 $.'
         ]
     )

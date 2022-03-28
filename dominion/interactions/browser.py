@@ -5,7 +5,6 @@ from ..cards import cards
 from .interaction import Interaction
 
 
-
 class BrowserInteraction(Interaction):
     def enter_choice(self, prompt):
         event = Event()
@@ -30,27 +29,17 @@ class BrowserInteraction(Interaction):
         message = f'\n{message}\n'
         self.socketio.send(message, to=self.sid)
 
-    def get_supply_string(self):
-        supply_table = self.supply.get_table()
-        while True:
-            try:
-                return supply_table.get_html_string()
-            except TypeError: 
-                pass
+    def _get_supply_data(self):
+        return {
+            "cards": [card_stack.json for card_stack in self.supply.card_stacks.values()],
+        }
 
-    def get_hand_string(self):
-        hand_table = prettytable.PrettyTable(hrules=prettytable.ALL)
-        hand_table.field_names = ['Number', 'Card', 'Type', 'Description']
-        for idx, card in enumerate(self.hand):
-            types = ', '.join([type.name.lower().capitalize() for type in card.types])
-            hand_table.add_row([idx + 1, card.name, types, card.description])
-        while True:
-            try:
-                return hand_table.get_html_string()
-            except TypeError:
-                pass
+    def _get_hand_data(self):
+        return {
+            "cards": [card.json for card in self.hand],
+        }        
 
-    def get_discard_pile_string(self):
+    def _get_discard_pile_string(self):
         discard_table = prettytable.PrettyTable(hrules=prettytable.ALL)
         discard_table.field_names = ['Number', 'Card', 'Type', 'Description']
         for idx, card in enumerate(self.discard_pile):
@@ -63,15 +52,21 @@ class BrowserInteraction(Interaction):
                 pass
 
     def display_supply(self):
-        supply_string = f'Supply:\n{self.get_supply_string()}'
-        self.send(supply_string)
+        self.socketio.emit(
+            "display supply",
+            self._get_supply_data(),
+            to=self.sid,
+        )
 
     def display_hand(self):
-        hand_string = f'Your hand:\n{self.get_hand_string()}'
-        self.send(hand_string)
+        self.socketio.emit(
+            "display hand",
+            self._get_hand_data(),
+            to=self.sid,
+        )
 
     def display_discard_pile(self):
-        discard_string = f'Your discard pile:\n{self.get_discard_pile_string()}'
+        discard_string = f'Your discard pile:\n{self._get_discard_pile_string()}'
         self.send(discard_string)
 
     def choose_card_from_hand(self, prompt, force):
@@ -80,7 +75,7 @@ class BrowserInteraction(Interaction):
             return None
         while True:
             try:
-                _prompt = f'{prompt}\n{self.get_hand_string()}'
+                _prompt = f'{prompt}\n{self._get_hand_string()}'
                 if force:
                     _prompt += f'\nEnter choice 1-{len(self.hand)}: '
                     card_num = self.enter_choice(_prompt)
@@ -154,7 +149,7 @@ class BrowserInteraction(Interaction):
             return None
         while True:
             try:
-                _prompt = self.get_discard_pile_string()
+                _prompt = self._get_discard_pile_string()
                 if force:
                     _prompt += f'\n{prompt}\nEnter choice 1-{len(self.discard_pile)}: '
                     card_num = self.enter_choice(_prompt)
@@ -174,13 +169,56 @@ class BrowserInteraction(Interaction):
             except (IndexError, ValueError):
                 self.send('That is not a valid choice.')        
 
+    # def choose_card_class_from_supply(self, prompt, max_cost, force, invalid_card_classes=None, exact_cost=False):
+    #     if invalid_card_classes is None:
+    #         invalid_card_classes = []
+    #     while True:
+    #         try:
+    #             supply_table = prettytable.PrettyTable(hrules=prettytable.ALL)
+    #             supply_table.field_names = ['Number', 'Card', 'Cost', 'Type', 'Quantity', 'Description']
+    #             # Only cards you can afford can be chosen (and with non-zero quantity)
+    #             stacks = self.supply.card_stacks
+    #             buyable_card_stacks = [card_class for card_class in stacks if stacks[card_class].modified_cost <= max_cost and card_class not in invalid_card_classes and stacks[card_class].cards_remaining > 0]
+    #             if exact_cost:
+    #                 buyable_card_stacks = [card_class for card_class in buyable_card_stacks if stacks[card_class].modified_cost == max_cost]
+    #             if not buyable_card_stacks:
+    #                 self.send('There are no cards in the Supply that you can buy.')
+    #                 return None
+    #             # for idx, card_class in enumerate(sorted(buyable_card_stacks, key=lambda x: (x.types[0].value, x.cost))):
+    #             for idx, card_class in enumerate(buyable_card_stacks):
+    #                 types = ', '.join([type.name.lower().capitalize() for type in card_class.types])
+    #                 card_quantity = stacks[card_class].cards_remaining
+    #                 supply_table.add_row([idx + 1, card_class.name, stacks[card_class].modified_cost, types, card_quantity, card_class.description])
+    #             while True:
+    #                 try:
+    #                     _prompt = f'{prompt}\n{supply_table.get_html_string()}'
+    #                     break
+    #                 except TypeError:
+    #                     pass
+    #             if force:
+    #                 _prompt += f'\nEnter choice 1-{len(buyable_card_stacks)}: '
+    #                 card_num = self.enter_choice(_prompt)
+    #                 if card_num < 1:
+    #                     raise ValueError
+    #                 card_to_buy = list(buyable_card_stacks)[card_num - 1]
+    #             else:
+    #                 _prompt += f'\nEnter choice 1-{len(buyable_card_stacks)} (0 to skip): '
+    #                 card_num = self.enter_choice(_prompt)
+    #                 if card_num < 0:
+    #                     raise ValueError
+    #                 elif card_num == 0:
+    #                     return None
+    #                 else:
+    #                     card_to_buy = list(buyable_card_stacks)[card_num - 1]
+    #             return card_to_buy
+    #         except (IndexError, ValueError, TypeError):
+    #             self.send('That is not a valid choice.')
+
     def choose_card_class_from_supply(self, prompt, max_cost, force, invalid_card_classes=None, exact_cost=False):
         if invalid_card_classes is None:
             invalid_card_classes = []
         while True:
             try:
-                supply_table = prettytable.PrettyTable(hrules=prettytable.ALL)
-                supply_table.field_names = ['Number', 'Card', 'Cost', 'Type', 'Quantity', 'Description']
                 # Only cards you can afford can be chosen (and with non-zero quantity)
                 stacks = self.supply.card_stacks
                 buyable_card_stacks = [card_class for card_class in stacks if stacks[card_class].modified_cost <= max_cost and card_class not in invalid_card_classes and stacks[card_class].cards_remaining > 0]
@@ -189,26 +227,15 @@ class BrowserInteraction(Interaction):
                 if not buyable_card_stacks:
                     self.send('There are no cards in the Supply that you can buy.')
                     return None
-                # for idx, card_class in enumerate(sorted(buyable_card_stacks, key=lambda x: (x.types[0].value, x.cost))):
-                for idx, card_class in enumerate(buyable_card_stacks):
-                    types = ', '.join([type.name.lower().capitalize() for type in card_class.types])
-                    card_quantity = stacks[card_class].cards_remaining
-                    supply_table.add_row([idx + 1, card_class.name, stacks[card_class].modified_cost, types, card_quantity, card_class.description])
-                while True:
-                    try:
-                        _prompt = f'{prompt}\n{supply_table.get_html_string()}'
-                        break
-                    except TypeError:
-                        pass
                 if force:
                     _prompt += f'\nEnter choice 1-{len(buyable_card_stacks)}: '
-                    card_num = self.enter_choice(_prompt)
+                    card_num = self.enter_choice(prompt)
                     if card_num < 1:
                         raise ValueError
                     card_to_buy = list(buyable_card_stacks)[card_num - 1]
                 else:
                     _prompt += f'\nEnter choice 1-{len(buyable_card_stacks)} (0 to skip): '
-                    card_num = self.enter_choice(_prompt)
+                    card_num = self.enter_choice(prompt)
                     if card_num < 0:
                         raise ValueError
                     elif card_num == 0:
@@ -217,7 +244,7 @@ class BrowserInteraction(Interaction):
                         card_to_buy = list(buyable_card_stacks)[card_num - 1]
                 return card_to_buy
             except (IndexError, ValueError, TypeError):
-                self.send('That is not a valid choice.')        
+                self.send('That is not a valid choice.')   
 
     def choose_specific_card_type_from_supply(self, prompt, max_cost, card_type, force):
         while True:
