@@ -5,7 +5,58 @@
     export let gameStarted;
 
     let cards = [];
+    let waitingForSelection = {
+        value: false,
+        handler: null,
+        callback: null,
+        type: "",
+        maxCards: null,
+        maxCost: null,
+        force: false,
+        prompt: null,
+    }
 
+    function handleSelected(event) {
+        if (waitingForSelection.value) {
+            var selectedCards = event.detail.selectedCards;
+            if (waitingForSelection.handler(selectedCards)) {
+                waitingForSelection.value = false;
+                waitingForSelection.handler = null;
+                waitingForSelection.callback = null;
+                waitingForSelection.type = "";
+                waitingForSelection.maxCards = null;
+                waitingForSelection.maxCost = null;
+                waitingForSelection.force = false;
+                waitingForSelection.prompt = false;
+            }
+        }
+    }
+
+    function handleTreasuresSelected(selectedCards) {
+        if (selectedCards.length == 0) {
+            var confirmed = confirm("Are you sure you want to skip selecting Treasures from your hand?");
+            if (!confirmed) {
+                return false;
+            }
+        }
+        waitingForSelection.callback(selectedCards);
+        return true;
+    }
+
+    function handleCardTypeSelected(selectedCards) {
+        if (selectedCards.length == 0) {
+            if (waitingForSelection.force) {
+                alert("You must make a selection.");
+                return false;
+            }
+            else {
+                waitingForSelection.callback(null);
+                return true;
+            }
+        }
+        waitingForSelection.callback(selectedCards[0]);
+        return true;
+    }
 
     socket.on(
         "display hand", 
@@ -13,6 +64,30 @@
             cards = data.cards;
         },
     );
+
+    socket.on(
+        "choose treasures from hand",
+        (data, callback) => {
+            waitingForSelection.value = true;
+            waitingForSelection.callback = callback;
+            waitingForSelection.prompt = data.prompt;
+            waitingForSelection.handler = handleTreasuresSelected;
+            waitingForSelection.type = "treasure";
+        }
+    )
+
+    socket.on(
+        "choose specific card type from hand",
+        (data, callback) => {
+            waitingForSelection.value = true;
+            waitingForSelection.callback = callback;
+            waitingForSelection.prompt = data.prompt;
+            waitingForSelection.handler = handleCardTypeSelected;
+            waitingForSelection.type = data.card_type.toLowerCase();
+            console.log(data.card_type)
+            waitingForSelection.maxCards = 1;
+        }
+    )
 </script>
 
 {#if gameStarted}
@@ -20,10 +95,11 @@
         <CardCarousel
             title="Your Hand"
             {cards}
+            {waitingForSelection}
+            on:selected={handleSelected}
         />
     </main>
 {/if}
 
 <style>
-    
 </style>

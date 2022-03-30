@@ -195,7 +195,7 @@ class Game:
         '''
         for player in self.players:
             player.interactions.send(message)
-
+        
     @property
     def ended(self):
         '''

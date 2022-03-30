@@ -1,9 +1,17 @@
 <script>
+    import {createEventDispatcher} from "svelte";
+
+    const dispatch = createEventDispatcher();
+
     import Card from "./card.svelte";
+    import SelectionPrompt from "./selection_prompt.svelte";
 
     export let title;
+    export let waitingForSelection;
 
-    export let cards = [ // Default cards are only present for easy prototyping
+    export let cards = [ 
+        // This is the "source of truth" for all cards in the front-end
+        // Default cards are only present for easy prototyping
         {
             name: "Copper",
             effects: "",
@@ -62,21 +70,13 @@
         },
     ]
 
-    export function addCard(card_data) {
-        cards = cards.concat(card_data)
-    }
-
-    let cardTitle = "";
-    let cardDescription = "";
-    let cardCost = "";
-    let cardType = "";
-    // let highestId = 0;
-    let sortByProperty = "name";
+    let sortByProperty = "type";
+    let selectedCardIds = [];
 
     let sortByOptions = [
-        {text: "Name", property: "name"},
         {text: "Type", property: "type"},
         {text: "Cost", property: "cost"},
+        {text: "Name", property: "name"},
     ]
 
     $: sortedCards = cards.sort((a, b) => {
@@ -91,64 +91,112 @@
             }
         }
     );
+
+    $: numSelected = selectedCardIds.length;
+
+    $: active = waitingForSelection.value;
+
+    function handleClicked(event) {
+        var cardSelected = event.detail.selected;
+        var cardId = event.detail.id;
+        if (cardSelected) {
+            selectedCardIds = selectedCardIds.concat(cardId);
+        }
+        else {
+            selectedCardIds = selectedCardIds.filter(
+                (selectedCardId) => {
+                    return selectedCardId != cardId;
+                }
+            );
+        }
+    }
+
+    function sendSelection() {
+        var selectedCards = cards.filter(
+            (card) => {
+                return selectedCardIds.some(
+                    (selectedCardId) => {
+                        return card.id == selectedCardId;
+                    }
+                );
+            }
+        );
+        dispatch(
+            "selected",
+            {
+                selectedCards: selectedCards,
+            }
+        );
+        selectedCardIds = [];
+    }
 </script>
 
-<main>
+<main
+    class="container"
+    class:active    
+>
     <div class="title">
         <h4>{title}</h4>
+        <div class="sort">
+            <p>Sort By<p>
+            <select bind:value={sortByProperty}>
+                {#each sortByOptions as option}
+                    <option value={option.property}>
+                        {option.text}
+                    </option>
+                {/each}
+            </select>
+        </div>
     </div>
 
-    <div class="sort">
-        <p>Sort By<p>
-        <select bind:value={sortByProperty}>
-            {#each sortByOptions as option}
-                <option value={option.property}>
-                    {option.text}
-                </option>
-            {/each}
-        </select>
-    </div>
+    {#if waitingForSelection.value}
+        <div class="selectionPrompt">
+            <SelectionPrompt 
+                {waitingForSelection}
+                on:click={sendSelection}
+            />
+        </div>
+    {/if}
 
-    <div class="container">
+    <div class="cards">
         {#each sortedCards as card (card.id)}
-            <Card {...card}/>
+            <Card
+                {...card}
+                {waitingForSelection}
+                {numSelected}
+                on:clicked={handleClicked}
+            />
         {:else}
             <div class="text">
                 <p>Nothing here!</p>
             </div>
         {/each}
     </div>
-
-    <!-- <div class="helper">
-        <input placeholder="Title" bind:value={cardTitle}/>
-        <input placeholder="Description" bind:value={cardDescription}/>
-        <input placeholder="Cost" bind:value={cardCost}/>
-        <input placeholder="Type" bind:value={cardType}/>
-        <button on:click= {
-            () => {
-                addCard({
-                    name: cardTitle,
-                    effects: "",
-                    description: cardDescription,
-                    cost: cardCost,
-                    type: cardType,
-                    id: highestId,
-                });
-                highestId += 1;
-            }
-        }>Add Card</button>
-    </div> -->
 </main>
 
 <style lang="scss">
     $margin: 5px;
 
+    @keyframes blinking {
+        0%, 30%, 70%, 100% {
+            background-color: #fff;
+        }
+        50% {
+            background-color: rgb(250, 226, 226);
+        }
+    }
+
     main {
         margin-top: 20px;
+        border: 1px solid slategrey;
+    }
+
+    .active {
+        animation: blinking 3s infinite;
     }
 
     .sort {
-        margin-top: 20px;
+        margin-top: 25px;
         display: flex;
         justify-content: center;
         align-items: baseline;
@@ -168,9 +216,19 @@
         width: 100%;
         height: 100%;
         text-align: center;
+        margin-top: 25px;
     }
 
-    .container {
+    .selectionPrompt {
+        flex-basis: 100%;
+        display: flex;
+        overflow-x: auto;
+        flex-wrap: nowrap;
+        padding: 10px;
+        text-align: center;
+    }
+
+    .cards {
         flex-basis: 100%;
         display: flex;
         overflow-x: auto;
@@ -180,9 +238,5 @@
         padding-bottom: 10px;
         padding-top: 25px;
         text-align: center;
-    }
-
-    .helper {
-        margin-top: 20px;
     }
 </style>

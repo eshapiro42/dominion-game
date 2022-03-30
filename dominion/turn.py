@@ -4,6 +4,7 @@ from collections import defaultdict
 from dataclasses import dataclass
 from .cards import cards, base_cards
 from .grammar import a, s
+from .interactions import BrowserInteraction
 
 
 class Turn:
@@ -235,19 +236,22 @@ class BuyPhase(Phase):
             if cards.CardType.TREASURE in card.types:
                 treasures_available.append(card)
         # Ask the player which Treasures they would like to play
-        treasures_to_play = []
-        while treasures_available:
-            options = ['Play all Treasures'] + treasures_available
-            prompt = f'Which Treasures would you like to play this turn?'
-            choice = self.player.interactions.choose_from_options(prompt, options, force=False)
-            if choice is None:
-                break
-            elif choice == 'Play all Treasures':
-                treasures_to_play += treasures_available
-                break
-            else:
-                treasures_available.remove(choice)
-                treasures_to_play.append(choice)
+        prompt = f'Which Treasures would you like to play this turn?'
+        if isinstance(self.player.interactions, BrowserInteraction):
+            treasures_to_play = self.player.interactions.choose_treasures_from_hand(prompt)
+        else:
+            treasures_to_play = []
+            while treasures_available:
+                options = ['Play all Treasures'] + treasures_available
+                choice = self.player.interactions.choose_from_options(prompt, options, force=False)
+                if choice is None:
+                    break
+                elif choice == 'Play all Treasures':
+                    treasures_to_play += treasures_available
+                    break
+                else:
+                    treasures_available.remove(choice)
+                    treasures_to_play.append(choice)
         for treasure in treasures_to_play:
             self.play_treasure(treasure)
         # Activate any pre-buy hooks registered to cards in the Supply

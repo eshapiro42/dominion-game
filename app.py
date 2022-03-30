@@ -1,4 +1,6 @@
 import eventlet
+eventlet.monkey_patch()
+
 import flask_socketio
 import random
 import string
@@ -8,7 +10,6 @@ from dominion.game import Game
 from dominion.interactions import NetworkedCLIInteraction, BrowserInteraction, AutoInteraction
 
 
-eventlet.monkey_patch()
 app = Flask(__name__)
 app.config.from_object("config.Config")
 socketio = flask_socketio.SocketIO(app)
