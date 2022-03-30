@@ -251,43 +251,33 @@ class BrowserInteraction(Interaction):
                     self.send('That is not a valid choice.')
 
     def choose_specific_card_type_from_supply(self, prompt, max_cost, card_type, force):
-        raise NotImplementedError()
-        while True:
-            try:
-                supply_table = prettytable.PrettyTable(hrules=prettytable.ALL)
-                supply_table.field_names = ['Number', 'Card', 'Cost', 'Type', 'Quantity', 'Description']
-                # Only cards you can afford can be chosen (and with non-zero quantity)
-                stacks = self.supply.card_stacks
-                buyable_card_stacks = [card_class for card_class in stacks if stacks[card_class].modified_cost <= max_cost and stacks[card_class].cards_remaining > 0 and card_type in card_class.types]
-                # for idx, card_class in enumerate(sorted(buyable_card_stacks, key=lambda x: (x.types[0].value, x.cost))):
-                for idx, card_class in enumerate(buyable_card_stacks):
-                    types = ', '.join([type.name.lower().capitalize() for type in card_class.types])
-                    card_quantity = stacks[card_class].cards_remaining
-                    supply_table.add_row([idx + 1, card_class.name, stacks[card_class].modified_cost, types, card_quantity, card_class.description])
-                while True:
-                    try:
-                        _prompt = f'{prompt}\n{supply_table.get_html_string()}'
-                        break
-                    except TypeError:
-                        pass
-                if force:
-                    _prompt += f'\nEnter choice 1-{len(buyable_card_stacks)}: '
-                    card_num = self._enter_choice(_prompt)
-                    if card_num < 1:
-                        raise ValueError
-                    card_to_buy = list(buyable_card_stacks)[card_num - 1]
-                else:
-                    _prompt += f'\nEnter choice 1-{len(buyable_card_stacks)} (0 to skip): '
-                    card_num = self._enter_choice(_prompt)
-                    if card_num < 0:
-                        raise ValueError
-                    elif card_num == 0:
+        with self.move_cards():
+            print("choose_specific_card_type_from_supply")
+            self.display_supply()
+            while True:
+                try:
+                    # Only cards you can afford can be chosen (and with non-zero quantity)
+                    stacks = self.supply.card_stacks
+                    buyable_card_stacks = [card_class for card_class in stacks if card_type in card_class.types and stacks[card_class].modified_cost <= max_cost and stacks[card_class].cards_remaining > 0]
+                    if not buyable_card_stacks:
+                        self.send('There are no cards in the Supply that you can buy.')
                         return None
-                    else:
-                        card_to_buy = list(buyable_card_stacks)[card_num - 1]
-                return card_to_buy
-            except (IndexError, ValueError):
-                self.send('That is not a valid choice.')    
+                    card_data = self._call(
+                        "choose specific card type from supply",
+                        {
+                            "prompt": prompt,
+                            "max_cost": max_cost,
+                            "card_type": card_type.name,
+                            "force": force,
+                        }
+                    )
+                    if card_data is None:
+                        return None
+                    for card_class, card_stack in self.supply.card_stacks.items():
+                        if card_data["name"] == card_stack.example.name:
+                            return card_class
+                except (IndexError, ValueError, TypeError):
+                    self.send('That is not a valid choice.')
 
     def choose_specific_card_type_from_trash(self, prompt, max_cost, card_type, force):
         raise NotImplementedError()

@@ -37,7 +37,7 @@
     $: renderedDescription = renderText(description);
 
     function clicked() {
-        if (waitingForSelection.value && type.toLowerCase().includes(waitingForSelection.type)) {
+        if (waitingForSelection.value && type.toLowerCase().includes(waitingForSelection.type.toLowerCase())) {
             if (
                 // Don't allow selection if the maximum number of cards is already selected (unselection is fine)
                 (!selected && waitingForSelection.maxCards != null && numSelected >= waitingForSelection.maxCards)

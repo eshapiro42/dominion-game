@@ -68,6 +68,20 @@
             waitingForSelection.force = data.force;
         }
     )
+
+    socket.on(
+        "choose specific card type from supply",
+        (data, callback) => {
+            waitingForSelection.value = true;
+            waitingForSelection.prompt = data.prompt;
+            waitingForSelection.handler = handleSupplyCardClassSelected;
+            waitingForSelection.callback = callback;
+            waitingForSelection.maxCards = 1;
+            waitingForSelection.maxCost = data.max_cost;
+            waitingForSelection.type = data.card_type;
+            waitingForSelection.force = data.force;
+        }
+    )
 </script>
 
 {#if gameStarted}
