@@ -140,6 +140,9 @@ class Supply:
 
 
 class SupplyStack(metaclass=ABCMeta):
+    def __init__(self):
+        self._example = self.card_class()
+
     @abstractmethod
     def draw(self):
         pass
@@ -158,6 +161,7 @@ class SupplyStack(metaclass=ABCMeta):
     def json(self):
         quantity = "inf" if self.cards_remaining == inf else self.cards_remaining
         card_stack_json = self.example.json
+        card_stack_json["cost"] = self.modified_cost
         card_stack_json["quantity"] = quantity
         print(card_stack_json)
         return card_stack_json
@@ -165,13 +169,14 @@ class SupplyStack(metaclass=ABCMeta):
     @property
     def example(self):
         # An orphaned example card that data can be pulled from
-        return self.card_class()
+        return self._example
 
 
 class InfiniteSupplyStack(SupplyStack):
     def __init__(self, card_class):
         self.card_class = card_class
         self._cards_remaining = inf
+        super().__init__()
 
     def draw(self):
         card = self.card_class()
@@ -192,6 +197,7 @@ class FiniteSupplyStack(SupplyStack):
         self.base_cost = card_class.cost
         self.modified_cost = card_class.cost
         self._cards_remaining = size
+        super().__init__()
 
     def draw(self):
         if not self.is_empty:

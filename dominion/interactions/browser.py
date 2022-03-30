@@ -2,7 +2,9 @@ import inspect
 import prettytable
 from contextlib import contextmanager
 from threading import Event
+
 from ..cards import cards
+from ..supply import FiniteSupplyStack
 from .interaction import Interaction
 
 
@@ -65,6 +67,7 @@ class BrowserInteraction(Interaction):
         }        
 
     def _get_discard_pile_string(self):
+        raise NotImplementedError()
         discard_table = prettytable.PrettyTable(hrules=prettytable.ALL)
         discard_table.field_names = ['Number', 'Card', 'Type', 'Description']
         for idx, card in enumerate(self.discard_pile):
@@ -98,6 +101,7 @@ class BrowserInteraction(Interaction):
         )
 
     def display_discard_pile(self):
+        raise NotImplementedError()
         discard_string = f'Your discard pile:\n{self._get_discard_pile_string()}'
         self.send(discard_string)
 
@@ -125,21 +129,22 @@ class BrowserInteraction(Interaction):
                     self.send('That is not a valid choice.')
 
     def choose_specific_card_class_from_hand(self, prompt, force, card_class):
-        if not any(isinstance(card, card_class) for card in self.hand):
-            self.send(f'There are no {card_class} cards in your hand.')
-            return None
-        # Find a card in the player's hand of the correct class
-        for card in self.hand:
-            if isinstance(card, card_class):
-                break
-        if force:
-            return card
-        else:
-            _prompt = f'{prompt}\nDo you want to choose a {card_class.name} from your hand?'
-            if self.choose_yes_or_no(_prompt):
+        with self.move_cards():
+            if not any(isinstance(card, card_class) for card in self.hand):
+                self.send(f'There are no {card_class} cards in your hand.')
+                return None
+            # Find a card in the player's hand of the correct class
+            for card in self.hand:
+                if isinstance(card, card_class):
+                    break
+            if force:
                 return card
             else:
-                return None
+                _prompt = f'{prompt}\nDo you want to choose a {card_class.name} from your hand?'
+                if self.choose_yes_or_no(_prompt):
+                    return card
+                else:
+                    return None
 
     def choose_specific_card_type_from_hand(self, prompt, card_type):
         with self.move_cards():
@@ -167,6 +172,7 @@ class BrowserInteraction(Interaction):
                     self.send('That is not a valid choice.')
 
     def choose_card_from_discard_pile(self, prompt, force):
+        raise NotImplementedError()
         if not self.discard_pile:
             self.send('There are no cards in your discard pile!')
             return None
@@ -245,6 +251,7 @@ class BrowserInteraction(Interaction):
                     self.send('That is not a valid choice.')
 
     def choose_specific_card_type_from_supply(self, prompt, max_cost, card_type, force):
+        raise NotImplementedError()
         while True:
             try:
                 supply_table = prettytable.PrettyTable(hrules=prettytable.ALL)
@@ -283,6 +290,7 @@ class BrowserInteraction(Interaction):
                 self.send('That is not a valid choice.')    
 
     def choose_specific_card_type_from_trash(self, prompt, max_cost, card_type, force):
+        raise NotImplementedError()
         while True:
             try:
                 trash_table = prettytable.PrettyTable(hrules=prettytable.ALL)
@@ -321,19 +329,18 @@ class BrowserInteraction(Interaction):
                 self.send('That is not a valid choice.')
 
     def choose_yes_or_no(self, prompt): 
-        with self.move_cards():
-            print("choose_yes_or_no")
-            while True:
-                try:
-                    response = self._call(
-                        "choose yes or no", 
-                        {
-                            "prompt": prompt,
-                        },
-                    )
-                    return response
-                except AttributeError:
-                    self.send(f'{response} is not a valid choice.')
+        print("choose_yes_or_no")
+        while True:
+            try:
+                response = self._call(
+                    "choose yes or no", 
+                    {
+                        "prompt": prompt,
+                    },
+                )
+                return response
+            except AttributeError:
+                self.send(f'{response} is not a valid choice.')
 
     def choose_from_range(self, prompt, minimum, maximum, force):
         options = list(range(minimum, maximum + 1))
@@ -356,6 +363,7 @@ class BrowserInteraction(Interaction):
                 self.send('That is not a valid choice.')
 
     def choose_from_options(self, prompt, options, force):
+        raise NotImplementedError()
         while True:
             options_table = prettytable.PrettyTable(hrules=prettytable.ALL)
             options_table.field_names = ['Number', 'Option']
