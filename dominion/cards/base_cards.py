@@ -854,7 +854,7 @@ class Chancellor(ActionCard):
     extra_coppers = 2
 
     def action(self):
-        prompt = f"Would you like to put your deck ({s(len(self.owner.deck), 'card')}) into your discard pile ({s(len(self.owner.discard_pile), 'card')}?"
+        prompt = f"Would you like to put your deck ({s(len(self.owner.deck), 'card')}) into your discard pile ({s(len(self.owner.discard_pile), 'card')})?"
         if self.interactions.choose_yes_or_no(prompt):
             self.game.broadcast(f'{self.owner} put their deck into their discard pile.')
             self.owner.deck.extend(self.owner.discard_pile)
