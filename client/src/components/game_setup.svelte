@@ -58,6 +58,11 @@
     socket.on("game startable", function(data) {
         gameStartable = true;
     });
+
+    socket.on("game started", function(data) {
+        dispatch("started");
+        shown = false;
+    })
 </script>
 
 {#if shown}
