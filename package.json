@@ -1,6 +1,5 @@
 {
     "scripts": {
-        "build": "rollup -c",
-        "postinstall": "cd client && npm install && npm run build"
+        "postinstall": "cd client"
     }
 }
