@@ -1,10 +1,9 @@
 import inspect
-import prettytable
+import math
 from contextlib import contextmanager
 from threading import Event
 
 from ..cards import cards
-from ..supply import FiniteSupplyStack
 from .interaction import Interaction
 
 
@@ -14,10 +13,14 @@ class BrowserInteraction(Interaction):
         self.display_hand()
         self.display_played_cards()
         self.display_supply()
+        self.display_discard_pile()
+        self.display_trash()
         yield
         self.display_hand()
         self.display_played_cards()
         self.display_supply()
+        self.display_discard_pile()
+        self.display_trash()
 
     def send(self, message):
         message = f'\n{message}\n'
@@ -66,18 +69,15 @@ class BrowserInteraction(Interaction):
             "cards": [card.json for card in self.hand],
         }        
 
-    def _get_discard_pile_string(self):
-        raise NotImplementedError()
-        discard_table = prettytable.PrettyTable(hrules=prettytable.ALL)
-        discard_table.field_names = ['Number', 'Card', 'Type', 'Description']
-        for idx, card in enumerate(self.discard_pile):
-            types = ', '.join([type.name.lower().capitalize() for type in card.types])
-            discard_table.add_row([idx + 1, card.name, types, card.description])
-        while True:
-            try:
-                return discard_table.get_html_string()
-            except TypeError:
-                pass
+    def _get_discard_pile_data(self):
+        return {
+            "cards": [card.json for card in self.discard_pile],
+        }
+
+    def _get_trash_data(self):
+        return {
+            "cards": self.supply.trash_pile_json,
+        }
 
     def display_supply(self):
         self.socketio.emit(
@@ -90,7 +90,7 @@ class BrowserInteraction(Interaction):
         self.socketio.emit(
             "display hand",
             self._get_hand_data(),
-            to=self.sid, # Only send the player's hand to that player
+            to=self.sid, # Only send the player's hand to this player
         )
 
     def display_played_cards(self):
@@ -101,9 +101,18 @@ class BrowserInteraction(Interaction):
         )
 
     def display_discard_pile(self):
-        raise NotImplementedError()
-        discard_string = f'Your discard pile:\n{self._get_discard_pile_string()}'
-        self.send(discard_string)
+        self.socketio.emit(
+            "display discard pile",
+            self._get_discard_pile_data(),
+            to=self.sid, # Only send discard pile to this player
+        )
+
+    def display_trash(self):
+        self.socketio.emit(
+            "display trash",
+            self._get_trash_data(),
+            to=self.room, # Always send trash to all players
+        )
 
     def choose_card_from_hand(self, prompt, force):
         with self.move_cards():
@@ -172,31 +181,27 @@ class BrowserInteraction(Interaction):
                     self.send('That is not a valid choice.')
 
     def choose_card_from_discard_pile(self, prompt, force):
-        raise NotImplementedError()
-        if not self.discard_pile:
-            self.send('There are no cards in your discard pile!')
-            return None
-        while True:
-            try:
-                _prompt = self._get_discard_pile_string()
-                if force:
-                    _prompt += f'\n{prompt}\nEnter choice 1-{len(self.discard_pile)}: '
-                    card_num = self._enter_choice(_prompt)
-                    if card_num < 1:
-                        raise ValueError
-                    card_chosen = self.discard_pile[card_num - 1]
-                else:
-                    _prompt += f'\n{prompt}\nEnter choice 1-{len(self.discard_pile)} (0 to skip): '
-                    card_num = self._enter_choice(_prompt)
-                    if card_num < 0:
-                        raise ValueError
-                    elif card_num == 0:
+        with self.move_cards():
+            print("choose_card_from_discard_pile")
+            if not self.discard_pile:
+                self.send('There are no cards in your discard pile.')
+                return None
+            while True:
+                try:
+                    response = self._call(
+                        "choose card from discard pile",
+                        {
+                            "prompt": prompt,
+                            "force": force,
+                        }
+                    )
+                    if response is None:
                         return None
-                    else:
-                        card_chosen = self.discard_pile[card_num - 1]
-                return card_chosen
-            except (IndexError, ValueError):
-                self.send('That is not a valid choice.')        
+                    for card in self.discard_pile:
+                            if response["id"] == card.id:
+                                return card
+                except (IndexError, ValueError):
+                    self.send('That is not a valid choice.')
 
     def choose_treasures_from_hand(self, prompt):
         with self.move_cards():
@@ -221,7 +226,6 @@ class BrowserInteraction(Interaction):
     def choose_card_class_from_supply(self, prompt, max_cost, force, invalid_card_classes=None, exact_cost=False):
         with self.move_cards():
             print("choose_card_class_from_supply")
-            self.display_supply()
             if invalid_card_classes is None:
                 invalid_card_classes = []
             while True:
@@ -238,7 +242,7 @@ class BrowserInteraction(Interaction):
                         "choose card class from supply",
                         {
                             "prompt": prompt,
-                            "max_cost": max_cost,
+                            "max_cost": max_cost if max_cost != math.inf else None,
                             "force": force,
                         }
                     )
@@ -253,71 +257,51 @@ class BrowserInteraction(Interaction):
     def choose_specific_card_type_from_supply(self, prompt, max_cost, card_type, force):
         with self.move_cards():
             print("choose_specific_card_type_from_supply")
-            self.display_supply()
-            while True:
-                try:
-                    # Only cards you can afford can be chosen (and with non-zero quantity)
-                    stacks = self.supply.card_stacks
-                    buyable_card_stacks = [card_class for card_class in stacks if card_type in card_class.types and stacks[card_class].modified_cost <= max_cost and stacks[card_class].cards_remaining > 0]
-                    if not buyable_card_stacks:
-                        self.send('There are no cards in the Supply that you can buy.')
-                        return None
-                    card_data = self._call(
-                        "choose specific card type from supply",
-                        {
-                            "prompt": prompt,
-                            "max_cost": max_cost,
-                            "card_type": card_type.name,
-                            "force": force,
-                        }
-                    )
-                    if card_data is None:
-                        return None
-                    for card_class, card_stack in self.supply.card_stacks.items():
-                        if card_data["name"] == card_stack.example.name:
-                            return card_class
-                except (IndexError, ValueError, TypeError):
-                    self.send('That is not a valid choice.')
+            # Only cards you can afford can be chosen (and with non-zero quantity)
+            stacks = self.supply.card_stacks
+            buyable_card_stacks = [card_class for card_class in stacks if card_type in card_class.types and stacks[card_class].modified_cost <= max_cost and stacks[card_class].cards_remaining > 0]
+            if not buyable_card_stacks:
+                self.send('There are no cards in the Supply that you can buy.')
+                return None
+            card_data = self._call(
+                "choose specific card type from supply",
+                {
+                    "prompt": prompt,
+                    "max_cost": max_cost if max_cost != math.inf else None,
+                    "card_type": card_type.name,
+                    "force": force,
+                }
+            )
+            if card_data is None:
+                return None
+            for card_class, card_stack in self.supply.card_stacks.items():
+                if card_data["name"] == card_stack.example.name:
+                    return card_class
 
     def choose_specific_card_type_from_trash(self, prompt, max_cost, card_type, force):
-        raise NotImplementedError()
-        while True:
-            try:
-                trash_table = prettytable.PrettyTable(hrules=prettytable.ALL)
-                trash_table.field_names = ['Number', 'Card', 'Cost', 'Type', 'Quantity', 'Description']
-                # Only cards you can afford can be chosen (and with non-zero quantity)
-                trash_pile = self.supply.trash_pile
-                gainable_card_classes = [card_class for card_class in trash_pile if trash_pile[card_class] and card_type in card_class.types]
-                # for idx, card_class in enumerate(sorted(buyable_card_stacks, key=lambda x: (x.types[0].value, x.cost))):
-                for idx, card_class in enumerate(gainable_card_classes):
-                    types = ', '.join([type.name.lower().capitalize() for type in card_class.types])
-                    card_quantity = len(trash_pile[card_class])
-                    trash_table.add_row([idx + 1, card_class.name, card_class.cost, types, card_quantity, card_class.description])
-                while True:
-                    try:
-                        _prompt = f'{prompt}\n{trash_table.get_html_string()}'
-                        break
-                    except TypeError:
-                        pass
-                if force:
-                    _prompt += f'\nEnter choice 1-{len(gainable_card_classes)}: '
-                    card_num = self._enter_choice(_prompt)
-                    if card_num < 1:
-                        raise ValueError
-                    card_to_gain = list(gainable_card_classes)[card_num - 1]
-                else:
-                    _prompt += f'\nEnter choice 1-{len(gainable_card_classes)} (0 to skip): '
-                    card_num = self._enter_choice(_prompt)
-                    if card_num < 0:
-                        raise ValueError
-                    elif card_num == 0:
-                        return None
-                    else:
-                        card_to_gain = list(gainable_card_classes)[card_num - 1]
-                return card_to_gain
-            except (IndexError, ValueError):
-                self.send('That is not a valid choice.')
-
+        with self.move_cards():
+            print("choose_specific_card_type_from_trash")
+            # Only cards you can afford can be chosen (and with non-zero quantity)
+            trash_pile = self.supply.trash_pile
+            gainable_card_classes = [card_class for card_class in trash_pile if trash_pile[card_class] and card_type in card_class.types]
+            if not gainable_card_classes:
+                self.send('There are no cards in the Trash that you can gain.')
+                return None
+            card_data = self._call(
+                "choose specific card type from trash",
+                {
+                    "prompt": prompt,
+                    "max_cost": max_cost if max_cost != math.inf else None,
+                    "card_type": card_type.name,
+                    "force": force,
+                }
+            )
+            if card_data is None:
+                return None
+            for card_class in gainable_card_classes:
+                if card_data["name"] == card_class.name:
+                    return card_class
+       
     def choose_yes_or_no(self, prompt): 
         print("choose_yes_or_no")
         while True:

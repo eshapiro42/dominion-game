@@ -1,6 +1,4 @@
 import copy
-import itertools
-import operator
 import prettytable
 import random
 from abc import ABCMeta, abstractmethod
@@ -137,6 +135,19 @@ class Supply:
     @property
     def num_empty_stacks(self):
         return [stack.is_empty for stack in self.card_stacks.values()].count(True)
+
+    @property
+    def trash_pile_json(self):
+        json = []
+        for card_class in self.trash_pile:
+            quantity = len(self.trash_pile[card_class])
+            try:
+                card_json = self.trash_pile[card_class][0].json
+                card_json["quantity"] = quantity
+                json.append(card_json)
+            except IndexError:
+                pass
+        return json
 
 
 class SupplyStack(metaclass=ABCMeta):

@@ -1,4 +1,5 @@
 <script>
+    import DiscardPile from "./components/discard_pile.svelte";
     import GameSetup from "./components/game_setup.svelte";
     import Hand from "./components/hand.svelte";
     import Lobby from "./components/lobby.svelte";
@@ -6,6 +7,7 @@
     import PopUp from "./components/pop_up.svelte";
     import Supply from "./components/supply.svelte";
     import Toasts from "./components/toasts.svelte";
+    import Trash from "./components/trash.svelte";
 
     export let socket;
 
@@ -138,6 +140,16 @@
     />
 
     <Supply
+        {socket}
+        {gameStarted}
+    />
+
+    <DiscardPile
+        {socket}
+        {gameStarted}
+    />
+
+    <Trash
         {socket}
         {gameStarted}
     />
