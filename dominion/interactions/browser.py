@@ -8,7 +8,7 @@ from .interaction import Interaction
 
 class BrowserInteraction(Interaction):
     @contextmanager
-    def modifies_ui(self):
+    def move_cards(self):
         self.display_hand()
         self.display_played_cards()
         self.display_supply()
@@ -101,31 +101,54 @@ class BrowserInteraction(Interaction):
         discard_string = f'Your discard pile:\n{self._get_discard_pile_string()}'
         self.send(discard_string)
 
+    # def choose_card_from_hand(self, prompt, force):
+    #     if not self.hand:
+    #         self.send('There are no cards in your hand.')
+    #         return None
+    #     while True:
+    #         try:
+    #             _prompt = f'{prompt}\n{self._get_hand_string()}'
+    #             if force:
+    #                 _prompt += f'\nEnter choice 1-{len(self.hand)}: '
+    #                 card_num = self._enter_choice(_prompt)
+    #                 if card_num < 1:
+    #                     raise ValueError
+    #                 card_chosen = self.hand[card_num - 1]
+    #             else:
+    #                 _prompt += f'\nEnter choice 1-{len(self.hand)} (0 to skip): '
+    #                 card_num = self._enter_choice(_prompt)
+    #                 if card_num < 0:
+    #                     raise ValueError
+    #                 elif card_num == 0:
+    #                     return None
+    #                 else:
+    #                     card_chosen = self.hand[card_num - 1]
+    #             return card_chosen
+    #         except (IndexError, ValueError):
+    #             self.send('That is not a valid choice.')
+
     def choose_card_from_hand(self, prompt, force):
-        if not self.hand:
-            self.send('There are no cards in your hand.')
-            return None
-        while True:
-            try:
-                _prompt = f'{prompt}\n{self._get_hand_string()}'
-                if force:
-                    _prompt += f'\nEnter choice 1-{len(self.hand)}: '
-                    card_num = self._enter_choice(_prompt)
-                    if card_num < 1:
-                        raise ValueError
-                    card_chosen = self.hand[card_num - 1]
-                else:
-                    _prompt += f'\nEnter choice 1-{len(self.hand)} (0 to skip): '
-                    card_num = self._enter_choice(_prompt)
-                    if card_num < 0:
-                        raise ValueError
-                    elif card_num == 0:
+        with self.move_cards():
+            print("choose_card_from_hand")
+            if not self.hand:
+                self.send('There are no cards in your hand.')
+                return None
+            while True:
+                try:
+                    response = self._call(
+                        "choose card from hand",
+                        {
+                            "prompt": prompt,
+                            "force": force,
+                        }
+                    )
+                    if response is None:
                         return None
-                    else:
-                        card_chosen = self.hand[card_num - 1]
-                return card_chosen
-            except (IndexError, ValueError):
-                self.send('That is not a valid choice.')
+                    for card in self.hand:
+                            if response["id"] == card.id:
+                                return card
+                except (IndexError, ValueError):
+                    self.send('That is not a valid choice.')
 
     def choose_specific_card_class_from_hand(self, prompt, force, card_class):
         if not any(isinstance(card, card_class) for card in self.hand):
@@ -144,39 +167,8 @@ class BrowserInteraction(Interaction):
             else:
                 return None
 
-    # def choose_specific_card_type_from_hand(self, prompt, card_type):
-    #     # Only cards of the correct type can be chosen
-    #     playable_cards = [card for card in self.hand if card_type in card.types]
-    #     if not playable_cards:
-    #         self.send(f'There are no {card_type.name.lower().capitalize()} cards in your hand.')
-    #         return None
-    #     while True:
-    #         try:
-    #             hand_table = prettytable.PrettyTable(hrules=prettytable.ALL)
-    #             hand_table.field_names = ['Number', 'Card', 'Type', 'Description']
-    #             for idx, card in enumerate(playable_cards):
-    #                 types = ', '.join([type.name.lower().capitalize() for type in card.types])
-    #                 hand_table.add_row([idx + 1, card.name, types, card.description])
-    #             while True:
-    #                 try:
-    #                     _prompt = f'{prompt}\n{hand_table.get_html_string()}'
-    #                     break
-    #                 except TypeError:
-    #                     pass
-    #             _prompt += f'\nEnter choice 1-{len(playable_cards)} (0 to skip): '
-    #             card_num = self._enter_choice(_prompt)
-    #             if card_num < 0:
-    #                 raise ValueError
-    #             elif card_num == 0:
-    #                 return None
-    #             else:
-    #                 card_to_play = playable_cards[card_num - 1]
-    #                 return card_to_play
-    #         except (IndexError, ValueError):
-    #             self.send('That is not a valid choice.')
-
     def choose_specific_card_type_from_hand(self, prompt, card_type):
-        with self.modifies_ui():
+        with self.move_cards():
             print("choose_specific_card_type_from_hand")
             # Only cards of the correct type can be chosen
             playable_cards = [card for card in self.hand if card_type in card.types]
@@ -227,7 +219,7 @@ class BrowserInteraction(Interaction):
                 self.send('That is not a valid choice.')        
 
     def choose_treasures_from_hand(self, prompt):
-        with self.modifies_ui():
+        with self.move_cards():
             print("choose_treasures_from_hand")
             while True:
                 try:
@@ -247,7 +239,7 @@ class BrowserInteraction(Interaction):
                     self.send('That is not a valid choice.')
 
     def choose_card_class_from_supply(self, prompt, max_cost, force, invalid_card_classes=None, exact_cost=False):
-        with self.modifies_ui():
+        with self.move_cards():
             print("choose_card_class_from_supply")
             self.display_supply()
             if invalid_card_classes is None:

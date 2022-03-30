@@ -23,7 +23,7 @@
     <p class="flex-item"><b>{waitingForSelection.prompt}</b></p>
     <div class="flex-item">
         <button type="button" on:click={handleSendSelection}>Send Selection</button>
-        {#if waitingForSelection.maxCards == null}
+        {#if waitingForSelection.maxCards == null && waitingForSelection.maxCards != 1}
             <button type="button" on:click={handleSelectAll}>Select All</button>
         {/if}
     </div>

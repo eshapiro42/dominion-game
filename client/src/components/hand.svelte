@@ -43,7 +43,7 @@
         return true;
     }
 
-    function handleCardTypeSelected(selectedCards) {
+    function handleCardSelected(selectedCards) {
         if (selectedCards.length == 0) {
             if (waitingForSelection.force) {
                 alert("You must make a selection.");
@@ -74,7 +74,7 @@
             waitingForSelection.handler = handleTreasuresSelected;
             waitingForSelection.type = "treasure";
         }
-    )
+    );
 
     socket.on(
         "choose specific card type from hand",
@@ -82,12 +82,23 @@
             waitingForSelection.value = true;
             waitingForSelection.callback = callback;
             waitingForSelection.prompt = data.prompt;
-            waitingForSelection.handler = handleCardTypeSelected;
+            waitingForSelection.handler = handleCardSelected;
             waitingForSelection.type = data.card_type.toLowerCase();
-            console.log(data.card_type)
             waitingForSelection.maxCards = 1;
         }
-    )
+    );
+
+    socket.on(
+        "choose card from hand",
+        (data, callback) => {
+            waitingForSelection.value = true;
+            waitingForSelection.callback = callback;
+            waitingForSelection.prompt = data.prompt;
+            waitingForSelection.handler = handleCardSelected;
+            waitingForSelection.force = data.force;
+            waitingForSelection.maxCards = 1;
+        }
+    );
 </script>
 
 {#if gameStarted}
