@@ -97,6 +97,10 @@
 
     $: active = waitingForSelection.value;
 
+    $: if (active) {
+        location.hash = "#" + title;
+    }
+
     function handleClicked(event) {
         selectedAll = false;
         var cardSelected = event.detail.selected;
@@ -137,19 +141,21 @@
     class="container"
     class:active    
 >
-    <div class="title">
-        <h4>{title}</h4>
-        <div class="sort">
-            <p>Sort By<p>
-            <select bind:value={sortByProperty}>
-                {#each sortByOptions as option}
-                    <option value={option.property}>
-                        {option.text}
-                    </option>
-                {/each}
-            </select>
+    <a id="{title}">
+        <div class="title">
+            <h4>{title}</h4>
+            <div class="sort">
+                <p>Sort By<p>
+                <select bind:value={sortByProperty}>
+                    {#each sortByOptions as option}
+                        <option value={option.property}>
+                            {option.text}
+                        </option>
+                    {/each}
+                </select>
+            </div>
         </div>
-    </div>
+    </a>
 
     {#if waitingForSelection.value}
         <div class="selectionPrompt">
