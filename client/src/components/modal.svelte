@@ -1,17 +1,5 @@
 <script>
-    import App from "../App.svelte";
-import Card from "./card.svelte";
-
     export let show = false;
-
-    let card = {
-        name: "Copper",
-        effects: [""],
-        description: "",
-        cost: 0,
-        type: "Treasure",
-        id: -1,
-    }
 </script>
 
 {#if show}

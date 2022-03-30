@@ -17,10 +17,10 @@
     export let waitingForSelection; 
     export let numSelected;
     export let selected = false;
+    export let selectedAll;
 
     let typeLowerCase = type.toLowerCase();
     let hovering = false;
-    let hoveringTimeout = null;
 
     $: action = typeLowerCase.includes("action") && !typeLowerCase.includes("attack") && !typeLowerCase.includes("reaction");
     $: attack = typeLowerCase.includes("attack")
@@ -37,10 +37,6 @@
     $: renderedDescription = renderText(description);
 
     function clicked() {
-        if (hoveringTimeout != null) {
-            clearTimeout(hoveringTimeout);
-            hoveringTimeout = null;
-        }
         if (waitingForSelection.value && type.toLowerCase().includes(waitingForSelection.type)) {
             if (
                 // Don't allow selection if the maximum number of cards is already selected (unselection is fine)
@@ -63,12 +59,32 @@
                     id: id,
                     selected: selected,
                 }
-            )
+            );
         }
     }
 
     $: if (waitingForSelection != null && !waitingForSelection.value) {
         selected = false;
+    }
+
+    $: if (selectedAll) {
+        if (waitingForSelection.value && type.toLowerCase().includes(waitingForSelection.type)) {
+            if (!selected) {
+                selected = true;
+                dispatch(
+                    "clicked", 
+                    {
+                        name: name,
+                        effects: effects,
+                        description: description,
+                        cost: cost,
+                        type: type,
+                        id: id,
+                        selected: selected,
+                    }
+                );
+            }
+        }
     }
 
 </script>

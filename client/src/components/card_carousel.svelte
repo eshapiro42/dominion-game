@@ -71,6 +71,7 @@
     ]
 
     let sortByProperty = "type";
+    let selectedAll = false;
     let selectedCardIds = [];
 
     let sortByOptions = [
@@ -97,6 +98,7 @@
     $: active = waitingForSelection.value;
 
     function handleClicked(event) {
+        selectedAll = false;
         var cardSelected = event.detail.selected;
         var cardId = event.detail.id;
         if (cardSelected) {
@@ -153,7 +155,12 @@
         <div class="selectionPrompt">
             <SelectionPrompt 
                 {waitingForSelection}
-                on:click={sendSelection}
+                on:sendSelection={sendSelection}
+                on:selectAll={
+                    () => {
+                        selectedAll = true;
+                    }
+                }
             />
         </div>
     {/if}
@@ -163,6 +170,7 @@
             <Card
                 {...card}
                 {waitingForSelection}
+                {selectedAll}
                 {numSelected}
                 on:clicked={handleClicked}
             />
