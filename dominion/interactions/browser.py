@@ -10,9 +10,11 @@ class BrowserInteraction(Interaction):
     @contextmanager
     def modifies_ui(self):
         self.display_hand()
+        self.display_played_cards()
         self.display_supply()
         yield
         self.display_hand()
+        self.display_played_cards()
         self.display_supply()
 
     def send(self, message):
@@ -52,6 +54,11 @@ class BrowserInteraction(Interaction):
             "cards": [card_stack.json for card_stack in self.supply.card_stacks.values()],
         }
 
+    def _get_played_cards_data(self):
+        return {
+            "cards" : [card.json for card in self.played_cards],
+        }
+
     def _get_hand_data(self):
         return {
             "cards": [card.json for card in self.hand],
@@ -81,6 +88,13 @@ class BrowserInteraction(Interaction):
             "display hand",
             self._get_hand_data(),
             to=self.sid, # Only send the player's hand to that player
+        )
+
+    def display_played_cards(self):
+        self.socketio.emit(
+            "display played cards",
+            self._get_played_cards_data(),
+            to=self.room, # Always send played cards to all players
         )
 
     def display_discard_pile(self):

@@ -3,6 +3,7 @@
     import Hand from "./components/hand.svelte";
     import Lobby from "./components/lobby.svelte";
     import MessageBoard from "./components/message_board.svelte";
+    import PlayedCards from "./components/played_cards.svelte";
     import Supply from "./components/supply.svelte";
 
     export let socket;
@@ -52,6 +53,11 @@
         {roomJoined}
         {roomCreator}
         on:started={startedGame}
+    />
+
+    <PlayedCards
+        {socket}
+        {gameStarted}
     />
 
     <Hand
