@@ -13,6 +13,7 @@
     let username = "";
     let room = null;
     let roomCreator = false;
+    let currentPlayer = null;
 
     function joinedRoom(event) {
         roomJoined = true;
@@ -24,6 +25,11 @@
     function startedGame(event) {
         gameStarted = true;
     }
+
+    socket.on(
+        "new turn", function(data) {
+        currentPlayer = data.player;
+    });
 </script>
 
 <main>
@@ -58,6 +64,7 @@
     <PlayedCards
         {socket}
         {gameStarted}
+        {currentPlayer}
     />
 
     <Hand

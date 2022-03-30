@@ -3,6 +3,8 @@
 
     export let socket;
     export let gameStarted;
+    export let currentPlayer;
+
     let waitingForSelection = false;
 
     let cards = [];
@@ -18,7 +20,7 @@
 {#if gameStarted}
     <main>
         <CardCarousel
-            title="Played Cards"
+            title="{currentPlayer}'s Played Cards"
             {waitingForSelection}
             {cards}
         />
