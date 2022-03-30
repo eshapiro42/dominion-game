@@ -27,9 +27,19 @@
     }
 
     socket.on(
-        "new turn", function(data) {
-        currentPlayer = data.player;
-    });
+        "new turn",
+        function(data) {
+            currentPlayer = data.player;
+        }
+    );
+
+    socket.on(
+        "choose yes or no",
+        function(data, callback) {
+            var response = confirm(data.prompt);
+            callback(response);
+        }
+    );
 </script>
 
 <main>

@@ -101,32 +101,6 @@ class BrowserInteraction(Interaction):
         discard_string = f'Your discard pile:\n{self._get_discard_pile_string()}'
         self.send(discard_string)
 
-    # def choose_card_from_hand(self, prompt, force):
-    #     if not self.hand:
-    #         self.send('There are no cards in your hand.')
-    #         return None
-    #     while True:
-    #         try:
-    #             _prompt = f'{prompt}\n{self._get_hand_string()}'
-    #             if force:
-    #                 _prompt += f'\nEnter choice 1-{len(self.hand)}: '
-    #                 card_num = self._enter_choice(_prompt)
-    #                 if card_num < 1:
-    #                     raise ValueError
-    #                 card_chosen = self.hand[card_num - 1]
-    #             else:
-    #                 _prompt += f'\nEnter choice 1-{len(self.hand)} (0 to skip): '
-    #                 card_num = self._enter_choice(_prompt)
-    #                 if card_num < 0:
-    #                     raise ValueError
-    #                 elif card_num == 0:
-    #                     return None
-    #                 else:
-    #                     card_chosen = self.hand[card_num - 1]
-    #             return card_chosen
-    #         except (IndexError, ValueError):
-    #             self.send('That is not a valid choice.')
-
     def choose_card_from_hand(self, prompt, force):
         with self.move_cards():
             print("choose_card_from_hand")
@@ -346,33 +320,20 @@ class BrowserInteraction(Interaction):
             except (IndexError, ValueError):
                 self.send('That is not a valid choice.')
 
-    def choose_yes_or_no(self, prompt):
-        _prompt = f'{prompt}\nEnter choice (Yes/No): '
-        event = Event()
-        response = None
-
-        def ack(data):
-            nonlocal event
-            nonlocal response
-            response = data
-            event.set()
-        
-        while True:
-            try:
-                self.socketio.emit(
-                    'choose yes or no', {'prompt': _prompt}, 
-                    to=self.sid,
-                    callback=ack,
-                )
-                event.wait()
-                if response.lower() in ['yes', 'y', 'no', 'n']:
-                    break
-            except AttributeError:
-                self.send(f'{response} is not a valid choice.')
-        if response.lower() in ['yes', 'y']:
-            return True
-        else:
-            return False
+    def choose_yes_or_no(self, prompt): 
+        with self.move_cards():
+            print("choose_yes_or_no")
+            while True:
+                try:
+                    response = self._call(
+                        "choose yes or no", 
+                        {
+                            "prompt": prompt,
+                        },
+                    )
+                    return response
+                except AttributeError:
+                    self.send(f'{response} is not a valid choice.')
 
     def choose_from_range(self, prompt, minimum, maximum, force):
         options = list(range(minimum, maximum + 1))
