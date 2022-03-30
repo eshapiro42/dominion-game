@@ -8,6 +8,7 @@
 
     export let title;
     export let waitingForSelection;
+    export let sortByProperty = "type";
 
     export let cards = [ 
         // This is the "source of truth" for all cards in the front-end
@@ -70,7 +71,6 @@
         },
     ]
 
-    let sortByProperty = "type";
     let selectedAll = false;
     let selectedCardIds = [];
 
@@ -78,9 +78,14 @@
         {text: "Type", property: "type"},
         {text: "Cost", property: "cost"},
         {text: "Name", property: "name"},
+        {text: "Order Sent", property: "orderSent"},
     ]
 
-    $: sortedCards = cards.sort((a, b) => {
+    $: sortedCards = cards.sort(
+        (a, b) => {
+            if (sortByProperty == "orderSent") {
+                return 0;
+            }
             if (a[sortByProperty] < b[sortByProperty]) {
                 return -1;
             }

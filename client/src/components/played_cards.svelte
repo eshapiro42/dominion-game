@@ -21,6 +21,7 @@
     <main>
         <CardCarousel
             title="{currentPlayer}'s Played Cards"
+            sortByProperty = "orderSent"
             {waitingForSelection}
             {cards}
         />
