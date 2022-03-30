@@ -40,7 +40,7 @@
                 () => {
                     showingToasts = showingToasts.filter(toast => toast.id != toast.id);
                 },
-                3000
+                500 // Toasts disappear more quickly after you've moused over them
             )
         });
     }

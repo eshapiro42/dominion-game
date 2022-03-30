@@ -103,7 +103,13 @@
     $: active = waitingForSelection.value;
 
     $: if (active) {
-        location.hash = "#" + title;
+        // Scroll to the active carousel after a short delay to allow the page to render
+        setTimeout(
+            () => {
+                location.hash = "#" + title;
+            },
+            1000
+        );
     }
 
     function handleClicked(event) {
