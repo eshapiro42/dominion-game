@@ -2,10 +2,10 @@
     import GameSetup from "./components/game_setup.svelte";
     import Hand from "./components/hand.svelte";
     import Lobby from "./components/lobby.svelte";
-    import MessageBoard from "./components/message_board.svelte";
     import PlayedCards from "./components/played_cards.svelte";
     import PopUp from "./components/pop_up.svelte";
     import Supply from "./components/supply.svelte";
+    import Toasts from "./components/toasts.svelte";
 
     export let socket;
 
@@ -108,16 +108,13 @@
         on:submit={submitPopUp}
     />
 
+    <Toasts
+        {socket}
+    />
+
     <Lobby 
         {socket}
         on:joined={joinedRoom}
-    />
-
-    <MessageBoard
-        {socket}
-        {username}
-        {room}
-        {roomJoined}
     />
 
     <GameSetup

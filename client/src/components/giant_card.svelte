@@ -4,7 +4,6 @@
     export let description;
     export let cost;
     export let type;
-    export let id;
     export let quantity = null;
 
     let typeLowerCase = type.toLowerCase();
