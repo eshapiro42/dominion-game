@@ -135,6 +135,6 @@ dmypy.json
 .pyre/
 
 # Svelte
-client/node_modules/
+node_modules/
 client/public/build/
 .DS_Store
