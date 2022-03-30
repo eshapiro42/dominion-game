@@ -1,5 +1,5 @@
-import eventlet
-eventlet.monkey_patch()
+from gevent import monkey
+monkey.patch_all()
 
 import flask_socketio
 import random
@@ -12,7 +12,7 @@ from dominion.interactions import NetworkedCLIInteraction, BrowserInteraction, A
 
 app = Flask(__name__)
 app.config.from_object("config.Config")
-socketio = flask_socketio.SocketIO(app)
+socketio = flask_socketio.SocketIO(app, async_mode="gevent")
 
 
 @app.route("/")
@@ -151,4 +151,4 @@ def disconnect():
 
 
 if __name__ == '__main__':
-    socketio.run(app, host="0.0.0.0", port=5000)
+    socketio.run(app)
