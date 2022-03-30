@@ -50,6 +50,10 @@
                 return false;
             }
             else {
+                var confirmed = confirm("Are you sure you want to skip selecting cards from your hand?");
+                if (!confirmed) {
+                    return false;
+                }
                 waitingForSelection.callback(null);
                 return true;
             }

@@ -934,7 +934,7 @@ class Spy(AttackCard):
         # Then the chooser makes a choice
         options = ['Discard', 'Return to deck']
         if revealer == chooser:
-            prompt = f'{chooser}: You revealed {a(card)}. What would you to do with it?'
+            prompt = f'{chooser}: You revealed {a(card)}. What would you like to do with it?'
         else:
             prompt = f'{chooser}: {revealer} revealed {a(card)}. What would you like them to do with it?'
         choice = chooser.interactions.choose_from_options(prompt=prompt, options=options, force=True)

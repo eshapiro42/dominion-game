@@ -31,8 +31,8 @@ class Customization:
         distribute_attack_cards (:obj:`bool`): If :obj:`True`, Attack cards are not allowed in the Supply.
     '''
     def __init__(self):
-        self.expansions = set()
-        self.required_card_classes = set() # If nonempty, ensures that each card in the list ends up in the supply
+        self.expansions = set([])
+        self.required_card_classes = set([]) # If nonempty, ensures that each card in the list ends up in the supply
         self.distribute_cost = False # If toggled, ensures there are at least two cards each of cost {2, 3, 4, 5}
         self.disable_attack_cards = False # If toggled, Attack cards are not allowed
         # require_plus_two_action = False # If toggled, ensures there is at least one card with '+2 Actions'

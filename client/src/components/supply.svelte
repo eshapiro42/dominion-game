@@ -65,7 +65,6 @@
             waitingForSelection.callback = callback;
             waitingForSelection.maxCards = 1;
             waitingForSelection.maxCost = data.max_cost;
-            console.log(`max cost: ${data.max_cost}`);
             waitingForSelection.force = data.force;
         }
     )

@@ -343,60 +343,43 @@ class BrowserInteraction(Interaction):
                 self.send(f'{response} is not a valid choice.')
 
     def choose_from_range(self, prompt, minimum, maximum, force):
-        options = list(range(minimum, maximum + 1))
+        print("choose_from_range")
         while True:
             try:
-                if force:
-                    _prompt = f'{prompt}\nEnter choice {minimum}-{maximum}: '
-                    response = self._enter_choice(_prompt)
-                    if response < minimum or response > maximum:
-                        raise ValueError
-                else:
-                    _prompt = f'{prompt}\nEnter choice {minimum}-{maximum} (0 to skip): '
-                    response = self._enter_choice(_prompt)
-                    if response == 0:
-                        return None
-                    elif response < minimum or response > maximum:
-                        raise ValueError
+                response = self._call(
+                    "choose from range",
+                    {
+                        "prompt": prompt,
+                        "start": minimum,
+                        "stop": maximum,
+                        "force": force,
+                    }
+                )
                 return response
             except (IndexError, ValueError):
                 self.send('That is not a valid choice.')
 
     def choose_from_options(self, prompt, options, force):
-        raise NotImplementedError()
-        while True:
-            options_table = prettytable.PrettyTable(hrules=prettytable.ALL)
-            options_table.field_names = ['Number', 'Option']
-            for idx, option in enumerate(options):
-                if isinstance(option, cards.Card) or inspect.isclass(option):
-                    options_table.add_row([idx + 1, option.name])
-                else:
-                    options_table.add_row([idx + 1, option])
-            try:
-                while True:
-                    try:
-                        _prompt = f'{prompt}\n{options_table.get_html_string()}'
-                        break
-                    except TypeError:
-                        pass
-                if force:
-                    _prompt += f'\nEnter choice 1-{len(options)}: '
-                    response_num = self._enter_choice(_prompt)
-                    if response_num < 1:
-                        raise ValueError
-                    response = options[response_num - 1]
-                else:
-                    _prompt += f'\nEnter choice 0-{len(options)} (0 to skip): '
-                    response_num = self._enter_choice(_prompt)
-                    if response_num < 0:
-                        raise ValueError
-                    elif response_num == 0:
-                        return None
-                    else:
-                        response = options[response_num - 1]
-                return response
-            except (IndexError, ValueError):
-                self.send('That is not a valid choice.')
+        print("choose_from_options")
+        option_names = []
+        for option in options:
+            if isinstance(option, cards.Card) or inspect.isclass(option):
+                option_names.append(option.name)
+            else:
+                option_names.append(option)
+        options_json = [{"id": idx, "name": name} for idx, name in enumerate(option_names)]
+        print(options_json)
+        response = self._call(
+            "choose from options",
+            {
+                "prompt": prompt,
+                "options": options_json,
+                "force": force,
+            }
+        )
+        if response is not None:
+            return options[response]
+        return None
 
     def new_turn(self):
         self.socketio.emit('new turn', {'player': self.player.name}, room=self.room)
