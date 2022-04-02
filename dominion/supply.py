@@ -174,7 +174,6 @@ class SupplyStack(metaclass=ABCMeta):
         card_stack_json = self.example.json
         card_stack_json["cost"] = self.modified_cost
         card_stack_json["quantity"] = quantity
-        print(card_stack_json)
         return card_stack_json
 
     @property

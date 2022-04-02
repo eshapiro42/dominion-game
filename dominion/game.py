@@ -51,6 +51,8 @@ class Game:
         self.players = []
         self.startable = False
         self.started = False
+        self.kill_scheduled = False
+        self.killed = False
         self.current_turn = None
         self.treasure_hooks = defaultdict(list)
         self.pre_buy_hooks = defaultdict(list)

@@ -15,6 +15,15 @@
             cards = data.cards;
         },
     );
+
+    socket.on(
+        "current player",
+        (data) => {
+            console.log("SETTING CURRENT PLAYER")
+            currentPlayer = data;
+        },
+    )
+
 </script>
 
 {#if gameStarted}

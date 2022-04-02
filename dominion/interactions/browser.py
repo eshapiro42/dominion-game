@@ -1,50 +1,67 @@
 import inspect
 import math
 from contextlib import contextmanager
-from threading import Event
+from threading import Event # Monkey patched to use gevent Events
 
 from ..cards import cards
 from .interaction import Interaction
 
 
 class BrowserInteraction(Interaction):
+    def display_all(self):
+            self.display_hand()
+            self.display_played_cards()
+            self.display_supply()
+            self.display_discard_pile()
+            self.display_trash()
+
     @contextmanager
     def move_cards(self):
-        self.display_hand()
-        self.display_played_cards()
-        self.display_supply()
-        self.display_discard_pile()
-        self.display_trash()
+        # self.display_all()
         yield
-        self.display_hand()
-        self.display_played_cards()
-        self.display_supply()
-        self.display_discard_pile()
-        self.display_trash()
+        # self.display_all()
 
     def send(self, message):
         message = f'\n{message}\n'
         self.socketio.send(message, to=self.sid)
         
     def _call(self, event_name, data):
+        """
+        Send a request to the player and wait for a response, then return it.
+        """
         event = Event()
         response = None
 
-        def ack(data):
+        # Callback to process the response 
+        @self.socketio.on("response")
+        def handle_response(response_data):
             nonlocal event
             nonlocal response
-            response = data
+            response = response_data
             event.set()
-        
-        self.socketio.emit(
-            event_name,
-            data, 
-            to=self.sid,
-            callback=ack,
-        )
-        event.wait()
-        print(response)
-        return response
+            self.response_data = response_data
+
+        # Try in a loop with a one second timeout in case an event gets missed or a network error occurs
+        tries = 0
+        while True:
+            # Send request
+            self.socketio.emit(
+                event_name,
+                data, 
+                to=self.sid,
+            )
+            # Wait for response
+            if event.wait(1):
+                # Response was received
+                break
+            if self.game.killed:
+                raise Exception(f"Game {self.room} was killed.")
+            tries += 1
+            if tries == 30 or tries % 60 == 0:
+                print(f"Still waiting for input after {tries} seconds")
+
+        # Return the response
+        return self.response_data
 
     def _enter_choice(self, prompt):
         return self._call(
@@ -80,39 +97,60 @@ class BrowserInteraction(Interaction):
         }
 
     def display_supply(self):
-        self.socketio.emit(
-            "display supply",
-            self._get_supply_data(),
-            to=self.room, # Always send the supply to all players
-        )
+        try:
+            if self.game.current_turn.player != self.player:
+                return
+            self.socketio.emit(
+                "display supply",
+                self._get_supply_data(),
+                to=self.room, # Always send the supply to all players
+            )
+        except Exception as exception:
+            print(exception)
 
     def display_hand(self):
-        self.socketio.emit(
-            "display hand",
-            self._get_hand_data(),
-            to=self.sid, # Only send the player's hand to this player
-        )
+        try:
+            self.socketio.emit(
+                "display hand",
+                self._get_hand_data(),
+                to=self.sid, # Only send the player's hand to this player
+            )
+        except Exception as exception:
+            print(exception)
 
     def display_played_cards(self):
-        self.socketio.emit(
-            "display played cards",
-            self._get_played_cards_data(),
-            to=self.room, # Always send played cards to all players
-        )
+        try:
+            if self.game.current_turn.player != self.player:
+                return
+            self.socketio.emit(
+                "display played cards",
+                self._get_played_cards_data(),
+                to=self.room, # Always send played cards to all players
+            )
+        except Exception as exception:
+            print(exception)
 
     def display_discard_pile(self):
-        self.socketio.emit(
-            "display discard pile",
-            self._get_discard_pile_data(),
-            to=self.sid, # Only send discard pile to this player
-        )
+        try:
+            self.socketio.emit(
+                "display discard pile",
+                self._get_discard_pile_data(),
+                to=self.sid, # Only send discard pile to this player
+            )
+        except Exception as exception:
+            print(exception)
 
     def display_trash(self):
-        self.socketio.emit(
-            "display trash",
-            self._get_trash_data(),
-            to=self.room, # Always send trash to all players
-        )
+        try:
+            if self.game.current_turn.player != self.player:
+                return
+            self.socketio.emit(
+                "display trash",
+                self._get_trash_data(),
+                to=self.room, # Always send trash to all players
+            )
+        except Exception as exception:
+            print(exception)
 
     def choose_card_from_hand(self, prompt, force):
         with self.move_cards():
@@ -342,7 +380,6 @@ class BrowserInteraction(Interaction):
             else:
                 option_names.append(option)
         options_json = [{"id": idx, "name": name} for idx, name in enumerate(option_names)]
-        print(options_json)
         response = self._call(
             "choose from options",
             {

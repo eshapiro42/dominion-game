@@ -8,7 +8,6 @@
     let waitingForSelection = {
         value: false,
         handler: null,
-        callback: null,
         type: "",
         maxCards: null,
         maxCost: null,
@@ -22,7 +21,6 @@
             if (waitingForSelection.handler(selectedCards)) {
                 waitingForSelection.value = false;
                 waitingForSelection.handler = null;
-                waitingForSelection.callback = null;
                 waitingForSelection.type = "";
                 waitingForSelection.maxCards = null;
                 waitingForSelection.maxCost = null;
@@ -39,7 +37,7 @@
                 return false;
             }
         }
-        waitingForSelection.callback(selectedCards);
+        socket.emit("response", selectedCards);
         return true;
     }
 
@@ -54,11 +52,11 @@
                 if (!confirmed) {
                     return false;
                 }
-                waitingForSelection.callback(null);
+                socket.emit("response", null);
                 return true;
             }
         }
-        waitingForSelection.callback(selectedCards[0]);
+        socket.emit("response", selectedCards[0]);
         return true;
     }
 
@@ -71,9 +69,8 @@
 
     socket.on(
         "choose treasures from hand",
-        (data, callback) => {
+        (data) => {
             waitingForSelection.value = true;
-            waitingForSelection.callback = callback;
             waitingForSelection.prompt = data.prompt;
             waitingForSelection.handler = handleTreasuresSelected;
             waitingForSelection.type = "treasure";
@@ -82,9 +79,8 @@
 
     socket.on(
         "choose specific card type from hand",
-        (data, callback) => {
+        (data) => {
             waitingForSelection.value = true;
-            waitingForSelection.callback = callback;
             waitingForSelection.prompt = data.prompt;
             waitingForSelection.handler = handleCardSelected;
             waitingForSelection.type = data.card_type.toLowerCase();
@@ -94,9 +90,8 @@
 
     socket.on(
         "choose card from hand",
-        (data, callback) => {
+        (data) => {
             waitingForSelection.value = true;
-            waitingForSelection.callback = callback;
             waitingForSelection.prompt = data.prompt;
             waitingForSelection.handler = handleCardSelected;
             waitingForSelection.force = data.force;

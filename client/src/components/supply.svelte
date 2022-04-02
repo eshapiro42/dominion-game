@@ -8,7 +8,6 @@
     let waitingForSelection = {
         value: false,
         handler: null,
-        callback: null,
         type: "",
         maxCards: null,
         maxCost: null,
@@ -22,7 +21,6 @@
             if (waitingForSelection.handler(selectedCards)) {
                 waitingForSelection.value = false;
                 waitingForSelection.handler = null;
-                waitingForSelection.callback = null;
                 waitingForSelection.type = "";
                 waitingForSelection.maxCards = null;
                 waitingForSelection.maxCost = null;
@@ -40,12 +38,12 @@
             }
             var confirmed = confirm("Are you sure you want to skip selecting a card from the Supply?");
             if (confirmed) {
-                waitingForSelection.callback(null);
+                socket.emit("response", null);
                 return true;
             }
             return false;
         }
-        waitingForSelection.callback(selectedCards[0]);
+        socket.emit("response", selectedCards[0]);
         return true;
     }
 
@@ -58,11 +56,10 @@
 
     socket.on(
         "choose card class from supply",
-        (data, callback) => {
+        (data) => {
             waitingForSelection.value = true;
             waitingForSelection.prompt = data.prompt;
             waitingForSelection.handler = handleSupplyCardClassSelected;
-            waitingForSelection.callback = callback;
             waitingForSelection.maxCards = 1;
             waitingForSelection.maxCost = data.max_cost;
             waitingForSelection.force = data.force;
@@ -71,11 +68,10 @@
 
     socket.on(
         "choose specific card type from supply",
-        (data, callback) => {
+        (data) => {
             waitingForSelection.value = true;
             waitingForSelection.prompt = data.prompt;
             waitingForSelection.handler = handleSupplyCardClassSelected;
-            waitingForSelection.callback = callback;
             waitingForSelection.maxCards = 1;
             waitingForSelection.maxCost = data.max_cost;
             waitingForSelection.type = data.card_type;

@@ -32,8 +32,7 @@
         gameStarted = true;
     }
 
-    function createPopUp(callback, prompt, force, type, range=null, options=null) {
-        popUp.callback = callback;
+    function createPopUp(prompt, force, type, range=null, options=null) {
         popUp.prompt = prompt;
         popUp.force = force;
         popUp.type = type;
@@ -51,10 +50,9 @@
             alert("You must make a selection.");
             return;
         }
-        popUp.callback(event.detail.selection);
+        socket.emit("response", event.detail.selection);
         popUp = {
             show: false,
-            callback: null,
             prompt: "",
             force: false,
             type: null,
@@ -72,24 +70,31 @@
 
     socket.on(
         "choose yes or no",
-        function(data, callback) {
-            createPopUp(callback, data.prompt, null, "boolean");
+        function(data) {
+            createPopUp(data.prompt, null, "boolean");
         }
     );
 
     socket.on(
         "choose from range",
-        function(data, callback) {
-            createPopUp(callback, data.prompt, data.force, "range", {start: data.start, stop: data.stop});
+        function(data) {
+            createPopUp(data.prompt, data.force, "range", {start: data.start, stop: data.stop});
         }
     );
 
     socket.on(
         "choose from options",
-        function(data, callback) {
-            createPopUp(callback, data.prompt, data.force, "options", null, data.options);
+        function(data) {
+            createPopUp(data.prompt, data.force, "options", null, data.options);
         }
     );
+
+    socket.on(
+        "connect",
+        function(data) {
+            console.log(socket.id);
+        }
+    )
 </script>
 
 <main>
@@ -112,6 +117,8 @@
 
     <Toasts
         {socket}
+        {username}
+        {room}
     />
 
     <Lobby 

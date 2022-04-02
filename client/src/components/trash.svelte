@@ -8,7 +8,6 @@
     let waitingForSelection = {
         value: false,
         handler: null,
-        callback: null,
         type: "",
         maxCards: null,
         maxCost: null,
@@ -22,7 +21,6 @@
             if (waitingForSelection.handler(selectedCards)) {
                 waitingForSelection.value = false;
                 waitingForSelection.handler = null;
-                waitingForSelection.callback = null;
                 waitingForSelection.type = "";
                 waitingForSelection.maxCards = null;
                 waitingForSelection.maxCost = null;
@@ -43,11 +41,11 @@
                 if (!confirmed) {
                     return false;
                 }
-                waitingForSelection.callback(null);
+                socket.emit("response", null);
                 return true;
             }
         }
-        waitingForSelection.callback(selectedCards[0]);
+        socket.emit("response", selectedCards[0]);
         return true;
     }        
 
@@ -60,10 +58,9 @@
 
     socket.on(
         "choose specific card type from trash",
-        (data, callback) => {
+        (data) => {
             waitingForSelection.value = true;
             waitingForSelection.handler = handleCardSelected;
-            waitingForSelection.callback = callback;
             waitingForSelection.type = data.card_type;
             waitingForSelection.maxCards = 1;
             waitingForSelection.maxCost = data.max_cost;

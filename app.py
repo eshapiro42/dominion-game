@@ -4,15 +4,16 @@ monkey.patch_all()
 import flask_socketio
 import random
 import string
+from collections import defaultdict
 from flask import Flask, request, send_from_directory
 from dominion.expansions import IntrigueExpansion, ProsperityExpansion
-from dominion.game import Game
+from dominion.game import Game, GameStartedError
 from dominion.interactions import NetworkedCLIInteraction, BrowserInteraction, AutoInteraction
 
 
 app = Flask(__name__)
 app.config.from_object("config.Config")
-socketio = flask_socketio.SocketIO(app, async_mode="gevent")
+socketio = flask_socketio.SocketIO(app, async_mode="gevent", logger=False, engineio_logger=False)
 
 
 @app.route("/")
@@ -26,10 +27,10 @@ def home(path):
 
 # Global dictionary of games, indexed by room ID
 games = {}
-
 # Global dictionary of sids, {sid: (room, data)}
 sids = {}
-
+# Global dictionary of disconnected players, indexed by room ID, {room: [username, ...], ...}
+disconnected_players = defaultdict(list)
 # Global dictionary of CPUs, indexed by room ID, {room: CPU_COUNT}
 cpus = {}
 
@@ -50,6 +51,7 @@ def join_room(data):
     try:
         # Add the player to the game
         game = games[room]
+        game.kill_scheduled = False # Cancel erasure of the game if necessary
         game_startable_before = game.startable
         game.add_player(username, sid, interactions_class=interaction_class)
         socketio.send(f'{username} has entered the room.\n', room=room)
@@ -58,6 +60,23 @@ def join_room(data):
         if game_startable_after != game_startable_before:
             socketio.emit('game startable', room=room)
         return True # This activates the client's joined_room() callback
+    except GameStartedError:
+        if username in disconnected_players[room]:
+            disconnected_players[room].remove(username)
+            socketio.send(f'{username} has re-entered the room.\n', room=room)
+            # Find the player object and set its sid
+            for player in game.players:
+                if player.name == username:
+                    player.sid = sid
+                    socketio.send(f"Player {username} has rejoined the game.\n", room=room)
+                    print(f"New sid for player {username}: {sid}")
+                    # Send the events needed to get the rejoined player's UI back in the right state
+                    socketio.emit("game started", to=sid)
+                    socketio.emit("current player", data=game.current_turn.player.name, to=sid)
+                    return True # This activates the client's joined_room() callback
+        else:
+            socketio.send(f'The game has already started.\n', sid=sid)
+            return False
     except KeyError:
         return False
 
@@ -82,6 +101,8 @@ def create_room(data):
     game = Game(socketio=socketio, room=room)
     # Add the game object to the global dictionary of games
     games[room] = game
+    # Create the game's heartbeat
+    game.heartbeat = HeartBeat(game)
     # Add the player to the game
     game.add_player(username, sid, interactions_class=interaction_class)
     socketio.send(f'{username} has created room {room}\n', room=room)
@@ -117,7 +138,6 @@ def start_game(data):
     # Send the game started event
     socketio.send(f'{username} has started the game.\n', room=room)
     socketio.emit('game started', room=room)
-    # time.sleep(1) # I'm not sure why this was in here
     game = games[room]
     # Add in customization options
     if intrigue:
@@ -128,6 +148,8 @@ def start_game(data):
         game.distribute_cost = True
     if disable_attack_cards:
         game.disable_attack_cards = True
+    # Start the game's heartbeat
+    socketio.start_background_task(game.heartbeat)
     # Start the game (nothing can happen after this)
     game.start()
 
@@ -136,18 +158,73 @@ def send_message(data):
     username = data['username']
     room = data['room']
     message = data['message']
-    socketio.send(f'{username}: {message}\n', room=f'{room}_message_board')
+    socketio.send(f'{username}: {message}\n', room=room)
+
+@socketio.on('player sent message')
+def send_message(data):
+    username = data['username']
+    room = data['room']
+    message = data['message']
+    socketio.emit("player message", f'{username}: {message}\n', room=room)
 
 @socketio.on("disconnect")
 def disconnect():
     try:
         sid = request.sid
         room, data = sids[sid]
+        game = games[room]
         username = data['username']
+        disconnected_players[room].append(username)
+        sids.pop(sid, None)
         flask_socketio.leave_room(room)
         socketio.send(f'{username} has left the room.\n', room=room)
+        # If there are no human players left, erase the game after a short delay
+        human_players = [player for player in game.players if not isinstance(player.interactions, AutoInteraction)]
+        print(f"human_players: {human_players}")
+        print(f"disconnected_players: {disconnected_players[room]}")
+        if len(disconnected_players[room]) == len(human_players):
+            game.kill_scheduled = True
+            socketio.sleep(30)
+            if game.kill_scheduled:
+                game.killed = True
+                game.heartbeat.stop()
+                # Erase the game from existence
+                games.pop(room, None)
+                disconnected_players.pop(room, None)
+                cpus.pop(room, None)
+                socketio.send(f'Game {room} has ended.\n', room=room)
     except KeyError:
         pass
+
+
+class HeartBeat():
+    def __init__(self, game):
+        self.game = game
+        self.run = True
+        self.beats_per_second = 2 # Must be an integer
+        self.message_interval = 60 # In seconds
+        self.sleep_time = 1 / self.beats_per_second
+        self.message_frequency = self.beats_per_second * self.message_interval
+
+    def __call__(self):
+        counter = 0
+        while self.run:
+            socketio.sleep(self.sleep_time)
+            if counter == self.message_frequency:
+                counter = 0
+                print(f"<3 Game {self.game.room} heartbeat <3")
+            if not self.game.started:
+                continue
+            try:
+                for player in self.game.players:
+                    if isinstance(player.interactions, BrowserInteraction):
+                        player.interactions.display_all()
+            except Exception as exception:
+                print(exception)
+            counter += 1
+
+    def stop(self):
+        self.run = False
 
 
 if __name__ == '__main__':
