@@ -44,6 +44,9 @@
                 ||
                 // Don't allow selection if the card costs more than the maximum cost
                 (!selected && waitingForSelection.maxCost != null && cost > waitingForSelection.maxCost)
+                ||
+                // Dont allow selection if the card is not in the supply
+                (!selected && quantity == 0)
             ) {
                 return;
             }
