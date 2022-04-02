@@ -18,15 +18,7 @@
     function handleSelected(event) {
         if (waitingForSelection.value) {
             var selectedCards = event.detail.selectedCards;
-            if (waitingForSelection.handler(selectedCards)) {
-                waitingForSelection.value = false;
-                waitingForSelection.handler = null;
-                waitingForSelection.type = "";
-                waitingForSelection.maxCards = null;
-                waitingForSelection.maxCost = null;
-                waitingForSelection.force = false;
-                waitingForSelection.prompt = false;
-            }
+            waitingForSelection.handler(selectedCards);
         }
     }
 
@@ -96,6 +88,22 @@
             waitingForSelection.handler = handleCardSelected;
             waitingForSelection.force = data.force;
             waitingForSelection.maxCards = 1;
+        }
+    );
+
+    socket.on(
+        "response received",
+        (data) => {
+            console.log("server received response")
+            waitingForSelection = {
+                value: false,
+                handler: null,
+                type: "",
+                maxCards: null,
+                maxCost: null,
+                force: false,
+                prompt: null,
+            }
         }
     );
 </script>

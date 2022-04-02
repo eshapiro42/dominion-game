@@ -60,7 +60,13 @@ class BrowserInteraction(Interaction):
             if tries == 30 or tries % 60 == 0:
                 print(f"Still waiting for input after {tries} seconds")
 
+        # Acknowledge the response
+        self.socketio.emit(
+            "response received",
+            to=self.sid,
+        )
         # Return the response
+        print(f"Response data: {self.response_data}")
         return self.response_data
 
     def _enter_choice(self, prompt):
