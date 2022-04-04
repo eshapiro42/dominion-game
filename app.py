@@ -201,7 +201,7 @@ class HeartBeat():
     def __init__(self, game):
         self.game = game
         self.run = True
-        self.beats_per_second = 10 # Must be an integer
+        self.beats_per_second = 5 # Must be an integer
         self.message_interval = 60 # In seconds
         self.sleep_time = 1 / self.beats_per_second
         self.message_frequency = self.beats_per_second * self.message_interval
