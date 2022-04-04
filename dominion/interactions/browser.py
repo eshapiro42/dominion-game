@@ -9,11 +9,11 @@ from .interaction import Interaction
 
 class BrowserInteraction(Interaction):
     def display_all(self):
-            self.display_hand()
-            self.display_played_cards()
-            self.display_supply()
-            self.display_discard_pile()
-            self.display_trash()
+        self.display_hand()
+        self.display_played_cards()
+        self.display_supply()
+        self.display_discard_pile()
+        self.display_trash()
 
     @contextmanager
     def move_cards(self):
@@ -29,18 +29,8 @@ class BrowserInteraction(Interaction):
         """
         Send a request to the player and wait for a response, then return it.
         """
-        event = Event()
-        response = None
-
-        # Callback to process the response 
-        @self.socketio.on("response")
-        def handle_response(response_data):
-            nonlocal event
-            nonlocal response
-            response = response_data
-            event.set()
-            self.response_data = response_data
-
+        self.event = Event()
+        self.response = None
         # Try in a loop with a one second timeout in case an event gets missed or a network error occurs
         tries = 0
         while True:
@@ -51,23 +41,22 @@ class BrowserInteraction(Interaction):
                 to=self.sid,
             )
             # Wait for response
-            if event.wait(1):
+            if self.event.wait(1):
                 # Response was received
                 break
             if self.game.killed:
                 raise Exception(f"Game {self.room} was killed.")
             tries += 1
             if tries == 30 or tries % 60 == 0:
-                print(f"Still waiting for input after {tries} seconds")
-
+                print(f"Still waiting for input from player {self.player.name} in room {self.room} after {tries} seconds")
         # Acknowledge the response
         self.socketio.emit(
             "response received",
             to=self.sid,
         )
         # Return the response
-        print(f"Response data: {self.response_data}")
-        return self.response_data
+        print(f"Response data: {self.response}")
+        return self.response
 
     def _enter_choice(self, prompt):
         return self._call(

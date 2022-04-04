@@ -121,7 +121,7 @@ def add_cpu(data):
     game_startable_before = game.startable
     cpu_name = f'CPU {cpu_num}'
     game.add_player(cpu_name, sid=None, interactions_class=AutoInteraction)
-    socketio.send(f'{cpu_name} has entered the room.\n', room=room)
+    socketio.send(f'{cpu_name} has entered room {room}.\n', room=room)
     # If the game just became startable, push an event
     game_startable_after = game.startable
     if game_startable_after != game_startable_before:
@@ -140,7 +140,7 @@ def start_game(data):
     require_buy = data['requireBuy']
     require_trashing = data['requireTrashing']
     # Send the game started event
-    socketio.send(f'{username} has started the game.\n', room=room)
+    socketio.send(f'{username} has started game {room}.\n', room=room)
     socketio.emit('game started', room=room)
     game = games[room]
     # Add in customization options
@@ -207,6 +207,23 @@ def disconnect():
                 socketio.send(f'Game {room} has ended.\n', room=room)
     except KeyError:
         pass
+
+@socketio.on("response")
+def handle_response(response_data):
+    # Only process responses from the player we're waiting for!!!
+    # Find the player who sent the response
+    try:
+        room = sids[request.sid][0]
+    except:
+        print(f"There is no player with SID {request.sid}.")
+        return
+    game = games[room]
+    for player in game.players:
+        if player.sid == request.sid:
+            break
+    # Process the response
+    player.interactions.response = response_data
+    player.interactions.event.set()
 
 
 class HeartBeat():
