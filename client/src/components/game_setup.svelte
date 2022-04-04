@@ -18,8 +18,12 @@
     ]
 
     var supplyCustomizations = [
-        {name: "Distribute Cost", property: "distributeCost", selected: false},
+        {name: "Distribute cost", property: "distributeCost", selected: false},
         {name: "Disable Attacks", property: "disableAttacks", selected: false},
+        {name: "Require +2 Action", property: "requirePlusTwoAction", selected: false},
+        {name: "Require +1 Card", property: "requireDrawer", selected: false},
+        {name: "Require +1 Buy", property: "requireBuy", selected: false},
+        {name: "Require Trashing", property: "requireTrashing", selected: false},
     ]
 
     function addCPU() {

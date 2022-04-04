@@ -1,4 +1,5 @@
 import copy
+from importlib.metadata import requires
 import prettytable
 import random
 from abc import ABCMeta, abstractmethod
@@ -33,10 +34,10 @@ class Customization:
         self.required_card_classes = set([]) # If nonempty, ensures that each card in the list ends up in the supply
         self.distribute_cost = False # If toggled, ensures there are at least two cards each of cost {2, 3, 4, 5}
         self.disable_attack_cards = False # If toggled, Attack cards are not allowed
-        # require_plus_two_action = False # If toggled, ensures there is at least one card with '+2 Actions'
-        # require_drawer = False # If toggled, ensures there is at least one card with '>= +1 Cards'
-        # require_buy = False # If toggled, ensures there is at least one card with '>= +1 Buys'
-        # require_trashing = False # If toggled, ensures there is at least one card that allows trashing
+        self.require_plus_two_action = False # If toggled, ensures there is at least one card with '+2 Actions'
+        self.require_drawer = False # If toggled, ensures there is at least one card with '>= +1 Cards'
+        self.require_buy = False # If toggled, ensures there is at least one card with '>= +1 Buys'
+        self.require_trashing = True # If toggled, ensures there is at least one card that allows trashing
 
 
 class Supply:
@@ -60,6 +61,26 @@ class Supply:
         possible_kingdom_card_classes = []
         for expansion in self.customization.expansions:
             possible_kingdom_card_classes += expansion.kingdom_card_classes
+        if self.customization.require_plus_two_action:
+            # Require a card with +2 Actions
+            plus_two_action_card_classes = [card_class for card_class in possible_kingdom_card_classes if hasattr(card_class, "extra_actions") and card_class.extra_actions >= 2]
+            plus_two_action_card_class = random.choice(plus_two_action_card_classes)
+            self.customization.required_card_classes.add(plus_two_action_card_class)
+        if self.customization.require_drawer:
+            # Require a card with +1 Card
+            draw_card_classes = [card_class for card_class in possible_kingdom_card_classes if hasattr(card_class, "extra_cards") and card_class.extra_cards >= 1]
+            draw_card_class = random.choice(draw_card_classes)
+            self.customization.required_card_classes.add(draw_card_class)
+        if self.customization.require_buy:
+            # Require a card with +1 Buy
+            buy_card_classes = [card_class for card_class in possible_kingdom_card_classes if hasattr(card_class, "extra_buys") and card_class.extra_buys >= 1]
+            buy_card_class = random.choice(buy_card_classes)
+            self.customization.required_card_classes.add(buy_card_class)
+        if self.customization.require_trashing:
+            # Require a card that allows trashing
+            trash_card_classes = [card_class for card_class in possible_kingdom_card_classes if "trash" in card_class.description.lower()]
+            trash_card_class = random.choice(trash_card_classes)
+            self.customization.required_card_classes.add(trash_card_class)
         # Add in required cards
         for card_class in self.customization.required_card_classes:
             selected_kingdom_card_classes.append(card_class)
@@ -68,10 +89,12 @@ class Supply:
             # Filter out attack cards
             possible_kingdom_card_classes = [card_class for card_class in copy.deepcopy(possible_kingdom_card_classes) if cards.CardType.ATTACK not in card_class.types]
         if self.customization.distribute_cost:
-            # Make sure at least two cards each of cost {2, 3, 4, 5} (this totals 8 cards)
+            # Make sure there are at least two kingdom cards each of cost {2, 3, 4, 5} (this leaves 2 cards of any cost)
+            selected_kingdom_card_classes_by_cost = {cost: [card_class for card_class in selected_kingdom_card_classes if card_class.cost == cost] for cost in range(2, 6)}
             possible_kingdom_card_classes_by_cost = {cost: [card_class for card_class in possible_kingdom_card_classes if card_class.cost == cost] for cost in range(2, 6)}
             for cost in range(2, 6):
-                card_classes_of_cost = random.sample(possible_kingdom_card_classes_by_cost[cost], 2)
+                num_still_needed = max(0, 2 - len(selected_kingdom_card_classes_by_cost[cost]))
+                card_classes_of_cost = random.sample(possible_kingdom_card_classes_by_cost[cost], num_still_needed)
                 for card_class in card_classes_of_cost:
                     selected_kingdom_card_classes.append(card_class)
                     possible_kingdom_card_classes.remove(card_class)

@@ -135,6 +135,10 @@ def start_game(data):
     prosperity = data['prosperity']
     distribute_cost = data['distributeCost']
     disable_attack_cards = data['disableAttacks']
+    require_plus_two_action = data['requirePlusTwoAction']
+    require_drawer = data['requireDrawer']
+    require_buy = data['requireBuy']
+    require_trashing = data['requireTrashing']
     # Send the game started event
     socketio.send(f'{username} has started the game.\n', room=room)
     socketio.emit('game started', room=room)
@@ -148,6 +152,14 @@ def start_game(data):
         game.distribute_cost = True
     if disable_attack_cards:
         game.disable_attack_cards = True
+    if require_plus_two_action:
+        game.require_plus_two_action = True
+    if require_drawer:
+        game.require_drawer = True
+    if require_buy:
+        game.require_buy = True
+    if require_trashing:
+        game.require_trashing = True
     # Start the game's heartbeat
     socketio.start_background_task(game.heartbeat)
     # Start the game (nothing can happen after this)

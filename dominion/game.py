@@ -61,6 +61,11 @@ class Game:
         self.expansions = set()
         self.distribute_cost = False # If toggled, ensures there are at least two cards each of cost {2, 3, 4, 5}
         self.disable_attack_cards = False # If toggled, Attack cards are not allowed
+        self.require_plus_two_action = False # If toggled, ensures there is at least one card with '+2 Actions'
+        self.require_drawer = False # If toggled, ensures there is at least one card with '>= +1 Cards'
+        self.require_buy = False # If toggled, ensures there is at least one card with '>= +1 Buys'
+        self.require_trashing = False # If toggled, ensures there is at least one card that mentions trashing
+
         self.add_expansion(BaseExpansion) # This must always be here or the game will not work
         # self.add_expansion(IntrigueExpansion)
         # self.add_expansion(ProsperityExpansion)
@@ -146,6 +151,10 @@ class Game:
         # Add in other supply customizations
         self.supply.customization.distribute_cost = self.distribute_cost
         self.supply.customization.disable_attack_cards = self.disable_attack_cards
+        self.supply.customization.require_plus_two_action = self.require_plus_two_action
+        self.supply.customization.require_drawer = self.require_drawer
+        self.supply.customization.require_buy = self.require_buy
+        self.supply.customization.require_trashing = self.require_trashing
         # Set up the supply
         self.supply.setup()
         # Print out the supply
