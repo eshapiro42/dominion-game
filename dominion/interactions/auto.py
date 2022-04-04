@@ -18,7 +18,31 @@ class AutoInteraction(Interaction):
     def display_discard_pile(self):
         pass
 
+    def _get_played_cards_data(self):
+        return {
+            "cards" : [card.json for card in self.played_cards],
+        }
+
+    def display_played_cards(self):
+        try:
+            self.socketio.emit(
+                "display played cards",
+                self._get_played_cards_data(),
+                to=self.room, # Always send played cards to all players
+            )
+        except Exception as exception:
+            print(exception)
+
+    def sleep_random(self):
+        """
+        Sleep to simulate thought unless we are running tests.
+        """
+        if not self.game.test:
+            time_to_sleep = random.uniform(1, 3) 
+            self.socketio.sleep(time_to_sleep)
+
     def choose_card_from_hand(self, prompt, force):
+        self.sleep_random()
         print(prompt)
         print()
         if not self.hand:
@@ -54,6 +78,7 @@ class AutoInteraction(Interaction):
                 raise
 
     def choose_specific_card_class_from_hand(self, prompt, force, card_class):
+        self.sleep_random()
         print(prompt)
         print()
         if not any(isinstance(card, card_class) for card in self.hand):
@@ -73,6 +98,7 @@ class AutoInteraction(Interaction):
                 return None
 
     def choose_specific_card_type_from_hand(self, prompt, card_type):
+        self.sleep_random()
         print(prompt)
         print()
         # Only cards of the correct type can be chosen
@@ -99,6 +125,7 @@ class AutoInteraction(Interaction):
                 raise
 
     def choose_card_from_discard_pile(self, prompt, force):
+        self.sleep_random()
         print(prompt)
         print()
         if not self.discard_pile:
@@ -132,7 +159,33 @@ class AutoInteraction(Interaction):
                 print('That is not a valid choice.\n')
                 raise
 
+    def choose_treasures_from_hand(self, prompt):
+        self.sleep_random()
+        print(prompt)
+        print()
+        while True:
+            try:
+                available_treasures = [card for card in self.hand if cards.CardType.TREASURE in card.types]
+                if not available_treasures:
+                    print('There are no treasures in your hand.\n')
+                    return []
+                print(f'Available treasures: {", ".join(map(str, available_treasures))}')
+                num_available_treasures = len(available_treasures)
+                num_chosen_treasures = random.choices(
+                    population=range(num_available_treasures + 1),
+                    weights=range(num_available_treasures + 1) # It's more likely for the CPU to pick more Treasures
+                )[0]
+                chosen_treasure_cards = random.choices(
+                    population=available_treasures,
+                    k=num_chosen_treasures
+                )         
+                print(f'Chosen treasures: {", ".join(map(str, chosen_treasure_cards))}')
+                return chosen_treasure_cards
+            except (IndexError, ValueError):
+                self.send('That is not a valid choice.')
+
     def choose_card_class_from_supply(self, prompt, max_cost, force, invalid_card_classes=None, exact_cost=False):
+        self.sleep_random()
         print(prompt)
         print()
         if invalid_card_classes is None:
@@ -184,6 +237,7 @@ class AutoInteraction(Interaction):
                 raise
 
     def choose_specific_card_type_from_supply(self, prompt, max_cost, card_type, force):
+        self.sleep_random()
         print(prompt)
         print()
         while True:
@@ -217,6 +271,7 @@ class AutoInteraction(Interaction):
                 raise
 
     def choose_specific_card_type_from_trash(self, prompt, max_cost, card_type, force):
+        self.sleep_random()
         print(prompt)
         print()
         while True:
@@ -252,6 +307,7 @@ class AutoInteraction(Interaction):
                 raise
 
     def choose_yes_or_no(self, prompt):
+        self.sleep_random()
         print(prompt)
         print()
         while True:
@@ -268,6 +324,7 @@ class AutoInteraction(Interaction):
             return False
 
     def choose_from_range(self, prompt, minimum, maximum, force):
+        self.sleep_random()
         options = list(range(minimum, maximum + 1))
         print(prompt)
         print()
@@ -293,6 +350,7 @@ class AutoInteraction(Interaction):
                 self.send('That is not a valid choice.')
 
     def choose_from_options(self, prompt, options, force):
+        self.sleep_random()
         print(prompt)
         print()
         while True:

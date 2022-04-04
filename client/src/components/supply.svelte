@@ -50,7 +50,6 @@
     socket.on(
         "choose card class from supply",
         (data) => {
-            console.log(invalidCards);
             invalidCards = data.invalid_cards;
             waitingForSelection.value = true;
             waitingForSelection.prompt = data.prompt;
@@ -77,7 +76,6 @@
     socket.on(
         "response received",
         (data) => {
-            console.log("server received response")
             invalidCards = [];
             waitingForSelection = {
                 value: false,

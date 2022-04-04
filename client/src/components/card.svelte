@@ -119,7 +119,6 @@
 
 <main
     in:fade
-    out:fade
     on:click={clicked}
     on:dblclick={
         () => {

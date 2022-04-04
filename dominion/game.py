@@ -42,8 +42,9 @@ class Game:
         expansions (:obj:`set` of :obj:`.expansion.Expansion`): A set of Expansion classes. This must always include :obj:`.expansion.BaseExpansion` for the game to work. 
         supply (:obj:`.supply.Supply`): The Supply for this game.
     '''
-    def __init__(self, socketio=None, room=None):
+    def __init__(self, socketio=None, room=None, test=False):
         self.socketio = socketio
+        self.test = test # If not running tests, slows down CPU interactions to simulate thought
         self.room = room
         self.player_names = []
         self.player_sids = []

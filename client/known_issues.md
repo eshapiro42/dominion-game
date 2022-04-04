@@ -7,5 +7,3 @@
         at update (index.mjs:1085:36)
         at flush (index.mjs:1052:13)
     ````
-
-2. CPUs' cards don't show up in the Played Cards carousel.

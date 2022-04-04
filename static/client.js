@@ -64,7 +64,7 @@ socket.on("game startable", function (data) {
 });
 
 socket.on("game started", function (data) {
-    console.log("GAME STARTED");
+    console.log("The game has started.");
     $("#gameSetupContainer").hide();
 });
 
