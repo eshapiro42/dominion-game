@@ -11,10 +11,11 @@
     export let effects;
     export let description;
     export let cost;
-    export let type;
+    export let type = "";
     export let id;
     export let quantity = null;
-    export let waitingForSelection; 
+
+    export let waitingForSelection;
     export let numSelected;
     export let selected = false;
     export let selectedAll;
@@ -22,6 +23,7 @@
 
     let typeLowerCase = type.toLowerCase();
     let hovering = false;
+    let selectable = true;
 
     $: action = typeLowerCase.includes("action") && !typeLowerCase.includes("attack") && !typeLowerCase.includes("reaction");
     $: attack = typeLowerCase.includes("attack")
@@ -37,37 +39,50 @@
     $: renderedEffects = effects.map(renderText);
     $: renderedDescription = renderText(description);
 
-    function clicked() {
-        if (waitingForSelection.value && type.toLowerCase().includes(waitingForSelection.type.toLowerCase())) {
-            if (
-                // Don't allow selection if the maximum number of cards is already selected (unselection is fine)
-                (!selected && waitingForSelection.maxCards != null && numSelected >= waitingForSelection.maxCards)
-                ||
+    $: {
+        if (!waitingForSelection.value) {
+            selectable = true;
+        }
+        else {
+            selectable = (
+                // Don't allow selection if this card is the wrong type
+                type.toLowerCase().includes(waitingForSelection.type.toLowerCase())
                 // Don't allow selection if the card costs more than the maximum cost
-                (!selected && waitingForSelection.maxCost != null && cost > waitingForSelection.maxCost)
-                ||
+                && (waitingForSelection.maxCost == null || cost <= waitingForSelection.maxCost)
                 // Dont allow selection if the card is not in the supply
-                (!selected && quantity == 0)
-                ||
+                && (quantity != 0)
                 // Don't allow selection if the card is explicity disallowed (e.g., Contraband)
-                (!selected && invalidCards.includes(name))
-            ) {
-                return;
-            }
-            selected = !selected;
-            dispatch(
-                "clicked", 
-                {
-                    name: name,
-                    effects: effects,
-                    description: description,
-                    cost: cost,
-                    type: type,
-                    id: id,
-                    selected: selected,
-                }
+                && (!invalidCards.includes(name))
             );
         }
+    }
+
+    $: unselectable = !selectable;
+
+    function clicked() {
+        if (
+            !waitingForSelection.value 
+            ||
+            !selectable
+            ||
+            // Don't allow selection if the maximum number of cards is already selected (unselection is fine)
+            (!selected && waitingForSelection.maxCards != null && numSelected >= waitingForSelection.maxCards)
+        ) {
+            return;
+        }
+        selected = !selected;
+        dispatch(
+            "clicked", 
+            {
+                name: name,
+                effects: effects,
+                description: description,
+                cost: cost,
+                type: type,
+                id: id,
+                selected: selected,
+            }
+        );
     }
 
     $: if (waitingForSelection != null && !waitingForSelection.value) {
@@ -131,6 +146,7 @@
     class:victory
     class:curse
     class:treasure
+    class:unselectable
     class:selected
 >
     {#if quantity == null}
@@ -296,5 +312,9 @@
         bottom: $margin;
         margin-top: $padding-basis;
         padding-right: $padding-basis + 4px;
+    }
+
+    .unselectable {
+        opacity: 0.5;
     }
 </style>
