@@ -110,7 +110,8 @@ class Turn:
                 "buys": s(self.buys_remaining, "Buy"),
                 "coppers": self.coppers_remaining,
                 "turns_played": self.player.turns_played,
-            }
+            },
+            room=self.game.room,
         )
 
 
