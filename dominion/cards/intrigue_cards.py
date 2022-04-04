@@ -765,6 +765,7 @@ class Replace(AttackCard):
             self.owner.trash(card_to_trash)
             # Gain a card costing up to 2 $ more than it
             max_cost = card_to_trash.cost + 2
+            prompt = f'Gain a card costing up to {max_cost} $.'
             card_class_to_gain = self.interactions.choose_card_class_from_supply(prompt, max_cost, force=True)
             # If it's an action or a treasure, gain to deck
             if CardType.ACTION in card_class_to_gain.types or CardType.TREASURE in card_class_to_gain.types:
