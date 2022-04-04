@@ -329,8 +329,8 @@ class BuyPhase(Phase):
         for treasure in treasures:
             treasure_name_counts[treasure.name] += 1
         treasure_counts = [(self.supply.card_name_to_card_class(name), quantity) for name, quantity in treasure_name_counts.items()] # convert from dict[treasure_name, count] into list[tuple(treasure_class, count)]
-        # Sort the treasures by cost
-        sorted_treasure_counts = sorted(treasure_counts, key=lambda treasure_tuple: treasure_tuple[0].cost)
+        # Sort the treasures by value
+        sorted_treasure_counts = sorted(treasure_counts, key=lambda treasure_tuple: treasure_tuple[0].value, reverse=True)
         treasure_strings = [s(quantity, treasure.name) for treasure, quantity in sorted_treasure_counts]
         self.game.broadcast(f"{self.player} played Treasures: {', '.join(treasure_strings)}.")
         # Play the Treasures
