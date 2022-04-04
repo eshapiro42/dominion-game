@@ -35,12 +35,12 @@
         </div>
         <div>
             <div>
-                {actions} Actions
+                {actions}
         </div>
         </div>
         <div>
             <div>
-                {buys} Buys
+                {buys}
         </div>
         </div>
         <div>

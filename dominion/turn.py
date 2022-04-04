@@ -106,8 +106,8 @@ class Turn:
             "current turn info",
             {
                 "current_phase": self.current_phase,
-                "actions": self.actions_remaining,
-                "buys": self.buys_remaining,
+                "actions": s(self.actions_remaining, "Action"),
+                "buys": s(self.buys_remaining, "Buy"),
                 "coppers": self.coppers_remaining,
                 "turns_played": self.player.turns_played,
             }
