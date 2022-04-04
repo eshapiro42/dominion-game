@@ -47,7 +47,7 @@ class Supply:
         self.post_gain_hooks = defaultdict(list)
         self.customization = Customization()
         # TODO: Remove these (they are for debugging specific cards)
-        # self.customization.required_card_classes.add(intrigue_cards.Diplomat)
+        self.customization.required_card_classes.add(prosperity_cards.Contraband)
 
     def setup(self):
         self.select_kingdom_cards()
@@ -89,7 +89,7 @@ class Supply:
             # Filter out attack cards
             possible_kingdom_card_classes = [card_class for card_class in copy.deepcopy(possible_kingdom_card_classes) if cards.CardType.ATTACK not in card_class.types]
         if self.customization.distribute_cost:
-            # Make sure there are at least two kingdom cards each of cost {2, 3, 4, 5} (this leaves 2 cards of any cost)
+            # Make sure there are at least two kingdom cards each of cost {2, 3, 4, 5} (this leaves 2 cards of any cost if no other customizations are chosen)
             selected_kingdom_card_classes_by_cost = {cost: [card_class for card_class in selected_kingdom_card_classes if card_class.cost == cost] for cost in range(2, 6)}
             possible_kingdom_card_classes_by_cost = {cost: [card_class for card_class in possible_kingdom_card_classes if card_class.cost == cost] for cost in range(2, 6)}
             for cost in range(2, 6):
@@ -99,7 +99,7 @@ class Supply:
                     selected_kingdom_card_classes.append(card_class)
                     possible_kingdom_card_classes.remove(card_class)
         # Select the remaining cards at random
-        num_cards_remaining = 10 - len(selected_kingdom_card_classes)
+        num_cards_remaining = max(0, 10 - len(selected_kingdom_card_classes))
         selected_kingdom_card_classes += random.sample(possible_kingdom_card_classes, num_cards_remaining)
         # Sort kingdom cards first by cost, then by name
         for card_class in sorted(selected_kingdom_card_classes, key=lambda card_class: (card_class.cost, card_class.name)):
