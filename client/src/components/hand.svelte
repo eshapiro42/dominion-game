@@ -94,7 +94,6 @@
     socket.on(
         "response received",
         (data) => {
-            console.log("server received response")
             waitingForSelection = {
                 value: false,
                 handler: null,

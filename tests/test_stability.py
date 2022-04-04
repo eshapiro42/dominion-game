@@ -41,7 +41,7 @@ def test_stability():
 
     Expansions and number of CPU players are randomly selected for each game.
     '''
-    game = Game()
+    game = Game(test=True)
     # Add a randomly selected set of expansions into the game
     num_expansions = random.randint(0, len(EXPANSIONS))
     expansions_to_include = random.sample(EXPANSIONS, num_expansions)

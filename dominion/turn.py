@@ -2,9 +2,10 @@ import copy
 from abc import ABCMeta, abstractmethod
 from collections import defaultdict
 from dataclasses import dataclass
+
 from .cards import cards, base_cards
 from .grammar import a, s
-from .interactions import BrowserInteraction
+from .interactions import AutoInteraction, BrowserInteraction
 
 
 class Turn:
@@ -237,7 +238,7 @@ class BuyPhase(Phase):
                 treasures_available.append(card)
         # Ask the player which Treasures they would like to play
         prompt = f'Which Treasures would you like to play this turn?'
-        if isinstance(self.player.interactions, BrowserInteraction):
+        if isinstance(self.player.interactions, BrowserInteraction) or isinstance(self.player.interactions, AutoInteraction):
             treasures_to_play = self.player.interactions.choose_treasures_from_hand(prompt)
         else:
             treasures_to_play = []

@@ -35,8 +35,6 @@
             show = false;
         }
     }
-
-    $: console.log(type);
 </script>
 
 <main>

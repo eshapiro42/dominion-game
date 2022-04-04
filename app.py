@@ -201,7 +201,7 @@ class HeartBeat():
     def __init__(self, game):
         self.game = game
         self.run = True
-        self.beats_per_second = 2 # Must be an integer
+        self.beats_per_second = 10 # Must be an integer
         self.message_interval = 60 # In seconds
         self.sleep_time = 1 / self.beats_per_second
         self.message_frequency = self.beats_per_second * self.message_interval
@@ -213,12 +213,16 @@ class HeartBeat():
             if counter == self.message_frequency:
                 counter = 0
                 print(f"<3 Game {self.game.room} heartbeat <3")
-            if not self.game.started:
+            if not self.game.started or self.game.current_turn is None:
                 continue
             try:
                 for player in self.game.players:
                     if isinstance(player.interactions, BrowserInteraction):
                         player.interactions.display_all()
+                    # Need to handle displaying CPU played cards explicitly
+                    current_player = self.game.current_turn.player
+                    if isinstance(current_player.interactions, AutoInteraction):
+                        current_player.interactions.display_played_cards()
             except Exception as exception:
                 print(exception)
             counter += 1
