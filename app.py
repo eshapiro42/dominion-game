@@ -224,8 +224,9 @@ class HeartBeat():
                     current_player = self.game.current_turn.player
                     if isinstance(current_player.interactions, AutoInteraction):
                         current_player.interactions.display_played_cards()
-                # Display the current turn
-                self.game.current_turn.display()
+                # Display the current turn (not as often)
+                if counter % 2 == 0:
+                    self.game.current_turn.display()
             except Exception as exception:
                 print(exception)
             counter += 1
