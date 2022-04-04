@@ -35,6 +35,8 @@
             show = false;
         }
     }
+
+    $: renderedPrompt = prompt.replace("$", `<i class="fa-solid fa-coins"></i>`);
 </script>
 
 <main>
@@ -46,7 +48,7 @@
             <div class="backdrop">
 
                 <div class="flex-item">
-                    <h5>{prompt}</h5>
+                    <h5>{@html renderedPrompt}</h5>
                 </div>
 
                 <div class="flex-item">

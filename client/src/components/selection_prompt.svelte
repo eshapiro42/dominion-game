@@ -17,10 +17,12 @@
         );
     }
 
+    $: renderedPrompt = waitingForSelection.prompt.replace("$", `<i class="fa-solid fa-coins"></i>`);
+
 </script>
 
 <main>
-    <p class="flex-item"><b>{waitingForSelection.prompt}</b></p>
+    <p class="flex-item"><b>{@html renderedPrompt}</b></p>
     <div class="flex-item">
         <button type="button" on:click={handleSendSelection}>Send Selection</button>
         {#if waitingForSelection.maxCards == null && waitingForSelection.maxCards != 1}
