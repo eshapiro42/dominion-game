@@ -61,6 +61,7 @@
 
     .infoContainer {
         flex-basis: 100%;
+        flex-wrap: wrap;
         display: flex;
         overflow-x: auto;
         padding-left: 10px;
@@ -74,7 +75,7 @@
     .playerInfo {
         display: flex;
         flex-direction: column;
-        justify-content: space-between;
+        justify-content: space-evenly;
         gap: 10px;
         padding: 25px;
         background-color: #343338;
