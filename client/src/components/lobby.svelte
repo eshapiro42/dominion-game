@@ -5,7 +5,7 @@
 
     export let socket;
 
-    let username = null;
+    let username = "";
     let room = null;
     let roomCreator = false;
     let shown = true;
@@ -34,6 +34,10 @@
     }
 
     function joinRoom() {
+        if (username.length < 3) {
+            alert("Username must be at least 3 characters.");
+            return;
+        }
         socket.emit(
             "join room",
             {
@@ -46,6 +50,10 @@
     }
 
     function createRoom() {
+        if (username.length < 3) {
+            alert("Username must be at least 3 characters.");
+            return;
+        }
         roomCreator = true;
         socket.emit(
             "create room",
