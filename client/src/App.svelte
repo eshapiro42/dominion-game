@@ -9,6 +9,7 @@
     import SummaryBar from "./components/summary_bar.svelte";
     import Supply from "./components/supply.svelte";
     import Toasts from "./components/toasts.svelte";
+    import TradeRoute from "./components/trade_route.svelte";
     import Trash from "./components/trash.svelte";
 
     export let socket;
@@ -179,6 +180,11 @@
     />
 
     <Trash
+        {socket}
+        {gameStarted}
+    />
+
+    <TradeRoute
         {socket}
         {gameStarted}
     />
