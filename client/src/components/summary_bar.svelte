@@ -3,18 +3,20 @@
     export let gameStarted = false;
     export let currentPlayer = "";
     
+    let phase = "";
     let actions = 1;
     let buys = 1;
     let coppers = 0;
-    let turns_played = 0;
+    let turnsPlayed = 0;
 
     socket.on(
         "current turn info",
         (data) => {
+            phase = data.current_phase;
             actions = data.actions;
             buys = data.buys;
             coppers = data.coppers;
-            turns_played = data.turns_played;
+            turnsPlayed = data.turns_played;
         }
     );
 </script>
@@ -23,7 +25,12 @@
     <main class="container">
         <div>
             <div>
-                Current Player: {currentPlayer = currentPlayer == null ? "No One" : currentPlayer}
+                {currentPlayer = currentPlayer == null ? "No One" : currentPlayer}
+            </div>
+        </div>
+        <div>
+            <div>
+                {phase}
             </div>
         </div>
         <div>
@@ -43,7 +50,7 @@
         </div>
         <div>
             <div>
-                Turn #{turns_played}
+                Turn #{turnsPlayed}
         </div>
         </div>
     </main>

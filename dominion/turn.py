@@ -35,6 +35,7 @@ class Turn:
         self.actions_remaining = 1
         self.buys_remaining = 1
         self.coppers_remaining = 0
+        self.current_phase = "Action Phase"
         self.action_phase = ActionPhase(turn=self)
         self.buy_phase = BuyPhase(turn=self)
         self.cleanup_phase = CleanupPhase(turn=self)
@@ -104,6 +105,7 @@ class Turn:
         self.game.socketio.emit(
             "current turn info",
             {
+                "current_phase": self.current_phase,
                 "actions": self.actions_remaining,
                 "buys": self.buys_remaining,
                 "coppers": self.coppers_remaining,
@@ -242,6 +244,7 @@ class BuyPhase(Phase):
         they would like to buy (then gain them).
 
         '''
+        self.turn.current_phase = "Buy Phase"
         # Find any Treasures in the player's hand
         treasures_available = []
         for card in self.player.hand:
@@ -419,6 +422,7 @@ class CleanupPhase(Phase):
 
         All cards in the Supply have their cost modifiers reset to the default.
         '''
+        self.turn.current_phase = "Cleanup Phase"
         # Clean up the player's mat
         self.player.cleanup()
         # Show their hand for next turn
