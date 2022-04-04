@@ -75,6 +75,11 @@
     let selectedAll = false;
     let selectedCardIds = [];
 
+    let displayAs = "row";
+
+    $: displayAsRow = displayAs == "row";
+    $: displayAsGrid = displayAs == "grid";
+
     let sortByOptions = [
         {text: "Type", property: "type"},
         {text: "Cost", property: "cost"},
@@ -156,15 +161,24 @@
     >
         <div class="title">
             <h4>{title}</h4>
-            <div class="sort">
-                <p>Sort By<p>
-                <select bind:value={sortByProperty}>
-                    {#each sortByOptions as option}
-                        <option value={option.property}>
-                            {option.text}
-                        </option>
-                    {/each}
-                </select>
+            <div class="dropdowns">
+                <div class="sort">
+                    <p>Sort By<p>
+                    <select bind:value={sortByProperty}>
+                        {#each sortByOptions as option}
+                            <option value={option.property}>
+                                {option.text}
+                            </option>
+                        {/each}
+                    </select>
+                </div>
+                <div class="displayAs">
+                    <p>Display As<p>
+                    <select bind:value={displayAs}>
+                        <option value="row">Row</option>
+                        <option value="grid">Grid</option>
+                    </select>
+                </div>
             </div>
         </div>
 
@@ -182,7 +196,11 @@
             </div>
         {/if}
 
-        <div class="cards">
+        <div
+            class="cards"
+            class:displayAsRow
+            class:displayAsGrid
+        >
             {#each sortedCards as card (card.id)}
                 <Card
                     {...card}
@@ -227,6 +245,16 @@
         display: flex;
         justify-content: center;
         align-items: baseline;
+        flex-wrap: nowrap;
+        gap: 10px;
+    }
+
+    .displayAs {
+        margin-top: 25px;
+        display: flex;
+        justify-content: center;
+        align-items: baseline;
+        flex-wrap: nowrap;
         gap: 10px;
     }
 
@@ -244,6 +272,12 @@
         height: 100%;
         text-align: center;
         margin-top: 25px;
+    }
+
+    .dropdowns {
+        display: flex;
+        justify-content: center;
+        gap: 100px;
     }
 
     .selectionPrompt {
@@ -265,5 +299,14 @@
         padding-bottom: 10px;
         padding-top: 25px;
         text-align: center;
+    }
+
+    .displayAsRow {
+        flex-wrap: nowrap;
+    }
+
+    .displayAsGrid {
+        flex-wrap: wrap;
+        row-gap: 5px;
     }
 </style>
