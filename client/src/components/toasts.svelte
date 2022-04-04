@@ -114,7 +114,7 @@
         on:mouseenter={cancelTimers}
         on:mouseleave={restartTimers}
     >
-        {#each showingToasts as toast (toast.id)}
+        {#each showingToasts as toast}
             <div class="toast"
                 class:playerMessage="{toast.playerMessage}"
                 transition:fade
