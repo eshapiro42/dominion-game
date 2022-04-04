@@ -54,7 +54,7 @@ def join_room(data):
         game.kill_scheduled = False # Cancel erasure of the game if necessary
         game_startable_before = game.startable
         game.add_player(username, sid, interactions_class=interaction_class)
-        socketio.send(f'{username} has entered the room.\n', room=room)
+        socketio.send(f'{username} has entered room {room}.\n', room=room)
         # If the game just became startable, push an event
         game_startable_after = game.startable
         if game_startable_after != game_startable_before:
@@ -63,12 +63,11 @@ def join_room(data):
     except GameStartedError:
         if username in disconnected_players[room]:
             disconnected_players[room].remove(username)
-            socketio.send(f'{username} has re-entered the room.\n', room=room)
             # Find the player object and set its sid
             for player in game.players:
                 if player.name == username:
                     player.sid = sid
-                    socketio.send(f"Player {username} has rejoined the game.\n", room=room)
+                    socketio.send(f"{username} has rejoined game {room}.\n", room=room)
                     print(f"New sid for player {username}: {sid}")
                     # Send the events needed to get the rejoined player's UI back in the right state
                     socketio.emit("game started", to=sid)
@@ -189,7 +188,7 @@ def disconnect():
         disconnected_players[room].append(username)
         sids.pop(sid, None)
         flask_socketio.leave_room(room)
-        socketio.send(f'{username} has left the room.\n', room=room)
+        socketio.send(f'{username} has left room {room}.\n', room=room)
         # If there are no human players left, erase the game after a short delay
         human_players = [player for player in game.players if not isinstance(player.interactions, AutoInteraction)]
         print(f"human_players: {human_players}")
