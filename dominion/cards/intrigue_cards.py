@@ -265,6 +265,7 @@ class Swindler(AttackCard):
         card_to_trash = player.take_from_deck()
         if card_to_trash is not None:
             self.supply.trash(card_to_trash)
+            self.game.broadcast(f'{player} trashed {a(card_to_trash)}.')
             # Gain a card with the same cost that the attacker chooses
             cost = card_to_trash.cost
             prompt = f'{attacker}: choose a card costing {cost} $ for {player} to gain.'
