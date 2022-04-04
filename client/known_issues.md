@@ -8,6 +8,4 @@
         at flush (index.mjs:1052:13)
     ````
 
-2. It is still possible to buy the named card when a Loan is played. The entire server-side of these interactions should probably be tightened up.
-
-3. Card carousels are not always updated when they should be. The server should send updates whenever something changes. Maybe add getters and setters to the supply, etc. to handle this.
+2. CPUs' cards don't show up in the Played Cards carousel.

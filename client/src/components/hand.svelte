@@ -113,6 +113,7 @@
         <CardCarousel
             title="Your Hand"
             {cards}
+            sortByProperty = "type"
             {waitingForSelection}
             on:selected={handleSelected}
         />

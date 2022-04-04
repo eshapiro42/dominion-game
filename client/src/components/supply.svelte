@@ -3,8 +3,9 @@
 
     export let socket;
     export let gameStarted;
-
+    
     let cards = [];
+    let invalidCards;
     let waitingForSelection = {
         value: false,
         handler: null,
@@ -13,7 +14,7 @@
         maxCost: null,
         force: false,
         prompt: null,
-    }
+    };
 
     function handleSelected(event) {
         if (waitingForSelection.value) {
@@ -49,6 +50,8 @@
     socket.on(
         "choose card class from supply",
         (data) => {
+            console.log(invalidCards);
+            invalidCards = data.invalid_cards;
             waitingForSelection.value = true;
             waitingForSelection.prompt = data.prompt;
             waitingForSelection.handler = handleSupplyCardClassSelected;
@@ -75,6 +78,7 @@
         "response received",
         (data) => {
             console.log("server received response")
+            invalidCards = [];
             waitingForSelection = {
                 value: false,
                 handler: null,
@@ -83,7 +87,7 @@
                 maxCost: null,
                 force: false,
                 prompt: null,
-            }
+            };
         }
     );
 </script>
@@ -93,6 +97,8 @@
         <CardCarousel
             title="Supply"
             {cards}
+            {invalidCards}
+            sortByProperty = "cost"
             {waitingForSelection}
             on:selected={handleSelected}
         />

@@ -288,13 +288,17 @@ class BrowserInteraction(Interaction):
                             "prompt": prompt,
                             "max_cost": max_cost if max_cost != math.inf else None,
                             "force": force,
+                            "invalid_cards": [card_class.name for card_class in invalid_card_classes],
                         }
                     )
                     if card_data is None:
                         return None
                     for card_class, card_stack in self.supply.card_stacks.items():
                         if card_data["name"] == card_stack.example.name:
-                            return card_class
+                            break
+                    if card_class not in buyable_card_stacks:
+                        raise ValueError()
+                    return card_class
                 except (IndexError, ValueError, TypeError):
                     self.send('That is not a valid choice.')
 

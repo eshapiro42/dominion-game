@@ -357,7 +357,7 @@ class Contraband(TreasureCard):
     description = '\n'.join(
         [
             '3 $',
-            # '+1 Buy',
+            '+1 Buy',
             "When you play this, the player to your left names a card. You can't buy that card this turn."
         ]
     )

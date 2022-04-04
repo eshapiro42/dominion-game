@@ -83,6 +83,7 @@
         <CardCarousel
             title="Trash"
             {cards}
+            sortByProperty = "orderSent"
             {waitingForSelection}
             on:selected={handleSelected}
         />

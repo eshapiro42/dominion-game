@@ -18,6 +18,7 @@
     export let numSelected;
     export let selected = false;
     export let selectedAll;
+    export let invalidCards = [];
 
     let typeLowerCase = type.toLowerCase();
     let hovering = false;
@@ -47,6 +48,9 @@
                 ||
                 // Dont allow selection if the card is not in the supply
                 (!selected && quantity == 0)
+                ||
+                // Don't allow selection if the card is explicity disallowed (e.g., Contraband)
+                (!selected && invalidCards.includes(name))
             ) {
                 return;
             }

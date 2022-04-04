@@ -82,6 +82,7 @@
         <CardCarousel
             title="Your Discard Pile"
             {cards}
+            sortByProperty = "orderSent"
             {waitingForSelection}
             on:selected={handleSelected}
         />
