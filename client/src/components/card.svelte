@@ -317,5 +317,7 @@
     .unselectable {
         opacity: 0.5;
         box-shadow: none;
+        top: 1px;
+        left: 1px;
     }
 </style>
