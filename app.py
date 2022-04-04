@@ -253,7 +253,16 @@ class HeartBeat():
                     if isinstance(current_player.interactions, AutoInteraction):
                         current_player.interactions.display_played_cards()
                 # Display current turn info in status bar
-                self.game.current_turn.display()
+                if hasattr(self.game, "current_turn"):
+                    self.game.current_turn.display()
+                # Display player info
+                if hasattr(self.game, "turn_order"):
+                    players_info = [player.get_info() for player in self.game.turn_order] # Get player info in turn order
+                    socketio.emit(
+                        "players info",
+                        players_info,
+                        room=self.game.room
+                    )
             except Exception as exception:
                 print(exception)
             counter += 1
