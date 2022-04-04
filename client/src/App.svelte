@@ -96,6 +96,20 @@
             console.log(socket.id);
         }
     )
+
+    socket.on(
+        "response received",
+        () => {
+            popUp = {
+                show: false,
+                prompt: "",
+                force: false,
+                type: null,
+                range: null,
+                options: null,
+            }
+        }
+    )
 </script>
 
 <main>
