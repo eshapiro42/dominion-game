@@ -701,7 +701,7 @@ class Mine(ActionCard):
     types = [CardType.ACTION]
     image_path = ''
 
-    description = 'You may trash a Treasure from your hand. Gain a Treasure to your hand costing up to $3 more than it.'
+    description = 'You may trash a Treasure from your hand. Gain a Treasure to your hand costing up to 3 $ more than it.'
 
     extra_cards = 0
     extra_actions = 0
