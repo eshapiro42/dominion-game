@@ -5,6 +5,7 @@
     import Lobby from "./components/lobby.svelte";
     import PlayedCards from "./components/played_cards.svelte";
     import PopUp from "./components/pop_up.svelte";
+    import SummaryBar from "./components/summary_bar.svelte";
     import Supply from "./components/supply.svelte";
     import Toasts from "./components/toasts.svelte";
     import Trash from "./components/trash.svelte";
@@ -119,6 +120,12 @@
         {socket}
         {username}
         {room}
+    />
+
+    <SummaryBar
+        {socket}
+        {gameStarted}
+        {currentPlayer}
     />
 
     <Lobby 

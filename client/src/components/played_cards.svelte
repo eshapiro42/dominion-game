@@ -23,12 +23,14 @@
         },
     )
 
+    $: currentPlayerName = currentPlayer == null ? "No One" : currentPlayer;
+
 </script>
 
 {#if gameStarted}
     <main>
         <CardCarousel
-            title="{currentPlayer}'s Played Cards"
+            title="{currentPlayerName}'s Played Cards"
             sortByProperty = "orderSent"
             {waitingForSelection}
             {cards}

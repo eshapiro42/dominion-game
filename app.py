@@ -216,6 +216,7 @@ class HeartBeat():
             if not self.game.started or self.game.current_turn is None:
                 continue
             try:
+                # Display cards in carousels
                 for player in self.game.players:
                     if isinstance(player.interactions, BrowserInteraction):
                         player.interactions.display_all()
@@ -223,6 +224,8 @@ class HeartBeat():
                     current_player = self.game.current_turn.player
                     if isinstance(current_player.interactions, AutoInteraction):
                         current_player.interactions.display_played_cards()
+                # Display the current turn
+                self.game.current_turn.display()
             except Exception as exception:
                 print(exception)
             counter += 1

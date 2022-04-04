@@ -149,11 +149,11 @@
     }
 </script>
 
-<main
-    class="container"
-    class:active    
->
-    <a id="{title}">
+<a id="{title}">
+    <main
+        class="container"
+        class:active    
+    >
         <div class="title">
             <h4>{title}</h4>
             <div class="sort">
@@ -167,39 +167,39 @@
                 </select>
             </div>
         </div>
-    </a>
 
-    {#if waitingForSelection.value}
-        <div class="selectionPrompt">
-            <SelectionPrompt 
-                {waitingForSelection}
-                on:sendSelection={sendSelection}
-                on:selectAll={
-                    () => {
-                        selectedAll = true;
+        {#if waitingForSelection.value}
+            <div class="selectionPrompt">
+                <SelectionPrompt 
+                    {waitingForSelection}
+                    on:sendSelection={sendSelection}
+                    on:selectAll={
+                        () => {
+                            selectedAll = true;
+                        }
                     }
-                }
-            />
-        </div>
-    {/if}
-
-    <div class="cards">
-        {#each sortedCards as card (card.id)}
-            <Card
-                {...card}
-                {invalidCards}
-                {waitingForSelection}
-                {selectedAll}
-                {numSelected}
-                on:clicked={handleClicked}
-            />
-        {:else}
-            <div class="text">
-                <p>Nothing here!</p>
+                />
             </div>
-        {/each}
-    </div>
-</main>
+        {/if}
+
+        <div class="cards">
+            {#each sortedCards as card (card.id)}
+                <Card
+                    {...card}
+                    {invalidCards}
+                    {waitingForSelection}
+                    {selectedAll}
+                    {numSelected}
+                    on:clicked={handleClicked}
+                />
+            {:else}
+                <div class="text">
+                    <p>Nothing here!</p>
+                </div>
+            {/each}
+        </div>
+    </main>
+</a>
 
 <style lang="scss">
     $margin: 5px;

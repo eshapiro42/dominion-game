@@ -100,6 +100,17 @@ class Turn:
             elif num_coppers < 0:
                 self.game.broadcast(f'-{-num_coppers} $ → {self.coppers_remaining} $.')
 
+    def display(self):
+        self.game.socketio.emit(
+            "current turn info",
+            {
+                "actions": self.actions_remaining,
+                "buys": self.buys_remaining,
+                "coppers": self.coppers_remaining,
+                "turns_played": self.player.turns_played,
+            }
+        )
+
 
 class Phase(metaclass=ABCMeta):
     '''
