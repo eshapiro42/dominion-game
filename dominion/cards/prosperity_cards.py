@@ -669,7 +669,7 @@ class Venture(TreasureCard):
             self.owner.discard_pile.extend(cards_to_discard)
             self.game.broadcast(f"{self.owner} discarded: {', '.join(map(str, cards_to_discard))}.")
         if revealed_treasure is not None:
-            self.owner.turn.buy_phase.play_treasure(revealed_treasure)
+            self.owner.turn.buy_phase.play_treasures([revealed_treasure])
 
 
 class Goons(AttackCard):

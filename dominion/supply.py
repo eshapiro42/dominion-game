@@ -132,6 +132,19 @@ class Supply:
         supply_table = self.get_table()
         return supply_table.get_string()
 
+    def card_name_to_card_class(self, card_name):
+        '''Convert a card name to a card class. If you need to use this function, you're almost definitely doing something wrong.
+
+        Args:
+            card_name (str): the name of the card
+
+        Returns:
+            Card: the card class
+        '''
+        for card_class in self.card_stacks:
+            if card_class.name == card_name:
+                return card_class
+
     @property
     def num_empty_stacks(self):
         return [stack.is_empty for stack in self.card_stacks.values()].count(True)

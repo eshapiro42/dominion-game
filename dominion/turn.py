@@ -253,8 +253,7 @@ class BuyPhase(Phase):
                 else:
                     treasures_available.remove(choice)
                     treasures_to_play.append(choice)
-        for treasure in treasures_to_play:
-            self.play_treasure(treasure)
+        self.play_treasures(treasures_to_play)
         # Activate any pre-buy hooks registered to cards in the Supply
         self.process_pre_buy_hooks()
         # Buy cards
@@ -299,27 +298,37 @@ class BuyPhase(Phase):
             for hook in expired_hooks:
                 self.turn.treasure_hooks[type(treasure)].remove(hook)
 
-    def play_treasure(self, treasure):
+    def play_treasures(self, treasures):
         '''
-        Play a Treasure.
+        Play Treasures.
 
-        This will activate any side effects caused by playing the Treasure.
+        This will activate any side effects caused by playing the Treasures.
 
-        It will then activate any treasure hooks registered to the Treasure.
+        It will then activate any treasure hooks registered to the Treasures.
 
         Args:
-            treasure (:obj:`cards.TreasureCard`): The Treasure whose hooks to activate.
+            list[treasure] (:obj:`cards.TreasureCard`): The Treasures whose hooks to activate.
         '''
-        self.game.broadcast(f"{self.player} played a Treasure: {treasure.name}.")
-        # Add the Treasure to the played cards area and remove from hand
-        self.player.play(treasure)
-        # Activate side effects cause by playing this Treasure
-        if hasattr(treasure, 'play'):
-            treasure.play()
-        # Process any Treasure hooks
-        self.process_treasure_hooks(treasure)
-        # Add the value of this Treasure
-        self.turn.coppers_remaining += treasure.value
+        # Get a pretty, sorted list of the Treasures
+        treasure_name_counts = defaultdict(int) # compute as a dict first since that's easier
+        for treasure in treasures:
+            treasure_name_counts[treasure.name] += 1
+        treasure_counts = [(self.supply.card_name_to_card_class(name), quantity) for name, quantity in treasure_name_counts.items()] # convert from dict[treasure_name, count] into list[tuple(treasure_class, count)]
+        # Sort the treasures by cost
+        sorted_treasure_counts = sorted(treasure_counts, key=lambda treasure_tuple: treasure_tuple[0].cost)
+        treasure_strings = [s(quantity, treasure.name) for treasure, quantity in sorted_treasure_counts]
+        self.game.broadcast(f"{self.player} played Treasures: {', '.join(treasure_strings)}.")
+        # Play the Treasures
+        for treasure in treasures:
+            # Add the Treasure to the played cards area and remove from hand
+            self.player.play(treasure)
+            # Activate side effects cause by playing this Treasure
+            if hasattr(treasure, 'play'):
+                treasure.play()
+            # Process any Treasure hooks
+            self.process_treasure_hooks(treasure)
+            # Add the value of this Treasure
+            self.turn.coppers_remaining += treasure.value
 
     def process_pre_buy_hooks(self):
         '''
