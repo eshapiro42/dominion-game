@@ -324,6 +324,15 @@ class BuyPhase(Phase):
         Args:
             list[treasure] (:obj:`cards.TreasureCard`): The Treasures whose hooks to activate.
         '''
+        # Get a pretty, sorted list of the Treasures played
+        treasure_name_counts = defaultdict(int) # compute as a dict first since that's easier
+        for treasure in treasures:
+            treasure_name_counts[treasure.name] += 1
+        treasure_counts = [(self.supply.card_name_to_card_class(name), quantity) for name, quantity in treasure_name_counts.items()] # convert from dict[treasure_name, count] into list[tuple(treasure_class, count)]
+        # Sort the treasures by cost (sorting by value would be tricky because of cards like Bank)
+        sorted_treasure_counts = sorted(treasure_counts, key=lambda treasure_tuple: treasure_tuple[0].cost, reverse=True)
+        treasure_strings = [s(quantity, treasure.name) for treasure, quantity in sorted_treasure_counts]
+        self.game.broadcast(f"{self.player} played Treasures: {', '.join(treasure_strings)}.")
         # Play the Treasures
         for treasure in treasures:
             # Add the Treasure to the played cards area and remove from hand
@@ -335,15 +344,6 @@ class BuyPhase(Phase):
             self.process_treasure_hooks(treasure)
             # Add the value of this Treasure
             self.turn.coppers_remaining += treasure.value
-        # Get a pretty, sorted list of the Treasures played
-        treasure_name_counts = defaultdict(int) # compute as a dict first since that's easier
-        for treasure in treasures:
-            treasure_name_counts[treasure.name] += 1
-        treasure_counts = [(self.supply.card_name_to_card_class(name), quantity) for name, quantity in treasure_name_counts.items()] # convert from dict[treasure_name, count] into list[tuple(treasure_class, count)]
-        # Sort the treasures by cost (sorting by value would be tricky because of cards like Bank)
-        sorted_treasure_counts = sorted(treasure_counts, key=lambda treasure_tuple: treasure_tuple[0].cost, reverse=True)
-        treasure_strings = [s(quantity, treasure.name) for treasure, quantity in sorted_treasure_counts]
-        self.game.broadcast(f"{self.player} played Treasures: {', '.join(treasure_strings)}.")
 
     def process_pre_buy_hooks(self):
         '''
