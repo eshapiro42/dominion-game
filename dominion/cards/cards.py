@@ -1,9 +1,12 @@
 from abc import ABCMeta, abstractmethod
 from enum import Enum, auto
+from threading import Lock # Monkey patched to use gevent Locks
+
 from ..grammar import a, s
 
 
 LOWEST_ID = 0
+ID_LOCK = Lock()
 
 
 class CardType(Enum):
@@ -37,8 +40,9 @@ class Card(metaclass=ABCMeta):
     def __init__(self, owner=None):
         global LOWEST_ID
         self._owner = owner
-        self.id = LOWEST_ID
-        LOWEST_ID += 1
+        with ID_LOCK:
+            self.id = LOWEST_ID
+            LOWEST_ID += 1
 
     @property
     def owner(self):
