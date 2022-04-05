@@ -6,6 +6,7 @@
     import PlayedCards from "./components/played_cards.svelte";
     import PlayerInfo from "./components/player_info.svelte";
     import PopUp from "./components/pop_up.svelte";
+    import SideBar from "./components/side_bar.svelte";
     import SummaryBar from "./components/summary_bar.svelte";
     import Supply from "./components/supply.svelte";
     import Toasts from "./components/toasts.svelte";
@@ -112,14 +113,18 @@
             }
         }
     )
+
+    $: headerClass = gameStarted ? "panel" : ""; // This will re-center the header once the game has started
 </script>
 
 <main>
     <header>
-        <h1>Dominion</h1>
-        {#if roomJoined}
-        <p>Room ID: {room}</p>
-        {/if}
+        <div class={headerClass}>
+            <h1>Dominion</h1>
+            {#if roomJoined}
+            <p>Room ID: {room}</p>
+            {/if}
+        </div>
     </header>
 
     <PopUp
@@ -139,6 +144,12 @@
     />
 
     <SummaryBar
+        {socket}
+        {gameStarted}
+        {currentPlayer}
+    />
+
+    <SideBar
         {socket}
         {gameStarted}
         {currentPlayer}
@@ -199,6 +210,12 @@
     main {
         text-align: center;
         padding-bottom: 20px;
+        
+        /* Disable selecting text */
+        -webkit-user-select: none; /* Safari */        
+        -moz-user-select: none; /* Firefox */
+        -ms-user-select: none; /* IE10+/Edge */
+        user-select: none; /* Standard */
     }
 
     header {

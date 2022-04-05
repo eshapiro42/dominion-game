@@ -18,27 +18,29 @@
 </script>
 
 {#if (gameStarted && show)}
-    <main class="container">
-        <div class="title">
-            <h4>{title}</h4>
-        </div>
+    <section id="Trade Route">>
+        <main class="panel">
+            <div class="title">
+                <h4>{title}</h4>
+            </div>
 
-        <div class="columns">
-            {#if (victoryCards.length > 0)}
-                <div class="victoryCards">
-                    {#each victoryCards as victoryCard}
-                        <p>{victoryCard}</p>
-                    {/each}
-                </div>
-            {/if}
+            <div class="columns">
+                {#if (victoryCards.length > 0)}
+                    <div class="victoryCards">
+                        {#each victoryCards as victoryCard}
+                            <p>{victoryCard}</p>
+                        {/each}
+                    </div>
+                {/if}
 
-            <div class="coinTokens">
-                <div>
-                    {tokens} <i class="bi bi-coin"></i>
+                <div class="coinTokens">
+                    <div>
+                        {tokens} <i class="bi bi-coin"></i>
+                    </div>
                 </div>
             </div>
-        </div>
-    </main>
+        </main>
+    </section>
 {/if}
 
 <style>

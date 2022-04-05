@@ -28,14 +28,16 @@
 </script>
 
 {#if gameStarted}
-    <main>
-        <CardCarousel
-            title="{currentPlayerName}'s Played Cards"
-            sortByProperty = "orderSent"
-            {waitingForSelection}
-            {cards}
-        />
-    </main>
+    <section id="Played Cards">
+        <main>
+            <CardCarousel
+                title="{currentPlayerName}'s Played Cards"
+                sortByProperty = "orderSent"
+                {waitingForSelection}
+                {cards}
+            />
+        </main>
+    </section>
 {/if}
 
 <style>

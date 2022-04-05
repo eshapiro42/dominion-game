@@ -154,9 +154,9 @@
     }
 </script>
 
-<a id="{title}">
+<section id="{title}">
     <main
-        class="container"
+        class="panel"
         class:active    
     >
         <div class="title">
@@ -217,7 +217,7 @@
             {/each}
         </div>
     </main>
-</a>
+</section>
 
 <style lang="scss">
     $margin: 5px;

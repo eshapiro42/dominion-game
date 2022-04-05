@@ -22,46 +22,45 @@
 </script>
 
 {#if gameStarted}
-    <main class="container">
-        <div>
+    <div class="panel-sticky">
+        <main class="panel">
             <div>
-                {currentPlayer = currentPlayer == null ? "No One" : currentPlayer}
+                <div>
+                    {currentPlayer = currentPlayer == null ? "No One" : currentPlayer}
+                </div>
             </div>
-        </div>
-        <div>
             <div>
-                {phase}
+                <div>
+                    {phase}
+                </div>
             </div>
-        </div>
-        <div>
             <div>
-                {actions}
-        </div>
-        </div>
-        <div>
+                <div>
+                    {actions}
+            </div>
+            </div>
             <div>
-                {buys}
-        </div>
-        </div>
-        <div>
+                <div>
+                    {buys}
+            </div>
+            </div>
             <div>
-                {coppers} <i class="fa-solid fa-coins"></i>
-        </div>
-        </div>
-        <div>
+                <div>
+                    {coppers} <i class="fa-solid fa-coins"></i>
+            </div>
+            </div>
             <div>
-                Turn #{turnsPlayed}
-        </div>
-        </div>
-    </main>
+                <div>
+                    Turn #{turnsPlayed}
+            </div>
+            </div>
+        </main>
+    </div>
 {/if}
 
 <style>
     main {
         z-index: 10;
-        position: -webkit-sticky;
-        position: sticky;
-        top: 0;
         background-color: #343338;
         color: #dadada;
         padding-top: 20px;
