@@ -132,7 +132,6 @@
             {description}
             {cost}
             {type}
-            {id}
             {quantity}
         />
     </span>
