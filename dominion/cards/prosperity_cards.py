@@ -367,6 +367,7 @@ class Contraband(TreasureCard):
         self.owner.turn.plus_buys(1)
         # The player to your left names a card
         player_to_left = self.owner.other_players[0]
+        self.game.broadcast(f"{player_to_left} must name a card that {self.owner} will be unable to buy this turn.")
         prompt = f'{player_to_left}: Which card should {self.owner} be forbidden from buying this turn?'
         forbidden_card_class = player_to_left.interactions.choose_card_class_from_supply(prompt, max_cost=math.inf, force=True) # max_cost=math.inf because any card can be named
         self.owner.turn.invalid_card_classes.append(forbidden_card_class)
