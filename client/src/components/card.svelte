@@ -31,13 +31,19 @@
     $: victory = typeLowerCase.includes("victory");
     $: curse = typeLowerCase.includes("curse");
     $: treasure = typeLowerCase.includes("treasure");
+    $: basicTreasure = ["Copper", "Silver", "Gold", "Platinum"].includes(name);
+    $: basicVictory = ["Curse", "Estate", "Duchy", "Province", "Colony"].includes(name);
 
     function renderText(text) {
-        return text.replace("$", `<i class="fa-solid fa-coins"></i>`);
+        return text
+            .replace("$", `<i class="fa-solid fa-coins"></i>`)
+            .replace("victory points", `<i class="bi bi-shield-shaded"></i>`)
+            .replace("victory point", `<i class="bi bi-shield-shaded"></i>`);
     }
 
     $: renderedEffects = effects.map(renderText);
-    $: renderedDescription = renderText(description);
+    $: renderedDescription = description.map(renderText);
+    // $: renderedDescription = renderText(description);
 
     $: {
         if (!waitingForSelection.value) {
@@ -146,6 +152,8 @@
     class:victory
     class:curse
     class:treasure
+    class:basicTreasure
+    class:basicVictory
     class:unselectable
     class:selected
 >
@@ -161,7 +169,11 @@
             <li>{@html effect}</li>
         {/each}
     </ul>
-    <div class="description">{@html renderedDescription}</div>
+    <ul class="description">
+        {#each renderedDescription as description}
+            <li>{@html description}</li>
+        {/each}
+    </ul>
     <div class="footer">
         <div class="cost">{cost}&nbsp;<i class="fa-solid fa-coins"></i></div>
         <div class="type">{type}</div>
@@ -278,6 +290,16 @@
         color: $dark-text-color;
     }
 
+    .basicTreasure .description {
+        padding-top: 40px;
+        font-size: 60px;
+    }
+
+    .basicVictory .description {
+        padding-top: 40px;
+        font-size: 60px;
+    }
+
     .name {
         display: flex;
         justify-content: space-between;
@@ -299,9 +321,15 @@
         font-family: minion-pro, serif;
         font-weight: 400;
         font-style: normal;
+        list-style-type: none;
+        padding: 0;
+        margin-left: 0;
         margin-bottom: $padding-basis;
-        // text-align: left;
         overflow-y: auto;
+    }
+
+    .description li:not(:last-child) { 
+        margin-bottom: 10px;  
     }
 
     .footer {

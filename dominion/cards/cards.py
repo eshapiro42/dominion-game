@@ -93,7 +93,8 @@ class Card(metaclass=ABCMeta):
         return {
             'name': self.name,
             'effects': effects,
-            'description': self.description.replace("\n", "<br>"),
+            # 'description': self.description.replace("\n", "<br>"),
+            'description': self.description.split("\n"),
             'cost': self.cost,
             'type': ', '.join([t.name.capitalize() for t in self.types]),
             'id': self.id,
