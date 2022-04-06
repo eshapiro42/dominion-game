@@ -1,68 +1,68 @@
 # dominion-game
 
-## Windows
+## Getting Started
 
-### First Time Setup
+Clone this repository.
 
-1. Install Windows Terminal from the Microsoft Store: https://www.microsoft.com/store/productId/9N0DX20HK701.
+```
+git clone https://github.com/eshapiro42/dominion-game.git
+``` 
 
-2. Download and install the latest stable Python 3 release from here: https://www.python.org/downloads/.
+## Frontend Setup 
 
-   * Use the default settings unless you know what you're doing, except for:
-     * **Add Python to PATH**: Check this box.
+The frontend uses the `Svelte` framework and requires compilation before it can be run. Make sure you have `Node.js` and `npm` installed. I recommend using the official installers from [Nodejs.org](https://nodejs.org/en/download/).
 
-3. Download and install the latest stable Git for Windows release from here: https://gitforwindows.org/
+Navigate into the `dominion-game` repository that you just cloned and install dependencies. 
 
-   * Use the default settings except for:
-     * **Default Editor**: Whatever you're comfortable using.
-     * **PATH Environment**: Choose "Git from the command line and also from 3rd-party software."
+```
+cd dominion-game
+npm install
+```
 
-4. Open Windows Terminal and launch a Command Prompt tab (or type `cmd` from PowerShell).
+* To compile the frontend once:
+    ```
+    npm run build
+    ```
 
-5. Clone the dominion-game GitHub repository and navigate into the newly cloned directory:
+* To compile the frontend whenever a source file changes, leave the following command running:
+    ```
+    npm run dev
+    ```
 
-   ```
-   git clone https://github.com/eshapiro42/dominion-game
-   cd dominion-game
-   ```
+Never commit the compiled files! They are explicitly listed in `.gitignore` for a reason.
 
-6. Create (and activate) a new Python virtual environment:
+## Backend Setup
 
-   ```bash
-   python3 -m venv venv
-   venv\Scripts\activate.bat
-   ```
+The backend is written in `Python` and uses `Flask-SocketIO` as a server. Make sure you have `Python 3.8` or newer installed. I recommend using the official installers from [Python.org](https://www.python.org/downloads/).
 
-7. Install all necessary Python modules:
+Navigate into the `dominion-game` repository that you just cloned and create a new virtual environment there. Make sure you are using the desired version of `Python` to create the virtual environment (i.e., replace `python3.10` in the second line below with whichever interpreter you are using).
 
-   ```bash
-   pip install -r requirements.txt
-   ```
+```
+cd dominion-game
+python3.10 -m venv venv
+```
 
-### Every Time
+Activate the newly create virtual environment and install dependencies.
 
-1. Open Windows Terminal and launch a Command Prompt tab
+```
+. venv/bin/activate
+python -m pip install --upgrade pip setuptools wheel
+python -m pip install -r requirements.txt
+```
 
-2. Pull the latest code from the dominion-game GitHub repository:
+The backend must always be run from within this virtual environment.
 
-   ```bash
-   cd dominion-game
-   git pull
-   ```
+* To launch the server in debug mode:
+    ```
+    python app.py
+    ```
 
-3. Source your Python virtual environment:
+* To launch the server in production mode, execute the command located in `Procfile` to use `gunicorn`:
 
-   ```bash
-   venv\Scripts\activate.bat
-   ```
+    ```
+    gunicorn -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker -w 1 --timeout 0 app:app
+    ```
 
-4. Run the game client (resize/zoom your Terminal window before you do this):
+## Putting it Together
 
-   ```bash
-   python client.py
-   ```
-
-5. If you need to kill the client, use  <kbd>CTRL</kbd>+<kbd>Break</kbd> (or <kbd>CTRL</kbd>+<kbd>Pause</kbd>).
-
-
-
+Assuming the frontend is compiled and the backend server is running, you should be able to play the game in your browser. If you're running the debug server, the default port is `5000` so it can be accessed at `localhost:5000`. If you're running the production server, the default port is `8000` so it can be accessed at `localhost:8000`.
