@@ -54,7 +54,3 @@ While the prerequisites above must be satisfied prior to having your pull reques
 * Comments should be used liberally for clarification but should not take up too much screen space.
 * `camelCase` should be used for all names, with the exception of `JSON` keys that come from the backend.
 * Code should be as modular as possible, and new code should try to have no impact on the existing code (except bug fixes of course). Try to create a new component for new code when sensible.
-
-## License
-
-By contributing to the `dominion-game` repository, you agree that your contributions will be licensed under its [MIT License](https://github.com/eshapiro42/dominion-game/blob/main/LICENSE).
