@@ -325,6 +325,9 @@ class BuyPhase(Phase):
         Args:
             list[treasure] (:obj:`cards.TreasureCard`): The Treasures whose hooks to activate.
         '''
+        if not treasures:
+            self.game.broadcast(f"{self.player} did not play any Treasures.")
+            return
         # Get a pretty, sorted list of the Treasures played
         treasure_name_counts = defaultdict(int) # compute as a dict first since that's easier
         for treasure in treasures:
