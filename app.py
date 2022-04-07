@@ -242,7 +242,11 @@ class HeartBeat():
                 # Display cards in carousels
                 for player in self.game.players:
                     if isinstance(player.interactions, BrowserInteraction):
-                        player.interactions.display_all()
+                        self.game.current_turn.player.interactions.display_played_cards()
+                        player.interactions.display_hand()
+                        player.interactions.display_supply()
+                        player.interactions.display_discard_pile()
+                        player.interactions.display_trash()
                     # Need to handle displaying CPU played cards explicitly
                     current_player = self.game.current_turn.player
                     if isinstance(current_player.interactions, AutoInteraction):

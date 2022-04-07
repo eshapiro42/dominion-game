@@ -93,12 +93,10 @@ class BrowserInteraction(Interaction):
 
     def display_supply(self):
         try:
-            if self.game.current_turn.player != self.player:
-                return
             self.socketio.emit(
                 "display supply",
                 self._get_supply_data(),
-                to=self.room, # Always send the supply to all players
+                to=self.sid,
             )
         except Exception as exception:
             print(exception)
@@ -108,19 +106,17 @@ class BrowserInteraction(Interaction):
             self.socketio.emit(
                 "display hand",
                 self._get_hand_data(),
-                to=self.sid, # Only send the player's hand to this player
+                to=self.sid,
             )
         except Exception as exception:
             print(exception)
 
     def display_played_cards(self):
         try:
-            if self.game.current_turn.player != self.player:
-                return
             self.socketio.emit(
                 "display played cards",
                 self._get_played_cards_data(),
-                to=self.room, # Always send played cards to all players
+                to=self.sid,
             )
         except Exception as exception:
             print(exception)
@@ -130,19 +126,17 @@ class BrowserInteraction(Interaction):
             self.socketio.emit(
                 "display discard pile",
                 self._get_discard_pile_data(),
-                to=self.sid, # Only send discard pile to this player
+                to=self.sid,
             )
         except Exception as exception:
             print(exception)
 
     def display_trash(self):
         try:
-            if self.game.current_turn.player != self.player:
-                return
             self.socketio.emit(
                 "display trash",
                 self._get_trash_data(),
-                to=self.room, # Always send trash to all players
+                to=self.sid,
             )
         except Exception as exception:
             print(exception)
