@@ -1,4 +1,6 @@
 <script>
+    import {classicFont} from "../stores.js";
+
     export let name;
     export let effects;
     export let description;
@@ -37,7 +39,8 @@
     class:treasure
     class:basicTreasure
     class:basicVictory
-    >
+    class:classic={$classicFont}
+>
     {#if quantity == null}
         <div class="name">{name}</div>
     {:else if quantity == "inf"}
@@ -62,8 +65,6 @@
 </main>
 
 <style lang="scss">
-    @import url("https://use.typekit.net/ktm4syd.css");
-
     $multiplier: 3;
 
     $ratio: 1.618;
@@ -102,6 +103,7 @@
         position: relative;
         overflow-y: hidden;
         overflow-x: hidden;
+        font-family: "Segoe UI", sans-serif;
     }
 
     .action {
@@ -150,6 +152,10 @@
         padding: $header-padding;
     }
 
+    .classic .name {
+        font-family: trajan-pro-3, serif;
+    }
+
     .effects {
         font-family: minion-pro, serif;
         font-weight: 700;
@@ -158,6 +164,11 @@
         padding: 0;
         margin-bottom: $padding-basis;
         margin-left: 0;
+        font-family: serif;
+    }
+
+    .classic .effects {
+        font-family: minion-pro, serif;
     }
 
     .description {
@@ -168,8 +179,11 @@
         padding: 0;
         margin-left: 0;
         margin-bottom: $padding-basis;
-        // text-align: left;
-        overflow-y: auto;
+        font-family: serif;
+    }
+
+    .classic .description {
+        font-family: minion-pro, serif;
     }
 
     .description li:not(:last-child) { 
@@ -184,5 +198,9 @@
         bottom: $margin;
         margin-top: $padding-basis;
         padding-right: $padding-basis + 4px;
+    }
+
+    .classic .footer {
+        font-family: trajan-pro-3, serif;
     }
 </style>

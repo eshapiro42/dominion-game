@@ -1,4 +1,6 @@
 <script>
+    import {classicFont} from "./stores.js";
+
     import DiscardPile from "./components/discard_pile.svelte";
     import GameSetup from "./components/game_setup.svelte";
     import Hand from "./components/hand.svelte";
@@ -123,6 +125,17 @@
             <h1>Dominion</h1>
             {#if roomJoined}
             <p>Room ID: {room}</p>
+            {/if}
+
+            {#if gameStarted}
+                <select bind:value={$classicFont}>
+                    <option value={false}>
+                        Modern Font
+                    </option>
+                    <option value={true}>
+                        Classic Font
+                    </option>
+                </select>
             {/if}
         </div>
     </header>

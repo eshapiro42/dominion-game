@@ -1,6 +1,8 @@
 <script>
     import {createEventDispatcher} from "svelte";
     import {fade} from 'svelte/transition';
+
+    import {classicFont} from "../stores.js";
     
     const dispatch = createEventDispatcher();
     
@@ -114,7 +116,6 @@
             }
         }
     }
-
 </script>
 
 <Modal 
@@ -155,6 +156,7 @@
     class:basicVictory
     class:unselectable
     class:selected
+    class:classic={$classicFont}
 >
     {#if quantity == null}
         <div class="name">{name}</div>
@@ -180,8 +182,6 @@
 </main>
 
 <style lang="scss">
-    @import url("https://use.typekit.net/ktm4syd.css");
-
     $ratio: 1.618;
     $width: 200px;
     $height: $width * $ratio;
@@ -233,6 +233,7 @@
         right: 50px;
         overflow-y: hidden;
         overflow-x: hidden;
+        font-family: "Segoe UI", sans-serif;
     }
 
     main:hover {
@@ -306,18 +307,25 @@
         padding: $header-padding;
     }
 
+    .classic .name {
+        font-family: trajan-pro-3, serif;
+    }
+
     .effects {
-        font-family: minion-pro, serif;
         font-weight: 700;
         font-style: normal;
         list-style-type: none;
         padding: 0;
         margin-bottom: $padding-basis;
         margin-left: 0;
+        font-family: serif;
+    }
+
+    .classic .effects {
+        font-family: minion-pro, serif;
     }
 
     .description {
-        font-family: minion-pro, serif;
         font-weight: 400;
         font-style: normal;
         list-style-type: none;
@@ -325,6 +333,11 @@
         margin-left: 0;
         margin-bottom: $padding-basis;
         overflow-y: auto;
+        font-family: serif;
+    }
+
+    .classic .description {
+        font-family: minion-pro, serif;
     }
 
     .description li:not(:last-child) { 
@@ -339,6 +352,10 @@
         bottom: $margin;
         margin-top: $padding-basis;
         padding-right: $padding-basis + 4px;
+    }
+
+    .classic .footer {
+        font-family: trajan-pro-3, serif;
     }
 
     .unselectable {
