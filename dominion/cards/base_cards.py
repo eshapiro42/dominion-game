@@ -856,7 +856,8 @@ class Chancellor(ActionCard):
         prompt = f"Would you like to put your deck ({s(len(self.owner.deck), 'card')}) into your discard pile ({s(len(self.owner.discard_pile), 'card')})?"
         if self.interactions.choose_yes_or_no(prompt):
             self.game.broadcast(f'{self.owner} put their deck into their discard pile.')
-            self.owner.deck.extend(self.owner.discard_pile)
+            self.owner.discard_pile.extend(self.owner.deck)
+            self.owner.deck.clear()
 
 
 class Woodcutter(ActionCard):
