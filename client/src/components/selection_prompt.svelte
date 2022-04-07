@@ -17,7 +17,14 @@
         );
     }
 
-    $: renderedPrompt = waitingForSelection.prompt.replace("$", `<i class="fa-solid fa-coins"></i>`);
+    function renderText(text) {
+        return text
+            .replaceAll("$", `<i class="fa-solid fa-coins"></i>`)
+            .replaceAll("victory points", `<i class="bi bi-shield-shaded"></i>`)
+            .replaceAll("victory point", `<i class="bi bi-shield-shaded"></i>`);
+    }
+
+    $: renderedPrompt = renderText(waitingForSelection.prompt);
 
 </script>
 

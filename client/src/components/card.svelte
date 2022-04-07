@@ -38,14 +38,13 @@
 
     function renderText(text) {
         return text
-            .replace("$", `<i class="fa-solid fa-coins"></i>`)
-            .replace("victory points", `<i class="bi bi-shield-shaded"></i>`)
-            .replace("victory point", `<i class="bi bi-shield-shaded"></i>`);
+            .replaceAll("$", `<i class="fa-solid fa-coins"></i>`)
+            .replaceAll("victory points", `<i class="bi bi-shield-shaded"></i>`)
+            .replaceAll("victory point", `<i class="bi bi-shield-shaded"></i>`);
     }
 
     $: renderedEffects = effects.map(renderText);
     $: renderedDescription = description.map(renderText);
-    // $: renderedDescription = renderText(description);
 
     $: {
         if (!waitingForSelection.value) {
