@@ -65,7 +65,7 @@
         }
     }
 
-    $: unselectable = !selectable;
+    $: unselectable = !selectable || quantity == 0;
 
     function clicked() {
         if (
