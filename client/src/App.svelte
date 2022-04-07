@@ -165,7 +165,6 @@
     <SideBar
         {socket}
         {gameStarted}
-        {currentPlayer}
     />
 
     <Lobby 
