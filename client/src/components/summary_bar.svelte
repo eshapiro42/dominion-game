@@ -7,6 +7,7 @@
     let actions = 1;
     let buys = 1;
     let coppers = 0;
+    let handSize = 5;
     let turnsPlayed = 0;
 
     socket.on(
@@ -16,6 +17,7 @@
             actions = data.actions;
             buys = data.buys;
             coppers = data.coppers;
+            handSize = data.hand_size;
             turnsPlayed = data.turns_played;
         }
     );
@@ -37,22 +39,27 @@
             <div>
                 <div>
                     {actions}
-            </div>
+                </div>
             </div>
             <div>
                 <div>
                     {buys}
-            </div>
+                </div>
             </div>
             <div>
                 <div>
                     {coppers} <i class="fa-solid fa-coins"></i>
+                </div>
             </div>
+            <div>
+                <div>
+                    {handSize}
+                </div>
             </div>
             <div>
                 <div>
                     Turn #{turnsPlayed}
-            </div>
+                </div>
             </div>
         </main>
     </div>

@@ -109,6 +109,7 @@ class Turn:
                 "actions": s(self.actions_remaining, "Action"),
                 "buys": s(self.buys_remaining, "Buy"),
                 "coppers": self.coppers_remaining,
+                "hand_size": s(len(self.player.hand), "Card"),
                 "turns_played": self.player.turns_played,
             },
             room=self.game.room,
