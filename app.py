@@ -9,7 +9,7 @@ from flask import Flask, request, send_from_directory
 from dominion.cards import cards, prosperity_cards
 from dominion.expansions import IntrigueExpansion, ProsperityExpansion
 from dominion.game import Game, GameStartedError
-from dominion.interactions import NetworkedCLIInteraction, BrowserInteraction, AutoInteraction
+from dominion.interactions import BrowserInteraction, AutoInteraction
 
 
 app = Flask(__name__)
@@ -40,11 +40,8 @@ cpus = {}
 def join_room(data):
     username = data['username']
     room = data['room']
-    try:
-        if data['client_type'] == 'browser':
-            interaction_class = BrowserInteraction
-    except KeyError:
-        interaction_class = NetworkedCLIInteraction
+    if data['client_type'] == 'browser':
+        interaction_class = BrowserInteraction
     # Add the user to the room
     flask_socketio.join_room(room)
     sid = request.sid
@@ -83,11 +80,8 @@ def join_room(data):
 @socketio.on('create room')
 def create_room(data):
     username = data['username']
-    try:
-        if data['client_type'] == 'browser':
-            interaction_class = BrowserInteraction
-    except KeyError:
-        interaction_class = NetworkedCLIInteraction
+    if data['client_type'] == 'browser':
+        interaction_class = BrowserInteraction
     characters = string.ascii_uppercase + string.digits
     # Create a unique room ID
     room = ''.join(random.choice(characters) for i in range(4))
