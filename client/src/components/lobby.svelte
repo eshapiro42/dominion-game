@@ -1,9 +1,9 @@
 <script>
     import {createEventDispatcher} from "svelte";
 
-    const dispatch = createEventDispatcher();
+    import {socket} from "../stores.js";
 
-    export let socket;
+    const dispatch = createEventDispatcher();
 
     let username = "";
     let room = null;
@@ -38,7 +38,7 @@
             alert("Username must be at least 3 characters.");
             return;
         }
-        socket.emit(
+        $socket.emit(
             "join room",
             {
                 username: username,
@@ -55,7 +55,7 @@
             return;
         }
         roomCreator = true;
-        socket.emit(
+        $socket.emit(
             "create room",
             {
                 username: username,

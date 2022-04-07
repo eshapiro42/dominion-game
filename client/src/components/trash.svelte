@@ -1,8 +1,7 @@
 <script>
-    import CardCarousel from "./card_carousel.svelte";
+    import {socket} from "../stores.js";
 
-    export let socket;
-    export let gameStarted;
+    import CardCarousel from "./card_carousel.svelte";
 
     let cards = [];
     let waitingForSelection = {
@@ -33,22 +32,22 @@
                 if (!confirmed) {
                     return false;
                 }
-                socket.emit("response", null);
+                $socket.emit("response", null);
                 return true;
             }
         }
-        socket.emit("response", selectedCards[0]);
+        $socket.emit("response", selectedCards[0]);
         return true;
     }        
 
-    socket.on(
+    $socket.on(
         "display trash", 
         (data) => {
             cards = data.cards;
         },
     );
 
-    socket.on(
+    $socket.on(
         "choose specific card type from trash",
         (data) => {
             waitingForSelection.value = true;
@@ -61,7 +60,7 @@
         },
     )
 
-    socket.on(
+    $socket.on(
         "response received",
         (data) => {
             waitingForSelection = {
@@ -77,17 +76,15 @@
     );
 </script>
 
-{#if gameStarted}
-    <main>
-        <CardCarousel
-            title="Trash"
-            {cards}
-            sortByProperty = "orderSent"
-            {waitingForSelection}
-            on:selected={handleSelected}
-        />
-    </main>
-{/if}
+<main>
+    <CardCarousel
+        title="Trash"
+        {cards}
+        sortByProperty = "orderSent"
+        {waitingForSelection}
+        on:selected={handleSelected}
+    />
+</main>
 
 <style>
 </style>

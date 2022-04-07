@@ -1,5 +1,11 @@
 <script>
-    import {classicFont} from "./stores.js";
+    import {
+        socket,
+        classicFont,
+        currentPlayer,
+        room,
+        username,
+    } from "./stores.js";
 
     import DiscardPile from "./components/discard_pile.svelte";
     import GameSetup from "./components/game_setup.svelte";
@@ -15,23 +21,18 @@
     import TradeRoute from "./components/trade_route.svelte";
     import Trash from "./components/trash.svelte";
 
-    export let socket;
-
-    let roomJoined = false;
     let gameStarted = false;
-    let username = "";
-    let room = null;
     let roomCreator = false;
-    let currentPlayer = null;
+    let roomJoined = false;
     let popUp = {
         show: false,
     };
 
     function joinedRoom(event) {
-        roomJoined = true;
-        username = event.detail.username;
-        room = event.detail.room;
+        $room = event.detail.room;
+        $username = event.detail.username;
         roomCreator = event.detail.roomCreator;
+        roomJoined = true;
     }
 
     function startedGame(event) {
@@ -56,7 +57,7 @@
             alert("You must make a selection.");
             return;
         }
-        socket.emit("response", event.detail.selection);
+        $socket.emit("response", event.detail.selection);
         popUp = {
             show: false,
             prompt: "",
@@ -67,42 +68,42 @@
         }
     }
 
-    socket.on(
+    $socket.on(
         "new turn",
         function(data) {
-            currentPlayer = data.player;
+            $currentPlayer = data.player;
         }
     );
 
-    socket.on(
+    $socket.on(
         "choose yes or no",
         function(data) {
             createPopUp(data.prompt, null, "boolean");
         }
     );
 
-    socket.on(
+    $socket.on(
         "choose from range",
         function(data) {
             createPopUp(data.prompt, data.force, "range", {start: data.start, stop: data.stop});
         }
     );
 
-    socket.on(
+    $socket.on(
         "choose from options",
         function(data) {
             createPopUp(data.prompt, data.force, "options", null, data.options);
         }
     );
 
-    socket.on(
+    $socket.on(
         "connect",
         function(data) {
-            console.log(socket.id);
+            console.log($socket.id);
         }
     )
 
-    socket.on(
+    $socket.on(
         "response received",
         () => {
             popUp = {
@@ -124,7 +125,7 @@
         <div class={headerClass}>
             <h1>Dominion</h1>
             {#if roomJoined}
-            <p>Room ID: {room}</p>
+            <p>Room ID: {$room}</p>
             {/if}
 
             {#if gameStarted}
@@ -150,72 +151,37 @@
         on:submit={submitPopUp}
     />
 
-    <Toasts
-        {socket}
-        {username}
-        {room}
-    />
-
-    <SummaryBar
-        {socket}
-        {gameStarted}
-        {currentPlayer}
-    />
-
-    <SideBar
-        {socket}
-        {gameStarted}
-    />
+    <Toasts/>
 
     <Lobby 
-        {socket}
         on:joined={joinedRoom}
     />
 
     <GameSetup
-        {socket}
-        {username}
-        {room}
         {roomJoined}
         {roomCreator}
         on:started={startedGame}
     />
 
-    <PlayedCards
-        {socket}
-        {gameStarted}
-        {currentPlayer}
-    />
+    {#if gameStarted}
+        <SummaryBar/>
 
-    <Hand
-        {socket}
-        {gameStarted}
-    />
+        <SideBar/>
+        
+        <PlayedCards/>
 
-    <Supply
-        {socket}
-        {gameStarted}
-    />
+        <Hand/>
 
-    <DiscardPile
-        {socket}
-        {gameStarted}
-    />
+        <Supply/>
 
-    <Trash
-        {socket}
-        {gameStarted}
-    />
+        <DiscardPile/>
 
-    <TradeRoute
-        {socket}
-        {gameStarted}
-    />
+        <Trash/>
 
-    <PlayerInfo
-        {socket}
-        {gameStarted}
-    />
+        <TradeRoute/>
+
+        <PlayerInfo/>
+    {/if}
 </main>
 
 <style>

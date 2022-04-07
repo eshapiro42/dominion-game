@@ -1,10 +1,12 @@
 <script>
     import { fade } from 'svelte/transition';
-    
-    export let socket;
-    export let room = null;
-    export let username = "";
-    
+
+    import {
+        socket,
+        room,
+        username,
+    } from "../stores";
+      
     let newMessage = "";
     let showingToasts = [];
     let expiredToasts = [];
@@ -52,15 +54,15 @@
     }
 
     function sendMessage() {
-        if (username == "") {
+        if ($username == "") {
             return;
         }
-        socket.emit(
+        $socket.emit(
             "player sent message", 
             {
                 message: newMessage,
-                username: username,
-                room: room,
+                username: $username,
+                room: $room,
             }
         );
         newMessage = "";
@@ -70,15 +72,15 @@
         showExpiredToasts = !showExpiredToasts;
     }
 
-    socket.on("message", function(data) {
+    $socket.on("message", function(data) {
         addMessage(data);
     });
 
-    socket.on("player message", function(data) {
+    $socket.on("player message", function(data) {
         addMessage(data, true);
     });
 
-    socket.on("disconnect", 
+    $socket.on("disconnect", 
         (reason) => {
             addMessage(`You have become disconnected from the server. Reason: ${reason}`);
         }

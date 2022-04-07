@@ -1,11 +1,14 @@
 <script>
     import {createEventDispatcher} from "svelte";
 
+    import {
+        socket,
+        room,
+        username,
+    } from "../stores.js";
+
     const dispatch = createEventDispatcher();
 
-    export let socket;
-    export let username;
-    export let room;
     export let roomJoined;
     export let roomCreator;
     
@@ -27,7 +30,7 @@
     ]
 
     function addCPU() {
-        socket.emit("add cpu", {room: room});
+        $socket.emit("add cpu", {room: $room});
     }
 
 
@@ -37,8 +40,8 @@
         }
         else {
             var gameProperties = {
-                username: username,
-                room: room,
+                username: $username,
+                room: $room,
             };
             expansions.forEach(
                 (expansion) => {
@@ -50,7 +53,7 @@
                     gameProperties[customization.property] = customization.selected;
                 }
             );
-            socket.emit(
+            $socket.emit(
                 "start game",
                 gameProperties
             );
@@ -59,11 +62,11 @@
         }
     }
 
-    socket.on("game startable", function(data) {
+    $socket.on("game startable", function(data) {
         gameStartable = true;
     });
 
-    socket.on("game started", function(data) {
+    $socket.on("game started", function(data) {
         dispatch("started");
         shown = false;
     })

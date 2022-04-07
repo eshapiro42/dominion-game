@@ -1,52 +1,49 @@
 <script>
-    export let socket;
-    export let gameStarted;
+    import {socket} from "../stores.js";
 
     let title = "Player Info";
     let playersInfo = [];
 
-    socket.on("players info", function(data) {
+    $socket.on("players info", function(data) {
         playersInfo = data;
     });
 </script>
 
-{#if gameStarted}
-    <section id="Player Info">
-        <main class="panel">
-            <div class="title">
-                <h4>{title}</h4>
-            </div>
+<section id="Player Info">
+    <main class="panel">
+        <div class="title">
+            <h4>{title}</h4>
+        </div>
 
-            <div class="infoContainer">
-                {#each playersInfo as playerInfo}
-                    <div class="playerInfo">
-                        <div>
-                            <h5>{playerInfo.name}</h5>
-                        </div>
-                        <div class="playerInfoItem">
-                            <div>Hand Size</div>
-                            <div>{playerInfo.hand_size}</div>
-                        </div>
-                        <div class="playerInfoItem">
-                            <div>Discard Size</div>
-                            <div>{playerInfo.discard_size}</div>
-                        </div>
-                        <div class="playerInfoItem">
-                            <div>Deck Size</div>
-                            <div>{playerInfo.deck_size}</div>
-                        </div>
-                        {#if "victory_tokens" in playerInfo}
-                            <div class="playerInfoItem">
-                                <div>Victory Tokens</div>
-                                <div>{playerInfo.victory_tokens}</div>
-                            </div>
-                        {/if}
+        <div class="infoContainer">
+            {#each playersInfo as playerInfo}
+                <div class="playerInfo">
+                    <div>
+                        <h5>{playerInfo.name}</h5>
                     </div>
-                {/each}
-            </div>
-        </main>
-    </section>
-{/if}
+                    <div class="playerInfoItem">
+                        <div>Hand Size</div>
+                        <div>{playerInfo.hand_size}</div>
+                    </div>
+                    <div class="playerInfoItem">
+                        <div>Discard Size</div>
+                        <div>{playerInfo.discard_size}</div>
+                    </div>
+                    <div class="playerInfoItem">
+                        <div>Deck Size</div>
+                        <div>{playerInfo.deck_size}</div>
+                    </div>
+                    {#if "victory_tokens" in playerInfo}
+                        <div class="playerInfoItem">
+                            <div>Victory Tokens</div>
+                            <div>{playerInfo.victory_tokens}</div>
+                        </div>
+                    {/if}
+                </div>
+            {/each}
+        </div>
+    </main>
+</section>
 
 <style>
     main {

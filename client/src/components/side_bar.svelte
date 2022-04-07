@@ -1,10 +1,9 @@
 <script>
-    export let socket;
-    export let gameStarted;
+    import {socket} from "../stores.js";
 
     let tradeRoute = false;
 
-    socket.on(
+    $socket.on(
         "trade route",
         (data) => {
             tradeRoute = true;
@@ -12,19 +11,17 @@
     );
 </script>
 
-{#if gameStarted}
-    <main>
-        <a class="section" href="#Played Cards">Active</a>
-        <a class="section" href="#Your Hand">Hand</a>
-        <a class="section" href="#Supply">Supply</a>
-        <a class="section" href="#Your Discard Pile">Discard</a>
-        <a class="section" href="#Trash">Trash</a>
-        {#if (tradeRoute)}
-            <a class="section" href="#Trade Route">Trade Route</a>
-        {/if}
-        <a class="section" href="#Player Info">Players</a>
-    </main>
-{/if}
+<main>
+    <a class="section" href="#Played Cards">Active</a>
+    <a class="section" href="#Your Hand">Hand</a>
+    <a class="section" href="#Supply">Supply</a>
+    <a class="section" href="#Your Discard Pile">Discard</a>
+    <a class="section" href="#Trash">Trash</a>
+    {#if (tradeRoute)}
+        <a class="section" href="#Trade Route">Trade Route</a>
+    {/if}
+    <a class="section" href="#Player Info">Players</a>
+</main>
 
 <style>
     main {

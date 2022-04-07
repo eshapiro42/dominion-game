@@ -1,8 +1,9 @@
 <script>
-    export let socket;
-    export let gameStarted = false;
-    export let currentPlayer = "";
-    
+    import {
+        socket,
+        currentPlayer,
+    } from "../stores.js";
+ 
     let phase = "";
     let actions = 1;
     let buys = 1;
@@ -10,7 +11,7 @@
     let handSize = 5;
     let turnsPlayed = 0;
 
-    socket.on(
+    $socket.on(
         "current turn info",
         (data) => {
             phase = data.current_phase;
@@ -23,47 +24,45 @@
     );
 </script>
 
-{#if gameStarted}
-    <div class="panel-sticky">
-        <main class="panel">
+<div class="panel-sticky">
+    <main class="panel">
+        <div>
             <div>
-                <div>
-                    {currentPlayer = currentPlayer == null ? "No One" : currentPlayer}
-                </div>
+                {$currentPlayer == "" ? "No One" : $currentPlayer}
             </div>
+        </div>
+        <div>
             <div>
-                <div>
-                    {phase}
-                </div>
+                {phase}
             </div>
+        </div>
+        <div>
             <div>
-                <div>
-                    {actions}
-                </div>
+                {actions}
             </div>
+        </div>
+        <div>
             <div>
-                <div>
-                    {buys}
-                </div>
+                {buys}
             </div>
+        </div>
+        <div>
             <div>
-                <div>
-                    {coppers} <i class="fa-solid fa-coins"></i>
-                </div>
+                {coppers} <i class="fa-solid fa-coins"></i>
             </div>
+        </div>
+        <div>
             <div>
-                <div>
-                    {handSize}
-                </div>
+                {handSize}
             </div>
+        </div>
+        <div>
             <div>
-                <div>
-                    Turn #{turnsPlayed}
-                </div>
+                Turn #{turnsPlayed}
             </div>
-        </main>
-    </div>
-{/if}
+        </div>
+    </main>
+</div>
 
 <style>
     main {

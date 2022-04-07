@@ -1,13 +1,12 @@
 <script>
-    export let socket;
-    export let gameStarted;
+    import {socket} from "../stores.js";
 
     let title = "Trade Route";
     let victoryCards = [];
     let tokens = 0;
     let show = false;
 
-    socket.on(
+    $socket.on(
         "trade route",
         function(data) {
             show = true;
@@ -17,7 +16,7 @@
     );
 </script>
 
-{#if (gameStarted && show)}
+{#if (show)}
     <section id="Trade Route">>
         <main class="panel">
             <div class="title">

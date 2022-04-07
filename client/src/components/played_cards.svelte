@@ -1,44 +1,40 @@
 <script>
-    import CardCarousel from "./card_carousel.svelte";
+    import {
+        socket,
+        currentPlayer,
+    } from "../stores.js";
 
-    export let socket;
-    export let gameStarted;
-    export let currentPlayer;
+    import CardCarousel from "./card_carousel.svelte";
 
     let waitingForSelection = false;
 
     let cards = [];
 
-    socket.on(
+    $socket.on(
         "display played cards", 
         (data) => {
             cards = data.cards;
         },
     );
 
-    socket.on(
+    $socket.on(
         "current player",
         (data) => {
-            currentPlayer = data;
+            $currentPlayer = data;
         },
     )
-
-    $: currentPlayerName = currentPlayer == null ? "No One" : currentPlayer;
-
 </script>
 
-{#if gameStarted}
-    <section id="Played Cards">
-        <main>
-            <CardCarousel
-                title="{currentPlayerName}'s Played Cards"
-                sortByProperty = "orderSent"
-                {waitingForSelection}
-                {cards}
-            />
-        </main>
-    </section>
-{/if}
+<section id="Played Cards">
+    <main>
+        <CardCarousel
+            title="{$currentPlayer == "" ? "No One" : $currentPlayer}'s Played Cards"
+            sortByProperty = "orderSent"
+            {waitingForSelection}
+            {cards}
+        />
+    </main>
+</section>
 
 <style>
 </style>

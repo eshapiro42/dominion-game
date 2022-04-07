@@ -1,9 +1,8 @@
 <script>
-    import CardCarousel from "./card_carousel.svelte";
+    import {socket} from "../stores.js";
 
-    export let socket;
-    export let gameStarted;
-    
+    import CardCarousel from "./card_carousel.svelte";
+  
     let cards = [];
     let invalidCards;
     let waitingForSelection = {
@@ -31,23 +30,23 @@
             }
             var confirmed = confirm("Are you sure you want to skip selecting a card from the Supply?");
             if (confirmed) {
-                socket.emit("response", null);
+                $socket.emit("response", null);
                 return true;
             }
             return false;
         }
-        socket.emit("response", selectedCards[0]);
+        $socket.emit("response", selectedCards[0]);
         return true;
     }
 
-    socket.on(
+    $socket.on(
         "display supply", 
         (data) => {
             cards = data.cards;
         },
     );
 
-    socket.on(
+    $socket.on(
         "choose card class from supply",
         (data) => {
             invalidCards = data.invalid_cards;
@@ -60,7 +59,7 @@
         }
     )
 
-    socket.on(
+    $socket.on(
         "choose specific card type from supply",
         (data) => {
             waitingForSelection.value = true;
@@ -73,7 +72,7 @@
         }
     )
 
-    socket.on(
+    $socket.on(
         "response received",
         (data) => {
             invalidCards = [];
@@ -90,18 +89,16 @@
     );
 </script>
 
-{#if gameStarted}
-    <main>
-        <CardCarousel
-            title="Supply"
-            {cards}
-            {invalidCards}
-            sortByProperty = "cost"
-            {waitingForSelection}
-            on:selected={handleSelected}
-        />
-    </main>
-{/if}
+<main>
+    <CardCarousel
+        title="Supply"
+        {cards}
+        {invalidCards}
+        sortByProperty = "cost"
+        {waitingForSelection}
+        on:selected={handleSelected}
+    />
+</main>
 
 <style>    
 </style>

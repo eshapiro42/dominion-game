@@ -1,8 +1,7 @@
 <script>
-    import CardCarousel from "./card_carousel.svelte";
+    import {socket} from "../stores.js";
 
-    export let socket;
-    export let gameStarted;
+    import CardCarousel from "./card_carousel.svelte";
 
     let cards = [];
     let waitingForSelection = {
@@ -29,7 +28,7 @@
                 return false;
             }
         }
-        socket.emit("response", selectedCards);
+        $socket.emit("response", selectedCards);
         return true;
     }
 
@@ -44,22 +43,22 @@
                 if (!confirmed) {
                     return false;
                 }
-                socket.emit("response", null);
+                $socket.emit("response", null);
                 return true;
             }
         }
-        socket.emit("response", selectedCards[0]);
+        $socket.emit("response", selectedCards[0]);
         return true;
     }
 
-    socket.on(
+    $socket.on(
         "display hand", 
         (data) => {
             cards = data.cards;
         },
     );
 
-    socket.on(
+    $socket.on(
         "choose treasures from hand",
         (data) => {
             waitingForSelection.value = true;
@@ -69,7 +68,7 @@
         }
     );
 
-    socket.on(
+    $socket.on(
         "choose specific card type from hand",
         (data) => {
             waitingForSelection.value = true;
@@ -80,7 +79,7 @@
         }
     );
 
-    socket.on(
+    $socket.on(
         "choose card from hand",
         (data) => {
             waitingForSelection.value = true;
@@ -91,7 +90,7 @@
         }
     );
 
-    socket.on(
+    $socket.on(
         "response received",
         (data) => {
             waitingForSelection = {
@@ -107,17 +106,15 @@
     );
 </script>
 
-{#if gameStarted}
-    <main>
-        <CardCarousel
-            title="Your Hand"
-            {cards}
-            sortByProperty = "type"
-            {waitingForSelection}
-            on:selected={handleSelected}
-        />
-    </main>
-{/if}
+<main>
+    <CardCarousel
+        title="Your Hand"
+        {cards}
+        sortByProperty = "type"
+        {waitingForSelection}
+        on:selected={handleSelected}
+    />
+</main>
 
 <style>
 </style>
