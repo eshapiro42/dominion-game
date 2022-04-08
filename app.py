@@ -243,17 +243,15 @@ class HeartBeat():
                 continue
             try:
                 # Display cards in carousels
+                # All players see the current player's played cards
+                self.game.current_turn.player.interactions.display_played_cards()
+                # Each player sees their own hand and discard, as well as the supply and trash
                 for player in self.game.players:
                     if isinstance(player.interactions, BrowserInteraction):
-                        self.game.current_turn.player.interactions.display_played_cards()
                         player.interactions.display_hand()
                         player.interactions.display_supply()
                         player.interactions.display_discard_pile()
                         player.interactions.display_trash()
-                    # Need to handle displaying CPU played cards explicitly
-                    current_player = self.game.current_turn.player
-                    if isinstance(current_player.interactions, AutoInteraction):
-                        current_player.interactions.display_played_cards()
                 # Display current turn info in status bar
                 if hasattr(self.game, "current_turn"):
                     self.game.current_turn.display()

@@ -116,7 +116,7 @@ class BrowserInteraction(Interaction):
             self.socketio.emit(
                 "display played cards",
                 self._get_played_cards_data(),
-                to=self.sid,
+                to=self.room, # Always send played cards to all players
             )
         except Exception as exception:
             print(exception)
