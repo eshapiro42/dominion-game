@@ -662,7 +662,7 @@ class Library(ActionCard):
                 break
             self.interactions.send(f'You drew {a(card_drawn)}.')
             if CardType.ACTION in card_drawn.types:
-                prompt = f"It's an Action card. You have {s(self.owner.turn.actions_remaining, 'action')} remaining. Would you like to keep it?"
+                prompt = f"You drew {a(card_drawn)}. It's an Action card. You have {s(self.owner.turn.actions_remaining, 'action')} remaining. Would you like to keep it?"
                 if self.interactions.choose_yes_or_no(prompt=prompt):
                     self.interactions.send('Adding it to your hand.')
                     self.owner.hand.append(card_drawn)
