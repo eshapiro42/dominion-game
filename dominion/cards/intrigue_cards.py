@@ -564,6 +564,7 @@ class SecretPassage(ActionCard):
             maximum = len(self.owner.deck) + 1
             prompt = f'Where in your deck would you like to put your {card}? (1: on top, {maximum}: on bottom).'
             index = self.interactions.choose_from_range(prompt, minimum, maximum, force=True) - 1
+            self.owner.hand.remove(card)
             self.owner.deck.insert(len(self.owner.deck) - index, card)
             self.game.broadcast(f'{self.owner} put a card from his hand into position {index + 1} in his deck.')
 
