@@ -112,7 +112,7 @@ class Supply:
             print("Disabling attack cards.")
             possible_kingdom_card_classes = [card_class for card_class in copy.deepcopy(possible_kingdom_card_classes) if cards.CardType.ATTACK not in card_class.types]
         # Find and add in kingdom cards satisfying the required effects
-        required_effects = list(self.customization.required_effects.keys())
+        required_effects = [effect for effect, required in self.customization.required_effects.items() if required]
         random.shuffle(required_effects) # Shuffle the list of required effects so some cards don't get preferential treatment every game
         for required_effect in required_effects:
             # First check if the required effect already happens to be satisfied by a previously required card
