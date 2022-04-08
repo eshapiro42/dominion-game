@@ -99,6 +99,13 @@ class Supply:
         possible_kingdom_card_classes = []
         for expansion in self.customization.expansions:
             possible_kingdom_card_classes += expansion.kingdom_card_classes
+        # Add in any required cards. Note that this will break things is a required card's expansion is not selected.
+        for required_card_class in self.customization.required_card_classes:
+            if required_card_class not in possible_kingdom_card_classes:
+                raise ValueError(f"Required card class {required_card_class.name} is not in the selected expansions.")
+            print(f"Adding required card class {required_card_class.name}.")
+            selected_kingdom_card_classes.append(required_card_class)
+            possible_kingdom_card_classes.remove(required_card_class)
         # All filtering and disabling should be done prior to fulfilling requirements!
         if self.customization.disable_attack_cards:
             # Filter out attack cards
