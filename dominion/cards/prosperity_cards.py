@@ -464,6 +464,8 @@ class Mountebank(AttackCard):
     extra_actions = 0
     extra_buys = 0
     extra_coppers = 2
+
+    allow_simultaneous_reactions = False # If only one Curse is left in the Supply, it is important that this is resolved in turn order
     
     def action(self):
         pass
@@ -498,6 +500,8 @@ class Rabble(AttackCard):
     extra_actions = 0
     extra_buys = 0
     extra_coppers = 0
+
+    allow_simultaneous_reactions = True
     
     def action(self):
         pass
@@ -693,6 +697,8 @@ class Goons(AttackCard):
     extra_actions = 0
     extra_buys = 1
     extra_coppers = 2
+
+    allow_simultaneous_reactions = True
 
     class GoonsPostGainHook(PostGainHook):
         persistent = True

@@ -62,13 +62,13 @@ def test_supply_customization():
     game = Game(test=True)
     # Add a randomly selected set of Supply customization options into the game
     options = [
+        "allow_simultaneous_reactions",
         "distribute_cost",
         "disable_attack_cards",
         "require_plus_two_action",
         "require_drawer",
         "require_buy",
         "require_trashing",
-
     ]
     num_options = random.randint(0, len(options))
     options_to_include = random.sample(options, num_options)

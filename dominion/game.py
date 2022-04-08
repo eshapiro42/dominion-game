@@ -59,6 +59,7 @@ class Game:
         self.pre_buy_hooks = defaultdict(list)
         self.game_end_conditions = []
         self.expansions = set()
+        self.allow_simultaneous_reactions = False # If toggled, allows attacked players to react to attacks simultaneously (when sensible)
         self.distribute_cost = False # If toggled, ensures there are at least two cards each of cost {2, 3, 4, 5}
         self.disable_attack_cards = False # If toggled, Attack cards are not allowed
         self.require_plus_two_action = False # If toggled, ensures there is at least one card with '+2 Actions'

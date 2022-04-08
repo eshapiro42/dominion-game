@@ -256,6 +256,8 @@ class Swindler(AttackCard):
     extra_buys = 0
     extra_coppers = 2
 
+    allow_simultaneous_reactions = False # Must be resolved in turn order in case there is a limited quantity of desirable cards in the Supply
+
     @property
     def prompt(self):
         return f'Each other player trashes the top card of their deck and gains a card with the same cost that {self.owner} chooses.'
@@ -654,6 +656,8 @@ class Minion(AttackCard):
     extra_buys = 0
     extra_coppers = 0
 
+    allow_simultaneous_reactions = True
+
     def attack_effect(self, attacker, player):
         if len(player.hand) >= 5:
             # Discard your hand
@@ -754,6 +758,8 @@ class Replace(AttackCard):
     extra_buys = 0
     extra_coppers = 0
 
+    allow_simultaneous_reactions = False # If only one Curse is left in the Supply, it is important that this is resolved in turn order
+
     def attack_effect(self, attacker, player):
         player.gain(base_cards.Curse)
 
@@ -797,6 +803,8 @@ class Torturer(AttackCard):
     extra_actions = 0
     extra_buys = 0
     extra_coppers = 0
+
+    allow_simultaneous_reactions = False # If only one Curse is left in the Supply, it is important that this is resolved in turn order
 
     def attack_effect(self, attacker, player):
         prompt = f'{player}: Which would you like to choose?'

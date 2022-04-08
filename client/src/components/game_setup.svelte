@@ -21,6 +21,7 @@
     ]
 
     var supplyCustomizations = [
+        {name: "Allow simultaneous reactions", property: "allowSimultaneousReactions", selected: false},
         {name: "Distribute cost", property: "distributeCost", selected: false},
         {name: "Disable Attacks", property: "disableAttacks", selected: false},
         {name: "Require +2 Action", property: "requirePlusTwoAction", selected: false},

@@ -127,6 +127,7 @@ def start_game(data):
     room = data['room']
     intrigue = data['intrigue']
     prosperity = data['prosperity']
+    allow_simultaneous_reactions = data['allowSimultaneousReactions']
     distribute_cost = data['distributeCost']
     disable_attack_cards = data['disableAttacks']
     require_plus_two_action = data['requirePlusTwoAction']
@@ -142,6 +143,8 @@ def start_game(data):
         game.add_expansion(IntrigueExpansion)
     if prosperity:
         game.add_expansion(ProsperityExpansion)
+    if allow_simultaneous_reactions:
+        game.allow_simultaneous_reactions = True
     if distribute_cost:
         game.distribute_cost = True
     if disable_attack_cards:

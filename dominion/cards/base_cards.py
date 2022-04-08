@@ -306,6 +306,8 @@ class Bureaucrat(AttackCard):
     extra_buys = 0
     extra_coppers = 0
 
+    allow_simultaneous_reactions = True
+
     def attack_effect(self, attacker, player):
         # Check if the player has a Victory card in their hand
         if any(CardType.VICTORY in card.types for card in player.hand):
@@ -363,6 +365,8 @@ class Militia(AttackCard):
     extra_actions = 0
     extra_buys = 0
     extra_coppers = 2
+
+    allow_simultaneous_reactions = True
 
     def attack_effect(self, attacker, player):
         number_to_discard = len(player.hand) - 3
@@ -512,6 +516,8 @@ class Bandit(AttackCard):
     extra_actions = 0
     extra_buys = 0
     extra_coppers = 0
+
+    allow_simultaneous_reactions = True
 
     def attack_effect(self, attacker, player):
         trashable_cards = []
@@ -798,6 +804,8 @@ class Witch(AttackCard):
     extra_buys = 0
     extra_coppers = 0
 
+    allow_simultaneous_reactions = False # If only one Curse is left in the Supply, it is important that this is resolved in turn order
+
     def attack_effect(self, attacker, player):
         player.gain(Curse)
 
@@ -924,6 +932,8 @@ class Spy(AttackCard):
     extra_buys = 0
     extra_coppers = 0
 
+    allow_simultaneous_reactions = False # The frontend cannot currently handle the attacker simultaneously reacting to multiple players' responses
+
     def reveal_top_card_and_discard_or_replace(self, revealer, chooser):
         # Revealer reveals a card
         card = revealer.take_from_deck()
@@ -973,6 +983,8 @@ class Thief(AttackCard):
     extra_actions = 0
     extra_buys = 0
     extra_coppers = 0
+
+    allow_simultaneous_reactions = False # The frontend cannot currently handle the attacker simultaneously reacting to multiple players' responses
 
     def attack_effect(self, attacker, player):
         # Player reveals two cards
