@@ -248,28 +248,27 @@ class BuyPhase(Phase):
         '''
         self.turn.current_phase = "Buy Phase"
         # Find any Treasures in the player's hand
-        treasures_available = []
-        for card in self.player.hand:
-            if cards.CardType.TREASURE in card.types:
-                treasures_available.append(card)
+        treasures_available = [card for card in self.player.hand if cards.CardType.TREASURE in card.types]
         # Ask the player which Treasures they would like to play
-        prompt = f'Which Treasures would you like to play this turn?'
-        if isinstance(self.player.interactions, BrowserInteraction) or isinstance(self.player.interactions, AutoInteraction):
-            treasures_to_play = self.player.interactions.choose_treasures_from_hand(prompt)
-        else:
-            treasures_to_play = []
-            while treasures_available:
-                options = ['Play all Treasures'] + treasures_available
-                choice = self.player.interactions.choose_from_options(prompt, options, force=False)
-                if choice is None:
-                    break
-                elif choice == 'Play all Treasures':
-                    treasures_to_play += treasures_available
-                    break
-                else:
-                    treasures_available.remove(choice)
-                    treasures_to_play.append(choice)
+        treasures_to_play = []
+        if treasures_available:
+            prompt = f'Which Treasures would you like to play this turn?'
+            if isinstance(self.player.interactions, BrowserInteraction) or isinstance(self.player.interactions, AutoInteraction):
+                treasures_to_play = self.player.interactions.choose_treasures_from_hand(prompt)
+            else:
+                while treasures_available:
+                    options = ['Play all Treasures'] + treasures_available
+                    choice = self.player.interactions.choose_from_options(prompt, options, force=False)
+                    if choice is None:
+                        break
+                    elif choice == 'Play all Treasures':
+                        treasures_to_play += treasures_available
+                        break
+                    else:
+                        treasures_available.remove(choice)
+                        treasures_to_play.append(choice)
         self.play_treasures(treasures_to_play)
+            
         # Activate any pre-buy hooks registered to cards in the Supply
         self.process_pre_buy_hooks()
         # Buy cards
