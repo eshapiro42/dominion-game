@@ -800,7 +800,7 @@ class Bank(TreasureCard):
 
     description = '\n'.join(
         [
-            "When you play this, it's worth $1 per Treasure you have in play (counting this)."
+            "When you play this, it's worth 1 $ per Treasure you have in play (counting this)."
         ]
     )
 
