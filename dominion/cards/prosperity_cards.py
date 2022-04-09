@@ -405,7 +405,8 @@ class CountingHouse(ActionCard):
                 self.game.broadcast(f"{self.owner} put {s(num_coppers, 'Copper')} from their discard pile into their hand.")
             else:
                 self.game.broadcast(f'{self.owner} did not put any Coppers from their discard pile into their hand.')
-
+        else:
+            self.game.broadcast(f"{self.owner} has no Coppers in their discard pile.")
 
 class Mint(ActionCard):
     name = 'Mint'
