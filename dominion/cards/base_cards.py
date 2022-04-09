@@ -423,7 +423,7 @@ class Poacher(ActionCard):
     extra_coppers = 1
 
     def action(self):
-        number_to_discard = self.supply.num_empty_stacks
+        number_to_discard = min(self.supply.num_empty_stacks, len(self.owner.hand))
         if number_to_discard > 0:
             self.game.broadcast(f"{self.owner} must discard {s(number_to_discard, 'card')}.")
             prompt = f"Choose {s(number_to_discard, 'card')} to discard."
