@@ -156,6 +156,7 @@ class AutoInteraction(Interaction):
                 raise
 
     def choose_treasures_from_hand(self, prompt):
+        # The CPU will always choose all available Treasures
         self.sleep_random()
         print(prompt)
         print()
@@ -166,17 +167,7 @@ class AutoInteraction(Interaction):
                     print('There are no treasures in your hand.\n')
                     return []
                 print(f'Available treasures: {", ".join(map(str, available_treasures))}')
-                num_available_treasures = len(available_treasures)
-                num_chosen_treasures = random.choices(
-                    population=range(num_available_treasures + 1),
-                    weights=range(num_available_treasures + 1) # It's more likely for the CPU to pick more Treasures
-                )[0]
-                chosen_treasure_cards = random.choices(
-                    population=available_treasures,
-                    k=num_chosen_treasures
-                )         
-                print(f'Chosen treasures: {", ".join(map(str, chosen_treasure_cards))}')
-                return chosen_treasure_cards
+                return available_treasures
             except (IndexError, ValueError):
                 self.send('That is not a valid choice.')
 
