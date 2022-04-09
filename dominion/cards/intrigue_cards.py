@@ -431,9 +431,10 @@ class Diplomat(ReactionCard):
         # Draw 2 cards
         self.owner.draw(2)
         # Discard 3 cards
-        for discard_num in range(3):
-            prompt = f'Choose a card to discard ({discard_num + 1}/3).'
-            card_to_discard = self.interactions.choose_card_from_hand(prompt, force=True)
+        self.game.broadcast(f"{self.owner} must discard 3 cards.")
+        prompt = f"Choose 3 cards to discard."
+        cards_to_discard = self.interactions.choose_cards_from_hand(prompt, force=True, max_cards=3)
+        for card_to_discard in cards_to_discard:
             self.owner.discard(card_to_discard)
         return None, True # Can be used again 
 
@@ -498,17 +499,16 @@ class Mill(ActionCard, VictoryCard):
     points = 1
 
     def action(self):
+        if len(self.owner.hand) < 2:
+            self.game.broadcast(f'{self.owner} has fewer than 2 cards in their hand and so cannot discard cards for +2 $.')
+            return
         prompt = 'Would you like to discard 2 cards for +2 $?'
         if self.interactions.choose_yes_or_no(prompt):
-            discarded_cards = []
-            for discard_num in range(2):
-                prompt = f'Choose a card to discard ({discard_num + 1}/2).'
-                card_to_discard = self.interactions.choose_card_from_hand(prompt, force=False)
-                if card_to_discard is not None:
-                    discarded_cards.append(card_to_discard)
-                    self.owner.discard(card_to_discard)
-            if len(discarded_cards) == 2:
-                self.owner.turn.plus_coppers(2)
+            prompt = f"Choose 2 cards to discard."
+            cards_to_discard = self.interactions.choose_cards_from_hand(prompt, force=True, max_cards=2)
+            for card_to_discard in cards_to_discard:
+                self.owner.discard(card_to_discard)
+            self.owner.turn.plus_coppers(2)
 
 
 class MiningVillage(ActionCard):
@@ -818,13 +818,11 @@ class Torturer(AttackCard):
         choice = player.interactions.choose_from_options(prompt, options, force=True)
         self.game.broadcast(f'{player} chose: {choice}.')
         if choice == f'Discard 2 cards ({num_cards_in_hand} in your hand)':
-            for card_num in range(2):
-                prompt = f'{player}: Choose card {card_num + 1} of 2 to discard.'
-                card_to_discard = player.interactions.choose_card_from_hand(prompt=prompt, force=True)
-                if card_to_discard is not None:
-                    player.discard(card_to_discard)
-                else:
-                    self.game.broadcast(f'{player} has no more cards to discard.')
+            number_to_discard = min(num_cards_in_hand, 2)
+            prompt = f"{attacker} has played a Torturer. Choose {s(number_to_discard, 'card')} to discard."
+            cards_to_discard = player.interactions.choose_cards_from_hand(prompt, force=True, max_cards=number_to_discard)
+            for card_to_discard in cards_to_discard:
+                player.discard(card_to_discard)
         elif choice == f'Gain a Curse to your hand ({num_curses_in_supply} in the Supply)':
             player.gain_to_hand(base_cards.Curse)
 
@@ -850,15 +848,14 @@ class TradingPost(ActionCard):
     extra_coppers = 0
 
     def action(self):
-        trashed_cards = []
-        for trash_num in range(2):
-            prompt = f'Choose a card from your hand to trash ({trash_num + 1}/2).'
-            card_to_trash = self.interactions.choose_card_from_hand(prompt, force=True)
-            if card_to_trash is not None:
-                trashed_cards.append(card_to_trash)
-                self.owner.trash(card_to_trash)
-        if len(trashed_cards) == 2:
-            self.owner.gain_to_hand(base_cards.Silver)
+        if len(self.owner.hand) < 2:
+            self.game.broadcast(f'{self.owner} does not have 2 cards to trash.')
+            return
+        prompt = f"Choose 2 cards from your hand to trash."
+        cards_to_trash = self.interactions.choose_cards_from_hand(prompt, force=True, max_cards=2)
+        for card_to_trash in cards_to_trash:
+            self.owner.trash(card_to_trash)
+        self.owner.gain_to_hand(base_cards.Silver)
 
 
 class Upgrade(ActionCard):

@@ -1,4 +1,6 @@
 import random
+from typing import List, Optional
+
 from ..cards import cards, base_cards
 from .interaction import Interaction
 
@@ -41,38 +43,32 @@ class AutoInteraction(Interaction):
             time_to_sleep = random.uniform(1, 3) 
             self.socketio.sleep(time_to_sleep)
 
-    def choose_card_from_hand(self, prompt, force):
+    def choose_card_from_hand(self, prompt, force) -> Optional[cards.Card]:
+        cards_chosen = self.choose_cards_from_hand(prompt, force, max_cards=1)
+        if not cards_chosen:
+            return None
+        return cards_chosen[0]
+
+    def choose_cards_from_hand(self, prompt, force, max_cards=1) -> List[cards.Card]:
         self.sleep_random()
         print(prompt)
         print()
         if not self.hand:
             print('There are no cards in your hand.\n')
-            return None
+            return []
+        if max_cards is None:
+            max_cards = len(self.hand)
+        else:
+            max_cards = min(max_cards, len(self.hand)) # Don't ask for more cards than we have
         while True:
             try:
                 self.display_hand()
                 if force:
-                    print(f'Enter choice 1-{len(self.hand)}: ', end='')
-                    choices = list(range(1, len(self.hand) + 1))
-                    # Weight options equally
-                    weights = [1 for card in self.hand]
-                    card_num = random.choices(choices, weights, k=1)[0]
-                    print(card_num)
-                    print()
-                    card_chosen = self.hand[card_num - 1]
+                    cards_chosen = random.sample(self.hand, max_cards)
                 else:
-                    print(f'Enter choice 1-{len(self.hand)} (0 to skip): ', end='')
-                    choices = list(range(0, len(self.hand) + 1))
-                    # Weight options equally
-                    weights = [1] + [1 for card in self.hand]
-                    card_num = random.choices(choices, weights, k=1)[0]
-                    print(card_num)
-                    print()
-                    if card_num == 0:
-                        return None
-                    else:
-                        card_chosen = self.hand[card_num - 1]
-                return card_chosen
+                    num_cards = random.randint(0, max_cards)
+                    cards_chosen = random.sample(self.hand, num_cards)
+                return cards_chosen
             except (IndexError, ValueError):
                 print('That is not a valid choice.\n')
                 raise

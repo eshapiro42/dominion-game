@@ -611,17 +611,14 @@ class Vault(ActionCard):
     
     def action(self):
         # Discard any number of cards for +1 $ each
-        discarded_card_count = 0
-        while True:
-            prompt = 'Choose a card from your hand to discard.'
-            card_to_discard = self.interactions.choose_card_from_hand(prompt=prompt, force=False)
-            if card_to_discard is None:
-                break
-            else:
-                discarded_card_count += 1
-                self.owner.discard(card_to_discard)
-        coppers_before = self.owner.turn.coppers_remaining
-        self.owner.turn.plus_coppers(discarded_card_count)
+        prompt = "Choose any number of cards from your hand to discard."
+        cards_to_discard = self.owner.interactions.choose_cards_from_hand(prompt=prompt, force=False, max_cards=None)
+        for card_to_discard in cards_to_discard:
+            self.owner.discard(card_to_discard)
+        if cards_to_discard:
+            self.owner.turn.plus_coppers(len(cards_to_discard))
+        else:
+            self.game.broadcast(f'{self.owner} did not discard any cards.')
         # Each other player may discard 2 cards, to draw a card.
         for player in self.owner.other_players:
             if len(player.hand) < 2:
@@ -629,15 +626,14 @@ class Vault(ActionCard):
             else:
                 prompt = f'{player}: Would you like to discard 2 cards to draw a card?'
                 if player.interactions.choose_yes_or_no(prompt):
-                    for discard_num in range(2):
-                        prompt = f'{player}: Choose card {discard_num + 1}/2 to discard.'
-                        card_to_discard = player.interactions.choose_card_from_hand(prompt, force=True)
-                        if card_to_discard is not None:
-                            player.discard(card_to_discard)
+                    prompt = f"Choose 2 cards to discard."
+                    cards_to_discard = player.interactions.choose_cards_from_hand(prompt=prompt, force=True, max_cards=2)
+                    for card_to_discard in cards_to_discard:
+                        player.discard(card_to_discard)
+                    self.game.broadcast(f"{player} drew a card.")
                     player.draw(1)
                 else:
                     self.game.broadcast(f'{player} chose not to discard 2 cards.')
-
 
 
 class Venture(TreasureCard):
@@ -716,11 +712,14 @@ class Goons(AttackCard):
             self.owner.turn.add_post_gain_hook(post_gain_hook, card_class) 
 
     def attack_effect(self, attacker, player):
-        number_to_discard = len(player.hand) - 3
+        number_to_discard = max(len(player.hand) - 3, 0)
+        if number_to_discard == 0:
+            self.game.broadcast(f"{player} only has {s(len(player.hand), 'card')} in their hand.")
+            return
         self.game.broadcast(f"{player} must discard {s(number_to_discard, 'card')}.")
-        for card_num in range(number_to_discard):
-            prompt = f'{player}: Choose card {card_num + 1} of {number_to_discard} to discard.'
-            card_to_discard = player.interactions.choose_card_from_hand(prompt=prompt, force=True)
+        prompt = f"{attacker} has played a Goons. Choose {s(number_to_discard, 'card')} to discard."
+        cards_to_discard = player.interactions.choose_cards_from_hand(prompt=prompt, force=True, max_cards=number_to_discard)
+        for card_to_discard in cards_to_discard:
             player.discard(card_to_discard)
 
 
@@ -854,18 +853,18 @@ class Forge(ActionCard):
     extra_coppers = 0
     
     def action(self):
-        current_value = 0
         # Trash any number of cards from your hand
-        while self.owner.hand:
-            prompt = f'You may choose a card from your hand to trash (current value: {current_value}).'
-            card_to_trash = self.interactions.choose_card_from_hand(prompt=prompt, force=False)
-            if card_to_trash is None:
-                break
-            else:
-                self.owner.trash(card_to_trash)
-                current_value += card_to_trash.cost
+        prompt = f'You may choose any number of cards from your hand to trash. You must gain a card with cost exactly equal to the total cost of the trashed cards. If you trash no cards, you must gain a card costing 0 $.'
+        cards_to_trash = self.interactions.choose_cards_from_hand(prompt=prompt, force=False, max_cards=None)
+        total_value = 0
+        if cards_to_trash:
+            total_value = sum(card.cost for card in cards_to_trash)
+        for card_to_trash in cards_to_trash:
+            self.owner.trash(card_to_trash)
+        self.game.broadcast(f"{self.owner} trashed {s(len(cards_to_trash), 'card')} for a total cost of {total_value} $.")
+        self.game.broadcast(f"{self.owner} must gain a card costing exactly {total_value} $.")
         # Gain a card with cost exactly equal to the total cost of the trashed cards
-        self.owner.turn.buy_phase.buy_without_side_effects(max_cost=current_value, force=True, exact_cost=True)
+        self.owner.turn.buy_phase.buy_without_side_effects(max_cost=total_value, force=True, exact_cost=True)
         
 
 class KingsCourt(ActionCard):

@@ -97,16 +97,14 @@ class Cellar(ActionCard):
     extra_coppers = 0
 
     def action(self):
-        discarded_card_count = 0
-        while True:
-            prompt = 'Choose a card from your hand to discard.'
-            card_to_discard = self.interactions.choose_card_from_hand(prompt=prompt, force=False)
-            if card_to_discard is None:
-                break
-            else:
-                discarded_card_count += 1
-                self.owner.discard(card_to_discard)
-        self.owner.draw(discarded_card_count)
+        prompt = 'Choose any number of cards from your hand to discard.'
+        cards_to_discard = self.interactions.choose_cards_from_hand(prompt=prompt, force=False, max_cards=None)
+        if not cards_to_discard:
+            self.game.broadcast(f'{self.owner} did not discard or draw any cards.')
+            return
+        for card_to_discard in cards_to_discard:
+            self.owner.discard(card_to_discard)
+        self.owner.draw(len(cards_to_discard))
 
 
 class Chapel(ActionCard):
@@ -123,13 +121,13 @@ class Chapel(ActionCard):
     extra_coppers = 0
 
     def action(self):
-        for idx in range(4):
-            prompt = f'You may choose a card from your hand to trash ({idx} of 4).'
-            card_to_trash = self.interactions.choose_card_from_hand(prompt=prompt, force=False)
-            if card_to_trash is None:
-                break
-            else:
-                self.owner.trash(card_to_trash)
+        prompt = f"You may choose up to 4 cards from your hand to trash."
+        cards_to_trash = self.interactions.choose_cards_from_hand(prompt=prompt, force=False, max_cards=4)
+        if not cards_to_trash:
+            self.game.broadcast(f'{self.owner} did not trash any cards.')
+            return
+        for card_to_trash in cards_to_trash:
+            self.owner.trash(card_to_trash)
 
 
 class Moat(ReactionCard):
@@ -369,11 +367,14 @@ class Militia(AttackCard):
     allow_simultaneous_reactions = True
 
     def attack_effect(self, attacker, player):
-        number_to_discard = len(player.hand) - 3
+        number_to_discard = max(len(player.hand) - 3, 0)
+        if number_to_discard == 0:
+            self.game.broadcast(f"{player} only has {s(len(player.hand), 'card')} in their hand.")
+            return
         self.game.broadcast(f"{player} must discard {s(number_to_discard, 'card')}.")
-        for card_num in range(number_to_discard):
-            prompt = f'{player}: Choose card {card_num + 1} of {number_to_discard} to discard.'
-            card_to_discard = player.interactions.choose_card_from_hand(prompt=prompt, force=True)
+        prompt = f"{attacker} has played a Militia. Choose {s(number_to_discard, 'card')} to discard."
+        cards_to_discard = player.interactions.choose_cards_from_hand(prompt=prompt, force=True, max_cards=number_to_discard)
+        for card_to_discard in cards_to_discard:
             player.discard(card_to_discard)
 
     def action(self):
@@ -424,12 +425,11 @@ class Poacher(ActionCard):
     def action(self):
         number_to_discard = self.supply.num_empty_stacks
         if number_to_discard > 0:
-            self.interactions.send(f"You must discard {s(number_to_discard, 'card')}.")
-            for num in range(number_to_discard):
-                prompt = f'Choose card {num + 1} of {number_to_discard} to discard.'
-                card_to_discard = self.interactions.choose_card_from_hand(prompt=prompt, force=True)
-                if card_to_discard is not None:
-                    self.owner.discard(card_to_discard)
+            self.game.broadcast(f"{self.owner} must discard {s(number_to_discard, 'card')}.")
+            prompt = f"Choose {s(number_to_discard, 'card')} to discard."
+            cards_to_discard = self.owner.interactions.choose_cards_from_hand(prompt=prompt, force=True, max_cards=number_to_discard)
+            for card_to_discard in cards_to_discard:
+                self.owner.discard(card_to_discard)
 
 
 class Remodel(ActionCard):

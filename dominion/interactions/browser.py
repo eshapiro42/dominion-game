@@ -2,8 +2,10 @@ import inspect
 import math
 from contextlib import contextmanager
 from threading import Event # Monkey patched to use gevent Events
+from typing import List, Optional
 
 from ..cards import cards
+from ..grammar import s
 from .interaction import Interaction
 
 
@@ -141,28 +143,45 @@ class BrowserInteraction(Interaction):
         except Exception as exception:
             print(exception)
 
-    def choose_card_from_hand(self, prompt, force):
+    def choose_cards_from_hand(self, prompt, force, max_cards=1) -> List[cards.Card]:
         with self.move_cards():
             print("choose_card_from_hand")
             if not self.hand:
                 self.send('There are no cards in your hand.')
-                return None
+                return []
+            if max_cards is not None:
+                max_cards = min(max_cards, len(self.hand)) # Don't ask for more cards than we have
             while True:
                 try:
                     response = self._call(
-                        "choose card from hand",
+                        "choose cards from hand",
                         {
                             "prompt": prompt,
                             "force": force,
+                            "max_cards": max_cards,
                         }
                     )
+                    if force:
+                        if response is None or (len(response) < max_cards and max_cards is not None):
+                            raise ArithmeticError("Not enough cards chosen.")
                     if response is None:
-                        return None
-                    for card in self.hand:
-                            if response["id"] == card.id:
-                                return card
+                        return []
+                    chosen_cards = []
+                    for card_data in response:
+                        for card in self.hand:
+                            if card_data["id"] == card.id:
+                                chosen_cards.append(card)
+                    return chosen_cards
                 except (IndexError, ValueError):
                     self.send('That is not a valid choice.')
+                except ArithmeticError:
+                    self.send(f"You must choose exactly {s(max_cards, 'card')}.")
+
+    def choose_card_from_hand(self, prompt, force) -> Optional[cards.Card]:
+        cards_chosen = self.choose_cards_from_hand(prompt, force, max_cards=1)
+        if not cards_chosen:
+            return None
+        return cards_chosen[0]
 
     def choose_specific_card_class_from_hand(self, prompt, force, card_class):
         with self.move_cards():
