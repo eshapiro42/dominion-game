@@ -27,7 +27,8 @@
             {
                 selection: selection,
             }
-        )
+        );
+        selection = null;
     }
 
     function handleClick() {
@@ -61,7 +62,7 @@
                 <div class="flex-item">
                     {#if type == "range"}
                         <select bind:value={selection}>
-                            {#each rangeList as option}
+                            {#each rangeList as option (option)}
                                 <option value={option}>
                                     {option}
                                 </option>
@@ -69,7 +70,7 @@
                         </select>
                     {:else if type == "options"}
                         <select bind:value={selection}>
-                            {#each options as option}
+                            {#each options as option (option.id)}
                                 <option value={option.id}>
                                     {option.name}
                                 </option>
