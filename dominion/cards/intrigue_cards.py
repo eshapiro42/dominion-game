@@ -29,6 +29,9 @@ class Courtyard(ActionCard):
         # Choose a card from your hand
         prompt = f'Choose a card from your hand to put onto your deck.'
         card = self.interactions.choose_card_from_hand(prompt, force=True)
+        if card is None:
+            self.game.broadcast(f'{self.owner.name} does not have any cards in their hand.')
+            return
         # Put that card onto your deck
         self.owner.hand.remove(card)
         self.owner.deck.append(card)
