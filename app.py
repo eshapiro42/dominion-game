@@ -30,6 +30,8 @@ def home(path):
 games = {}
 # Global dictionary of sids, {sid: (room, data)}
 sids = {}
+# Global dictionary of connected players, indexed by room ID, {room: [username, ...], ...}
+connected_players = defaultdict(list)
 # Global dictionary of disconnected players, indexed by room ID, {room: [username, ...], ...}
 disconnected_players = defaultdict(list)
 # Global dictionary of CPUs, indexed by room ID, {room: CPU_COUNT}
@@ -42,10 +44,15 @@ def join_room(data):
     room = data['room']
     if data['client_type'] == 'browser':
         interaction_class = BrowserInteraction
+    # If the user is already in the room, reject them
+    if username in connected_players[room]:
+        socketio.send(f'A player with that username has already joined the game.')
+        return False
     # Add the user to the room
     flask_socketio.join_room(room)
     sid = request.sid
     sids[sid] = (room, data)
+    connected_players[room].append(username)
     try:
         # Add the player to the game
         game = games[room]
@@ -61,6 +68,7 @@ def join_room(data):
     except GameStartedError:
         if username in disconnected_players[room]:
             disconnected_players[room].remove(username)
+            connected_players[room].append(username)
             # Find the player object and set its sid
             for player in game.players:
                 if player.name == username:
@@ -91,6 +99,7 @@ def create_room(data):
     flask_socketio.join_room(room)
     sid = request.sid
     sids[sid] = (room, data)
+    connected_players[room].append(username)
     # Create the game object
     game = Game(socketio=socketio, room=room)
     # Add the game object to the global dictionary of games
@@ -183,6 +192,7 @@ def disconnect():
         room, data = sids[sid]
         game = games[room]
         username = data['username']
+        connected_players[room].remove(username)
         disconnected_players[room].append(username)
         sids.pop(sid, None)
         flask_socketio.leave_room(room)
@@ -199,6 +209,7 @@ def disconnect():
                 game.heartbeat.stop()
                 # Erase the game from existence
                 games.pop(room, None)
+                connected_players.pop(room, None)
                 disconnected_players.pop(room, None)
                 cpus.pop(room, None)
                 socketio.send(f'Game {room} has ended.\n', room=room)

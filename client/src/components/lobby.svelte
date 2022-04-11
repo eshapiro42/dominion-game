@@ -24,7 +24,7 @@
         }
         else {
             room = null;
-            alert("Invalid room ID.");
+            alert("Invalid username or room ID.");
         }
     }
 
