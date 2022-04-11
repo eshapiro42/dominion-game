@@ -21,7 +21,7 @@ class ProsperityExpansion(Expansion):
         choice = random.choices(choices, weights, k=1)[0]
         if choice:
             self.platinum_and_colony = True
-            print('Using Platinum and Colony')
+            self.game.broadcast("Platinum and Colony are in play this game.")
             # The Colony pile size depends on the number of players:
             if self.supply.num_players == 2:
                 colony_pile_size = 8
@@ -44,6 +44,7 @@ class ProsperityExpansion(Expansion):
             player.victory_tokens = 0
         # If the Trade Route is in the Supply, it requires additional setup of the Trade Route mat and Coin tokens
         if prosperity_cards.TradeRoute in self.supply.card_stacks:
+            self.game.broadcast("The Trade Route is in play this game.")
             # Trade route mat starts off with no coin tokens
             self.supply.trade_route = 0
             # Each Victory card pile in the Supply starts off with one coin token on top (implemented via non-persistent post-gain hooks)

@@ -455,7 +455,6 @@ class CleanupPhase(Phase):
         # Clean up the player's mat
         self.player.cleanup()
         # Show their hand for next turn
-        # self.player.interactions.send('Your hand for next turn:')
         self.player.interactions.display_hand()
         # Reset all card's cost modifiers
         self.supply.reset_costs()

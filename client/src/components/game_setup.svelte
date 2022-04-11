@@ -26,9 +26,11 @@
             property: "allowSimultaneousReactions",
             selected: false,
             description: [
-                "Allow attacked players to react to an Attack simultaneously and asynchronously (when doing so is sensible).",
-                "This currently only works for Attack effects where the only required input is from the players being attacked, such as with the Militia. If the Attack requires feedback from the attacker, like with the Spy, Thief, Swindler, etc, the frontend is not currently equipped to deal with simultaneous reactions.",
-                "This also cannot be used for Attacks that require the attacked players to gain cards from the Supply, such as the Witch, Swindler, Torturer, Replace, etc. That's because there may be only one of a given card left in the Supply, and therefore the effect must be resolved in turn order."
+                "Allow attacked players to react to an Attack (or certain Actions) simultaneously and asynchronously (when doing so is sensible).",
+                "This only works for Attack effects where the only required input is from the players being attacked, such as with the Militia. If the Attack requires feedback from the attacker, like with the Thief, the frontend is not currently equipped to deal with simultaneous reactions.",
+                "This also cannot be used for Attacks that require the attacked players to gain cards from the Supply, such as the Witch. That's because there may be only one of a given card left in the Supply, and therefore the effect must be resolved in turn order.",
+                "<b>Supported cards</b>: Bandit, Bishop, Bureaucrat, Goons, Masquerade, Militia, Minion, Rabble, Vault.",
+                "<b>Unsupported cards</b>: Mountebank, Replace, Spy, Swindler, Thief, Torturer, Witch.",
             ],
         },
         {
@@ -149,7 +151,7 @@
                             <span class="hoverable-text">
                                 {#each customization.description as line}
                                     <span class="hoverable-text-line">
-                                        {line}
+                                        {@html line}
                                     </span>
                                 {/each}
                             </span>
@@ -198,6 +200,7 @@
     .hoverable .hoverable-text {
         visibility: hidden;
         position: absolute;
+        left: 50px;
         display: flex;
         flex-direction: column;
         justify-content: center;

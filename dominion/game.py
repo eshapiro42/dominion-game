@@ -149,6 +149,19 @@ class Game:
             expansion_instance = expansion(self)
             self.supply.customization.expansions.add(expansion_instance)
             self.game_end_conditions += expansion_instance.game_end_conditions
+        expansion_names = sorted([expansion.name for expansion in self.expansions if expansion != BaseExpansion])
+        if len(expansion_names) > 1:
+            # Join the last two with "and" for easier readability
+            expansion_names[-2] = f"{expansion_names[-2]} and {expansion_names[-1]}"
+            expansion_names.pop()
+            expansions_string = ", ".join(expansion_names)
+            self.broadcast(f"Using {expansions_string} expansions.")
+        elif len(expansion_names) == 1:
+            expansion_name = expansion_names[0]
+            self.broadcast(f"Using {expansion_name} expansion.")
+        # Notify players if simultaneous reactions are allowed
+        if self.allow_simultaneous_reactions:
+            self.broadcast("Simultaneous reactions are allowed.")
         # Add in other supply customizations
         self.supply.customization.distribute_cost = self.distribute_cost
         self.supply.customization.disable_attack_cards = self.disable_attack_cards
@@ -168,7 +181,6 @@ class Game:
             player.get_other_players()
         # Print out each player's hand (other than the starting player)
         for player in self.turn_order[1:]:
-            player.interactions.send('Your hand for next turn:')
             player.interactions.display_hand()
         # Start the game loop!
         if not debug:
