@@ -11,6 +11,7 @@
         type: "",
         maxCards: null,
         maxCost: null,
+        exactCost: null,
         force: false,
         prompt: null,
     };
@@ -55,6 +56,7 @@
             waitingForSelection.handler = handleSupplyCardClassSelected;
             waitingForSelection.maxCards = 1;
             waitingForSelection.maxCost = data.max_cost;
+            waitingForSelection.exactCost = data.exact_cost;
             waitingForSelection.force = data.force;
         }
     )
@@ -82,6 +84,7 @@
                 type: "",
                 maxCards: null,
                 maxCost: null,
+                exactCost: null,
                 force: false,
                 prompt: null,
             };

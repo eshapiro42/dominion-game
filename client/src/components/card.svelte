@@ -56,6 +56,8 @@
                 type.toLowerCase().includes(waitingForSelection.type.toLowerCase())
                 // Don't allow selection if the card costs more than the maximum cost
                 && (waitingForSelection.maxCost == null || cost <= waitingForSelection.maxCost)
+                // Don't allow selection if an exact cost is specified and the card doesn't have the exact cost
+                && ((waitingForSelection.exactCost == false || cost == waitingForSelection.maxCost) || !("exactCost" in waitingForSelection))
                 // Dont allow selection if the card is not in the supply
                 && (quantity != 0)
                 // Don't allow selection if the card is explicity disallowed (e.g., Contraband)

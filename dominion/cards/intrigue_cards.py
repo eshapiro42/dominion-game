@@ -273,7 +273,7 @@ class Swindler(AttackCard):
             self.game.broadcast(f'{player} trashed {a(card_to_trash)}.')
             # Gain a card with the same cost that the attacker chooses
             cost = card_to_trash.cost
-            prompt = f'{attacker}: choose a card costing {cost} $ for {player} to gain.'
+            prompt = f'{player} trashed {a(card_to_trash)}. Choose a card costing {cost} $ for {player} to gain.'
             card_class_to_gain = attacker.interactions.choose_card_class_from_supply(prompt, max_cost=cost, force=True, exact_cost=True)
             if card_class_to_gain is not None:
                 player.gain(card_class_to_gain)

@@ -291,6 +291,7 @@ class BrowserInteraction(Interaction):
                             "max_cost": max_cost if max_cost != math.inf else None,
                             "force": force,
                             "invalid_cards": [card_class.name for card_class in invalid_card_classes],
+                            "exact_cost": exact_cost,
                         }
                     )
                     if card_data is None:
