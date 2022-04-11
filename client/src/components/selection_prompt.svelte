@@ -6,15 +6,31 @@
     export let waitingForSelection;
 
     function handleSendSelection() {
+        document.removeEventListener("keyup", handleEnterKey);
         dispatch(
             "sendSelection"
         );
     }
 
     function handleSelectAll() {
+        document.removeEventListener("keyup", handleAKey);
         dispatch(
             "selectAll"
         );
+    }
+
+    function handleEnterKey(event) {
+        if (event.code == "Enter" && waitingForSelection) {
+            document.removeEventListener("keyup", this);
+            handleSendSelection();
+        }
+    }
+
+    function handleAKey(event) {
+        if (event.code == "KeyA" && waitingForSelection) {
+            document.removeEventListener("keyup", this);
+            handleSelectAll();
+        }
     }
 
     function renderText(text) {
@@ -26,13 +42,22 @@
 
     $: renderedPrompt = renderText(waitingForSelection.prompt);
 
+    $: selectAllEnabled = waitingForSelection.maxCards == null;
+
+    $: if (waitingForSelection.value) {
+        document.addEventListener("keyup", handleEnterKey, {once: true});
+        if (selectAllEnabled) {
+            document.addEventListener("keyup", handleAKey, {once: true});
+        }
+    }
+
 </script>
 
 <main>
     <p class="flex-item"><b>{@html renderedPrompt}</b></p>
     <div class="flex-item">
         <button type="button" on:click={handleSendSelection}>Send Selection</button>
-        {#if waitingForSelection.maxCards == null && waitingForSelection.maxCards != 1}
+        {#if selectAllEnabled}
             <button type="button" on:click={handleSelectAll}>Select All</button>
         {/if}
     </div>
