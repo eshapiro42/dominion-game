@@ -168,26 +168,29 @@ class Masquerade(ActionCard):
         players_with_cards = [player for player in self.owner.other_players if len(player.hand) > 0]
         if len(self.owner.hand) > 0:
             players_with_cards = [self.owner] + players_with_cards
-        cards_passed = [] # This will be a list of [(card_received, old_owner, new_owner)]
-        player_to_left = {}
-        for player in players_with_cards:
-            player_idx = players_with_cards.index(player)
-            try:
-                player_to_left[player] = players_with_cards[player_idx + 1]
-            except IndexError:
-                player_to_left[player] = players_with_cards[0]
-        # Simultaneous reactions are only allowed if they are enabled for the game
-        if self.game.allow_simultaneous_reactions:
-            greenlets = [Greenlet.spawn(player_reaction, player, player_to_left[player]) for player in self.game.players]
-            joinall(greenlets)
+        # If there aren't at least two players with cards in their hand, nothing happens
+        if len(players_with_cards) < 2:
+            self.game.broadcast('There are not enough players with cards in their hand for any cards to be passed.')
         else:
-            for player in self.game.players:
-                player_reaction(player, player_to_left[player])
-        # Cards get passed
-        for card_received, old_owner, new_owner in cards_passed:
-            new_owner.hand.append(card_received)
-            card_received.owner = new_owner # Set .owner attribute of each card after they trade hands
-            new_owner.interactions.send(f'{old_owner} passed you {a(card_received)}.')
+            greenlets = []
+            cards_passed = [] # This will be a list of [(card_received, old_owner, new_owner)]
+            for player in players_with_cards:
+                player_idx = players_with_cards.index(player)
+                try:
+                    player_to_left = players_with_cards[player_idx + 1]
+                except IndexError:
+                    player_to_left = players_with_cards[0]
+                # Simultaneous reactions are only allowed if they are enabled for the game
+                if self.game.allow_simultaneous_reactions:
+                    greenlets.append(Greenlet.spawn(player_reaction, player, player_to_left))
+                else:
+                    player_reaction(player, player_to_left)
+            joinall(greenlets)
+            # Cards get passed
+            for card_received, old_owner, new_owner in cards_passed:
+                new_owner.hand.append(card_received)
+                card_received.owner = new_owner # Set .owner attribute of each card after they trade hands
+                new_owner.interactions.send(f'{old_owner} passed you {a(card_received)}.')
         # You may trash a card from your hand
         prompt = f'You may trash a card from your hand.'
         card_to_trash = self.interactions.choose_card_from_hand(prompt, force=False)
