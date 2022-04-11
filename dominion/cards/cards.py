@@ -249,6 +249,11 @@ class ReactionCard(ActionCard):
 
     @abstractmethod
     def react(self):
+        """
+        Returns:
+            reaction_type (ReactionType): the type of reaction
+            ignore_again (bool): whether to ignore the reaction card again
+        """
         pass
 
 

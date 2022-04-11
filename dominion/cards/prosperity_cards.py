@@ -281,8 +281,7 @@ class Talisman(TreasureCard):
         persistent = True
 
         def __call__(self, player, card, where_it_went):
-            game = player.game
-            game.broadcast(f'{player} gains an extra {self.card_class.name} from their Talisman.')
+            self.game.broadcast(f'{player} gains an extra {self.card_class.name} from their Talisman.')
             player.gain_without_hooks(self.card_class, message=False)
 
 
@@ -290,7 +289,7 @@ class Talisman(TreasureCard):
         # All non-Victory cards costing 4 $ or less get a post gain hook added this turn
         for card_class in self.supply.card_stacks:
             if card_class.cost <= 4 and CardType.VICTORY not in card_class.types:
-                post_gain_hook = self.TalismanPostGainHook(card_class)
+                post_gain_hook = self.TalismanPostGainHook(self.game, card_class)
                 self.owner.turn.add_post_gain_hook(post_gain_hook, card_class) 
 
 
@@ -576,18 +575,17 @@ class RoyalSeal(TreasureCard):
 
         def __call__(self, player, card, where_it_went):
             if card in where_it_went: # Need this in case a Watchtower or other card has already moved the card
-                game = player.game
                 prompt = f'{player}: Would you like to put the {card} you just gained onto your deck?'
                 if player.interactions.choose_yes_or_no(prompt):
                     where_it_went.remove(card)
                     player.deck.append(card)
-                    game.broadcast(f'{player} put the {card} onto their deck.')
+                    self.game.broadcast(f'{player} put the {card} onto their deck.')
 
     def play(self):
         # All cards get a post gain hook added this turn (but only one!)
         for card_class in self.supply.card_stacks:
             if not any(isinstance(hook, self.RoyalSealPostGainHook) for hook in self.owner.turn.post_gain_hooks[card_class]):
-                post_gain_hook = self.RoyalSealPostGainHook(card_class)
+                post_gain_hook = self.RoyalSealPostGainHook(self.game, card_class)
                 self.owner.turn.add_post_gain_hook(post_gain_hook, card_class) 
 
 
@@ -701,15 +699,14 @@ class Goons(AttackCard):
         persistent = True
 
         def __call__(self, player, card, where_it_went):
-            game = player.game
-            game.broadcast(f'{player} takes a Victory token from their Goons.')
+            self.game.broadcast(f'{player} takes a Victory token from their Goons.')
             player.victory_tokens += 1
 
 
     def action(self):
         # All cards get a post gain hook added this turn
         for card_class in self.supply.card_stacks:
-            post_gain_hook = self.GoonsPostGainHook(card_class)
+            post_gain_hook = self.GoonsPostGainHook(self.game, card_class)
             self.owner.turn.add_post_gain_hook(post_gain_hook, card_class) 
 
     def attack_effect(self, attacker, player):
@@ -778,8 +775,7 @@ class Hoard(TreasureCard):
         persistent = True
 
         def __call__(self, player, card, where_it_went):
-            game = player.game
-            game.broadcast(f'{player} gains a Gold from their Hoard.')
+            self.game.broadcast(f'{player} gains a Gold from their Hoard.')
             player.gain_without_hooks(base_cards.Gold)
 
 
@@ -787,7 +783,7 @@ class Hoard(TreasureCard):
         # All Victory cards get a post gain hook added this turn
         for card_class in self.supply.card_stacks:
             if CardType.VICTORY in card_class.types:
-                post_gain_hook = self.HoardPostGainHook(card_class)
+                post_gain_hook = self.HoardPostGainHook(self.game, card_class)
                 self.owner.turn.add_post_gain_hook(post_gain_hook, card_class) 
 
 

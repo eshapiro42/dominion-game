@@ -49,7 +49,7 @@ class ProsperityExpansion(Expansion):
             # Each Victory card pile in the Supply starts off with one coin token on top (implemented via non-persistent post-gain hooks)
             victory_card_classes = [card_class for card_class in self.supply.card_stacks if cards.CardType.VICTORY in card_class.types]
             for victory_card_class in victory_card_classes:
-                post_gain_hook = prosperity_cards.TradeRoute.TradeRoutePostGainHook(victory_card_class)
+                post_gain_hook = prosperity_cards.TradeRoute.TradeRoutePostGainHook(self.game, victory_card_class)
                 self.supply.add_post_gain_hook(post_gain_hook, victory_card_class)  
         # If the Grand Market is in the Supply, add its Treasure hook
         if prosperity_cards.GrandMarket in self.supply.card_stacks:
@@ -57,12 +57,12 @@ class ProsperityExpansion(Expansion):
             self.game.add_treasure_hook(treasure_hook, base_cards.Copper)
         # If the Mint is in the Supply, add its post-gain hook
         if prosperity_cards.Mint in self.supply.card_stacks:
-            post_gain_hook = prosperity_cards.Mint.MintPostGainHook(prosperity_cards.Mint)
+            post_gain_hook = prosperity_cards.Mint.MintPostGainHook(self.game, prosperity_cards.Mint)
             self.supply.add_post_gain_hook(post_gain_hook, prosperity_cards.Mint)
         # If the Watchtower is in the Supply, add its post-gain hook to every card in the Supply
         if prosperity_cards.Watchtower in self.supply.card_stacks:
             for card_class in self.supply.card_stacks:
-                post_gain_hook = prosperity_cards.Watchtower.WatchtowerPostGainHook(card_class)
+                post_gain_hook = prosperity_cards.Watchtower.WatchtowerPostGainHook(self.game, card_class)
                 self.supply.add_post_gain_hook(post_gain_hook, card_class)
         # If the Peddler is in the Supply, add its pre-buy hook
         if prosperity_cards.Peddler in self.supply.card_stacks:
