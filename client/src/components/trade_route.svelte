@@ -17,7 +17,7 @@
 </script>
 
 {#if (show)}
-    <section id="Trade Route">>
+    <section id="Trade Route">
         <main class="panel">
             <div class="title">
                 <h4>{title}</h4>
