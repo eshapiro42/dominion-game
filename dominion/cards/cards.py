@@ -211,13 +211,13 @@ class AttackCard(ActionCard):
                 if type(reaction_card) in reaction_card_classes_to_ignore or not reaction_card.can_react:
                     continue
                 else:
-                    prompt = f'{player}: You have a Reaction card ({reaction_card.name}) in your hand. Play it?'
+                    prompt = f'{self.owner} played {a(self.name)} (an Attack card). You have a Reaction card ({reaction_card.name}) in your hand. Play it?'
                     if player.interactions.choose_yes_or_no(prompt=prompt):
                         self.game.broadcast(f'{player} revealed {a(reaction_card.name)}.')
                         reaction_type, ignore_again = reaction_card.react()
                         if reaction_type == ReactionType.IMMUNITY:
                             immune = True
-                            self.game.broadcast(f"{player} is immune to the effects.")
+                            self.game.broadcast(f"{player} is immune to the effects of {self.owner}'s {self.name}.")
                         if ignore_again:
                             reaction_card_classes_to_ignore.add(type(reaction_card))
         # If the player is not immune, they are forced to endure the attack effect

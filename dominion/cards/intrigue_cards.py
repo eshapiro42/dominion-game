@@ -833,7 +833,7 @@ class Torturer(AttackCard):
     allow_simultaneous_reactions = False # If only one Curse is left in the Supply, it is important that this is resolved in turn order
 
     def attack_effect(self, attacker, player):
-        prompt = f'{player}: Which would you like to choose?'
+        prompt = f'{attacker} played a Torturer. Which option would you like to choose? (You may pick an option you cannot do.)'
         num_cards_in_hand = len(player.hand)
         num_curses_in_supply = self.supply.card_stacks[base_cards.Curse].cards_remaining
         options = [

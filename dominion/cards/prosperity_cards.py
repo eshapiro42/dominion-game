@@ -69,7 +69,7 @@ class Loan(TreasureCard):
                 cards_revealed.append(card)
         # Ask if they want to discard or trash the revealed Treasure
         if revealed_treasure is not None:
-            prompt = f'{self.owner}: You revealed {a(revealed_treasure.name)}. What would you like to do with it?'
+            prompt = f'You revealed {a(revealed_treasure.name)} with your Loan. What would you like to do with it?'
             options = ['Trash', 'Discard']
             choice = self.interactions.choose_from_options(prompt=prompt, options=list(options), force=True)
             if choice == 'Trash':
@@ -114,7 +114,7 @@ class TradeRoute(ActionCard):
     
     def action(self):
         # Trash a card from your hand
-        prompt = f'{self.owner}: Choose a card from your hand to trash.'
+        prompt = f'You played a Trade Route. You must choose a card from your hand to trash.'
         card_to_trash = self.owner.interactions.choose_card_from_hand(prompt=prompt, force=True)
         if card_to_trash is None:
             self.game.broadcast(f'{self.owner} has no cards in their hand to trash.')
@@ -378,7 +378,7 @@ class Contraband(TreasureCard):
         # The player to your left names a card
         player_to_left = self.owner.other_players[0]
         self.game.broadcast(f"{player_to_left} must name a card that {self.owner} will be unable to buy this turn.")
-        prompt = f'{player_to_left}: Which card should {self.owner} be forbidden from buying this turn?'
+        prompt = f'{self.owner} played a Contraband and you are the player to their left. Which card should {self.owner} be forbidden from buying this turn?'
         forbidden_card_class = player_to_left.interactions.choose_card_class_from_supply(prompt, max_cost=math.inf, force=True) # max_cost=math.inf because any card can be named
         self.owner.turn.invalid_card_classes.append(forbidden_card_class)
         self.game.broadcast(f'{self.owner} cannot buy {a(forbidden_card_class.name)} this turn.')
@@ -404,7 +404,7 @@ class CountingHouse(ActionCard):
     def action(self):
         coppers_in_discard_pile = [card for card in self.owner.discard_pile if isinstance(card, base_cards.Copper)]
         if coppers_in_discard_pile:
-            prompt = f"{self.owner}: You have {s(len(coppers_in_discard_pile), 'Copper')} in your discard pile. How many would you like to put into your hand?"
+            prompt = f"You played a Counting House. You have {s(len(coppers_in_discard_pile), 'Copper')} in your discard pile. How many Coppers would you like to put into your hand?"
             options = list(range(1, len(coppers_in_discard_pile) + 1))
             num_coppers = self.owner.interactions.choose_from_options(prompt, options, force=False)
             if num_coppers:
@@ -447,7 +447,7 @@ class Mint(ActionCard):
 
     def action(self):
         # You may reveal a Treasure card from your hand.
-        prompt = f'{self.owner}: You may reveal a Treasure card from your hand to gain a copy of it.'
+        prompt = f'You played a Mint. You may reveal a Treasure card from your hand to gain a copy of it.'
         treasure_card = self.owner.interactions.choose_specific_card_type_from_hand(prompt, CardType.TREASURE)
         if treasure_card is not None:
             treasure_card_class = type(treasure_card)
@@ -485,7 +485,7 @@ class Mountebank(AttackCard):
         # Check if the other player has a Curse in their hand
         curses_in_hand = [card for card in player.hand if isinstance(card, base_cards.Curse)]
         # If they do, ask if they would like to discard it
-        if curses_in_hand and player.interactions.choose_yes_or_no(prompt=f'{player}: You have a Curse in your hand. Would you like to reveal and discard it?'):
+        if curses_in_hand and player.interactions.choose_yes_or_no(prompt=f'{attacker} played a Mountebank. You have a Curse in your hand. Would you like to reveal and discard it? If you do not, you will gain a Curse and a Copper.'):
             curse = curses_in_hand[0]
             player.discard(curse)
         else:
@@ -586,11 +586,11 @@ class RoyalSeal(TreasureCard):
 
         def __call__(self, player, card, where_it_went):
             if card in where_it_went: # Need this in case a Watchtower or other card has already moved the card
-                prompt = f'{player}: Would you like to put the {card} you just gained onto your deck?'
+                prompt = f'You have a Royal Seal in play. Would you like to put the {card} you just gained onto your deck?'
                 if player.interactions.choose_yes_or_no(prompt):
                     where_it_went.remove(card)
                     player.deck.append(card)
-                    self.game.broadcast(f'{player} put the {card} onto their deck.')
+                    self.game.broadcast(f'{player} put the gained {card} onto their deck via their Royal Seal.')
 
     def play(self):
         # All cards get a post gain hook added this turn (but only one!)

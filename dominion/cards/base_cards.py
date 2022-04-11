@@ -316,9 +316,9 @@ class Bureaucrat(AttackCard):
                 card = victory_cards[0]
             else: 
                 # If there is more than one type of Victory card, player must choose one
-                prompt = f'{player}: choose a Victory card to put back onto your deck.'
+                prompt = f'{attacker} played a Bureaucrat. Choose a Victory card to put back onto your deck.'
                 card = player.interactions.choose_from_options(prompt=prompt, options=victory_cards, force=True)
-            self.game.broadcast(f'{player} puts {a(card)} on top of their deck.')
+            self.game.broadcast(f'{player} put {a(card)} on top of their deck.')
             player.hand.remove(card)
             player.deck.append(card)
         else:
@@ -558,7 +558,7 @@ class Bandit(AttackCard):
             player.discard_pile.append(card_to_discard)
         else:
             # The player must choose a card to trash
-            prompt = f'{player}: You must choose a card to trash.'
+            prompt = f'{attacker} played a Bandit. You must choose a card to trash.'
             card_to_trash = player.interactions.choose_from_options(prompt=prompt, options=trashable_cards, force=True)
             trashable_cards.remove(card_to_trash)
             card_to_discard = trashable_cards[0]
@@ -944,9 +944,9 @@ class Spy(AttackCard):
         # Then the chooser makes a choice
         options = ['Discard', 'Return to deck']
         if revealer == chooser:
-            prompt = f'{chooser}: You revealed {a(card)}. What would you like to do with it?'
+            prompt = f'You revealed {a(card)} with your Spy. What would you like to do with it?'
         else:
-            prompt = f'{chooser}: {revealer} revealed {a(card)}. What would you like them to do with it?'
+            prompt = f'{revealer} revealed {a(card)} with your Spy. What would you like {revealer} to do with it?'
         choice = chooser.interactions.choose_from_options(prompt=prompt, options=options, force=True)
         if choice == 'Discard':
             revealer.discard_pile.append(card)
@@ -1014,7 +1014,7 @@ class Thief(AttackCard):
                     card_to_discard = treasures[1]
             else:
                 # Otherwise, the attacker chooses which treasure to trash
-                prompt = f'{attacker}: Choose a Treasure that {player} revealed to trash.'
+                prompt = f"Your Thief revealed several of {player}'s Treasures. Choose a Treasure that {player} revealed to trash. You will have the opportunity to gain it afterward."
                 card_to_trash = attacker.interactions.choose_from_options(prompt=prompt, options=treasures, force=True)
                 treasures.remove(card_to_trash)
                 card_to_discard = treasures[0]
@@ -1023,7 +1023,7 @@ class Thief(AttackCard):
                 player.discard_pile.append(card_to_discard)
                 self.game.broadcast(f'{player} discarded {a(card_to_discard)}.')
             # Allow the attacker to gain the trashed card
-            prompt = f'{attacker}: Would you like to gain the trashed {card_to_trash}?'
+            prompt = f"Would you like to gain {player}'s trashed {card_to_trash}?"
             if attacker.interactions.choose_yes_or_no(prompt=prompt):
                 attacker.discard_pile.append(card_to_trash)
                 self.game.broadcast(f"{attacker} gained {player}'s trashed {card_to_trash}.")
