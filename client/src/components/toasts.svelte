@@ -1,6 +1,4 @@
 <script>
-    import { fade } from 'svelte/transition';
-
     import {
         socket,
         room,
@@ -25,8 +23,8 @@
             playerMessage: playerMessage,
             timeout: setTimeout(
                 () => {
-                    expiredToasts = expiredToasts.concat(toast);
                     showingToasts = showingToasts.filter(toast => toast.id != id);
+                    expiredToasts = expiredToasts.concat(toast);
                 },
                 3000
             )
@@ -45,8 +43,8 @@
         showingToasts.forEach(toast => {
             toast.timeout = setTimeout(
                 () => {
-                    expiredToasts = expiredToasts.concat(toast);
                     showingToasts = showingToasts.filter(toast => toast.id != toast.id);
+                    expiredToasts = expiredToasts.concat(toast);
                 },
                 500 // Toasts disappear more quickly after you've moused over them
             )
@@ -97,7 +95,7 @@
         <div class="expiredToasts">
             <div> 
                 <!-- The things inside this div will not be reversed! -->
-                {#each expiredToasts as toast}
+                {#each expiredToasts as toast (toast.id)}
                     <div class="toast"
                         class:playerMessage="{toast.playerMessage}"
                     >
@@ -119,7 +117,6 @@
         {#each showingToasts as toast}
             <div class="toast"
                 class:playerMessage="{toast.playerMessage}"
-                transition:fade
             >
                 {toast.text}
             </div>
