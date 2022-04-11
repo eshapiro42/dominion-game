@@ -1,4 +1,7 @@
 import math
+
+from gevent import Greenlet, joinall
+
 from .cards import CardType, Card, TreasureCard, ActionCard, AttackCard, ReactionCard, VictoryCard, CurseCard
 from . import base_cards
 from ..hooks import TreasureHook, PostTreasureHook, PreBuyHook, PostGainHook
@@ -194,13 +197,20 @@ class Bishop(ActionCard):
     extra_actions = 0
     extra_buys = 0
     extra_coppers = 1
+
+    def player_reaction(self, player):
+        # Each other player may trash a card from their hand
+        prompt = f'{self.owner} played a Bishop. You may trash a card from your hand.'
+        card_to_trash = player.interactions.choose_card_from_hand(prompt=prompt, force=False)
+        if card_to_trash is not None:
+            player.trash(card_to_trash)
     
     def action(self):
         # +1 Victory token
         self.owner.victory_tokens += 1
         self.game.broadcast(f'{self.owner} took a Victory token.')
         # Trash a card from your hand. +1 Victory token per 2 $ it costs (round down)
-        prompt = f'{self.owner}: Choose a card from your hand to trash for Victory tokens.'
+        prompt = f'Choose a card from your hand to trash for Victory tokens.'
         card_to_trash = self.owner.interactions.choose_card_from_hand(prompt=prompt, force=True)
         if card_to_trash is None:
             self.game.broadcast(f'{self.owner} has no cards in their hand to trash.')
@@ -209,12 +219,13 @@ class Bishop(ActionCard):
             victory_tokens = math.floor(card_to_trash.cost / 2)
             self.owner.victory_tokens += victory_tokens
             self.game.broadcast(f"{self.owner} took {s(victory_tokens, 'Victory token')}.")
-        # Each other player may trash a card from their hand
-        for player in self.owner.other_players:
-            prompt = f'{player}: You may trash a card from your hand.'
-            card_to_trash = player.interactions.choose_card_from_hand(prompt=prompt, force=False)
-            if card_to_trash is not None:
-                player.trash(card_to_trash)
+        # Simultaneous reactions are only allowed if they are enabled for the game
+        if self.game.allow_simultaneous_reactions:
+            greenlets = [Greenlet.spawn(self.player_reaction, player) for player in self.owner.other_players]
+            joinall(greenlets)
+        else:
+            for player in self.owner.other_players:
+                self.player_reaction(player)
 
 
 class Monument(ActionCard):
@@ -607,6 +618,22 @@ class Vault(ActionCard):
     extra_actions = 0
     extra_buys = 0
     extra_coppers = 0
+
+    def player_reaction(self, player):
+        # Each other player may discard 2 cards, to draw a card.
+        if len(player.hand) < 2:
+            self.game.broadcast(f'{player} does not have 2 cards in their hand.')
+        else:
+            prompt = f'{self.owner} played a Vault. Would you like to discard 2 cards to draw a card?'
+            if player.interactions.choose_yes_or_no(prompt):
+                prompt = f"Choose 2 cards to discard."
+                cards_to_discard = player.interactions.choose_cards_from_hand(prompt=prompt, force=True, max_cards=2)
+                for card_to_discard in cards_to_discard:
+                    player.discard(card_to_discard)
+                self.game.broadcast(f"{player} drew a card.")
+                player.draw(1)
+            else:
+                self.game.broadcast(f'{player} chose not to discard 2 cards.')
     
     def action(self):
         # Discard any number of cards for +1 $ each
@@ -618,21 +645,14 @@ class Vault(ActionCard):
             self.owner.turn.plus_coppers(len(cards_to_discard))
         else:
             self.game.broadcast(f'{self.owner} did not discard any cards.')
-        # Each other player may discard 2 cards, to draw a card.
-        for player in self.owner.other_players:
-            if len(player.hand) < 2:
-                self.game.broadcast(f'{player} does not have 2 cards in their hand.')
-            else:
-                prompt = f'{player}: Would you like to discard 2 cards to draw a card?'
-                if player.interactions.choose_yes_or_no(prompt):
-                    prompt = f"Choose 2 cards to discard."
-                    cards_to_discard = player.interactions.choose_cards_from_hand(prompt=prompt, force=True, max_cards=2)
-                    for card_to_discard in cards_to_discard:
-                        player.discard(card_to_discard)
-                    self.game.broadcast(f"{player} drew a card.")
-                    player.draw(1)
-                else:
-                    self.game.broadcast(f'{player} chose not to discard 2 cards.')
+        # Simultaneous reactions are only allowed if they are enabled for the game
+        if self.game.allow_simultaneous_reactions:
+            greenlets = [Greenlet.spawn(self.player_reaction, player) for player in self.owner.other_players]
+            joinall(greenlets)
+        else:
+            for player in self.owner.other_players:
+                self.player_reaction(player)
+
 
 
 class Venture(TreasureCard):

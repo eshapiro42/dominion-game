@@ -1,4 +1,7 @@
 import math
+
+from gevent import Greenlet, joinall
+
 from .cards import CardType, Card, TreasureCard, ActionCard, AttackCard, ReactionCard, VictoryCard, CurseCard
 from . import base_cards
 from ..hooks import TreasureHook, PreBuyHook, PostGainHook
@@ -147,28 +150,44 @@ class Masquerade(ActionCard):
     extra_coppers = 0
 
     def action(self):
+        def player_reaction(player, player_to_left):
+            # Choose a card to pass
+            nonlocal cards_passed
+            if player == self.owner:
+                prompt = f'You played a Masquerade. Choose a card from your hand to pass to {player_to_left}.'
+            else:
+                prompt = f'{self.owner} played a Masquerade. Choose a card from your hand to pass to {player_to_left}.'
+            card_to_pass = player.interactions.choose_card_from_hand(prompt, force=True)
+            player.hand.remove(card_to_pass)
+            cards_passed.append((card_to_pass, player, player_to_left))
+            player.interactions.send(f'You passed {player_to_left} {a(card_to_pass)}.')
+            self.game.broadcast(f'{player} passed a card to {player_to_left}.')
+
+        # Get all players with cards in hand and the closest such player to their left
         self.game.broadcast('Each player with any cards in hand much choose a card to pass to the next such player to their left.')
         players_with_cards = [player for player in self.owner.other_players if len(player.hand) > 0]
         if len(self.owner.hand) > 0:
             players_with_cards = [self.owner] + players_with_cards
         cards_passed = [] # This will be a list of [(card_received, old_owner, new_owner)]
-        # Each player chooses a card to pass
+        player_to_left = {}
         for player in players_with_cards:
             player_idx = players_with_cards.index(player)
             try:
-                player_to_left = players_with_cards[player_idx + 1]
+                player_to_left[player] = players_with_cards[player_idx + 1]
             except IndexError:
-                player_to_left = players_with_cards[0]
-            prompt = f'{player}: Choose a card from your hand to pass to {player_to_left}.'
-            card_to_pass = player.interactions.choose_card_from_hand(prompt, force=True)
-            player.interactions.send(f'{player}: You passed {player_to_left} {a(card_to_pass)}.')
-            cards_passed.append((card_to_pass, player, player_to_left))
+                player_to_left[player] = players_with_cards[0]
+        # Simultaneous reactions are only allowed if they are enabled for the game
+        if self.game.allow_simultaneous_reactions:
+            greenlets = [Greenlet.spawn(player_reaction, player, player_to_left[player]) for player in self.game.players]
+            joinall(greenlets)
+        else:
+            for player in self.game.players:
+                player_reaction(player, player_to_left[player])
         # Cards get passed
         for card_received, old_owner, new_owner in cards_passed:
-            old_owner.hand.remove(card_received)
             new_owner.hand.append(card_received)
             card_received.owner = new_owner # Set .owner attribute of each card after they trade hands
-            new_owner.interactions.send(f'{new_owner}: {old_owner} passed you {a(card_received)}.')
+            new_owner.interactions.send(f'{old_owner} passed you {a(card_received)}.')
         # You may trash a card from your hand
         prompt = f'You may trash a card from your hand.'
         card_to_trash = self.interactions.choose_card_from_hand(prompt, force=False)
