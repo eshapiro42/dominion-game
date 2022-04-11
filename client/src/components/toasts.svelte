@@ -95,7 +95,7 @@
         <div class="expiredToasts">
             <div> 
                 <!-- The things inside this div will not be reversed! -->
-                {#each expiredToasts as toast (toast.id)}
+                {#each expiredToasts as toast}
                     <div class="toast"
                         class:playerMessage="{toast.playerMessage}"
                     >
