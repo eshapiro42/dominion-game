@@ -372,16 +372,25 @@ class Contraband(TreasureCard):
         ]
     )
 
+    class ContrabandPostTreasureHook(PostTreasureHook):
+        persistent = False
+        
+        def __call__(self):
+            owner = self.game.current_turn.player
+            # The player to your left names a card
+            player_to_left = owner.other_players[0]
+            self.game.broadcast(f"{player_to_left} must name a card that {owner} will be unable to buy this turn.")
+            prompt = f'{owner} played a Contraband and you are the player to their left. Which card should {owner} be forbidden from buying this turn?'
+            forbidden_card_class = player_to_left.interactions.choose_card_class_from_supply(prompt, max_cost=math.inf, force=True) # max_cost=math.inf because any card can be named
+            owner.turn.invalid_card_classes.append(forbidden_card_class)
+            self.game.broadcast(f'{owner} cannot buy {a(forbidden_card_class.name)} this turn.')
+
     def play(self):
         # +1 Buy (this must be done manually here since it is a Treasure card)
         self.owner.turn.plus_buys(1)
-        # The player to your left names a card
-        player_to_left = self.owner.other_players[0]
-        self.game.broadcast(f"{player_to_left} must name a card that {self.owner} will be unable to buy this turn.")
-        prompt = f'{self.owner} played a Contraband and you are the player to their left. Which card should {self.owner} be forbidden from buying this turn?'
-        forbidden_card_class = player_to_left.interactions.choose_card_class_from_supply(prompt, max_cost=math.inf, force=True) # max_cost=math.inf because any card can be named
-        self.owner.turn.invalid_card_classes.append(forbidden_card_class)
-        self.game.broadcast(f'{self.owner} cannot buy {a(forbidden_card_class.name)} this turn.')
+        # The player to your left names a card you cannot buy this turn
+        post_treasure_hook = self.ContrabandPostTreasureHook(self.game)
+        self.game.current_turn.add_post_treasure_hook(post_treasure_hook)
 
 
 class CountingHouse(ActionCard):
