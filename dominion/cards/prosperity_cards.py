@@ -1,7 +1,7 @@
 import math
 from .cards import CardType, Card, TreasureCard, ActionCard, AttackCard, ReactionCard, VictoryCard, CurseCard
 from . import base_cards
-from ..hooks import TreasureHook, PreBuyHook, PostGainHook
+from ..hooks import TreasureHook, PostTreasureHook, PreBuyHook, PostGainHook
 from ..grammar import a, s
 
 
@@ -793,7 +793,7 @@ class Bank(TreasureCard):
     types = [CardType.TREASURE]
     image_path = ''
 
-    value = None
+    value = 0 # The value is computed and added via a Post-Treasure Hook
 
     description = '\n'.join(
         [
@@ -801,9 +801,22 @@ class Bank(TreasureCard):
         ]
     )
 
+    class BankPostTreasureHook(PostTreasureHook):
+        persistent = False
+
+        def __call__(self):
+            """
+            Worth 1 $ per Treasure in play, including this (it's by definition already in play!)
+            """
+            turn = self.game.current_turn
+            player = turn.player
+            value = len([card for card in player.played_cards if CardType.TREASURE in card.types])
+            self.game.broadcast(f"{player}'s Bank is worth {value} $.")
+            turn.coppers_remaining += value
+
     def play(self):
-        # Worth 1 $ per Treasure in play
-        self.value = len([card for card in self.owner.played_cards if CardType.TREASURE in card.types])
+        post_treasure_hook = self.BankPostTreasureHook(self.game)
+        self.game.current_turn.add_post_treasure_hook(post_treasure_hook)
 
 
 class Expand(ActionCard):

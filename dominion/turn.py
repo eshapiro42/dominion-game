@@ -40,6 +40,7 @@ class Turn:
         self.buy_phase = BuyPhase(turn=self)
         self.cleanup_phase = CleanupPhase(turn=self)
         self.treasure_hooks = defaultdict(list)
+        self.post_treasure_hooks = []
         self.post_gain_hooks = defaultdict(list)
         self.invalid_card_classes = []
 
@@ -66,6 +67,15 @@ class Turn:
             card_class (:obj:`type(cards.Card)`): The card_class which should activate the Treasure Hook.
         '''
         self.treasure_hooks[card_class].append(treasure_hook)
+
+    def add_post_treasure_hook(self, post_treasure_hook):
+        '''
+        Add a Turn-wide Post Treasure Hook.
+
+        Args:
+            post_treasure_hook (:obj:`.hooks.PostTreasureHook`): The Post Treasure Hook to add.
+        '''
+        self.post_treasure_hooks.append(post_treasure_hook)
 
     def add_post_gain_hook(self, post_gain_hook, card_class):
         '''
@@ -268,7 +278,8 @@ class BuyPhase(Phase):
                         treasures_available.remove(choice)
                         treasures_to_play.append(choice)
         self.play_treasures(treasures_to_play)
-            
+        # Activate any post-treasure hooks
+        self.process_post_treasure_hooks()
         # Activate any pre-buy hooks registered to cards in the Supply
         self.process_pre_buy_hooks()
         # Buy cards
@@ -312,6 +323,20 @@ class BuyPhase(Phase):
             # Remove any non-persistent hooks
             for hook in expired_hooks:
                 self.turn.treasure_hooks[type(treasure)].remove(hook)
+
+    def process_post_treasure_hooks(self):
+        '''
+        Activate any post-treasure hooks currently registered.
+        '''
+        expired_hooks = []
+        # Activate any hooks caused by playing the Treasure
+        for post_treasure_hook in self.turn.post_treasure_hooks:
+            post_treasure_hook()
+            if not post_treasure_hook.persistent:
+                expired_hooks.append(post_treasure_hook)
+        # Remove any non-persistent hooks
+        for hook in expired_hooks:
+            self.turn.post_treasure_hooks.remove(hook)
 
     def play_treasures(self, treasures):
         '''

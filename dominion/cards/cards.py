@@ -109,7 +109,10 @@ class TreasureCard(Card):
     '''Base treasure card class.
 
     Abstract properties:
-        value:  the number of coppers this card is worth (int)
+        value: the number of coppers this card is worth (int)
+
+    Optional methods:
+        play: a method to call when the card is played (function)
     '''
     @property
     @abstractmethod

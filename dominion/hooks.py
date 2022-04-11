@@ -58,6 +58,16 @@ class TreasureHook(Hook):
         pass
 
 
+class PostTreasureHook(Hook):
+    """
+    Hook to activate after a players plays treasure cards.
+    """
+
+    @abstractmethod
+    def __call__(self):
+        pass
+
+
 class PreBuyHook(Hook):
     """
     Hook to activate before a player buys a card.
