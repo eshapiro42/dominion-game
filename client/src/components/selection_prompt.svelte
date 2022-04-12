@@ -27,7 +27,7 @@
     }
 
     function handleAKey(event) {
-        if (event.code == "KeyA" && waitingForSelection) {
+        if (event.code == "KeyA" && selectAllEnabled) {
             document.removeEventListener("keyup", this);
             handleSelectAll();
         }
@@ -42,13 +42,17 @@
 
     $: renderedPrompt = renderText(waitingForSelection.prompt);
 
-    $: selectAllEnabled = waitingForSelection.maxCards == null;
+    $: selectAllEnabled = waitingForSelection.value && waitingForSelection.maxCards == null;
 
     $: if (waitingForSelection.value) {
         document.addEventListener("keyup", handleEnterKey, {once: true});
         if (selectAllEnabled) {
             document.addEventListener("keyup", handleAKey, {once: true});
         }
+    }
+    else {
+        document.removeEventListener("keyup", handleEnterKey);
+        document.removeEventListener("keyup", handleAKey);
     }
 
 </script>
