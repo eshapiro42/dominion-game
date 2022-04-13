@@ -5,6 +5,7 @@ from collections import defaultdict
 from prettytable import PrettyTable
 from .cards import base_cards
 from .expansions import BaseExpansion, ProsperityExpansion, IntrigueExpansion
+from .grammar import s
 from .interactions import CLIInteraction
 from .player import Player
 from .supply import Supply
@@ -206,9 +207,26 @@ class Game:
                 turns_str = ', '.join([f'{k}: {v}' for k, v in turns_played_dict.items()])
                 self.broadcast(f'Turns played: {turns_str}')
                 winners_str = ', '.join(map(str, winners))
-                self.broadcast(f'Winners: {winners_str}.')
+                self.broadcast(f'{s(len(winners), "Winner").split(" ")[-1]}: {winners_str}.')
                 for player in self.players:
                     self.broadcast(f"{player}'s cards: {', '.join(map(str, list(player.all_cards)))}.")
+                if self.socketio is not None:
+                    # Send formatted game end info to players
+                    newsection = "<br><br>"
+                    prompt = f"""
+                        <b>Game over!</b>
+                        {explanation}
+                        {newsection}
+                        <b>{s(len(winners), "Winner").split(" ")[-1]}:</b> {winners_str}
+                        {newsection}
+                        <b>Scores:</b> {scores_str}
+                        {newsection}
+                        <b>Turns played:</b> {turns_str}
+                    """
+                    self.socketio.emit(
+                        'game over',
+                        {'prompt': prompt},
+                    )
                 break
 
     def broadcast(self, message):

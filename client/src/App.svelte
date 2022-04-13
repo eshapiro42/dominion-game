@@ -117,6 +117,13 @@
         }
     )
 
+    $socket.on(
+        "game over",
+        (data) => {
+            createPopUp(data.prompt, false, "alert");
+        }
+    );
+
     $: headerClass = gameStarted ? "panel" : ""; // This will re-center the header once the game has started
 </script>
 
