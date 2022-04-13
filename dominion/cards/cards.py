@@ -1,6 +1,13 @@
 from abc import ABCMeta, abstractmethod
 from enum import Enum, auto
-from ..grammar import a
+from gevent import Greenlet, joinall
+from threading import Lock # Monkey patched to use gevent Locks
+
+from ..grammar import a, s
+
+
+LOWEST_ID = 0
+ID_LOCK = Lock()
 
 
 class CardType(Enum):
@@ -32,7 +39,11 @@ class Card(metaclass=ABCMeta):
     description = ''
 
     def __init__(self, owner=None):
+        global LOWEST_ID
         self._owner = owner
+        with ID_LOCK:
+            self.id = LOWEST_ID
+            LOWEST_ID += 1
 
     @property
     def owner(self):
@@ -65,6 +76,31 @@ class Card(metaclass=ABCMeta):
     def image_path(self):
         pass
 
+    @property
+    def json(self):
+        extra_cards = self.extra_cards if hasattr(self, 'extra_cards') else 0
+        extra_actions = self.extra_actions if hasattr(self, 'extra_actions') else 0
+        extra_buys = self.extra_buys if hasattr(self, 'extra_buys') else 0
+        extra_coppers = self.extra_coppers if hasattr(self, 'extra_coppers') else 0
+        effects = []
+        if extra_cards:
+            effects.append(f"+{s(extra_cards, 'Card')}")
+        if extra_actions:
+            effects.append(f"+{s(extra_actions, 'Action')}")
+        if extra_buys:
+            effects.append(f"+{s(extra_buys, 'Buy')}")
+        if extra_coppers:
+            effects.append(f"+{extra_coppers} $")
+        return {
+            'name': self.name,
+            'effects': effects,
+            # 'description': self.description.replace("\n", "<br>"),
+            'description': self.description.split("\n"),
+            'cost': self.cost,
+            'type': ', '.join([t.name.capitalize() for t in self.types]),
+            'id': self.id,
+        }
+
     def __repr__(self):
         return self.name
 
@@ -73,7 +109,10 @@ class TreasureCard(Card):
     '''Base treasure card class.
 
     Abstract properties:
-        value:  the number of coppers this card is worth (int)
+        value: the number of coppers this card is worth (int)
+
+    Optional methods:
+        play: a method to call when the card is played (function)
     '''
     @property
     @abstractmethod
@@ -124,45 +163,71 @@ class ActionCard(Card):
 class AttackCard(ActionCard):
     '''Base attack card class.
 
+    Attributes:
+        attacking: whether the card is being used to attack (bool)
+
+        allow_simultaneous_reactions:
+            whether to allow simultaneous reactions (bool)
+
+            This currently only works for attack effects where the
+            only required input is from the players being attacked,
+            such as  with the Militia. If the attack requires feedback
+            from the attacker, like with Spy, Thief, Swindler, etc,
+            the frontend is not currently equipped to deal with
+            simultaneous reactions.
+
+            This also cannot be used for attacks that require the
+            attacked players to gain cards from the Supply, such as Witch,
+            Swindler, Torturer, Replace, etc. That's because there may be
+            only one of a given card left in the Supply, and therefore the
+            effect must be resolved in turn order.
+
     Abstract methods:
         prompt: a description of the attack on other players
         attack_effect: the effect of an attack on a single other player
     '''
     attacking = True
+    allow_simultaneous_reactions = False
 
     def attack(self):
-        if self.attacking:
-            if self.prompt is not None:
-                self.game.broadcast(self.prompt)
-            immune_players = set()
-            self.game.broadcast('Checking if any other players have a Reaction card in their hand...')
+        if self.prompt is not None:
+            self.game.broadcast(self.prompt)
+        # Simultaneous reactions are only allowed if the attack card allows it AND if simultaneous reactions are enabled for the game
+        if self.allow_simultaneous_reactions and self.game.allow_simultaneous_reactions:
+            greenlets = [Greenlet.spawn(self.attack_player, player) for player in self.owner.other_players]
+            joinall(greenlets)
+        else:
             for player in self.owner.other_players:
-                # First, check if they have a reaction card in their hand
-                if any(CardType.REACTION in card.types for card in player.hand):
-                    reaction_cards_in_hand = [card for card in player.hand if CardType.REACTION in card.types]
-                    reaction_card_classes_to_ignore = set() # We don't want to keep asking about reaction card classes that have already been played/ignored
-                    for reaction_card in reaction_cards_in_hand:
-                        if type(reaction_card) in reaction_card_classes_to_ignore or not reaction_card.can_react:
-                            continue
-                        else:
-                            prompt = f'{player}: You have a Reaction card ({reaction_card.name}) in your hand. Play it?'
-                            if player.interactions.choose_yes_or_no(prompt=prompt):
-                                self.game.broadcast(f'{player} revealed {a(reaction_card.name)}.')
-                                reaction_type, ignore_again = reaction_card.react()
-                                if reaction_type == ReactionType.IMMUNITY:
-                                    immune_players.add(player)
-                                if ignore_again:
-                                    reaction_card_classes_to_ignore.add(type(reaction_card))
-                # Now force non-immune players to endure the attack effect
-                if player in immune_players:
-                    self.game.broadcast(f'{player} is immune to the effects.')
+                self.game.broadcast(f"{player} must react to {self.owner}'s {self.name}.")
+                self.attack_player(player)
+
+    def attack_player(self, player):
+        # First check if they have a reaction card in their hand
+        immune = False
+        if any(CardType.REACTION in card.types for card in player.hand):
+            reaction_cards_in_hand = [card for card in player.hand if CardType.REACTION in card.types]
+            reaction_card_classes_to_ignore = set() # We don't want to keep asking about reaction card classes that have already been played/ignored
+            for reaction_card in reaction_cards_in_hand:
+                if type(reaction_card) in reaction_card_classes_to_ignore or not reaction_card.can_react:
                     continue
                 else:
-                    self.attack_effect(self.owner, player)
+                    prompt = f'{self.owner} played {a(self.name)} (an Attack card). You have a Reaction card ({reaction_card.name}) in your hand. Play it?'
+                    if player.interactions.choose_yes_or_no(prompt=prompt):
+                        self.game.broadcast(f'{player} revealed {a(reaction_card.name)}.')
+                        reaction_type, ignore_again = reaction_card.react()
+                        if reaction_type == ReactionType.IMMUNITY:
+                            immune = True
+                            self.game.broadcast(f"{player} is immune to the effects of {self.owner}'s {self.name}.")
+                        if ignore_again:
+                            reaction_card_classes_to_ignore.add(type(reaction_card))
+        # If the player is not immune, they are forced to endure the attack effect
+        if not immune:
+            self.attack_effect(self.owner, player)
 
     def play(self):
         self.action()
-        self.attack()
+        if self.attacking:
+            self.attack()
 
     @property
     @abstractmethod
@@ -187,6 +252,11 @@ class ReactionCard(ActionCard):
 
     @abstractmethod
     def react(self):
+        """
+        Returns:
+            reaction_type (ReactionType): the type of reaction
+            ignore_again (bool): whether to ignore the reaction card again
+        """
         pass
 
 

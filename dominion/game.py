@@ -5,6 +5,7 @@ from collections import defaultdict
 from prettytable import PrettyTable
 from .cards import base_cards
 from .expansions import BaseExpansion, ProsperityExpansion, IntrigueExpansion
+from .grammar import s
 from .interactions import CLIInteraction
 from .player import Player
 from .supply import Supply
@@ -42,8 +43,9 @@ class Game:
         expansions (:obj:`set` of :obj:`.expansion.Expansion`): A set of Expansion classes. This must always include :obj:`.expansion.BaseExpansion` for the game to work. 
         supply (:obj:`.supply.Supply`): The Supply for this game.
     '''
-    def __init__(self, socketio=None, room=None):
+    def __init__(self, socketio=None, room=None, test=False):
         self.socketio = socketio
+        self.test = test # If not running tests, slows down CPU interactions to simulate thought
         self.room = room
         self.player_names = []
         self.player_sids = []
@@ -51,13 +53,21 @@ class Game:
         self.players = []
         self.startable = False
         self.started = False
+        self.kill_scheduled = False
+        self.killed = False
         self.current_turn = None
         self.treasure_hooks = defaultdict(list)
         self.pre_buy_hooks = defaultdict(list)
         self.game_end_conditions = []
         self.expansions = set()
+        self.allow_simultaneous_reactions = False # If toggled, allows attacked players to react to attacks simultaneously (when sensible)
         self.distribute_cost = False # If toggled, ensures there are at least two cards each of cost {2, 3, 4, 5}
         self.disable_attack_cards = False # If toggled, Attack cards are not allowed
+        self.require_plus_two_action = False # If toggled, ensures there is at least one card with '+2 Actions'
+        self.require_drawer = False # If toggled, ensures there is at least one card with '>= +1 Cards'
+        self.require_buy = False # If toggled, ensures there is at least one card with '>= +1 Buys'
+        self.require_trashing = False # If toggled, ensures there is at least one card that mentions trashing
+
         self.add_expansion(BaseExpansion) # This must always be here or the game will not work
         # self.add_expansion(IntrigueExpansion)
         # self.add_expansion(ProsperityExpansion)
@@ -140,9 +150,26 @@ class Game:
             expansion_instance = expansion(self)
             self.supply.customization.expansions.add(expansion_instance)
             self.game_end_conditions += expansion_instance.game_end_conditions
+        expansion_names = sorted([expansion.name for expansion in self.expansions if expansion != BaseExpansion])
+        if len(expansion_names) > 1:
+            # Join the last two with "and" for easier readability
+            expansion_names[-2] = f"{expansion_names[-2]} and {expansion_names[-1]}"
+            expansion_names.pop()
+            expansions_string = ", ".join(expansion_names)
+            self.broadcast(f"Using {expansions_string} expansions.")
+        elif len(expansion_names) == 1:
+            expansion_name = expansion_names[0]
+            self.broadcast(f"Using {expansion_name} expansion.")
+        # Notify players if simultaneous reactions are allowed
+        if self.allow_simultaneous_reactions:
+            self.broadcast("Simultaneous reactions are allowed.")
         # Add in other supply customizations
         self.supply.customization.distribute_cost = self.distribute_cost
         self.supply.customization.disable_attack_cards = self.disable_attack_cards
+        self.supply.customization.require_plus_two_action = self.require_plus_two_action
+        self.supply.customization.require_drawer = self.require_drawer
+        self.supply.customization.require_buy = self.require_buy
+        self.supply.customization.require_trashing = self.require_trashing
         # Set up the supply
         self.supply.setup()
         # Print out the supply
@@ -155,7 +182,6 @@ class Game:
             player.get_other_players()
         # Print out each player's hand (other than the starting player)
         for player in self.turn_order[1:]:
-            player.interactions.send('Your hand for next turn:')
             player.interactions.display_hand()
         # Start the game loop!
         if not debug:
@@ -181,9 +207,26 @@ class Game:
                 turns_str = ', '.join([f'{k}: {v}' for k, v in turns_played_dict.items()])
                 self.broadcast(f'Turns played: {turns_str}')
                 winners_str = ', '.join(map(str, winners))
-                self.broadcast(f'Winners: {winners_str}.')
+                self.broadcast(f'{s(len(winners), "Winner").split(" ")[-1]}: {winners_str}.')
                 for player in self.players:
                     self.broadcast(f"{player}'s cards: {', '.join(map(str, list(player.all_cards)))}.")
+                if self.socketio is not None:
+                    # Send formatted game end info to players
+                    newsection = "<br><br>"
+                    prompt = f"""
+                        <b>Game over!</b>
+                        {explanation}
+                        {newsection}
+                        <b>{s(len(winners), "Winner").split(" ")[-1]}:</b> {winners_str}
+                        {newsection}
+                        <b>Scores:</b> {scores_str}
+                        {newsection}
+                        <b>Turns played:</b> {turns_str}
+                    """
+                    self.socketio.emit(
+                        'game over',
+                        {'prompt': prompt},
+                    )
                 break
 
     def broadcast(self, message):
@@ -195,7 +238,7 @@ class Game:
         '''
         for player in self.players:
             player.interactions.send(message)
-
+        
     @property
     def ended(self):
         '''

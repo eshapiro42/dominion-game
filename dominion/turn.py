@@ -2,8 +2,10 @@ import copy
 from abc import ABCMeta, abstractmethod
 from collections import defaultdict
 from dataclasses import dataclass
+
 from .cards import cards, base_cards
 from .grammar import a, s
+from .interactions import AutoInteraction, BrowserInteraction
 
 
 class Turn:
@@ -33,10 +35,12 @@ class Turn:
         self.actions_remaining = 1
         self.buys_remaining = 1
         self.coppers_remaining = 0
+        self.current_phase = "Action Phase"
         self.action_phase = ActionPhase(turn=self)
         self.buy_phase = BuyPhase(turn=self)
         self.cleanup_phase = CleanupPhase(turn=self)
         self.treasure_hooks = defaultdict(list)
+        self.post_treasure_hooks = []
         self.post_gain_hooks = defaultdict(list)
         self.invalid_card_classes = []
 
@@ -63,6 +67,15 @@ class Turn:
             card_class (:obj:`type(cards.Card)`): The card_class which should activate the Treasure Hook.
         '''
         self.treasure_hooks[card_class].append(treasure_hook)
+
+    def add_post_treasure_hook(self, post_treasure_hook):
+        '''
+        Add a Turn-wide Post Treasure Hook.
+
+        Args:
+            post_treasure_hook (:obj:`.hooks.PostTreasureHook`): The Post Treasure Hook to add.
+        '''
+        self.post_treasure_hooks.append(post_treasure_hook)
 
     def add_post_gain_hook(self, post_gain_hook, card_class):
         '''
@@ -97,6 +110,20 @@ class Turn:
                 self.game.broadcast(f'+{num_coppers} $ → {self.coppers_remaining} $.')
             elif num_coppers < 0:
                 self.game.broadcast(f'-{-num_coppers} $ → {self.coppers_remaining} $.')
+
+    def display(self):
+        self.game.socketio.emit(
+            "current turn info",
+            {
+                "current_phase": self.current_phase,
+                "actions": s(self.actions_remaining, "Action"),
+                "buys": s(self.buys_remaining, "Buy"),
+                "coppers": self.coppers_remaining,
+                "hand_size": s(len(self.player.hand), "Card"),
+                "turns_played": self.player.turns_played,
+            },
+            room=self.game.room,
+        )
 
 
 class Phase(metaclass=ABCMeta):
@@ -229,27 +256,30 @@ class BuyPhase(Phase):
         they would like to buy (then gain them).
 
         '''
+        self.turn.current_phase = "Buy Phase"
         # Find any Treasures in the player's hand
-        treasures_available = []
-        for card in self.player.hand:
-            if cards.CardType.TREASURE in card.types:
-                treasures_available.append(card)
+        treasures_available = [card for card in self.player.hand if cards.CardType.TREASURE in card.types]
         # Ask the player which Treasures they would like to play
         treasures_to_play = []
-        while treasures_available:
-            options = ['Play all Treasures'] + treasures_available
+        if treasures_available:
             prompt = f'Which Treasures would you like to play this turn?'
-            choice = self.player.interactions.choose_from_options(prompt, options, force=False)
-            if choice is None:
-                break
-            elif choice == 'Play all Treasures':
-                treasures_to_play += treasures_available
-                break
+            if isinstance(self.player.interactions, BrowserInteraction) or isinstance(self.player.interactions, AutoInteraction):
+                treasures_to_play = self.player.interactions.choose_treasures_from_hand(prompt)
             else:
-                treasures_available.remove(choice)
-                treasures_to_play.append(choice)
-        for treasure in treasures_to_play:
-            self.play_treasure(treasure)
+                while treasures_available:
+                    options = ['Play all Treasures'] + treasures_available
+                    choice = self.player.interactions.choose_from_options(prompt, options, force=False)
+                    if choice is None:
+                        break
+                    elif choice == 'Play all Treasures':
+                        treasures_to_play += treasures_available
+                        break
+                    else:
+                        treasures_available.remove(choice)
+                        treasures_to_play.append(choice)
+        self.play_treasures(treasures_to_play)
+        # Activate any post-treasure hooks
+        self.process_post_treasure_hooks()
         # Activate any pre-buy hooks registered to cards in the Supply
         self.process_pre_buy_hooks()
         # Buy cards
@@ -294,27 +324,54 @@ class BuyPhase(Phase):
             for hook in expired_hooks:
                 self.turn.treasure_hooks[type(treasure)].remove(hook)
 
-    def play_treasure(self, treasure):
+    def process_post_treasure_hooks(self):
         '''
-        Play a Treasure.
+        Activate any post-treasure hooks currently registered.
+        '''
+        expired_hooks = []
+        # Activate any hooks caused by playing the Treasure
+        for post_treasure_hook in self.turn.post_treasure_hooks:
+            post_treasure_hook()
+            if not post_treasure_hook.persistent:
+                expired_hooks.append(post_treasure_hook)
+        # Remove any non-persistent hooks
+        for hook in expired_hooks:
+            self.turn.post_treasure_hooks.remove(hook)
 
-        This will activate any side effects caused by playing the Treasure.
+    def play_treasures(self, treasures):
+        '''
+        Play Treasures.
 
-        It will then activate any treasure hooks registered to the Treasure.
+        This will activate any side effects caused by playing the Treasures.
+
+        It will then activate any treasure hooks registered to the Treasures.
 
         Args:
-            treasure (:obj:`cards.TreasureCard`): The Treasure whose hooks to activate.
+            list[treasure] (:obj:`cards.TreasureCard`): The Treasures whose hooks to activate.
         '''
-        self.game.broadcast(f"{self.player} played a Treasure: {treasure.name}.")
-        # Add the Treasure to the played cards area and remove from hand
-        self.player.play(treasure)
-        # Activate side effects cause by playing this Treasure
-        if hasattr(treasure, 'play'):
-            treasure.play()
-        # Process any Treasure hooks
-        self.process_treasure_hooks(treasure)
-        # Add the value of this Treasure
-        self.turn.coppers_remaining += treasure.value
+        if not treasures:
+            self.game.broadcast(f"{self.player} did not play any Treasures.")
+            return
+        # Get a pretty, sorted list of the Treasures played
+        treasure_name_counts = defaultdict(int) # compute as a dict first since that's easier
+        for treasure in treasures:
+            treasure_name_counts[treasure.name] += 1
+        treasure_counts = [(self.supply.card_name_to_card_class(name), quantity) for name, quantity in treasure_name_counts.items()] # convert from dict[treasure_name, count] into list[tuple(treasure_class, count)]
+        # Sort the treasures by cost (sorting by value would be tricky because of cards like Bank)
+        sorted_treasure_counts = sorted(treasure_counts, key=lambda treasure_tuple: treasure_tuple[0].cost, reverse=True)
+        treasure_strings = [s(quantity, treasure.name) for treasure, quantity in sorted_treasure_counts]
+        self.game.broadcast(f"{self.player} played Treasures: {', '.join(treasure_strings)}.")
+        # Play the Treasures
+        for treasure in treasures:
+            # Add the Treasure to the played cards area and remove from hand
+            self.player.play(treasure)
+            # Activate side effects cause by playing this Treasure
+            if hasattr(treasure, 'play'):
+                treasure.play()
+            # Process any Treasure hooks
+            self.process_treasure_hooks(treasure)
+            # Add the value of this Treasure
+            self.turn.coppers_remaining += treasure.value
 
     def process_pre_buy_hooks(self):
         '''
@@ -394,10 +451,10 @@ class CleanupPhase(Phase):
 
         All cards in the Supply have their cost modifiers reset to the default.
         '''
+        self.turn.current_phase = "Cleanup Phase"
         # Clean up the player's mat
         self.player.cleanup()
         # Show their hand for next turn
-        self.player.interactions.send('Your hand for next turn:')
         self.player.interactions.display_hand()
         # Reset all card's cost modifiers
         self.supply.reset_costs()

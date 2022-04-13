@@ -1,8 +1,9 @@
-import prettytable
 import random
 from collections import deque
 from copy import deepcopy
+
 from .cards import cards, base_cards
+from .expansions import ProsperityExpansion
 from .grammar import a, s
 from .supply import SupplyStackEmptyError
 
@@ -14,6 +15,7 @@ class Player:
         self.turn = None
         self.turns_played = 0
         self.supply = self.game.supply
+        self._sid = sid
         self.interactions = interactions_class(player=self, socketio=socketio, sid=sid)
         self.deck = deque()
         self.discard_pile = deque()
@@ -235,3 +237,23 @@ class Player:
         for expansion in self.supply.customization.expansions:
             victory_points += expansion.scoring(self)
         return victory_points
+
+    @property
+    def sid(self):
+        return self._sid
+
+    @sid.setter
+    def sid(self, new_sid):
+        self._sid = new_sid
+        self.interactions.sid = new_sid
+
+    def get_info(self):
+        info = {
+            "name": self.name,
+            "hand_size": len(self.hand),
+            "discard_size": len(self.discard_pile),
+            "deck_size": len(self.deck),
+        }
+        if ProsperityExpansion in self.game.expansions:
+            info["victory_tokens"] = self.victory_tokens
+        return info

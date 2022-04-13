@@ -9,6 +9,7 @@ class Interaction(metaclass=ABCMeta):
 
     def start(self):
         self.hand = self.player.hand
+        self.played_cards = self.player.played_cards
         self.discard_pile = self.player.discard_pile
         self.deck = self.player.deck
         self.supply = self.player.game.supply

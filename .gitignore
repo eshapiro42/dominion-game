@@ -133,3 +133,8 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Svelte
+node_modules/
+client/public/build/
+.DS_Store

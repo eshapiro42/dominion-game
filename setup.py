@@ -2,7 +2,7 @@ import setuptools
 
 setuptools.setup(
     name='dominion',
-    version='0.0.1',
+    version='1.0',
     author='Eric Shapiro',
     author_email='eshapiro42@gmail.com',
     packages=setuptools.find_packages(),

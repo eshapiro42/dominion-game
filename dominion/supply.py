@@ -1,11 +1,11 @@
 import copy
-import itertools
-import operator
 import prettytable
 import random
 from abc import ABCMeta, abstractmethod
 from collections import defaultdict
 from math import inf
+from typing import Dict
+
 from .cards import cards, base_cards, prosperity_cards, intrigue_cards
 
 
@@ -31,14 +31,51 @@ class Customization:
         distribute_attack_cards (:obj:`bool`): If :obj:`True`, Attack cards are not allowed in the Supply.
     '''
     def __init__(self):
-        self.expansions = set()
-        self.required_card_classes = set() # If nonempty, ensures that each card in the list ends up in the supply
+        self.expansions = set([])
+        self.required_card_classes = set([]) # If nonempty, ensures that each card in the list ends up in the supply
         self.distribute_cost = False # If toggled, ensures there are at least two cards each of cost {2, 3, 4, 5}
         self.disable_attack_cards = False # If toggled, Attack cards are not allowed
-        # require_plus_two_action = False # If toggled, ensures there is at least one card with '+2 Actions'
-        # require_drawer = False # If toggled, ensures there is at least one card with '>= +1 Cards'
-        # require_buy = False # If toggled, ensures there is at least one card with '>= +1 Buys'
-        # require_trashing = False # If toggled, ensures there is at least one card that allows trashing
+        self.require_plus_two_action = False # If toggled, ensures there is at least one card with '+2 Actions'
+        self.require_drawer = False # If toggled, ensures there is at least one card with '>= +1 Cards'
+        self.require_buy = False # If toggled, ensures there is at least one card with '>= +1 Buys'
+        self.require_trashing = True # If toggled, ensures there is at least one card that allows trashing
+
+    @property
+    def required_effects(self) -> Dict[str, bool]:
+        """
+        Return a dictionary whose keys are strings describing potentially required
+        effects and whose values are booleans indicating whether or not that effect
+        is required.
+        """
+        return {
+            "plus_two_action": self.require_plus_two_action,
+            "drawer": self.require_drawer,
+            "buy": self.require_buy,
+            "trashing": self.require_trashing,
+        }
+
+    @staticmethod
+    def card_has_effect(card_class: cards.Card, effect: str) -> bool:
+        """
+        TODO: This really belongs in the Card class itself as either multiple properties or a regular method that accepts an effect.
+
+        Return whether a given card class has a specific effect. Useful for dealing with customization options that require specific effects.
+
+        For instance, `Customization.card_has_effect(base_cards.Festival, "buy")` would return `True`.
+
+        Arguments:
+            card_class (:obj:`type(card.Card)`): The card class to check.
+            effect (:obj:`str`): The effect to check for.
+
+        Returns:
+            :obj:`bool`: Whether the card class has the effect.
+        """
+        return {
+            "plus_two_action": hasattr(card_class, "extra_actions") and card_class.extra_actions >= 2,
+            "drawer": hasattr(card_class, "extra_cards") and card_class.extra_cards >= 1,
+            "buy": hasattr(card_class, "extra_buys") and card_class.extra_buys >= 1,
+            "trashing": "trash" in card_class.description.lower(),
+        }[effect]
 
 
 class Supply:
@@ -48,7 +85,7 @@ class Supply:
         self.post_gain_hooks = defaultdict(list)
         self.customization = Customization()
         # TODO: Remove these (they are for debugging specific cards)
-        # self.customization.required_card_classes.add(intrigue_cards.Diplomat)
+        # self.customization.required_card_classes.add(prosperity_cards.Contraband)
 
     def setup(self):
         self.select_kingdom_cards()
@@ -62,23 +99,48 @@ class Supply:
         possible_kingdom_card_classes = []
         for expansion in self.customization.expansions:
             possible_kingdom_card_classes += expansion.kingdom_card_classes
-        # Add in required cards
-        for card_class in self.customization.required_card_classes:
-            selected_kingdom_card_classes.append(card_class)
-            possible_kingdom_card_classes.remove(card_class)
+        # Add in any required cards. Note that this will break things is a required card's expansion is not selected.
+        for required_card_class in self.customization.required_card_classes:
+            if required_card_class not in possible_kingdom_card_classes:
+                raise ValueError(f"Required card class {required_card_class.name} is not in the selected expansions.")
+            print(f"Adding required card class {required_card_class.name}.")
+            selected_kingdom_card_classes.append(required_card_class)
+            possible_kingdom_card_classes.remove(required_card_class)
+        # All filtering and disabling should be done prior to fulfilling requirements!
         if self.customization.disable_attack_cards:
             # Filter out attack cards
+            print("Disabling attack cards.")
             possible_kingdom_card_classes = [card_class for card_class in copy.deepcopy(possible_kingdom_card_classes) if cards.CardType.ATTACK not in card_class.types]
+        # Find and add in kingdom cards satisfying the required effects
+        required_effects = [effect for effect, required in self.customization.required_effects.items() if required]
+        random.shuffle(required_effects) # Shuffle the list of required effects so some cards don't get preferential treatment every game
+        for required_effect in required_effects:
+            # First check if the required effect already happens to be satisfied by a previously required card
+            if any(self.customization.card_has_effect(card_class, required_effect) for card_class in selected_kingdom_card_classes):
+                print(f"{required_effect} is already satisfied by a previously selected card.")
+                continue
+            # Otherwise, find a card that has the required effect
+            possible_kingdom_card_classes_with_required_effect = [card_class for card_class in possible_kingdom_card_classes if self.customization.card_has_effect(card_class, required_effect)]
+            card_class_with_required_effect = random.choice(possible_kingdom_card_classes_with_required_effect)
+            print(f"Adding {card_class_with_required_effect.name} to satisfy {required_effect}.")
+            # Add the card to the list of selected kingdom cards
+            selected_kingdom_card_classes.append(card_class_with_required_effect)
+            # Remove the card from the list of possible remaining kingdom cards
+            possible_kingdom_card_classes.remove(card_class_with_required_effect)
         if self.customization.distribute_cost:
-            # Make sure at least two cards each of cost {2, 3, 4, 5} (this totals 8 cards)
+            # Make sure there are at least two kingdom cards each of cost {2, 3, 4, 5} (this leaves 2 cards of any cost if no other customizations are chosen)
+            print("Distributing costs")
+            selected_kingdom_card_classes_by_cost = {cost: [card_class for card_class in selected_kingdom_card_classes if card_class.cost == cost] for cost in range(2, 6)}
             possible_kingdom_card_classes_by_cost = {cost: [card_class for card_class in possible_kingdom_card_classes if card_class.cost == cost] for cost in range(2, 6)}
             for cost in range(2, 6):
-                card_classes_of_cost = random.sample(possible_kingdom_card_classes_by_cost[cost], 2)
+                num_still_needed = max(0, 2 - len(selected_kingdom_card_classes_by_cost[cost]))
+                card_classes_of_cost = random.sample(possible_kingdom_card_classes_by_cost[cost], num_still_needed)
+                print(f"Adding {num_still_needed} cards of cost {cost}: {' and '.join(card_class.name for card_class in card_classes_of_cost)}")
                 for card_class in card_classes_of_cost:
                     selected_kingdom_card_classes.append(card_class)
                     possible_kingdom_card_classes.remove(card_class)
         # Select the remaining cards at random
-        num_cards_remaining = 10 - len(selected_kingdom_card_classes)
+        num_cards_remaining = max(0, 10 - len(selected_kingdom_card_classes))
         selected_kingdom_card_classes += random.sample(possible_kingdom_card_classes, num_cards_remaining)
         # Sort kingdom cards first by cost, then by name
         for card_class in sorted(selected_kingdom_card_classes, key=lambda card_class: (card_class.cost, card_class.name)):
@@ -134,12 +196,41 @@ class Supply:
         supply_table = self.get_table()
         return supply_table.get_string()
 
+    def card_name_to_card_class(self, card_name):
+        '''Convert a card name to a card class. If you need to use this function, you're almost definitely doing something wrong.
+
+        Args:
+            card_name (str): the name of the card
+
+        Returns:
+            Card: the card class
+        '''
+        for card_class in self.card_stacks:
+            if card_class.name == card_name:
+                return card_class
+
     @property
     def num_empty_stacks(self):
         return [stack.is_empty for stack in self.card_stacks.values()].count(True)
 
+    @property
+    def trash_pile_json(self):
+        json = []
+        for card_class in self.trash_pile:
+            quantity = len(self.trash_pile[card_class])
+            try:
+                card_json = self.trash_pile[card_class][0].json
+                card_json["quantity"] = quantity
+                json.append(card_json)
+            except IndexError:
+                pass
+        return json
+
 
 class SupplyStack(metaclass=ABCMeta):
+    def __init__(self):
+        self._example = self.card_class()
+
     @abstractmethod
     def draw(self):
         pass
@@ -154,11 +245,25 @@ class SupplyStack(metaclass=ABCMeta):
     def is_empty(self):
         pass
 
+    @property
+    def json(self):
+        quantity = "inf" if self.cards_remaining == inf else self.cards_remaining
+        card_stack_json = self.example.json
+        card_stack_json["cost"] = self.modified_cost
+        card_stack_json["quantity"] = quantity
+        return card_stack_json
+
+    @property
+    def example(self):
+        # An orphaned example card that data can be pulled from
+        return self._example
+
 
 class InfiniteSupplyStack(SupplyStack):
     def __init__(self, card_class):
         self.card_class = card_class
         self._cards_remaining = inf
+        super().__init__()
 
     def draw(self):
         card = self.card_class()
@@ -179,6 +284,7 @@ class FiniteSupplyStack(SupplyStack):
         self.base_cost = card_class.cost
         self.modified_cost = card_class.cost
         self._cards_remaining = size
+        super().__init__()
 
     def draw(self):
         if not self.is_empty:

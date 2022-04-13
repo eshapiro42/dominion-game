@@ -1,2 +1,1 @@
-  
-web: gunicorn -k eventlet -w 1 app:app --preload
+web: gunicorn -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker -w 1 --timeout 0 app:app

@@ -1,7 +1,10 @@
 import math
+
+from gevent import Greenlet, joinall
+
 from .cards import CardType, Card, TreasureCard, ActionCard, AttackCard, ReactionCard, VictoryCard, CurseCard
 from . import base_cards
-from ..hooks import TreasureHook, PreBuyHook, PostGainHook
+from ..hooks import TreasureHook, PostTreasureHook, PreBuyHook, PostGainHook
 from ..grammar import a, s
 
 
@@ -66,7 +69,7 @@ class Loan(TreasureCard):
                 cards_revealed.append(card)
         # Ask if they want to discard or trash the revealed Treasure
         if revealed_treasure is not None:
-            prompt = f'{self.owner}: You revealed {a(revealed_treasure.name)}. What would you like to do with it?'
+            prompt = f'You revealed {a(revealed_treasure.name)} with your Loan. What would you like to do with it?'
             options = ['Trash', 'Discard']
             choice = self.interactions.choose_from_options(prompt=prompt, options=list(options), force=True)
             if choice == 'Trash':
@@ -89,7 +92,7 @@ class TradeRoute(ActionCard):
 
     description = '\n'.join(
         [
-            '+1 Buy',
+            # '+1 Buy',
             'Trash a card from your hand.',
             '+1 $ per Coin token on the Trade Route mat.'
         ]
@@ -111,7 +114,7 @@ class TradeRoute(ActionCard):
     
     def action(self):
         # Trash a card from your hand
-        prompt = f'{self.owner}: Choose a card from your hand to trash.'
+        prompt = f'You played a Trade Route. You must choose a card from your hand to trash.'
         card_to_trash = self.owner.interactions.choose_card_from_hand(prompt=prompt, force=True)
         if card_to_trash is None:
             self.game.broadcast(f'{self.owner} has no cards in their hand to trash.')
@@ -184,7 +187,7 @@ class Bishop(ActionCard):
 
     description = '\n'.join(
         [
-            '+1 $',
+            # '+1 $',
             '+1 Victory token',
             'Trash a card from your hand. +1 Victory token per 2 $ it costs (round down). Each other player may trash a card from their hand.'
         ]
@@ -194,13 +197,20 @@ class Bishop(ActionCard):
     extra_actions = 0
     extra_buys = 0
     extra_coppers = 1
+
+    def player_reaction(self, player):
+        # Each other player may trash a card from their hand
+        prompt = f'{self.owner} played a Bishop. You may trash a card from your hand.'
+        card_to_trash = player.interactions.choose_card_from_hand(prompt=prompt, force=False)
+        if card_to_trash is not None:
+            player.trash(card_to_trash)
     
     def action(self):
         # +1 Victory token
         self.owner.victory_tokens += 1
         self.game.broadcast(f'{self.owner} took a Victory token.')
         # Trash a card from your hand. +1 Victory token per 2 $ it costs (round down)
-        prompt = f'{self.owner}: Choose a card from your hand to trash for Victory tokens.'
+        prompt = f'Choose a card from your hand to trash for Victory tokens.'
         card_to_trash = self.owner.interactions.choose_card_from_hand(prompt=prompt, force=True)
         if card_to_trash is None:
             self.game.broadcast(f'{self.owner} has no cards in their hand to trash.')
@@ -209,12 +219,13 @@ class Bishop(ActionCard):
             victory_tokens = math.floor(card_to_trash.cost / 2)
             self.owner.victory_tokens += victory_tokens
             self.game.broadcast(f"{self.owner} took {s(victory_tokens, 'Victory token')}.")
-        # Each other player may trash a card from their hand
-        for player in self.owner.other_players:
-            prompt = f'{player}: You may trash a card from your hand.'
-            card_to_trash = player.interactions.choose_card_from_hand(prompt=prompt, force=False)
-            if card_to_trash is not None:
-                player.trash(card_to_trash)
+        # Simultaneous reactions are only allowed if they are enabled for the game
+        if self.game.allow_simultaneous_reactions:
+            greenlets = [Greenlet.spawn(self.player_reaction, player) for player in self.owner.other_players]
+            joinall(greenlets)
+        else:
+            for player in self.owner.other_players:
+                self.player_reaction(player)
 
 
 class Monument(ActionCard):
@@ -225,7 +236,7 @@ class Monument(ActionCard):
 
     description = '\n'.join(
         [
-            '+2 $',
+            # '+2 $',
             '+1 Victory token',
         ]
     )
@@ -281,8 +292,7 @@ class Talisman(TreasureCard):
         persistent = True
 
         def __call__(self, player, card, where_it_went):
-            game = player.game
-            game.broadcast(f'{player} gains an extra {self.card_class.name} from their Talisman.')
+            self.game.broadcast(f'{player} gains an extra {self.card_class.name} from their Talisman.')
             player.gain_without_hooks(self.card_class, message=False)
 
 
@@ -290,7 +300,7 @@ class Talisman(TreasureCard):
         # All non-Victory cards costing 4 $ or less get a post gain hook added this turn
         for card_class in self.supply.card_stacks:
             if card_class.cost <= 4 and CardType.VICTORY not in card_class.types:
-                post_gain_hook = self.TalismanPostGainHook(card_class)
+                post_gain_hook = self.TalismanPostGainHook(self.game, card_class)
                 self.owner.turn.add_post_gain_hook(post_gain_hook, card_class) 
 
 
@@ -302,9 +312,9 @@ class WorkersVillage(ActionCard):
 
     description = '\n'.join(
         [
-            '+1 Card',
-            '+2 Actions',
-            '+1 Buy'
+            # '+1 Card',
+            # '+2 Actions',
+            # '+1 Buy'
         ]
     )
 
@@ -325,8 +335,8 @@ class City(ActionCard):
 
     description = '\n'.join(
         [
-            '+1 Card',
-            '+2 Actions',
+            # '+1 Card',
+            # '+2 Actions',
             'If there are one or more empty Supply piles, +1 Card. If there are two or more, +1 Buy and +1 $.'
         ]
     )
@@ -362,15 +372,25 @@ class Contraband(TreasureCard):
         ]
     )
 
+    class ContrabandPostTreasureHook(PostTreasureHook):
+        persistent = False
+        
+        def __call__(self):
+            owner = self.game.current_turn.player
+            # The player to your left names a card
+            player_to_left = owner.other_players[0]
+            self.game.broadcast(f"{player_to_left} must name a card that {owner} will be unable to buy this turn.")
+            prompt = f'{owner} played a Contraband and you are the player to their left. Which card should {owner} be forbidden from buying this turn?'
+            forbidden_card_class = player_to_left.interactions.choose_card_class_from_supply(prompt, max_cost=math.inf, force=True) # max_cost=math.inf because any card can be named
+            owner.turn.invalid_card_classes.append(forbidden_card_class)
+            self.game.broadcast(f'{owner} cannot buy {a(forbidden_card_class.name)} this turn.')
+
     def play(self):
         # +1 Buy (this must be done manually here since it is a Treasure card)
         self.owner.turn.plus_buys(1)
-        # The player to your left names a card
-        player_to_left = self.owner.other_players[0]
-        prompt = f'{player_to_left}: Which card should {self.owner} be forbidden from buying this turn?'
-        forbidden_card_class = player_to_left.interactions.choose_card_class_from_supply(prompt, max_cost=math.inf, force=True) # max_cost=math.inf because any card can be named
-        self.owner.turn.invalid_card_classes.append(forbidden_card_class)
-        self.game.broadcast(f'{self.owner} cannot buy {a(forbidden_card_class.name)} this turn.')
+        # The player to your left names a card you cannot buy this turn
+        post_treasure_hook = self.ContrabandPostTreasureHook(self.game)
+        self.game.current_turn.add_post_treasure_hook(post_treasure_hook)
 
 
 class CountingHouse(ActionCard):
@@ -393,7 +413,7 @@ class CountingHouse(ActionCard):
     def action(self):
         coppers_in_discard_pile = [card for card in self.owner.discard_pile if isinstance(card, base_cards.Copper)]
         if coppers_in_discard_pile:
-            prompt = f"{self.owner}: You have {s(len(coppers_in_discard_pile), 'Copper')} in your discard pile. How many would you like to put into your hand?"
+            prompt = f"You played a Counting House. You have {s(len(coppers_in_discard_pile), 'Copper')} in your discard pile. How many Coppers would you like to put into your hand?"
             options = list(range(1, len(coppers_in_discard_pile) + 1))
             num_coppers = self.owner.interactions.choose_from_options(prompt, options, force=False)
             if num_coppers:
@@ -404,7 +424,8 @@ class CountingHouse(ActionCard):
                 self.game.broadcast(f"{self.owner} put {s(num_coppers, 'Copper')} from their discard pile into their hand.")
             else:
                 self.game.broadcast(f'{self.owner} did not put any Coppers from their discard pile into their hand.')
-
+        else:
+            self.game.broadcast(f"{self.owner} has no Coppers in their discard pile.")
 
 class Mint(ActionCard):
     name = 'Mint'
@@ -435,7 +456,7 @@ class Mint(ActionCard):
 
     def action(self):
         # You may reveal a Treasure card from your hand.
-        prompt = f'{self.owner}: You may reveal a Treasure card from your hand to gain a copy of it.'
+        prompt = f'You played a Mint. You may reveal a Treasure card from your hand to gain a copy of it.'
         treasure_card = self.owner.interactions.choose_specific_card_type_from_hand(prompt, CardType.TREASURE)
         if treasure_card is not None:
             treasure_card_class = type(treasure_card)
@@ -452,7 +473,7 @@ class Mountebank(AttackCard):
 
     description = '\n'.join(
         [
-            '+2 $',
+            # '+2 $',
             "Each other player may discard a Curse. If they don't, they gain a Curse and a Copper.",
         ]
     )
@@ -463,6 +484,8 @@ class Mountebank(AttackCard):
     extra_actions = 0
     extra_buys = 0
     extra_coppers = 2
+
+    allow_simultaneous_reactions = False # If only one Curse is left in the Supply, it is important that this is resolved in turn order
     
     def action(self):
         pass
@@ -471,7 +494,7 @@ class Mountebank(AttackCard):
         # Check if the other player has a Curse in their hand
         curses_in_hand = [card for card in player.hand if isinstance(card, base_cards.Curse)]
         # If they do, ask if they would like to discard it
-        if curses_in_hand and player.interactions.choose_yes_or_no(prompt=f'{player}: You have a Curse in your hand. Would you like to reveal and discard it?'):
+        if curses_in_hand and player.interactions.choose_yes_or_no(prompt=f'{attacker} played a Mountebank. You have a Curse in your hand. Would you like to reveal and discard it? If you do not, you will gain a Curse and a Copper.'):
             curse = curses_in_hand[0]
             player.discard(curse)
         else:
@@ -487,7 +510,7 @@ class Rabble(AttackCard):
 
     description = '\n'.join(
         [
-            '+3 Cards',
+            # '+3 Cards',
             'Each other player reveals the top 3 cards of their deck, discards the Actions and Treasures, and puts the rest back in any order they choose.',
         ]
     )
@@ -497,6 +520,8 @@ class Rabble(AttackCard):
     extra_actions = 0
     extra_buys = 0
     extra_coppers = 0
+
+    allow_simultaneous_reactions = True
     
     def action(self):
         pass
@@ -570,18 +595,17 @@ class RoyalSeal(TreasureCard):
 
         def __call__(self, player, card, where_it_went):
             if card in where_it_went: # Need this in case a Watchtower or other card has already moved the card
-                game = player.game
-                prompt = f'{player}: Would you like to put the {card} you just gained onto your deck?'
+                prompt = f'You have a Royal Seal in play. Would you like to put the {card} you just gained onto your deck?'
                 if player.interactions.choose_yes_or_no(prompt):
                     where_it_went.remove(card)
                     player.deck.append(card)
-                    game.broadcast(f'{player} put the {card} onto their deck.')
+                    self.game.broadcast(f'{player} put the gained {card} onto their deck via their Royal Seal.')
 
     def play(self):
         # All cards get a post gain hook added this turn (but only one!)
         for card_class in self.supply.card_stacks:
             if not any(isinstance(hook, self.RoyalSealPostGainHook) for hook in self.owner.turn.post_gain_hooks[card_class]):
-                post_gain_hook = self.RoyalSealPostGainHook(card_class)
+                post_gain_hook = self.RoyalSealPostGainHook(self.game, card_class)
                 self.owner.turn.add_post_gain_hook(post_gain_hook, card_class) 
 
 
@@ -593,7 +617,7 @@ class Vault(ActionCard):
 
     description = '\n'.join(
         [
-            '+2 Cards',
+            # '+2 Cards',
             'Discard any number of cards for +1 $ each.',
             'Each other player may discard 2 cards, to draw a card.'
         ]
@@ -603,35 +627,40 @@ class Vault(ActionCard):
     extra_actions = 0
     extra_buys = 0
     extra_coppers = 0
+
+    def player_reaction(self, player):
+        # Each other player may discard 2 cards, to draw a card.
+        if len(player.hand) < 2:
+            self.game.broadcast(f'{player} does not have 2 cards in their hand.')
+        else:
+            prompt = f'{self.owner} played a Vault. Would you like to discard 2 cards to draw a card?'
+            if player.interactions.choose_yes_or_no(prompt):
+                prompt = f"Choose 2 cards to discard."
+                cards_to_discard = player.interactions.choose_cards_from_hand(prompt=prompt, force=True, max_cards=2)
+                for card_to_discard in cards_to_discard:
+                    player.discard(card_to_discard)
+                self.game.broadcast(f"{player} drew a card.")
+                player.draw(1)
+            else:
+                self.game.broadcast(f'{player} chose not to discard 2 cards.')
     
     def action(self):
         # Discard any number of cards for +1 $ each
-        discarded_card_count = 0
-        while True:
-            prompt = 'Choose a card from your hand to discard.'
-            card_to_discard = self.interactions.choose_card_from_hand(prompt=prompt, force=False)
-            if card_to_discard is None:
-                break
-            else:
-                discarded_card_count += 1
-                self.owner.discard(card_to_discard)
-        coppers_before = self.owner.turn.coppers_remaining
-        self.owner.turn.plus_coppers(discarded_card_count)
-        # Each other player may discard 2 cards, to draw a card.
-        for player in self.owner.other_players:
-            if len(player.hand) < 2:
-                self.game.broadcast(f'{player} does not have 2 cards in their hand.')
-            else:
-                prompt = f'{player}: Would you like to discard 2 cards to draw a card?'
-                if player.interactions.choose_yes_or_no(prompt):
-                    for discard_num in range(2):
-                        prompt = f'{player}: Choose card {discard_num + 1}/2 to discard.'
-                        card_to_discard = player.interactions.choose_card_from_hand(prompt, force=True)
-                        if card_to_discard is not None:
-                            player.discard(card_to_discard)
-                    player.draw(1)
-                else:
-                    self.game.broadcast(f'{player} chose not to discard 2 cards.')
+        prompt = "Choose any number of cards from your hand to discard."
+        cards_to_discard = self.owner.interactions.choose_cards_from_hand(prompt=prompt, force=False, max_cards=None)
+        for card_to_discard in cards_to_discard:
+            self.owner.discard(card_to_discard)
+        if cards_to_discard:
+            self.owner.turn.plus_coppers(len(cards_to_discard))
+        else:
+            self.game.broadcast(f'{self.owner} did not discard any cards.')
+        # Simultaneous reactions are only allowed if they are enabled for the game
+        if self.game.allow_simultaneous_reactions:
+            greenlets = [Greenlet.spawn(self.player_reaction, player) for player in self.owner.other_players]
+            joinall(greenlets)
+        else:
+            for player in self.owner.other_players:
+                self.player_reaction(player)
 
 
 
@@ -669,7 +698,7 @@ class Venture(TreasureCard):
             self.owner.discard_pile.extend(cards_to_discard)
             self.game.broadcast(f"{self.owner} discarded: {', '.join(map(str, cards_to_discard))}.")
         if revealed_treasure is not None:
-            self.owner.turn.buy_phase.play_treasure(revealed_treasure)
+            self.owner.turn.buy_phase.play_treasures([revealed_treasure])
 
 
 class Goons(AttackCard):
@@ -680,8 +709,8 @@ class Goons(AttackCard):
 
     description = '\n'.join(
         [
-            '+1 Buy',
-            '+2 $',
+            # '+1 Buy',
+            # '+2 $',
             'Each other player discards down to 3 cards in hand.',
             'While this is in play, when you buy a card, +1 Victory token.'
         ]
@@ -693,27 +722,31 @@ class Goons(AttackCard):
     extra_buys = 1
     extra_coppers = 2
 
+    allow_simultaneous_reactions = True
+
     class GoonsPostGainHook(PostGainHook):
         persistent = True
 
         def __call__(self, player, card, where_it_went):
-            game = player.game
-            game.broadcast(f'{player} takes a Victory token from their Goons.')
+            self.game.broadcast(f'{player} takes a Victory token from their Goons.')
             player.victory_tokens += 1
 
 
     def action(self):
         # All cards get a post gain hook added this turn
         for card_class in self.supply.card_stacks:
-            post_gain_hook = self.GoonsPostGainHook(card_class)
+            post_gain_hook = self.GoonsPostGainHook(self.game, card_class)
             self.owner.turn.add_post_gain_hook(post_gain_hook, card_class) 
 
     def attack_effect(self, attacker, player):
-        number_to_discard = len(player.hand) - 3
+        number_to_discard = max(len(player.hand) - 3, 0)
+        if number_to_discard == 0:
+            self.game.broadcast(f"{player} only has {s(len(player.hand), 'card')} in their hand.")
+            return
         self.game.broadcast(f"{player} must discard {s(number_to_discard, 'card')}.")
-        for card_num in range(number_to_discard):
-            prompt = f'{player}: Choose card {card_num + 1} of {number_to_discard} to discard.'
-            card_to_discard = player.interactions.choose_card_from_hand(prompt=prompt, force=True)
+        prompt = f"{attacker} has played a Goons. Choose {s(number_to_discard, 'card')} to discard."
+        cards_to_discard = player.interactions.choose_cards_from_hand(prompt=prompt, force=True, max_cards=number_to_discard)
+        for card_to_discard in cards_to_discard:
             player.discard(card_to_discard)
 
 
@@ -725,10 +758,10 @@ class GrandMarket(ActionCard):
 
     description = '\n'.join(
         [
-            '+1 Card',
-            '+1 Action',
-            '+1 Buy',
-            '+2 $',
+            # '+1 Card',
+            # '+1 Action',
+            # '+1 Buy',
+            # '+2 $',
             "You can't buy this if you have any Coppers in play."
         ]
     )
@@ -771,8 +804,7 @@ class Hoard(TreasureCard):
         persistent = True
 
         def __call__(self, player, card, where_it_went):
-            game = player.game
-            game.broadcast(f'{player} gains a Gold from their Hoard.')
+            self.game.broadcast(f'{player} gains a Gold from their Hoard.')
             player.gain_without_hooks(base_cards.Gold)
 
 
@@ -780,7 +812,7 @@ class Hoard(TreasureCard):
         # All Victory cards get a post gain hook added this turn
         for card_class in self.supply.card_stacks:
             if CardType.VICTORY in card_class.types:
-                post_gain_hook = self.HoardPostGainHook(card_class)
+                post_gain_hook = self.HoardPostGainHook(self.game, card_class)
                 self.owner.turn.add_post_gain_hook(post_gain_hook, card_class) 
 
 
@@ -790,17 +822,30 @@ class Bank(TreasureCard):
     types = [CardType.TREASURE]
     image_path = ''
 
-    value = None
+    value = 0 # The value is computed and added via a Post-Treasure Hook
 
     description = '\n'.join(
         [
-            "When you play this, it's worth $1 per Treasure you have in play (counting this)."
+            "When you play this, it's worth 1 $ per Treasure you have in play (counting this)."
         ]
     )
 
+    class BankPostTreasureHook(PostTreasureHook):
+        persistent = False
+
+        def __call__(self):
+            """
+            Worth 1 $ per Treasure in play, including this (it's by definition already in play!)
+            """
+            turn = self.game.current_turn
+            player = turn.player
+            value = len([card for card in player.played_cards if CardType.TREASURE in card.types])
+            self.game.broadcast(f"{player}'s Bank is worth {value} $.")
+            turn.coppers_remaining += value
+
     def play(self):
-        # Worth 1 $ per Treasure in play
-        self.value = len([card for card in self.owner.played_cards if CardType.TREASURE in card.types])
+        post_treasure_hook = self.BankPostTreasureHook(self.game)
+        self.game.current_turn.add_post_treasure_hook(post_treasure_hook)
 
 
 class Expand(ActionCard):
@@ -847,18 +892,18 @@ class Forge(ActionCard):
     extra_coppers = 0
     
     def action(self):
-        current_value = 0
         # Trash any number of cards from your hand
-        while self.owner.hand:
-            prompt = f'You may choose a card from your hand to trash (current value: {current_value}).'
-            card_to_trash = self.interactions.choose_card_from_hand(prompt=prompt, force=False)
-            if card_to_trash is None:
-                break
-            else:
-                self.owner.trash(card_to_trash)
-                current_value += card_to_trash.cost
+        prompt = f'You may choose any number of cards from your hand to trash. You must gain a card with cost exactly equal to the total cost of the trashed cards. If you trash no cards, you must gain a card costing 0 $.'
+        cards_to_trash = self.interactions.choose_cards_from_hand(prompt=prompt, force=False, max_cards=None)
+        total_value = 0
+        if cards_to_trash:
+            total_value = sum(card.cost for card in cards_to_trash)
+        for card_to_trash in cards_to_trash:
+            self.owner.trash(card_to_trash)
+        self.game.broadcast(f"{self.owner} trashed {s(len(cards_to_trash), 'card')} for a total cost of {total_value} $.")
+        self.game.broadcast(f"{self.owner} must gain a card costing exactly {total_value} $.")
         # Gain a card with cost exactly equal to the total cost of the trashed cards
-        self.owner.turn.buy_phase.buy_without_side_effects(max_cost=current_value, force=True, exact_cost=True)
+        self.owner.turn.buy_phase.buy_without_side_effects(max_cost=total_value, force=True, exact_cost=True)
         
 
 class KingsCourt(ActionCard):
@@ -903,9 +948,9 @@ class Peddler(ActionCard):
 
     description = '\n'.join(
         [
-            '+1 Card',
-            '+1 Action',
-            '+1 $',
+            # '+1 Card',
+            # '+1 Action',
+            # '+1 $',
             'During your Buy phase, this costs 2 $ less per Action card you have in play, but not less than 0 $.'
         ]
     )
