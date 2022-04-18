@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, List, Dict
 
 from .cards import cards
 from .grammar import a, s
-from .interactions import AutoInteraction, BrowserInteraction
+from .interactions import AIInteraction, BrowserInteraction
 
 if TYPE_CHECKING:
     from .cards.cards import ActionCard, TreasureCard, CardMeta
@@ -420,7 +420,7 @@ class BuyPhase(Phase):
         treasures_to_play = []
         if treasures_available:
             prompt = f'Which Treasures would you like to play this turn?'
-            if isinstance(self.player.interactions, BrowserInteraction) or isinstance(self.player.interactions, AutoInteraction):
+            if isinstance(self.player.interactions, BrowserInteraction) or isinstance(self.player.interactions, AIInteraction):
                 treasures_to_play = self.player.interactions.choose_treasures_from_hand(prompt)
             else:
                 while treasures_available:

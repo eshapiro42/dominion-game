@@ -3,7 +3,7 @@ import random
 from dominion.cards import base_cards, intrigue_cards, prosperity_cards
 from dominion.expansions import IntrigueExpansion, ProsperityExpansion
 from dominion.game import Game
-from dominion.interactions import AutoInteraction
+from dominion.interactions import AIInteraction
 
 
 EXPANSIONS = [
@@ -50,7 +50,7 @@ def test_stability():
     # Add a random number (2-4) players into the game
     num_players = random.randint(2, 4)
     for _ in range(num_players):
-        game.add_player(interactions_class=AutoInteraction)
+        game.add_player(interactions_class=AIInteraction)
     game.start()
 
 
@@ -77,5 +77,5 @@ def test_supply_customization():
     # Add a random number (2-4) players into the game
     num_players = random.randint(2, 4)
     for _ in range(num_players):
-        game.add_player(interactions_class=AutoInteraction)
+        game.add_player(interactions_class=AIInteraction)
     game.start()
