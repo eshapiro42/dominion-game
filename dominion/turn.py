@@ -5,7 +5,7 @@ from dataclasses import dataclass
 
 from .cards import cards, base_cards
 from .grammar import a, s
-from .interactions import AutoInteraction, BrowserInteraction
+from .interactions import AIInteraction, BrowserInteraction
 
 
 class Turn:
@@ -263,7 +263,7 @@ class BuyPhase(Phase):
         treasures_to_play = []
         if treasures_available:
             prompt = f'Which Treasures would you like to play this turn?'
-            if isinstance(self.player.interactions, BrowserInteraction) or isinstance(self.player.interactions, AutoInteraction):
+            if isinstance(self.player.interactions, BrowserInteraction) or isinstance(self.player.interactions, AIInteraction):
                 treasures_to_play = self.player.interactions.choose_treasures_from_hand(prompt)
             else:
                 while treasures_available:

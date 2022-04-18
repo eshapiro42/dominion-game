@@ -9,7 +9,7 @@ from flask import Flask, request, send_from_directory
 from dominion.cards import cards, prosperity_cards
 from dominion.expansions import IntrigueExpansion, ProsperityExpansion
 from dominion.game import Game, GameStartedError
-from dominion.interactions import BrowserInteraction, AutoInteraction
+from dominion.interactions import BrowserInteraction, AIInteraction
 
 
 app = Flask(__name__)
@@ -123,7 +123,7 @@ def add_cpu(data):
     game = games[room]
     game_startable_before = game.startable
     cpu_name = f'CPU {cpu_num}'
-    game.add_player(cpu_name, sid=None, interactions_class=AutoInteraction)
+    game.add_player(cpu_name, sid=None, interactions_class=AIInteraction)
     socketio.send(f'{cpu_name} has entered room {room}.\n', room=room)
     # If the game just became startable, push an event
     game_startable_after = game.startable
@@ -198,7 +198,7 @@ def disconnect():
         flask_socketio.leave_room(room)
         socketio.send(f'{username} has left room {room}.\n', room=room)
         # If there are no human players left, erase the game after a short delay
-        human_players = [player for player in game.players if not isinstance(player.interactions, AutoInteraction)]
+        human_players = [player for player in game.players if not isinstance(player.interactions, AIInteraction)]
         print(f"human_players: {human_players}")
         print(f"disconnected_players: {disconnected_players[room]}")
         if len(disconnected_players[room]) == len(human_players):

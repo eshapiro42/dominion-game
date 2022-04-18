@@ -1,0 +1,40 @@
+Interaction n:
+    Game State --> Network --> Softmax
+
+    Choose the **available option** (or options if max_card != 1) with the highest probability.
+
+    (This approach means the network will need to be retrained whenever an expansion is added, since the softmax outputs need to be the correct shape.)
+
+Game State:
+    1. Current Player == Self?
+    2. Vectors with the same shape as the softmax output (each slot represents the quantity of that card present):
+        a. Current Played Cards
+        b. Own Hand
+        c. Own Discard Pile
+        d. Current Supply
+        e. Trash
+    3. Zero-padded vector with info for each player (six-length)
+        a. Hand Size
+        b. Discard Pile Size
+        c. Deck Size
+        d. Victory Tokens
+    4. Current Turn Info
+        a. Actions remaining
+        b. Buys remaining
+        c. Coppers remaining
+        d. Turn number
+    5. Current Interaction Info (InteractionType enum)
+    6. Most recently played card (index shared by softmax output)
+    7. Trade Route coin tokens
+
+    Store array of game states indexed by interaction number
+
+Game End:
+    If won:
+        Score for interaction n = min(50, 0.99^(last_interaction_number - n))
+        So final interaction gets score of 1, second-to-last gets score of 0.99, third-to-last gets score of ~0.98, etc.
+    If lost:
+        Score for interaction n = max(50, 1 - 0.99^(last_interaction_number - n))
+        So final interaction gets score of 0, second-to-last gets score of 0.01, third-to-last gets score of ~0.02, etc.
+
+    Feed scores to the network in reverse order.
