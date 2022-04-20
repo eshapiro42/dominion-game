@@ -407,25 +407,24 @@ class BuyPhase(Phase):
         self.player.gain(card_class, message=False)
         self.turn.coppers_remaining -= self.supply.card_stacks[card_class].modified_cost
 
-    def buy_without_side_effects(self, max_cost, force, exact_cost=False):
+    def gain_without_side_effects(self, prompt, max_cost, force, exact_cost=False):
         '''
-        Buy a card from the Supply.
+        Gain a card from the Supply.
 
         The current player will gain the card.
 
         Remaining buys and coins for this turn are not affected.
 
         Args:
-            card_class(:obj:`type(cards.Card)`): The class of card to buy. 
+            card_class(:obj:`type(cards.Card)`): The class of card to gain. 
         '''
-        prompt = f'You have {max_cost} $ to spend. Select a card to buy.'
         card_class = self.player.interactions.choose_card_class_from_supply(prompt=prompt, max_cost=max_cost, force=force, exact_cost=exact_cost)
         if card_class is None:
-            self.game.broadcast(f'{self.player} did not buy anything.')
+            self.game.broadcast(f'{self.player} did not gain anything.')
             return
         else:
             # Gain the desired card
-            self.game.broadcast(f'{self.player} bought {a(card_class.name)}.')
+            self.game.broadcast(f'{self.player} gained {a(card_class.name)}.')
             self.player.gain(card_class, message=False)
 
 

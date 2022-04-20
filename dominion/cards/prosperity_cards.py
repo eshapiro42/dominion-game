@@ -866,12 +866,13 @@ class Expand(ActionCard):
     extra_coppers = 0
     
     def action(self):
-        prompt = 'Choose a card from your hand to trash.'
+        prompt = 'You played an Expand. Choose a card from your hand to trash.'
         card_to_trash = self.interactions.choose_card_from_hand(prompt=prompt, force=True)
         if card_to_trash is not None:
             self.owner.trash(card_to_trash)
             max_cost = card_to_trash.cost + 3
-            self.owner.turn.buy_phase.buy_without_side_effects(max_cost=max_cost, force=True)
+            prompt = f'You played an Expand and trashed a {card_to_trash.name}. Select a card costing up to {max_cost} $ to gain.'
+            self.owner.turn.buy_phase.gain_without_side_effects(prompt, max_cost=max_cost, force=True)
 
 
 class Forge(ActionCard):
@@ -893,7 +894,7 @@ class Forge(ActionCard):
     
     def action(self):
         # Trash any number of cards from your hand
-        prompt = f'You may choose any number of cards from your hand to trash. You must gain a card with cost exactly equal to the total cost of the trashed cards. If you trash no cards, you must gain a card costing 0 $.'
+        prompt = f'You played a Forge and may choose any number of cards from your hand to trash. You must gain a card with cost exactly equal to the total cost of the trashed cards. If you trash no cards, you must gain a card costing 0 $.'
         cards_to_trash = self.interactions.choose_cards_from_hand(prompt=prompt, force=False, max_cards=None)
         total_value = 0
         if cards_to_trash:
@@ -903,7 +904,8 @@ class Forge(ActionCard):
         self.game.broadcast(f"{self.owner} trashed {s(len(cards_to_trash), 'card')} for a total cost of {total_value} $.")
         self.game.broadcast(f"{self.owner} must gain a card costing exactly {total_value} $.")
         # Gain a card with cost exactly equal to the total cost of the trashed cards
-        self.owner.turn.buy_phase.buy_without_side_effects(max_cost=total_value, force=True, exact_cost=True)
+        prompt = f"You played a forge and trashed cards with a total cost of {total_value} $. You must gain a card costing exactly {total_value} $."
+        self.owner.turn.buy_phase.gain_without_side_effects(prompt, max_cost=total_value, force=True, exact_cost=True)
         
 
 class KingsCourt(ActionCard):
@@ -924,7 +926,7 @@ class KingsCourt(ActionCard):
     extra_coppers = 0
     
     def action(self):
-        prompt = 'Select an action card to play three times.'
+        prompt = "You played a King's Court. Select an action card to play three times."
         card = self.interactions.choose_specific_card_type_from_hand(prompt=prompt, card_type=CardType.ACTION)
         if card is not None:
             # Playing the card should not use any actions, so we use a special method

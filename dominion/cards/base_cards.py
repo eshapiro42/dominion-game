@@ -97,7 +97,7 @@ class Cellar(ActionCard):
     extra_coppers = 0
 
     def action(self):
-        prompt = 'Choose any number of cards from your hand to discard.'
+        prompt = 'You played a Cellar. Choose any number of cards from your hand to discard. You will then draw that many cards.'
         cards_to_discard = self.interactions.choose_cards_from_hand(prompt=prompt, force=False, max_cards=None)
         if not cards_to_discard:
             self.game.broadcast(f'{self.owner} did not discard or draw any cards.')
@@ -121,7 +121,7 @@ class Chapel(ActionCard):
     extra_coppers = 0
 
     def action(self):
-        prompt = f"You may choose up to 4 cards from your hand to trash."
+        prompt = f"You played a Chapel. You may choose up to 4 cards from your hand to trash."
         cards_to_trash = self.interactions.choose_cards_from_hand(prompt=prompt, force=False, max_cards=4)
         if not cards_to_trash:
             self.game.broadcast(f'{self.owner} did not trash any cards.')
@@ -179,7 +179,7 @@ class Harbinger(ActionCard):
     extra_coppers = 0
 
     def action(self):
-        prompt = 'Choose a card from your discard pile to put onto your deck.'
+        prompt = 'You played a Harbinger. You may choose a card from your discard pile to put onto your deck.'
         card = self.interactions.choose_card_from_discard_pile(prompt=prompt, force=False)
         if card is not None:
             self.owner.deck.append(card)
@@ -246,7 +246,7 @@ class Vassal(ActionCard):
         self.owner.discard_pile.append(card)
         self.game.broadcast(f'{self.owner} discarded {a(card)}.')
         if CardType.ACTION in card.types:
-            prompt = f'You revealed {a(card.name)}. Would you like to play it?'
+            prompt = f'You played a Vassal and revealed {a(card.name)}. Would you like to play it?'
             if self.interactions.choose_yes_or_no(prompt=prompt):
                 self.owner.turn.action_phase.play_without_side_effects(card)
 
@@ -287,7 +287,8 @@ class Workshop(ActionCard):
     extra_coppers = 0
 
     def action(self):
-        self.owner.turn.buy_phase.buy_without_side_effects(max_cost=4, force=True)
+        prompt = f'You played a Workshop. Select a card costing up to 4 $ to gain.'
+        self.owner.turn.buy_phase.gain_without_side_effects(prompt, max_cost=4, force=True)
 
 
 class Bureaucrat(AttackCard):
@@ -395,7 +396,7 @@ class Moneylender(ActionCard):
     extra_coppers = 0
 
     def action(self):
-        prompt = 'You may trash a Copper from your hand.'
+        prompt = 'You played a Moneylender. You may trash a Copper from your hand for +3 $.'
         copper_to_trash = self.interactions.choose_specific_card_class_from_hand(prompt=prompt, force=False, card_class=Copper)
         if copper_to_trash is not None:
             self.owner.trash(copper_to_trash)
@@ -426,7 +427,7 @@ class Poacher(ActionCard):
         number_to_discard = min(self.supply.num_empty_stacks, len(self.owner.hand))
         if number_to_discard > 0:
             self.game.broadcast(f"{self.owner} must discard {s(number_to_discard, 'card')}.")
-            prompt = f"Choose {s(number_to_discard, 'card')} to discard."
+            prompt = f"You played a Poacher and there are {number_to_discard} empty Supply piles. Choose {s(number_to_discard, 'card')} to discard."
             cards_to_discard = self.owner.interactions.choose_cards_from_hand(prompt=prompt, force=True, max_cards=number_to_discard)
             for card_to_discard in cards_to_discard:
                 self.owner.discard(card_to_discard)
@@ -446,12 +447,13 @@ class Remodel(ActionCard):
     extra_coppers = 0
 
     def action(self):
-        prompt = 'Choose a card from your hand to trash.'
+        prompt = 'You played a Remodel. Choose a card from your hand to trash. You will then gain a card costing up to 2 $ more than it.'
         card_to_trash = self.interactions.choose_card_from_hand(prompt=prompt, force=True)
         if card_to_trash is not None:
             self.owner.trash(card_to_trash)
             max_cost = card_to_trash.cost + 2
-            self.owner.turn.buy_phase.buy_without_side_effects(max_cost=max_cost, force=True)
+            prompt = f'You played a Remodel and trashed a {card_to_trash.name}. Select a card costing up to {max_cost} $ to gain.'
+            self.owner.turn.buy_phase.gain_without_side_effects(prompt, max_cost=max_cost, force=True)
 
 
 class Smithy(ActionCard):
@@ -489,7 +491,7 @@ class ThroneRoom(ActionCard):
     extra_coppers = 0
 
     def action(self):
-        prompt = 'Select an action card to play twice.'
+        prompt = 'You played a Throne Room. Select an action card to play twice.'
         card = self.interactions.choose_specific_card_type_from_hand(prompt=prompt, card_type=CardType.ACTION)
         if card is not None:
             # Playing the card should not use any actions, so we use a special method
@@ -662,7 +664,7 @@ class Library(ActionCard):
                 break
             self.interactions.send(f'You drew {a(card_drawn)}.')
             if CardType.ACTION in card_drawn.types:
-                prompt = f"You drew {a(card_drawn)}. It's an Action card. You have {s(self.owner.turn.actions_remaining, 'action')} remaining. Would you like to keep it?"
+                prompt = f"You drew {a(card_drawn)} with your Library. It's an Action card. You have {s(self.owner.turn.actions_remaining, 'action')} remaining. Would you like to keep it?"
                 if self.interactions.choose_yes_or_no(prompt=prompt):
                     self.interactions.send('Adding it to your hand.')
                     self.owner.hand.append(card_drawn)
@@ -714,7 +716,7 @@ class Mine(ActionCard):
     extra_coppers = 0
 
     def action(self):
-        prompt = 'You may choose a Treasure card from your hand to trash.'
+        prompt = 'You played a Mine. You may choose a Treasure card from your hand to trash. If you do, you will gain a Treasure card costing up to 3 $ more than it.'
         card_to_trash = self.interactions.choose_specific_card_type_from_hand(prompt=prompt, card_type=CardType.TREASURE)
         if card_to_trash is None:
             self.game.broadcast(f'{self.owner} did not trash anything.')
@@ -756,7 +758,7 @@ class Sentry(ActionCard):
             else:
                 self.game.broadcast(f'{self.owner} has no more cards to draw from.')
         for card in cards_revealed:
-            prompt = f'You revealed {a(card)}. What would you like to do with it?'
+            prompt = f'You revealed {a(card)} with your Sentry. What would you like to do with it?'
             options = ['Trash', 'Discard', 'Return to deck']
             choice = self.interactions.choose_from_options(prompt=prompt, options=options, force=True)
             if choice == 'Trash':
@@ -832,10 +834,10 @@ class Artisan(ActionCard):
     extra_coppers = 0
 
     def action(self):
-        prompt = 'Gain a card to your hand costing up to 5 $.'
+        prompt = 'You played an Artisan. Gain a card to your hand costing up to 5 $. You will then put a card from your hand onto your deck.'
         card_class = self.interactions.choose_card_class_from_supply(prompt=prompt, max_cost=5, force=True)
         self.owner.gain_to_hand(card_class)
-        prompt = 'Put a card from your hand onto your deck.'
+        prompt = f'You played an Artisan and gained a {card_class.name}. Put a card from your hand onto your deck.'
         card = self.interactions.choose_card_from_hand(prompt=prompt, force=True)
         self.owner.hand.remove(card)
         self.owner.deck.append(card)
@@ -861,7 +863,7 @@ class Chancellor(ActionCard):
     extra_coppers = 2
 
     def action(self):
-        prompt = f"Would you like to put your deck ({s(len(self.owner.deck), 'card')}) into your discard pile ({s(len(self.owner.discard_pile), 'card')})?"
+        prompt = f"You played a Chancellor. Would you like to put your deck ({s(len(self.owner.deck), 'card')}) into your discard pile ({s(len(self.owner.discard_pile), 'card')})?"
         if self.interactions.choose_yes_or_no(prompt):
             self.game.broadcast(f'{self.owner} put their deck into their discard pile.')
             self.owner.discard_pile.extend(self.owner.deck)
@@ -910,7 +912,8 @@ class Feast(ActionCard):
 
     def action(self):
         self.owner.trash_played_card(self)
-        self.owner.turn.buy_phase.buy_without_side_effects(max_cost=5, force=True)
+        prompt = f'You played and trashed a Feast. Select a card costing up to 5 $ to gain.'
+        self.owner.turn.buy_phase.gain_without_side_effects(prompt, max_cost=5, force=True)
 
 
 class Spy(AttackCard):
