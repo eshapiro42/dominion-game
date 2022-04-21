@@ -168,9 +168,9 @@ class Player:
     def play(self, card):
         try:
             self.hand.remove(card)
-            self.played_cards.append(card)
         except ValueError:
             pass
+        self.played_cards.append(card)
 
     def discard(self, card, message=True):
         self.discard_pile.append(card)
