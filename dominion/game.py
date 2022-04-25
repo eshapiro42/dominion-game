@@ -3,7 +3,7 @@ import random
 
 from collections import defaultdict
 
-from .cards.cards import Card
+from .cards.cards import Card, CardType
 from .expansions import BaseExpansion, ProsperityExpansion, IntrigueExpansion
 from .grammar import s
 from .interactions import CLIInteraction
@@ -209,7 +209,17 @@ class Game:
                 winners_str = ', '.join(map(str, winners))
                 self.broadcast(f'{s(len(winners), "Winner").split(" ")[-1]}: {winners_str}.')
                 for player in self.players:
-                    self.broadcast(f"{player}'s cards: {Card.group_and_sort_by_cost(player.all_cards)}.")
+                    victory_cards = [card for card in player.all_cards if CardType.VICTORY in card.types]
+                    other_cards = [card for card in player.all_cards if CardType.VICTORY not in card.types]
+                    victory_cards_string = Card.group_and_sort_by_cost(victory_cards)
+                    other_cards_string = Card.group_and_sort_by_cost(other_cards)
+                    if victory_cards and other_cards:
+                        all_cards_string = ", ".join((victory_cards_string, other_cards_string))
+                        self.broadcast(f"{player}'s cards: {all_cards_string}.")
+                    elif victory_cards:
+                        self.broadcast(f"{player}'s cards: {victory_cards_string}.")
+                    elif other_cards:
+                        self.broadcast(f"{player}'s cards: {other_cards_string}.")
                 if self.socketio is not None:
                     # Send formatted game end info to players
                     newsection = "<br><br>"
