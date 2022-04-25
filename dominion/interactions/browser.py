@@ -186,7 +186,7 @@ class BrowserInteraction(Interaction):
     def choose_specific_card_class_from_hand(self, prompt, force, card_class):
         with self.move_cards():
             if not any(isinstance(card, card_class) for card in self.hand):
-                self.send(f'There are no {card_class} cards in your hand.')
+                self.send(f'There are no {card_class.name} cards in your hand.')
                 return None
             # Find a card in the player's hand of the correct class
             for card in self.hand:
