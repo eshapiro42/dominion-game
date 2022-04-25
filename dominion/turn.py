@@ -352,15 +352,8 @@ class BuyPhase(Phase):
         if not treasures:
             self.game.broadcast(f"{self.player} did not play any Treasures.")
             return
-        # Get a pretty, sorted list of the Treasures played
-        treasure_name_counts = defaultdict(int) # compute as a dict first since that's easier
-        for treasure in treasures:
-            treasure_name_counts[treasure.name] += 1
-        treasure_counts = [(self.supply.card_name_to_card_class(name), quantity) for name, quantity in treasure_name_counts.items()] # convert from dict[treasure_name, count] into list[tuple(treasure_class, count)]
-        # Sort the treasures by cost (sorting by value would be tricky because of cards like Bank)
-        sorted_treasure_counts = sorted(treasure_counts, key=lambda treasure_tuple: treasure_tuple[0].cost, reverse=True)
-        treasure_strings = [s(quantity, treasure.name) for treasure, quantity in sorted_treasure_counts]
-        self.game.broadcast(f"{self.player} played Treasures: {', '.join(treasure_strings)}.")
+        treasures_string = cards.Card.group_and_sort_by_cost(treasures)
+        self.game.broadcast(f"{self.player} played Treasures: {treasures_string}.")
         # Play the Treasures
         for treasure in treasures:
             # Add the Treasure to the played cards area and remove from hand

@@ -1,4 +1,7 @@
+from __future__ import annotations
+
 from abc import ABCMeta, abstractmethod
+from collections import defaultdict
 from enum import Enum, auto
 from gevent import Greenlet, joinall
 from threading import Lock # Monkey patched to use gevent Locks
@@ -103,6 +106,21 @@ class Card(metaclass=ABCMeta):
 
     def __repr__(self):
         return self.name
+
+    @staticmethod
+    def group_and_sort_by_cost(cards: list[Card]) -> str:
+        """
+        Given a list of cards, return a comma-separated string of
+        the cards with their quantities and ordered by cost.
+        """
+        card_class_counts = defaultdict(int) # compute as a dict first since that's easier
+        for card in cards:
+            card_class_counts[type(card)] += 1
+        card_class_counts = [(card_class, quantity) for card_class, quantity in card_class_counts.items()] # convert from dict[card_class, count] into list[tuple(card_class, count)]
+        # Sort the cards by cost (sorting by value would be tricky because of cards like Bank)
+        sorted_card_class_counts = sorted(card_class_counts, key=lambda card_tuple: card_tuple[0].cost, reverse=True)
+        card_strings = [s(quantity, card_class.name) for card_class, quantity in sorted_card_class_counts]
+        return ", ".join(card_strings)
 
 
 class TreasureCard(Card):

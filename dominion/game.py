@@ -1,9 +1,9 @@
 import itertools
 import random
-import time
+
 from collections import defaultdict
-from prettytable import PrettyTable
-from .cards import base_cards
+
+from .cards.cards import Card
 from .expansions import BaseExpansion, ProsperityExpansion, IntrigueExpansion
 from .grammar import s
 from .interactions import CLIInteraction
@@ -209,7 +209,7 @@ class Game:
                 winners_str = ', '.join(map(str, winners))
                 self.broadcast(f'{s(len(winners), "Winner").split(" ")[-1]}: {winners_str}.')
                 for player in self.players:
-                    self.broadcast(f"{player}'s cards: {', '.join(map(str, list(player.all_cards)))}.")
+                    self.broadcast(f"{player}'s cards: {Card.group_and_sort_by_cost(player.all_cards)}.")
                 if self.socketio is not None:
                     # Send formatted game end info to players
                     newsection = "<br><br>"
