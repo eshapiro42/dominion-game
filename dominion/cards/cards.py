@@ -5,8 +5,15 @@ from collections import defaultdict
 from enum import Enum, auto
 from gevent import Greenlet, joinall
 from threading import Lock # Monkey patched to use gevent Locks
+from typing import TYPE_CHECKING
 
-from ..grammar import a, s
+from ..grammar import a, s, Word
+
+if TYPE_CHECKING:
+    from ..game import Game
+    from ..interactions.interaction import Interaction
+    from ..player import Player
+    from ..supply import Supply
 
 
 LOWEST_ID = 0
@@ -26,7 +33,7 @@ class ReactionType(Enum):
     IMMUNITY = auto()
 
 
-class Card(metaclass=ABCMeta):
+class Card(Word, metaclass=ABCMeta):
     '''Base card class.
 
     Attributes:
@@ -49,15 +56,33 @@ class Card(metaclass=ABCMeta):
             LOWEST_ID += 1
 
     @property
-    def owner(self):
+    def owner(self) -> Player:
         return self._owner
 
     @owner.setter
-    def owner(self, owner):
-        self._owner = owner
-        self.interactions = self.owner.interactions
-        self.game = self.owner.game
-        self.supply = self.owner.game.supply
+    def owner(self, owner: Player):
+        self._owner: Player = owner
+        self.interactions: Interaction = self.owner.interactions
+        self.game: Game = self.owner.game
+        self.supply: Supply = self.owner.game.supply
+
+    @classmethod
+    @property
+    def singular(cls) -> str:
+        """
+        The singular name of the card.
+        """
+        return cls.name
+
+    @classmethod
+    @property
+    def pluralized(cls) -> str:
+        """
+        Standard pluralized name of the card (i.e., add an "s").
+        
+        Override this for cards with non-standard pluralization, like Library.
+        """
+        return f"{cls.name}s"
 
     @property
     @abstractmethod
@@ -116,10 +141,10 @@ class Card(metaclass=ABCMeta):
         card_class_counts = defaultdict(int) # compute as a dict first since that's easier
         for card in cards:
             card_class_counts[type(card)] += 1
-        card_class_counts = [(card_class, quantity) for card_class, quantity in card_class_counts.items()] # convert from dict[card_class, count] into list[tuple(card_class, count)]
+        card_class_counts = list(card_class_counts.items()) # convert from dict[card_class, count] into list[tuple(card_class, count)]
         # Sort the cards by cost (sorting by value would be tricky because of cards like Bank)
         sorted_card_class_counts = sorted(card_class_counts, key=lambda card_tuple: card_tuple[0].cost, reverse=True)
-        card_strings = [s(quantity, card_class.name) for card_class, quantity in sorted_card_class_counts]
+        card_strings = [s(quantity, card_class) for card_class, quantity in sorted_card_class_counts]
         return ", ".join(card_strings)
 
 

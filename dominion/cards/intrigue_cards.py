@@ -471,6 +471,7 @@ class Diplomat(ReactionCard):
 
 class Ironworks(ActionCard):
     name = 'Ironworks'
+    pluralized = 'Ironworks'
     cost = 4
     types = [CardType.ACTION]
     image_path = ''
@@ -933,6 +934,7 @@ class Harem(TreasureCard, VictoryCard):
 
 class Nobles(ActionCard, VictoryCard):
     name = 'Nobles'
+    pluralized = 'Nobles'
     cost = 6
     types = [CardType.ACTION, CardType.VICTORY]
     image_path = ''

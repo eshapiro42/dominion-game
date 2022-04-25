@@ -41,6 +41,7 @@ class Estate(VictoryCard):
 
 class Duchy(VictoryCard):
     name = 'Duchy'
+    pluralized = 'Duchies'
     cost = 5
     types = [CardType.VICTORY]
     image_path = ''
@@ -333,6 +334,7 @@ class Bureaucrat(AttackCard):
 
 class Gardens(VictoryCard):
     name = 'Gardens'
+    pluralized = 'Gardens'
     cost = 4
     types = [CardType.VICTORY]
     image_path = ''
@@ -458,6 +460,7 @@ class Remodel(ActionCard):
 
 class Smithy(ActionCard):
     name = 'Smithy'
+    pluralized = 'Smithies'
     cost = 4
     types = [CardType.ACTION]
     image_path = ''
@@ -623,6 +626,7 @@ class Festival(ActionCard):
 
 class Laboratory(ActionCard):
     name = 'Laboratory'
+    pluralized = 'Laboratories'
     cost = 5
     types = [CardType.ACTION]
     image_path = ''
@@ -645,6 +649,7 @@ class Laboratory(ActionCard):
 
 class Library(ActionCard):
     name = 'Library'
+    pluralized = 'Libraries'
     cost = 5
     types = [CardType.ACTION]
     image_path = ''
@@ -730,6 +735,7 @@ class Mine(ActionCard):
 
 class Sentry(ActionCard):
     name = 'Sentry'
+    pluralized = 'Sentries'
     cost = 5
     types = [CardType.ACTION]
     image_path = ''
@@ -789,6 +795,7 @@ class Sentry(ActionCard):
 
 class Witch(AttackCard):
     name = 'Witch'
+    pluralized = 'Witches'
     cost = 5
     types = [CardType.ACTION, CardType.ATTACK]
     image_path = ''
@@ -918,6 +925,7 @@ class Feast(ActionCard):
 
 class Spy(AttackCard):
     name = 'Spy'
+    pluralized = 'Spies'
     cost = 4
     types = [CardType.ACTION, CardType.ATTACK]
     image_path = ''
@@ -971,6 +979,7 @@ class Spy(AttackCard):
 
 class Thief(AttackCard):
     name = 'Thief'
+    pluralized = 'Thieves'
     cost = 4
     types = [CardType.ACTION, CardType.ATTACK]
     image_path = ''

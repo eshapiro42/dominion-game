@@ -253,6 +253,7 @@ class Monument(ActionCard):
 
 class Quarry(TreasureCard):
     name = 'Quarry'
+    pluralized = 'Quarries'
     cost = 4
     types = [CardType.TREASURE]
     image_path = ''
@@ -329,6 +330,7 @@ class WorkersVillage(ActionCard):
 
 class City(ActionCard):
     name = 'City'
+    pluralized = 'Cities'
     cost = 5
     types = [CardType.ACTION]
     image_path = ''
@@ -345,7 +347,7 @@ class City(ActionCard):
     extra_actions = 2
     extra_buys = 0
     extra_coppers = 0
-    
+
     def action(self):
         if self.supply.num_empty_stacks >= 1:
             self.game.broadcast(f'{self.owner} draws a card since there are one or more empty Supply piles.')
@@ -703,6 +705,7 @@ class Venture(TreasureCard):
 
 class Goons(AttackCard):
     name = 'Goons'
+    pluralized = 'Goons'
     cost = 5
     types = [CardType.ACTION, CardType.ATTACK]
     image_path = ''
@@ -730,7 +733,6 @@ class Goons(AttackCard):
         def __call__(self, player, card, where_it_went):
             self.game.broadcast(f'{player} takes a Victory token from their Goons.')
             player.victory_tokens += 1
-
 
     def action(self):
         # All cards get a post gain hook added this turn
