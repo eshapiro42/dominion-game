@@ -29,7 +29,7 @@ class Game:
         socketio (:obj:`socketio.Server`, optional): A Socket.IO server instance.
         room (:obj:`str`, optional): The room ID for this game.
 
-    Attributes:
+    Parameters:
         player_names (:obj:`list` of :obj:`str`): A list of the names of players in the game.
         player_sids (:obj:`list` of :obj:`str`): A list of SIDs corresponding to each player in the game (these lists share an index).
         player_interaction_classes (:obj:`list` of :obj:`.interactions.Interaction`): A list of interaction classes corresponding to each player in the game (these lists share an index).

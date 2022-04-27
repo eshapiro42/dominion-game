@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 from abc import ABCMeta, abstractmethod
-from enum import Enum, auto
-from typing import Type, TYPE_CHECKING
+# from enum import Enum, auto
+from typing import TYPE_CHECKING
 
 
 # Might use these later to expand the hooks system
@@ -30,7 +30,7 @@ class Hook(metaclass=ABCMeta):
     """
     Base class for all hooks.
 
-    Attributes:
+    Args:
         game: the game to which the hook belongs
     """
     def __init__(self, game: Game):
@@ -81,7 +81,7 @@ class PostGainHook(Hook):
     """
     Hook to activate after a player gains a card.
     """
-    def __init__(self, game: Game, card_class: Type[Card]):
+    def __init__(self, game: Game, card_class: type[Card]):
         super().__init__(game)
         self.card_class = card_class
 
