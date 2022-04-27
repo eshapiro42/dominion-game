@@ -5,7 +5,7 @@ from collections import defaultdict
 from enum import Enum, auto
 from gevent import Greenlet, joinall
 from threading import Lock # Monkey patched to use gevent Locks
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional, List, Tuple
 
 from ..grammar import a, s, Word
 
@@ -21,6 +21,9 @@ ID_LOCK = Lock()
 
 
 class CardType(Enum):
+    """
+    Enumeration of all card types.
+    """
     TREASURE = auto()
     VICTORY = auto()
     CURSE = auto()
@@ -30,25 +33,22 @@ class CardType(Enum):
 
 
 class ReactionType(Enum):
+    """
+    Emumeration of all reaction types.
+    """
     IMMUNITY = auto()
 
 
 class Card(Word, metaclass=ABCMeta):
-    '''Base card class.
+    '''
+    Base card class.
 
-    Attributes:
-        owner: the player who owns the card
-        description: the card's description (default: '')
-
-    Abstract properties:
-        name:       the name of the card (str)
-        cost:       the cost of the card (int)
-        types:      the types of card (list[CardType])
-        image_path: path to the card's image (str)
+    Args:
+        owner: The owner of the card.
     '''
     description = ''
 
-    def __init__(self, owner=None):
+    def __init__(self, owner: Optional[Player] = None):
         global LOWEST_ID
         self._owner = owner
         with ID_LOCK:
@@ -56,11 +56,14 @@ class Card(Word, metaclass=ABCMeta):
             LOWEST_ID += 1
 
     @property
-    def owner(self) -> Player:
+    def owner(self) -> Optional[Player]:
+        """
+        The owner of the card.
+        """
         return self._owner
 
     @owner.setter
-    def owner(self, owner: Player):
+    def owner(self, owner: Optional[Player]):
         self._owner: Player = owner
         self.interactions: Interaction = self.owner.interactions
         self.game: Game = self.owner.game
@@ -71,6 +74,8 @@ class Card(Word, metaclass=ABCMeta):
     def singular(cls) -> str:
         """
         The singular name of the card.
+
+        E.g., "Copper".
         """
         return cls.name
 
@@ -79,6 +84,8 @@ class Card(Word, metaclass=ABCMeta):
     def pluralized(cls) -> str:
         """
         Standard pluralized name of the card (i.e., add an "s").
+
+        E.g., "Coppers".
         
         Override this for cards with non-standard pluralization, like Library.
         """
@@ -86,22 +93,43 @@ class Card(Word, metaclass=ABCMeta):
 
     @property
     @abstractmethod
-    def name(self):
+    def name(self) -> str:
+        """
+        The name of the card.
+        """
         pass
 
     @property
     @abstractmethod
-    def cost(self):
+    def cost(self) -> int:
+        """
+        The cost of the card.
+        """
         pass
 
     @property
     @abstractmethod
-    def types(self):
+    def types(self) -> List[CardType]:
+        """
+        A list of the cards types.
+
+        E.g.:
+        
+        .. highlight:: python
+        .. code-block:: python
+            
+            prosperity_cards.Goons.types = [CardType.ACTION, CardType.ATTACK]
+        """
         pass
 
     @property
     @abstractmethod
-    def image_path(self):
+    def image_path(self) -> str:
+        """
+        A path to the card's background image.
+
+        This is not currently used.
+        """
         pass
 
     @property
@@ -137,6 +165,9 @@ class Card(Word, metaclass=ABCMeta):
         """
         Given a list of cards, return a comma-separated string of
         the cards with their quantities and ordered by cost.
+
+        Args:
+            cards: A list of Cards.
         """
         card_class_counts = defaultdict(int) # compute as a dict first since that's easier
         for card in cards:
@@ -149,68 +180,102 @@ class Card(Word, metaclass=ABCMeta):
 
 
 class TreasureCard(Card):
-    '''Base treasure card class.
-
-    Abstract properties:
-        value: the number of coppers this card is worth (int)
-
-    Optional methods:
-        play: a method to call when the card is played (function)
+    '''
+    Base treasure card class.
     '''
     @property
     @abstractmethod
-    def value(self):
+    def value(self) -> int:
+        """
+        The number of coppers this card is worth.
+        """
+        pass
+
+    def play(self):
+        """
+        An optional method to call when the card is played.
+        """
         pass
 
 
 class ActionCard(Card):
-    '''Base action card class.
-
-    Abstract properties:
-        extra_actions
-        extra_coppers
-        extra_buys
-        extra_cards
-
-    Abstract methods:
-        play: complete the directions on the card
+    '''
+    Base action card class.
     '''
     def play(self):
+        """
+        Just calls :code:`self.action()`.
+        """
         self.action()
 
     @property
     @abstractmethod
-    def extra_cards(self):
+    def extra_cards(self) -> int:
+        """
+        The number of cards to draw when this card is played.
+        """
         pass
 
     @property
     @abstractmethod
-    def extra_actions(self):
+    def extra_actions(self) -> int:
+        """
+        The number of extra actions granted when this card is played.
+        """
         pass
 
     @property
     @abstractmethod
-    def extra_buys(self):
+    def extra_buys(self) -> int:
+        """
+        The number of extra buys granted when this card is played.
+        """
         pass
 
     @property
     @abstractmethod
-    def extra_coppers(self):
+    def extra_coppers(self) -> int:
+        """
+        The number of extra coppers granted when this card is played.
+        """
         pass
 
     @abstractmethod
     def action(self):
+        """
+        Complete the directions on the card.
+
+        This method should not move the played card between
+        deques, although it might need to move other cards
+        (e.g., if playing it causes the player to gain a card).
+        """
         pass
 
 
 class AttackCard(ActionCard):
-    '''Base attack card class.
+    '''
+    Base attack card class.
+    '''
 
-    Attributes:
-        attacking: whether the card is being used to attack (bool)
+    def __init__(self):
+        super().__init__()
+        self._attacking = False
 
-        allow_simultaneous_reactions:
-            whether to allow simultaneous reactions (bool)
+    @property
+    def attacking(self) -> bool:
+        """
+        Whether the card is being used to attack.
+        """
+        return True
+
+    @attacking.setter
+    def attacking(self, attacking: bool):
+        self._attacking = attacking
+
+    @property
+    def allow_simultaneous_reactions(self) -> bool:
+        """
+            whether to allow simultaneous reactions.
 
             This currently only works for attack effects where the
             only required input is from the players being attacked,
@@ -224,13 +289,8 @@ class AttackCard(ActionCard):
             Swindler, Torturer, Replace, etc. That's because there may be
             only one of a given card left in the Supply, and therefore the
             effect must be resolved in turn order.
-
-    Abstract methods:
-        prompt: a description of the attack on other players
-        attack_effect: the effect of an attack on a single other player
-    '''
-    attacking = True
-    allow_simultaneous_reactions = False
+        """
+        return False
 
     def attack(self):
         if self.prompt is not None:
@@ -244,7 +304,7 @@ class AttackCard(ActionCard):
                 self.game.broadcast(f"{player} must react to {self.owner}'s {self.name}.")
                 self.attack_player(player)
 
-    def attack_player(self, player):
+    def attack_player(self, player: Player):
         # First check if they have a reaction card in their hand
         immune = False
         if any(CardType.REACTION in card.types for card in player.hand):
@@ -268,6 +328,10 @@ class AttackCard(ActionCard):
             self.attack_effect(self.owner, player)
 
     def play(self):
+        """
+        Complete the directions on the card and perform the attack,
+        if applicable.
+        """
         self.action()
         if self.attacking:
             self.attack()
@@ -275,53 +339,71 @@ class AttackCard(ActionCard):
     @property
     @abstractmethod
     def prompt(self):
+        """
+        A description of the attack on other players.
+        """
         pass
 
     @abstractmethod
-    def attack_effect(self, attacker, player):
+    def attack_effect(self, attacker: Player, player: Player):
+        """
+        The effect of the attack on a single other player.
+
+        Args:
+            attacker: The player who played the attack card.
+            player: The player being attacked.
+        """
         pass
 
 
 class ReactionCard(ActionCard):
-    '''Base reaction card class.
-
-    Abstract methods:
-        react (optional): complete the reactive directions on the card
+    '''
+    Base reaction card class.
     '''
     @property
     @abstractmethod
-    def can_react(self):
+    def can_react(self) -> bool:
+        """
+        Whether the card can react to an attack.
+        """
         pass
 
     @abstractmethod
-    def react(self):
+    def react(self) -> Tuple[ReactionType, bool]:
         """
+        Complete the reactive directions on the card.
+
         Returns:
-            reaction_type (ReactionType): the type of reaction
-            ignore_again (bool): whether to ignore the reaction card again
+            Tuple[ReactionType, bool]: A tuple containing:
+
+                reaction_type (:code:`ReactionType`): 
+                    The type of reaction.
+
+                ignore_again (:code:`bool`): 
+                    Whether the reaction can only be played once in
+                    response to an attack.
+
+                    If False, this reaction can be played multiple times
+                    in response to an attack.
+                
         """
         pass
 
 
 class VictoryCard(Card):
-    '''Base victory card class.
-
-    Abstract properties:
-        points:  the number of victory points this card is worth (int)
+    '''
+    Base victory card class.
     '''
     @property
     @abstractmethod
-    def points(self):
+    def points(self) -> int:
+        """
+        The number of victory points this card is worth.
+        """
         pass
 
 
-class CurseCard(Card):
-    '''Base curse card class.
-
-    Abstract properties:
-        points:  the number of victory points this card is worth (int)
+class CurseCard(VictoryCard):
     '''
-    @property
-    @abstractmethod
-    def points(self):
-        pass
+    Base curse card class.
+    '''

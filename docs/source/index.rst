@@ -10,54 +10,44 @@ Welcome to dominion-game's documentation!
    :maxdepth: 2
    :caption: Contents:
 
-Dominion main
-=============
-.. automodule:: dominion
-   :members:
-
-Dominion cards
+Cards
 ==============
-.. automodule:: dominion.cards
+.. automodule:: dominion.cards.cards
    :members:
 
-Dominion expansions
+Expansions
 ===================
-.. automodule:: dominion.expansions
+.. automodule:: dominion.expansions.expansion
    :members:
 
-Dominion game
+Game
 =============
 .. automodule:: dominion.game
    :members:
 
-Dominion hooks
+Hooks
 ==============
 .. automodule:: dominion.hooks
    :members:
 
-Dominion interactions
+Interactions
 =====================
-.. automodule:: dominion.interactions
+.. automodule:: dominion.interactions.interaction
    :members:
 
-Dominion player
+Player
 ===============
 .. automodule:: dominion.player
    :members:
 
-Dominion supply
+Supply
 ===============
 .. automodule:: dominion.supply
    :members:
 
-Dominion turn
+Turn
 =============
 .. automodule:: dominion.turn
-   :members:
-
-Dominion app
-============
-.. automodule:: app
    :members:
 
 

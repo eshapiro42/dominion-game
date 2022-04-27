@@ -16,7 +16,7 @@ class Turn:
     Args:
         player (:obj:`player.Player`): The Player whose turn it currently is.
 
-    Attributes:
+    Args:
         game (:obj:`.game.Game`): The Game which is currently being played.
         actions_remaining (:obj:`int`): The number of Actions the player has left this turn. Starts at 1.
         buys_remaining (:obj:`int`): The number of Buys the player has left this turn. Starts at 1.
@@ -133,7 +133,7 @@ class Phase(metaclass=ABCMeta):
     Args:
         turn (:obj:`Turn`): The current turn.
     
-    Attributes:
+    Args:
         player (:obj:`.player.Player`): The player whose turn it currently is.
         game (:obj:`.game.Game`): The game which is currently being played.
         supply (:obj:`.supply.Supply`): The supply for this game.
@@ -157,7 +157,7 @@ class ActionPhase(Phase):
     Args:
         turn (:obj:`Turn`): The current turn.
     
-    Attributes:
+    Args:
         player (:obj:`.player.Player`): The player whose turn it currently is.
         game (:obj:`.game.Game`): The game which is currently being played.
         supply (:obj:`.supply.Supply`): The supply for this game.
@@ -235,7 +235,7 @@ class BuyPhase(Phase):
     Args:
         turn (:obj:`Turn`): The current turn.
     
-    Attributes:
+    Args:
         player (:obj:`.player.Player`): The player whose turn it currently is.
         game (:obj:`.game.Game`): The game which is currently being played.
         supply (:obj:`.supply.Supply`): The supply for this game.
@@ -428,7 +428,7 @@ class CleanupPhase(Phase):
     Args:
         turn (:obj:`Turn`): The current turn.
     
-    Attributes:
+    Args:
         player (:obj:`.player.Player`): The player whose turn it currently is.
         game (:obj:`.game.Game`): The game which is currently being played.
         supply (:obj:`.supply.Supply`): The supply for this game.
