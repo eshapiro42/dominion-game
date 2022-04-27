@@ -121,6 +121,7 @@
         "game over",
         (data) => {
             createPopUp(data.prompt, false, "alert");
+            $socket.disconnect();
         }
     );
 
