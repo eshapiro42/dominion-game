@@ -1,26 +1,46 @@
-import random
-from collections import deque
-from copy import deepcopy
+from __future__ import annotations
 
-from .cards import cards, base_cards
+import random
+
+from collections import deque
+from typing import TYPE_CHECKING, Optional, List
+
+from .cards import base_cards
 from .expansions import ProsperityExpansion
 from .grammar import a, s
 from .supply import SupplyStackEmptyError
 
+if TYPE_CHECKING:
+    from flask_socketio import SocketIO
+    from .cards.cards import Card, CardMeta
+    from .game import Game
+    from .interactions.interaction import Interaction, InteractionMeta
+    from .supply import Supply
+    from .turn import Turn
+
 
 class Player:
-    def __init__(self, game, name, interactions_class, socketio=None, sid=None):
-        self.game = game
-        self.name = name
-        self.turn = None
-        self.turns_played = 0
-        self.supply = self.game.supply
+    """
+    Player object representing a player's state.
+
+    Args:
+        game: The game to which the Player belongs.
+        name: The name of the Player.
+        interactions_class: The class of interactions to use for the Player.
+        socketio: The socketio object to use for the Player.
+        sid: The socket ID of the Player.
+    """
+    def __init__(self, game: Game, name: str, interactions_class: InteractionMeta, socketio: Optional[SocketIO] = None, sid: Optional[str] = None):
+        self._game = game
+        self._name = name
+        self._turn = None
+        self._turns_played = 0
         self._sid = sid
-        self.interactions = interactions_class(player=self, socketio=socketio, sid=sid)
-        self.deck = deque()
-        self.discard_pile = deque()
-        self.hand = deque()
-        self.played_cards = deque()
+        self._interactions = interactions_class(player=self, socketio=socketio, sid=sid)
+        self._deck = deque()
+        self._discard_pile = deque()
+        self._hand = deque()
+        self._played_cards = deque()
         # self.victory_tokens = 0
         # Start with seven coppers and three estates
         self.gain(base_cards.Copper, quantity=7, from_supply=False, message=False)
@@ -29,8 +49,88 @@ class Player:
         # Draw a hand of five cards
         self.draw(5, message=False)
 
-    def get_other_players(self):
-        '''Gets a list of other players in the correct turn order'''
+    @property
+    def game(self) -> Game:
+        """
+        The game to which the Player belongs.
+        """
+        return self._game
+
+    @property
+    def name(self) -> str:
+        """
+        The name of the Player.
+        """
+        return self._name
+
+    @property
+    def turn(self) -> Optional[Turn]:
+        """
+        The Player's current Turn.
+        """
+        return self._turn
+
+    @turn.setter
+    def turn(self, turn: Turn):
+        self._turn = turn
+
+    @property
+    def turns_played(self) -> int:
+        """
+        The number of turns this Player has taken so far.
+        """
+        return self._turns_played
+
+    @turns_played.setter
+    def turns_played(self, turns_played: int):
+        self._turns_played = turns_played
+
+    @property
+    def supply(self) -> Supply:
+        """
+        The Supply belonging to this Player's Game.
+        """
+        return self.game.supply
+
+    @property
+    def interactions(self) -> Interaction:
+        """
+        The Interaction object for the Player.
+        """
+        return self._interactions
+
+    @property
+    def deck(self) -> deque[Card]:
+        """
+        The Player's deck.
+        """
+        return self._deck
+
+    @property
+    def discard_pile(self) -> deque[Card]:
+        """
+        The Player's discard pile.
+        """
+        return self._discard_pile
+
+    @property
+    def hand(self) -> deque[Card]:
+        """
+        The Player's hand.
+        """
+        return self._hand
+
+    @property
+    def played_cards(self) -> deque[Card]:
+        """
+        The Player's played cards from the current Turn.
+        """
+        return self._played_cards        
+
+    def get_other_players(self) -> List[Player]:
+        """
+        Get a list of other players in the correct turn order.
+        """
         # Find this player's position in the turn order
         idx = self.game.turn_order.index(self)
         # Get the order of players whose turns are before and after
@@ -40,6 +140,13 @@ class Player:
         self.other_players = players_after + players_before
 
     def process_post_gain_hooks(self, card, where_it_went):
+        """
+        Process registered hooks after a card is gained.
+
+        Args:
+            card: The card that was gained.
+            where_it_went: The deque to which the card was gained.
+        """
         # Check if there are any game-wide post-gain hooks caused by gaining the card
         expired_hooks = []
         if type(card) in self.supply.post_gain_hooks:
@@ -64,7 +171,17 @@ class Player:
                 for hook in expired_hooks:
                     self.turn.post_gain_hooks[type(card)].remove(hook)
 
-    def gain(self, card_class, quantity: int = 1, from_supply: bool = True, message=True):
+    def gain(self, card_class: CardMeta, quantity: int = 1, from_supply: bool = True, message: bool = True, ignore_hooks: bool = False):
+        """
+        Gain a card.
+
+        Args:
+            card_class: The class of the Card to gain.
+            quantity: The number of Cards to gain.
+            from_supply: Whether the Card is being gained from the Supply.
+            message: Whether to broadcast a message to all Players saying that the card was gained.
+            ignore_hooks: Whether to activate any post-gain Hooks registered to this card.
+        """
         for _ in range(quantity):
             if not from_supply:
                 card = card_class()
@@ -78,24 +195,38 @@ class Player:
             self.discard_pile.append(card)
             if message:
                 self.game.broadcast(f'{self.name} gained {a(card_class.name)}.')
-            self.process_post_gain_hooks(card, self.discard_pile)
+            if not ignore_hooks:
+                self.process_post_gain_hooks(card, self.discard_pile)
 
-    def gain_without_hooks(self, card_class, quantity: int = 1, from_supply: bool = True, message=True):
-        for _ in range(quantity):
-            if not from_supply:
-                card = card_class()
-            else:
-                try:
-                    card = self.supply.draw(card_class)
-                except SupplyStackEmptyError:
-                    self.game.broadcast(f'{self.name} could not gain {a(card_class.name)} since that supply pile is empty.')
-                    return
-            card.owner = self
-            self.discard_pile.append(card)
-            if message:
-                self.game.broadcast(f'{self.name} gained {a(card_class.name)}.')
+    def gain_without_hooks(self, card_class: CardMeta, quantity: int = 1, from_supply: bool = True, message: bool = True):
+        """
+        Gain a card without activating any post-gain Hooks registered to this card.
 
-    def gain_to_hand(self, card_class, quantity: int = 1, from_supply: bool = True, message=True):
+        Equivalent to calling 
+
+        .. highlight:: python
+        .. code-block:: python
+            
+            self.gain(..., ignore_hooks=True)
+
+        Args:
+            card_class: The class of the Card to gain.
+            quantity: The number of Cards to gain.
+            from_supply: Whether the Card is being gained from the Supply.
+            message: Whether to broadcast a message to all Players saying that the card was gained.
+        """
+        self.gain(card_class, quantity, from_supply, message, ignore_hooks=True)
+
+    def gain_to_hand(self, card_class: CardMeta, quantity: int = 1, from_supply: bool = True, message: bool = True):
+        """
+        Gain a card to the Player's hand.
+
+        Args:
+            card_class: The class of the Card to gain.
+            quantity: The number of Cards to gain.
+            from_supply: Whether the Card is being gained from the Supply.
+            message: Whether to broadcast a message to all Players saying that the card was gained.
+        """
         for _ in range(quantity):
             if not from_supply:
                 card = card_class()
@@ -111,7 +242,16 @@ class Player:
                 self.game.broadcast(f'{self.name} gained {a(card_class.name)} into their hand.')
             self.process_post_gain_hooks(card, self.hand)
 
-    def gain_to_deck(self, card_class, quantity: int = 1, from_supply: bool = True, message=True):
+    def gain_to_deck(self, card_class: CardMeta, quantity: int = 1, from_supply: bool = True, message: bool = True):
+        """
+        Gain a card to the Player's deck.
+
+        Args:
+            card_class: The class of the Card to gain.
+            quantity: The number of Cards to gain.
+            from_supply: Whether the Card is being gained from the Supply.
+            message: Whether to broadcast a message to all Players saying that the card was gained.
+        """
         for _ in range(quantity):
             if not from_supply:
                 card = card_class()
@@ -128,12 +268,23 @@ class Player:
             self.process_post_gain_hooks(card, self.deck)
 
     def shuffle(self):
+        """
+        Shuffle the Player's discard pile into their deck.
+        """
         self.game.broadcast(f'{self.name} shuffled their deck.')
         self.deck.extend(self.discard_pile)
         self.discard_pile.clear()
         random.shuffle(self.deck)
 
-    def take_from_deck(self):
+    def take_from_deck(self) -> Card:
+        """
+        Take a Card from the Player's deck.
+
+        This orphans the card and it must explicitly be added to another deque.
+
+        Returns:
+            card: The Card that was taken from the Player's deck.
+        """
         try:
             card = self.deck.pop()
         except IndexError: # If a card cannot be taken, shuffle
@@ -144,7 +295,17 @@ class Player:
                 card = None
         return card
 
-    def draw(self, quantity: int = 1, message=True):
+    def draw(self, quantity: int = 1, message: bool = True) -> List[Card]:
+        """
+        Draw Cards from the Player's deck into their hand.
+
+        Args:
+            quantity: The number of Cards to draw.
+            message: Whether to broadcast a message to all Players saying that Cards were drawn.
+
+        Returns:
+            A list of Cards that were drawn.
+        """
         drawn_cards = []
         for _ in range(quantity):
             card = self.take_from_deck()
@@ -165,26 +326,57 @@ class Player:
                 self.game.broadcast(f'{self} had no cards left to draw from.')
         return drawn_cards
 
-    def play(self, card):
+    def play(self, card: Card):
+        """
+        Move a card from the Player's hand to the Player's played cards.
+
+        If the card is not in the Player's hand, it is still added to 
+        the Player's played cards, but care must be taken to ensure that
+        the card is not being duplicated.
+
+        Args:
+            card: The Card to play.
+        """
         try:
             self.hand.remove(card)
         except ValueError:
             pass
         self.played_cards.append(card)
 
-    def discard(self, card, message=True):
+    def discard(self, card: Card, message: bool = True):
+        """
+        Discard a card from the Player's hand.
+
+        Args:
+            card: The Card to discard.
+            message: Whether to broadcast a message to all Players saying that the card was discarded.
+        """
         self.discard_pile.append(card)
         self.hand.remove(card)
         if message:
             self.game.broadcast(f'{self.name} discarded {a(card)}.')
 
-    def trash(self, card, message=True):
+    def trash(self, card: Card, message: bool = True):
+        """
+        Trash a card from the Player's hand.
+
+        Args:
+            card: The Card to trash.
+            message: Whether to broadcast a message to all Players saying that the card was trashed.
+        """
         self.supply.trash(card)
         self.hand.remove(card)
         if message:
             self.game.broadcast(f'{self.name} trashed {a(card)}.')
 
-    def trash_played_card(self, card, message=True):
+    def trash_played_card(self, card: Card, message: bool = True):
+        """
+        Trash a card from the Player's played cards.
+
+        Args:
+            card: The Card to trash.
+            message: Whether to broadcast a message to all Players saying that the card was trashed.
+        """
         self.supply.trash(card)
         try:
             self.played_cards.remove(card)
@@ -193,7 +385,15 @@ class Player:
         except ValueError:
             pass
 
-    def take_from_trash(self, card_class):
+    def take_from_trash(self, card_class: CardMeta):
+        """
+        Take a card from the Trash and set its owner to the Player.
+
+        This orphans the card and it must explicitly be added to another deque.
+
+        Args:
+            card_class: The class of the Card to take.
+        """
         try:
             card = self.supply.trash_pile[card_class].pop()
             card.owner = self
@@ -201,7 +401,14 @@ class Player:
             card = None
         return card
 
-    def gain_from_trash(self, card_class, message=True):
+    def gain_from_trash(self, card_class: CardMeta, message: bool = True):
+        """
+        Gain a card from the Trash.
+
+        Args:
+            card_class: The class of the Card to gain.
+            message: Whether to broadcast a message to all Players saying that the card was gained.
+        """
         card = self.take_from_trash(card_class)
         if card is not None:
             self.discard_pile.append(card)
@@ -210,6 +417,12 @@ class Player:
                 self.game.broadcast(f'{self.name} gained {a(card)} from the trash.')
 
     def cleanup(self):
+        """
+        Cleanup after the Player's turn has finished.
+
+        Discards all cards from the Player's hand and played cards,
+        then draws a new hand of five cards
+        """
         # Discard hand from this turn
         self.discard_pile.extend(self.hand)
         self.hand.clear()
@@ -226,12 +439,20 @@ class Player:
         return self.name
         
     @property
-    def all_cards(self):
-        '''Concatenate all cards on the player mat (no side effects)'''
+    def all_cards(self) -> set[Card]:
+        '''
+        Concatenate all cards belonging to the Player (no side effects).
+
+        Returns:
+            A set of all the Player's cards.
+        '''
         return set(self.deck + self.discard_pile + self.hand + self.played_cards)
 
     @property
-    def current_victory_points(self):
+    def current_victory_points(self) -> int:
+        """
+        The Player's current victory points.
+        """
         victory_points = 0
         # Add up all different point methods across added expansions
         for expansion in self.supply.customization.expansions:
@@ -239,7 +460,10 @@ class Player:
         return victory_points
 
     @property
-    def sid(self):
+    def sid(self) -> str:
+        """
+        The Player's socket ID.
+        """
         return self._sid
 
     @sid.setter

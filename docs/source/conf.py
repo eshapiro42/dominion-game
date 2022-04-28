@@ -18,11 +18,11 @@ sys.path.insert(0, os.path.abspath('../..'))
 # -- Project information -----------------------------------------------------
 
 project = 'dominion-game'
-copyright = '2020, Eric Shapiro'
+copyright = '2022, Eric Shapiro'
 author = 'Eric Shapiro'
 
 # The full version, including alpha/beta/rc tags
-release = '0.0'
+release = 'v1.0'
 
 
 # -- General configuration ---------------------------------------------------
@@ -32,8 +32,12 @@ release = '0.0'
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
-    'sphinxcontrib.napoleon',
+    'sphinx.ext.napoleon',
+    'sphinx_autodoc_typehints',
 ]
+
+autodoc_member_order = "groupwise"
+napoleon_use_param = True
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -49,7 +53,7 @@ exclude_patterns = []
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'classic'
+html_theme = 'sphinx_rtd_theme'
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
