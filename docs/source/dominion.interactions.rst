@@ -4,6 +4,14 @@ dominion.interactions package
 Submodules
 ----------
 
+dominion.interactions.ai module
+-------------------------------
+
+.. automodule:: dominion.interactions.ai
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 dominion.interactions.auto module
 ---------------------------------
 
