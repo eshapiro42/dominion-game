@@ -1,6 +1,7 @@
 # `dominion-game`
 
-![Read the Docs](https://img.shields.io/readthedocs/dominion-game)
+[![Documentation Status](https://readthedocs.org/projects/dominion-game/badge/?version=latest)](https://dominion-game.readthedocs.io/en/latest/?badge=latest)
+
 
 ## Getting Started
 
