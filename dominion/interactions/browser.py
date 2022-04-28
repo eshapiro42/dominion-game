@@ -221,8 +221,8 @@ class BrowserInteraction(Interaction):
                     if response is None:
                         return None
                     for card in self.hand:
-                            if response["id"] == card.id:
-                                return card
+                        if response["id"] == card.id:
+                            return card
                 except (IndexError, ValueError):
                     self.send('That is not a valid choice.')
 
@@ -244,8 +244,8 @@ class BrowserInteraction(Interaction):
                     if response is None:
                         return None
                     for card in self.discard_pile:
-                            if response["id"] == card.id:
-                                return card
+                        if response["id"] == card.id:
+                            return card
                 except (IndexError, ValueError):
                     self.send('That is not a valid choice.')
 

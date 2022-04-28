@@ -974,7 +974,7 @@ class Spy(AttackCard):
 
     @property
     def prompt(self):
-         return f"Each player reveals the top card of his deck and either discards it or puts it back, {self.owner}'s choice."
+        return f"Each player reveals the top card of his deck and either discards it or puts it back, {self.owner}'s choice."
 
 
 class Thief(AttackCard):
