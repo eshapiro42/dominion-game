@@ -4,7 +4,6 @@ from abc import ABCMeta, abstractmethod
 from collections import defaultdict
 from enum import Enum, auto
 from gevent import Greenlet, joinall
-from threading import Lock # Monkey patched to use gevent Locks
 from typing import TYPE_CHECKING, Optional, List, Tuple
 
 from ..grammar import a, s, Word
@@ -14,10 +13,6 @@ if TYPE_CHECKING:
     from ..interactions.interaction import Interaction
     from ..player import Player
     from ..supply import Supply
-
-
-LOWEST_ID = 0
-ID_LOCK = Lock()
 
 
 class CardType(Enum):
@@ -39,21 +34,31 @@ class ReactionType(Enum):
     IMMUNITY = auto()
 
 
-class Card(Word, metaclass=ABCMeta):
+class CardMeta(ABCMeta):
+    """
+    Metaclass for :class:`Card`.
+
+    Mainly for typing purposes. An object of type :class:`CardMeta`
+    will be a Card class itself, not an instance of it.
+    """
+    pass
+
+
+class Card(Word, metaclass=CardMeta):
     '''
     Base card class.
 
     Args:
         owner: The owner of the card.
     '''
+    __lowest_id = 0
+
     description = ''
 
     def __init__(self, owner: Optional[Player] = None):
-        global LOWEST_ID
         self._owner = owner
-        with ID_LOCK:
-            self.id = LOWEST_ID
-            LOWEST_ID += 1
+        self._id = Card.__lowest_id
+        Card.__lowest_id += 1
 
     @property
     def owner(self) -> Optional[Player]:
@@ -68,6 +73,13 @@ class Card(Word, metaclass=ABCMeta):
         self.interactions: Interaction = self.owner.interactions
         self.game: Game = self.owner.game
         self.supply: Supply = self.owner.game.supply
+
+    @property
+    def id(self) -> int:
+        """
+        The unique ID of the card.
+        """
+        return self._id
 
     @classmethod
     @property
@@ -204,7 +216,7 @@ class ActionCard(Card):
     '''
     def play(self):
         """
-        Just calls :code:`self.action()`.
+        Just calls :meth:`action`.
         """
         self.action()
 
@@ -275,20 +287,23 @@ class AttackCard(ActionCard):
     @property
     def allow_simultaneous_reactions(self) -> bool:
         """
-            whether to allow simultaneous reactions.
+        Whether to allow simultaneous reactions for this card.
 
-            This currently only works for attack effects where the
-            only required input is from the players being attacked,
-            such as  with the Militia. If the attack requires feedback
-            from the attacker, like with Spy, Thief, Swindler, etc,
-            the frontend is not currently equipped to deal with
-            simultaneous reactions.
+        If simultaneous reactions are not allowed for the game,
+        then this has no effect.
 
-            This also cannot be used for attacks that require the
-            attacked players to gain cards from the Supply, such as Witch,
-            Swindler, Torturer, Replace, etc. That's because there may be
-            only one of a given card left in the Supply, and therefore the
-            effect must be resolved in turn order.
+        This currently only works for attack effects where the
+        only required input is from the players being attacked,
+        such as  with the Militia. If the attack requires feedback
+        from the attacker, like with Spy, Thief, Swindler, etc,
+        the frontend is not currently equipped to deal with
+        simultaneous reactions.
+
+        This also cannot be used for attacks that require the
+        attacked players to gain cards from the Supply, such as Witch,
+        Swindler, Torturer, Replace, etc. That's because there may be
+        only one of a given card left in the Supply, and therefore the
+        effect must be resolved in turn order.
         """
         return False
 
@@ -373,19 +388,17 @@ class ReactionCard(ActionCard):
         """
         Complete the reactive directions on the card.
 
-        Returns:
-            Tuple[ReactionType, bool]: A tuple containing:
+        Returns a tuple containing:
 
-                reaction_type (:code:`ReactionType`): 
-                    The type of reaction.
+            reaction_type (:class:`ReactionType`): 
+                The type of reaction.
 
-                ignore_again (:code:`bool`): 
-                    Whether the reaction can only be played once in
-                    response to an attack.
+            ignore_again (:class:`bool`): 
+                Whether the reaction can only be played once in
+                response to an attack.
 
-                    If False, this reaction can be played multiple times
-                    in response to an attack.
-                
+                If False, this reaction can be played multiple times
+                in response to an attack.
         """
         pass
 

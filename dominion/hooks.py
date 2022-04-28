@@ -21,7 +21,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from collections import deque
-    from .cards.cards import Card
+    from .cards.cards import Card, CardMeta
     from .game import Game
     from .player import Player
 
@@ -31,17 +31,37 @@ class Hook(metaclass=ABCMeta):
     Base class for all hooks.
 
     Args:
-        game: the game to which the hook belongs
+        game: The game to which the hook belongs
     """
     def __init__(self, game: Game):
-        self.game= game
+        self._game = game
+
+    @property
+    def game(self) -> Game:
+        """
+        The game to which the hook belongs.
+        """
+        return self._game
 
     @abstractmethod
     def __call__(self, *args, **kwargs):
+        """
+        Logic to be executed when the hook is activated.
+        """
         pass
 
+    @property
     @abstractmethod
-    def persistent(self):
+    def persistent(self) -> bool:
+        """
+        Whether the hook should be removed after it is
+        activated once.
+
+        If :obj:`False`, the hook will be removed after it
+        is activated for the first time. If :obj:`True`, it
+        will not be removed unless explicitly removed by
+        some other means.
+        """
         pass
 
 
@@ -60,9 +80,8 @@ class TreasureHook(Hook):
 
 class PostTreasureHook(Hook):
     """
-    Hook to activate after a players plays treasure cards.
+    Hook to activate after a player is finished playing treasure cards.
     """
-
     @abstractmethod
     def __call__(self):
         pass
@@ -80,11 +99,30 @@ class PreBuyHook(Hook):
 class PostGainHook(Hook):
     """
     Hook to activate after a player gains a card.
+
+    Args:
+        game: The game to which the hook belongs.
+        card_class: The card class of the card that was gained.
     """
-    def __init__(self, game: Game, card_class: type[Card]):
+    def __init__(self, game: Game, card_class: CardMeta):
         super().__init__(game)
-        self.card_class = card_class
+        self._card_class = card_class
+
+    @property
+    def card_class(self) -> CardMeta:
+        """
+        The card class of the card that was gained.
+        """
+        return self._card_class
 
     @abstractmethod
     def __call__(self, player: Player, card: Card, where_it_went: deque):
+        """
+        Logic to be executed when the hook is activated.
+
+        Args:
+            player: The player who gained the card.
+            card: The card that was gained.
+            where_it_went: The deque where the card ended up.
+        """
         pass

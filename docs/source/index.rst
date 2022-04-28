@@ -29,6 +29,7 @@ Hooks
 ==============
 .. automodule:: dominion.hooks
    :members:
+   :special-members: __call__
 
 Interactions
 =====================
