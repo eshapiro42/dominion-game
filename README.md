@@ -1,5 +1,7 @@
 # `dominion-game`
 
+![Read the Docs](https://img.shields.io/readthedocs/dominion-game)
+
 ## Getting Started
 
 Clone this repository.
