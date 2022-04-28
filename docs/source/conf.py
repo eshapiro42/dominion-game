@@ -18,11 +18,11 @@ sys.path.insert(0, os.path.abspath('../..'))
 # -- Project information -----------------------------------------------------
 
 project = 'dominion-game'
-copyright = '2020, Eric Shapiro'
+copyright = '2022, Eric Shapiro'
 author = 'Eric Shapiro'
 
 # The full version, including alpha/beta/rc tags
-release = '0.0'
+release = 'v1.0'
 
 
 # -- General configuration ---------------------------------------------------
