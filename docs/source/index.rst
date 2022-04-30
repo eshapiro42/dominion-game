@@ -25,6 +25,11 @@ Game
 .. automodule:: dominion.game
    :members:
 
+Grammar
+=============
+.. automodule:: dominion.grammar
+   :members:
+
 Hooks
 ==============
 .. automodule:: dominion.hooks

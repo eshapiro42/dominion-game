@@ -21,7 +21,7 @@ class Word(metaclass=ABCMeta):
 # Grammatical helper functions
 
 
-def a(word):
+def a(word: str) -> str:
     """
     Decide whether or not to use "a " or "an " before a word.
     """
@@ -32,7 +32,7 @@ def a(word):
         return f"a {word}"
 
 
-def s(num, word: str | Word):
+def s(num: int, word: str | Word) -> str:
     """
     Pluralize a word (or a Word object (or a Type inheriting from Word)) based on a number.
     """
