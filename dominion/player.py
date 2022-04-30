@@ -3,7 +3,7 @@ from __future__ import annotations
 import random
 
 from collections import deque
-from typing import TYPE_CHECKING, Optional, List
+from typing import TYPE_CHECKING, Optional, Deque, List
 
 from .cards import base_cards
 from .expansions import ProsperityExpansion
@@ -100,28 +100,28 @@ class Player:
         return self._interactions
 
     @property
-    def deck(self) -> deque[Card]:
+    def deck(self) -> Deque[Card]:
         """
         The Player's deck.
         """
         return self._deck
 
     @property
-    def discard_pile(self) -> deque[Card]:
+    def discard_pile(self) -> Deque[Card]:
         """
         The Player's discard pile.
         """
         return self._discard_pile
 
     @property
-    def hand(self) -> deque[Card]:
+    def hand(self) -> Deque[Card]:
         """
         The Player's hand.
         """
         return self._hand
 
     @property
-    def played_cards(self) -> deque[Card]:
+    def played_cards(self) -> Deque[Card]:
         """
         The Player's played cards from the current Turn.
         """

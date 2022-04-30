@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from abc import ABCMeta, abstractmethod
-from typing import TYPE_CHECKING, Any, Optional, List
+from typing import TYPE_CHECKING, Any, Optional, Deque, List
 
 if TYPE_CHECKING:
     from collections import deque
@@ -68,28 +68,28 @@ class Interaction(metaclass=InteractionMeta):
         self._room = self.player.game.room
 
     @property
-    def hand(self) -> deque:
+    def hand(self) -> Deque[Card]:
         """
         The player's hand.
         """
         return self._hand
 
     @property
-    def played_cards(self) -> deque:
+    def played_cards(self) -> Deque[Card]:
         """
         The player's played cards from the current turn, if any.
         """
         return self._played_cards
 
     @property
-    def discard_pile(self) -> deque:
+    def discard_pile(self) -> Deque[Card]:
         """
         The player's discard pile.
         """
         return self._discard_pile
 
     @property
-    def deck(self) -> deque:
+    def deck(self) -> Deque[Card]:
         """
         The player's deck.
         """

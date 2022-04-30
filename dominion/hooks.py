@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from abc import ABCMeta, abstractmethod
 # from enum import Enum, auto
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Deque
 
 
 # Might use these later to expand the hooks system
@@ -116,7 +116,7 @@ class PostGainHook(Hook):
         return self._card_class
 
     @abstractmethod
-    def __call__(self, player: Player, card: Card, where_it_went: deque):
+    def __call__(self, player: Player, card: Card, where_it_went: Deque[Card]):
         """
         Logic to be executed when the hook is activated.
 
