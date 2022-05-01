@@ -4,7 +4,7 @@ from abc import ABCMeta, abstractmethod
 from collections import defaultdict
 from enum import Enum, auto
 from gevent import Greenlet, joinall
-from typing import TYPE_CHECKING, Optional, List, Tuple
+from typing import TYPE_CHECKING, Optional, List, Tuple, Type
 
 from ..grammar import a, s, Word
 
@@ -34,17 +34,7 @@ class ReactionType(Enum):
     IMMUNITY = auto()
 
 
-class CardMeta(ABCMeta):
-    """
-    Metaclass for :class:`Card`.
-
-    Mainly for typing purposes. An object of type :class:`CardMeta`
-    will be a Card class itself, not an instance of it.
-    """
-    pass
-
-
-class Card(Word, metaclass=CardMeta):
+class Card(Word, metaclass=ABCMeta):
     '''
     Base card class.
 

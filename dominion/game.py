@@ -4,7 +4,7 @@ import itertools
 import random
 
 from collections import defaultdict
-from typing import TYPE_CHECKING, Callable, Optional, Dict, List, Tuple
+from typing import TYPE_CHECKING, Callable, Optional, Dict, List, Tuple, Type
 
 from .cards.cards import Card, CardType
 from .expansions import BaseExpansion, ProsperityExpansion, IntrigueExpansion
@@ -16,10 +16,9 @@ from .turn import Turn
 
 if TYPE_CHECKING:
     from flask_socketio import SocketIO
-    from .cards.cards import CardMeta
-    from .expansions.expansion import ExpansionMeta
+    from .expansions.expansion import Expansion
     from .hooks import TreasureHook, PreBuyHook
-    from .interactions.interaction import InteractionMeta
+    from .interactions.interaction import Interaction
 
 
 class GameStartedError(Exception):
@@ -119,14 +118,14 @@ class Game:
         self._player_sids = player_sids
 
     @property
-    def player_interactions_classes(self) -> List[InteractionMeta]:
+    def player_interactions_classes(self) -> List[Type[Interaction]]:
         '''
         A list of interaction classes corresponding to each player in the game (these lists share an index).
         '''
         return self._player_interactions_classes
 
     @player_interactions_classes.setter
-    def player_interactions_classes(self, player_interactions_classes: List[InteractionMeta]):
+    def player_interactions_classes(self, player_interactions_classes: List[Type[Interaction]]):
         self._player_interactions_classes = player_interactions_classes
 
     @property
@@ -204,7 +203,7 @@ class Game:
         self._current_turn = current_turn
 
     @property
-    def treasure_hooks(self) -> Dict[CardMeta, List[TreasureHook]]:
+    def treasure_hooks(self) -> Dict[Type[Card], List[TreasureHook]]:
         '''
         A dictionary of game-wide :obj:`TreasureHook` instances, indexed by Card class.
 
@@ -213,11 +212,11 @@ class Game:
         return self._treasure_hooks
 
     @treasure_hooks.setter
-    def treasure_hooks(self, treasure_hooks: Dict[CardMeta, List[TreasureHook]]):
+    def treasure_hooks(self, treasure_hooks: Dict[Type[Card], List[TreasureHook]]):
         self._treasure_hooks = treasure_hooks
 
     @property
-    def pre_buy_hooks(self) -> Dict[CardMeta, List[PreBuyHook]]:
+    def pre_buy_hooks(self) -> Dict[Type[Card], List[PreBuyHook]]:
         '''
         A dictionary of game-wide :obj:`PreBuyHook` instances, indexed by Card class.
 
@@ -226,7 +225,7 @@ class Game:
         return self._pre_buy_hooks
 
     @pre_buy_hooks.setter
-    def pre_buy_hooks(self, pre_buy_hooks: Dict[CardMeta, List[PreBuyHook]]):
+    def pre_buy_hooks(self, pre_buy_hooks: Dict[Type[Card], List[PreBuyHook]]):
         self._pre_buy_hooks = pre_buy_hooks
 
     @property
@@ -251,14 +250,14 @@ class Game:
         self._game_end_conditions = game_end_conditions
     
     @property
-    def expansions(self) -> List[ExpansionMeta]:
+    def expansions(self) -> List[Type[Expansion]]:
         """
         A list of expansion classes to be added into the game.
         """
         return self._expansions
 
     @expansions.setter
-    def expansions(self, expansions: List[ExpansionMeta]):
+    def expansions(self, expansions: List[Type[Expansion]]):
         self._expansions = expansions
 
     @property
@@ -354,7 +353,7 @@ class Game:
     def require_trashing(self, require_trashing: bool):
         self._require_trashing = require_trashing
 
-    def add_treasure_hook(self, treasure_hook: TreasureHook, card_class: CardMeta):
+    def add_treasure_hook(self, treasure_hook: TreasureHook, card_class: Type[Card]):
         '''
         Add a game-wide treasure hook to a specific card class.
 
@@ -364,7 +363,7 @@ class Game:
         '''
         self.treasure_hooks[card_class].append(treasure_hook)
 
-    def add_pre_buy_hook(self, pre_buy_hook: PreBuyHook, card_class: CardMeta):
+    def add_pre_buy_hook(self, pre_buy_hook: PreBuyHook, card_class: Type[Card]):
         '''
         Add a game-wide pre-buy hook to a specific card class.
 
@@ -374,7 +373,7 @@ class Game:
         '''
         self.pre_buy_hooks[card_class].append(pre_buy_hook)
 
-    def add_expansion(self, expansion: ExpansionMeta):
+    def add_expansion(self, expansion: Type[Expansion]):
         '''
         Add an expansion into the game.
 
@@ -383,7 +382,7 @@ class Game:
         '''
         self.expansions.add(expansion)
 
-    def add_player(self, name: Optional[str] = None, sid: Optional[str] = None, interactions_class: InteractionMeta = CLIInteraction):
+    def add_player(self, name: Optional[str] = None, sid: Optional[str] = None, interactions_class: Type[Interaction] = CLIInteraction):
         '''
         Add a new player into the game.
         

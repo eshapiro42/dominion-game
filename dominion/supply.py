@@ -6,13 +6,13 @@ import random
 from abc import ABCMeta, abstractmethod
 from collections import defaultdict
 from math import inf
-from typing import TYPE_CHECKING, Dict, List
+from typing import TYPE_CHECKING, Dict, List, Type
 
 from .cards import cards, base_cards, prosperity_cards, intrigue_cards
 
 if TYPE_CHECKING:
-    from .cards.cards import Card, CardMeta
-    from .expansions.expansion import ExpansionMeta
+    from .cards.cards import Card
+    from .expansions.expansion import Expansion
     from .hooks import PostGainHook
 
 
@@ -23,7 +23,7 @@ class SupplyStackEmptyError(Exception):
     Args:
         card_class: The class of the card whose supply stack is empty.
     '''
-    def __init__(self, card_class: CardMeta):
+    def __init__(self, card_class: Type[Card]):
         message = f'{card_class.name} supply stack is empty'
         super().__init__(message)
 
@@ -43,18 +43,18 @@ class Customization:
         self._require_trashing = True # If toggled, ensures there is at least one card that allows trashing
 
     @property
-    def expansions(self) -> set[ExpansionMeta]:
+    def expansions(self) -> set[Type[Expansion]]:
         """
         A set of expansion classes to be chosen from in the supply.
         """
         return self._expansions
 
     @expansions.setter
-    def expansions(self, expansions: set[ExpansionMeta]):
+    def expansions(self, expansions: set[Type[Expansion]]):
         self._expansions = expansions
 
     @property
-    def required_card_classes(self) -> set[CardMeta]:
+    def required_card_classes(self) -> set[Type[Card]]:
         """
         A set of card classes to require in the supply.
 
@@ -65,7 +65,7 @@ class Customization:
         return self._required_card_classes
 
     @required_card_classes.setter
-    def required_card_classes(self, required_card_classes: set[CardMeta]):
+    def required_card_classes(self, required_card_classes: set[Type[Card]]):
         self._required_card_classes = required_card_classes
 
     @property
@@ -149,7 +149,7 @@ class Customization:
         }
 
     @staticmethod
-    def card_has_effect(card_class: CardMeta, effect_string: str) -> bool:
+    def card_has_effect(card_class: Type[Card], effect_string: str) -> bool:
         """
         TODO: This really belongs in the :obj:`Card` class itself as either multiple properties or a regular method that accepts an effect.
         Additionally, it would be better to have an enumeration of all the effects that can be checked for, rather than using strings.
@@ -196,7 +196,7 @@ class Supply:
         return self._num_players
 
     @property
-    def card_stacks(self) -> Dict[CardMeta, SupplyStack]:
+    def card_stacks(self) -> Dict[Type[Card], SupplyStack]:
         """
         A dictionary whose keys are card classes and whose values are
         :obj:`SupplyStack` objects.
@@ -207,11 +207,11 @@ class Supply:
         return self._card_stacks
 
     @card_stacks.setter
-    def card_stacks(self, card_stacks: Dict[CardMeta, SupplyStack]):
+    def card_stacks(self, card_stacks: Dict[Type[Card], SupplyStack]):
         self._card_stacks = card_stacks
 
     @property
-    def post_gain_hooks(self) -> Dict[CardMeta, List[PostGainHook]]:
+    def post_gain_hooks(self) -> Dict[Type[Card], List[PostGainHook]]:
         """
         A dictionary whose keys are card classes and whose values are
         lists of post-gain hooks.
@@ -222,7 +222,7 @@ class Supply:
         return self._post_gain_hooks
 
     @post_gain_hooks.setter
-    def post_gain_hooks(self, post_gain_hooks: Dict[CardMeta, List[PostGainHook]]):
+    def post_gain_hooks(self, post_gain_hooks: Dict[Type[Card], List[PostGainHook]]):
         self._post_gain_hooks = post_gain_hooks
 
     @property
@@ -331,7 +331,7 @@ class Supply:
         for expansion in self.customization.expansions:
             expansion.additional_setup()
 
-    def add_post_gain_hook(self, post_gain_hook: PostGainHook, card_class: CardMeta):
+    def add_post_gain_hook(self, post_gain_hook: PostGainHook, card_class: Type[Card]):
         """
         Add a post-gain hook to the specified card class.
 
@@ -341,7 +341,7 @@ class Supply:
         """
         self.post_gain_hooks[card_class].append(post_gain_hook)
 
-    def draw(self, card_class: CardMeta):
+    def draw(self, card_class: Type[Card]):
         """
         Draw a card of the specified card class from the supply.
         In the case of a :obj:`FiniteSupplyStack`, the quantity
@@ -365,7 +365,7 @@ class Supply:
         card_class = type(card)
         self.trash_pile[card_class].append(card)
 
-    def modify_cost(self, card_class: CardMeta, increment: int):
+    def modify_cost(self, card_class: Type[Card], increment: int):
         """
         Temporarily modify a card's cost. (A card's cost cannot ever
         be less than 0.)
@@ -402,7 +402,7 @@ class Supply:
         supply_table = self.get_table()
         return supply_table.get_string()
 
-    def card_name_to_card_class(self, card_name: str) -> CardMeta:
+    def card_name_to_card_class(self, card_name: str) -> Type[Card]:
         '''Convert a card name to a card class. If you need to use this function, you're almost definitely doing something wrong.
 
         Args:
@@ -443,7 +443,7 @@ class SupplyStack(metaclass=ABCMeta):
     Args:
         card_class: The card class of the cards in the stack.
     """
-    def __init__(self, card_class: CardMeta):
+    def __init__(self, card_class: Type[Card]):
         self._card_class = card_class
         self._example = self.card_class()
 
@@ -504,7 +504,7 @@ class InfiniteSupplyStack(SupplyStack):
     Args:
         card_class: The card class of the cards in the stack.
     """
-    def __init__(self, card_class: CardMeta):
+    def __init__(self, card_class: Type[Card]):
         super().__init__(card_class)
         self._cards_remaining = inf
 
@@ -529,7 +529,7 @@ class FiniteSupplyStack(SupplyStack):
         card_class: The card class of the cards in the stack.
         size: The number of cards in the stack.
     """
-    def __init__(self, card_class: CardMeta, size: int):
+    def __init__(self, card_class: Type[Card], size: int):
         super().__init__(card_class)
         self._base_cost = card_class.cost
         self._modified_cost = card_class.cost

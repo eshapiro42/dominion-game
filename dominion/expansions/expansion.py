@@ -2,26 +2,16 @@ from __future__ import annotations
 
 from abc import ABCMeta, abstractmethod
 
-from typing import TYPE_CHECKING, Callable, List, Optional, Tuple
+from typing import TYPE_CHECKING, Callable, List, Optional, Tuple, Type
 
 if TYPE_CHECKING:
-    from ..cards.cards import CardMeta
+    from ..cards.cards import Card
     from ..game import Game
     from ..player import Player
     from ..supply import Supply
 
 
-class ExpansionMeta(ABCMeta):
-    """
-    Metaclass for :class:`Expansion`.
-
-    Mainly for typing purposes. An object of type :class:`ExpansionMeta`
-    will be an Expansion class itself, not an instance of it.
-    """
-    pass
-
-
-class Expansion(metaclass=ExpansionMeta):
+class Expansion(metaclass=ABCMeta):
     '''
     Base class for Dominion expansions.
 
@@ -64,7 +54,7 @@ class Expansion(metaclass=ExpansionMeta):
 
     @property
     @abstractmethod
-    def basic_card_piles(self) -> List[Tuple[CardMeta, int]]:
+    def basic_card_piles(self) -> List[Tuple[Type[Card], int]]:
         """
         A list of tuples representing the basic card piles
         in this expansion and the quantities that should be
@@ -78,7 +68,7 @@ class Expansion(metaclass=ExpansionMeta):
 
     @property
     @abstractmethod
-    def kingdom_card_classes(self) -> List[CardMeta]:
+    def kingdom_card_classes(self) -> List[Type[Card]]:
         """
         A list of Card classes that this expansion adds and
         which should be considered for inclusion in the

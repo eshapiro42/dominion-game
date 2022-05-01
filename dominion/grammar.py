@@ -1,7 +1,11 @@
 from abc import abstractmethod, ABCMeta
 
 
-class Word(metaclass=ABCMeta):
+class WordMeta(ABCMeta):
+    pass
+
+
+class Word(metaclass=WordMeta):
     """
     Mixin class for objects that have grammatical class properties.
     """

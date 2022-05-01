@@ -20,8 +20,7 @@ from typing import TYPE_CHECKING, Deque
 
 
 if TYPE_CHECKING:
-    from collections import deque
-    from .cards.cards import Card, CardMeta
+    from .cards.cards import Card
     from .game import Game
     from .player import Player
 
@@ -104,12 +103,12 @@ class PostGainHook(Hook):
         game: The game to which the hook belongs.
         card_class: The card class of the card that was gained.
     """
-    def __init__(self, game: Game, card_class: CardMeta):
+    def __init__(self, game: Game, card_class: Type[Card]):
         super().__init__(game)
         self._card_class = card_class
 
     @property
-    def card_class(self) -> CardMeta:
+    def card_class(self) -> Type[Card]:
         """
         The card class of the card that was gained.
         """

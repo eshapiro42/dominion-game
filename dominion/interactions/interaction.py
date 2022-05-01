@@ -1,28 +1,17 @@
 from __future__ import annotations
 
 from abc import ABCMeta, abstractmethod
-from typing import TYPE_CHECKING, Any, Optional, Deque, List
+from typing import TYPE_CHECKING, Any, Optional, Deque, List, Type
 
 if TYPE_CHECKING:
-    from collections import deque
     from flask_socketio import SocketIO
-    from ..cards.cards import Card, CardMeta, CardType
+    from ..cards.cards import Card, CardType
     from ..game import Game
     from ..player import Player
     from ..supply import Supply
 
 
-class InteractionMeta(ABCMeta):
-    """
-    Metaclass for :class:`Interaction`.
-
-    Mainly for typing purposes. An object of type :class:`InteractionMeta`
-    will be an Interaction class itself, not an instance of it.
-    """
-    pass
-
-
-class Interaction(metaclass=InteractionMeta):
+class Interaction(metaclass=ABCMeta):
     """
     Base class for all interactions.
 
@@ -156,7 +145,7 @@ class Interaction(metaclass=InteractionMeta):
         pass
 
     @abstractmethod
-    def choose_specific_card_class_from_hand(self, prompt: str, force: bool, card_class: CardMeta) -> Optional[Card]:
+    def choose_specific_card_class_from_hand(self, prompt: str, force: bool, card_class: Type[Card]) -> Optional[Card]:
         """
         Request the player to choose a card of a specific card class from their hand.
 
@@ -190,7 +179,7 @@ class Interaction(metaclass=InteractionMeta):
         pass
 
     @abstractmethod
-    def choose_card_class_from_supply(self, prompt: str, max_cost, force: bool, invalid_card_classes: Optional[List[CardMeta]] = None, exact_cost: bool = False) -> Optional[CardMeta]:
+    def choose_card_class_from_supply(self, prompt: str, max_cost, force: bool, invalid_card_classes: Optional[List[Type[Card]]] = None, exact_cost: bool = False) -> Optional[Type[Card]]:
         """
         Request the player to choose a card class from the supply.
 
@@ -204,7 +193,7 @@ class Interaction(metaclass=InteractionMeta):
         pass
 
     @abstractmethod
-    def choose_specific_card_type_from_supply(self, prompt: str, max_cost: int, card_type: CardType, force: bool) -> Optional[CardMeta]:
+    def choose_specific_card_type_from_supply(self, prompt: str, max_cost: int, card_type: CardType, force: bool) -> Optional[Type[Card]]:
         """
         Request the player to choose a card of the specified type from the supply.
 
@@ -217,7 +206,7 @@ class Interaction(metaclass=InteractionMeta):
         pass
 
     @abstractmethod
-    def choose_specific_card_type_from_trash(self, prompt: str, max_cost: int, card_type: CardType, force: bool) -> Optional[CardMeta]:
+    def choose_specific_card_type_from_trash(self, prompt: str, max_cost: int, card_type: CardType, force: bool) -> Optional[Type[Card]]:
         """
         Request the player to choose a card of the specified type from the trash.
 

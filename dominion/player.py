@@ -3,7 +3,7 @@ from __future__ import annotations
 import random
 
 from collections import deque
-from typing import TYPE_CHECKING, Optional, Deque, List
+from typing import TYPE_CHECKING, Optional, Deque, List, Type
 
 from .cards import base_cards
 from .expansions import ProsperityExpansion
@@ -12,9 +12,9 @@ from .supply import SupplyStackEmptyError
 
 if TYPE_CHECKING:
     from flask_socketio import SocketIO
-    from .cards.cards import Card, CardMeta
+    from .cards.cards import Card
     from .game import Game
-    from .interactions.interaction import Interaction, InteractionMeta
+    from .interactions.interaction import Interaction
     from .supply import Supply
     from .turn import Turn
 
@@ -30,7 +30,7 @@ class Player:
         socketio: The socketio object to use for the Player.
         sid: The socket ID of the Player.
     """
-    def __init__(self, game: Game, name: str, interactions_class: InteractionMeta, socketio: Optional[SocketIO] = None, sid: Optional[str] = None):
+    def __init__(self, game: Game, name: str, interactions_class: Type[Interaction], socketio: Optional[SocketIO] = None, sid: Optional[str] = None):
         self._game = game
         self._name = name
         self._turn = None
@@ -171,7 +171,7 @@ class Player:
                 for hook in expired_hooks:
                     self.turn.post_gain_hooks[type(card)].remove(hook)
 
-    def gain(self, card_class: CardMeta, quantity: int = 1, from_supply: bool = True, message: bool = True, ignore_hooks: bool = False):
+    def gain(self, card_class: Type[Card], quantity: int = 1, from_supply: bool = True, message: bool = True, ignore_hooks: bool = False):
         """
         Gain a card.
 
@@ -198,7 +198,7 @@ class Player:
             if not ignore_hooks:
                 self.process_post_gain_hooks(card, self.discard_pile)
 
-    def gain_without_hooks(self, card_class: CardMeta, quantity: int = 1, from_supply: bool = True, message: bool = True):
+    def gain_without_hooks(self, card_class: Type[Card], quantity: int = 1, from_supply: bool = True, message: bool = True):
         """
         Gain a card without activating any post-gain Hooks registered to this card.
 
@@ -217,7 +217,7 @@ class Player:
         """
         self.gain(card_class, quantity, from_supply, message, ignore_hooks=True)
 
-    def gain_to_hand(self, card_class: CardMeta, quantity: int = 1, from_supply: bool = True, message: bool = True):
+    def gain_to_hand(self, card_class: Type[Card], quantity: int = 1, from_supply: bool = True, message: bool = True):
         """
         Gain a card to the Player's hand.
 
@@ -242,7 +242,7 @@ class Player:
                 self.game.broadcast(f'{self.name} gained {a(card_class.name)} into their hand.')
             self.process_post_gain_hooks(card, self.hand)
 
-    def gain_to_deck(self, card_class: CardMeta, quantity: int = 1, from_supply: bool = True, message: bool = True):
+    def gain_to_deck(self, card_class: Type[Card], quantity: int = 1, from_supply: bool = True, message: bool = True):
         """
         Gain a card to the Player's deck.
 
@@ -385,7 +385,7 @@ class Player:
         except ValueError:
             pass
 
-    def take_from_trash(self, card_class: CardMeta):
+    def take_from_trash(self, card_class: Type[Card]):
         """
         Take a card from the Trash and set its owner to the Player.
 
@@ -401,7 +401,7 @@ class Player:
             card = None
         return card
 
-    def gain_from_trash(self, card_class: CardMeta, message: bool = True):
+    def gain_from_trash(self, card_class: Type[Card], message: bool = True):
         """
         Gain a card from the Trash.
 

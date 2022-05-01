@@ -2,14 +2,14 @@ from __future__ import annotations
 
 from abc import ABCMeta, abstractmethod
 from collections import defaultdict
-from typing import TYPE_CHECKING, List, Dict
+from typing import TYPE_CHECKING, List, Dict, Type
 
 from .cards import cards
 from .grammar import a, s
 from .interactions import AutoInteraction, BrowserInteraction
 
 if TYPE_CHECKING:
-    from .cards.cards import ActionCard, TreasureCard, CardMeta
+    from .cards.cards import Card, ActionCard, TreasureCard
     from .game import Game
     from .hooks import TreasureHook, PostGainHook, PostTreasureHook
     from .player import Player
@@ -121,14 +121,14 @@ class Turn:
         return self._cleanup_phase
 
     @property
-    def treasure_hooks(self) -> Dict[CardMeta, List[TreasureHook]]:
+    def treasure_hooks(self) -> Dict[Type[Card], List[TreasureHook]]:
         """
         A dictionary of treasure hooks registered for this turn.
         """
         return self._treasure_hooks
 
     @treasure_hooks.setter
-    def treasure_hooks(self, treasure_hooks: Dict[CardMeta, List[TreasureHook]]):
+    def treasure_hooks(self, treasure_hooks: Dict[Type[Card], List[TreasureHook]]):
         self._treasure_hooks = treasure_hooks
 
     @property
@@ -143,25 +143,25 @@ class Turn:
         self._post_treasure_hooks = post_treasure_hooks
 
     @property
-    def post_gain_hooks(self) -> Dict[CardMeta, List[PostGainHook]]:
+    def post_gain_hooks(self) -> Dict[Type[Card], List[PostGainHook]]:
         """
         A dictionary of post-gain hooks registered for this turn.
         """
         return self._post_gain_hooks
 
     @post_gain_hooks.setter
-    def post_gain_hooks(self, post_gain_hooks: Dict[CardMeta, List[PostGainHook]]):
+    def post_gain_hooks(self, post_gain_hooks: Dict[Type[Card], List[PostGainHook]]):
         self._post_gain_hooks = post_gain_hooks
 
     @property
-    def invalid_card_classes(self) -> List[CardMeta]:
+    def invalid_card_classes(self) -> List[Type[Card]]:
         """
         A list of card classes that cannot be purchased this turn.
         """
         return self._invalid_card_classes
 
     @invalid_card_classes.setter
-    def invalid_card_classes(self, invalid_card_classes: List[CardMeta]):
+    def invalid_card_classes(self, invalid_card_classes: List[Type[Card]]):
         self._invalid_card_classes = invalid_card_classes
 
     def start(self):
@@ -178,7 +178,7 @@ class Turn:
         self.buy_phase.start()
         self.cleanup_phase.start()
 
-    def add_treasure_hook(self, treasure_hook: TreasureHook, card_class: CardMeta):
+    def add_treasure_hook(self, treasure_hook: TreasureHook, card_class: Type[Card]):
         '''
         Add a turn-wide treasure hook to a specific card class.
 
@@ -197,7 +197,7 @@ class Turn:
         '''
         self.post_treasure_hooks.append(post_treasure_hook)
 
-    def add_post_gain_hook(self, post_gain_hook: PostGainHook, card_class: CardMeta):
+    def add_post_gain_hook(self, post_gain_hook: PostGainHook, card_class: Type[Card]):
         '''
         Add a turn-wide post-gain hook to a specific card class.
 
@@ -538,7 +538,7 @@ class BuyPhase(Phase):
             for hook in expired_hooks:
                 self.game.treasure_hooks[card_class].remove(hook)
 
-    def buy(self, card_class: CardMeta):
+    def buy(self, card_class: Type[Card]):
         '''
         Buy a card from the supply.
 
