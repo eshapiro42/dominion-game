@@ -89,7 +89,7 @@ class Game:
         return self._test
 
     @property
-    def room(self) -> str:
+    def room(self) -> Optional[str]:
         '''
         The room ID for this game.
         '''
@@ -192,7 +192,7 @@ class Game:
         self._killed = killed
         
     @property
-    def current_turn(self) -> Turn:
+    def current_turn(self) -> Optional[Turn]:
         '''
         The Turn object corresponding to the current turn of the game.
         '''

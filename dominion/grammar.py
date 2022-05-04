@@ -1,5 +1,7 @@
 from abc import abstractmethod, ABCMeta
 
+from typing import Type
+
 
 class WordMeta(ABCMeta):
     pass
@@ -36,7 +38,7 @@ def a(word: str) -> str:
         return f"a {word}"
 
 
-def s(num: int, word: str | Word) -> str:
+def s(num: int, word: str | Word | Type[Word]) -> str:
     """
     Pluralize a word (or a Word object (or a Type inheriting from Word)) based on a number.
     """
@@ -52,3 +54,4 @@ def s(num: int, word: str | Word) -> str:
             return f"{num} {word.singular}"
         else:
             return f"{num} {word.pluralized}"
+    return None

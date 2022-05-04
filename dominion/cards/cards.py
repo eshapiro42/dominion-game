@@ -4,7 +4,7 @@ from abc import ABCMeta, abstractmethod
 from collections import defaultdict
 from enum import Enum, auto
 from gevent import Greenlet, joinall
-from typing import TYPE_CHECKING, Optional, List, Tuple, Type
+from typing import TYPE_CHECKING, Optional, Dict, List, Tuple, Type
 
 from ..grammar import a, s, Word
 
@@ -58,7 +58,7 @@ class Card(Word, metaclass=ABCMeta):
         return self._owner
 
     @owner.setter
-    def owner(self, owner: Optional[Player]):
+    def owner(self, owner: Player):
         self._owner: Player = owner
         self.interactions: Interaction = self.owner.interactions
         self.game: Game = self.owner.game
@@ -171,10 +171,10 @@ class Card(Word, metaclass=ABCMeta):
         Args:
             cards: A list of Cards.
         """
-        card_class_counts = defaultdict(int) # compute as a dict first since that's easier
+        card_class_counts: Dict[Type[Card], int] = defaultdict(int) # compute as a dict first since that's easier
         for card in cards:
             card_class_counts[type(card)] += 1
-        card_class_counts = list(card_class_counts.items()) # convert from dict[card_class, count] into list[tuple(card_class, count)]
+        card_class_counts: List[Tuple[Type[Card], int]] = list(card_class_counts.items()) # convert from dict[card_class, count] into list[tuple(card_class, count)]
         # Sort the cards by cost (sorting by value would be tricky because of cards like Bank)
         sorted_card_class_counts = sorted(card_class_counts, key=lambda card_tuple: card_tuple[0].cost, reverse=True)
         card_strings = [s(quantity, card_class) for card_class, quantity in sorted_card_class_counts]

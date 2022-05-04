@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from abc import ABCMeta, abstractmethod
 # from enum import Enum, auto
-from typing import TYPE_CHECKING, Deque
+from typing import TYPE_CHECKING, Deque, Type
 
 
 # Might use these later to expand the hooks system
