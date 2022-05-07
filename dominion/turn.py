@@ -168,11 +168,13 @@ class Turn:
         '''
         Start the Turn.
 
-        This increments the current Player's number of turns played.
+        This increments the current player's number of turns played.
+        It first activates any pre-turn hooks registered to the current player.
         It then runs the Action, Buy and Cleanup phases in that order.
         '''
         self.player.turns_played += 1
         self.player.interactions.new_turn()
+        self.process_pre_turn_hooks()
         self.player.interactions.display_hand()
         self.action_phase.start()
         self.buy_phase.start()
@@ -268,6 +270,21 @@ class Turn:
             },
             room=self.game.room,
         )
+
+    def process_pre_turn_hooks(self):
+        '''
+        Activate any pre turn hooks registered to the current player.
+        '''
+        # Activate any pre turn hooks registered to the current player
+        expired_hooks = []
+        for pre_turn_hook in self.game.pre_turn_hooks:
+            if pre_turn_hook.player == self.player:
+                pre_turn_hook()
+                if not pre_turn_hook.persistent:
+                    expired_hooks.append(pre_turn_hook)
+        # Remove any non-persistent hooks
+        for hook in expired_hooks:
+            self.game.pre_turn_hooks.remove(hook)
 
 
 class Phase(metaclass=ABCMeta):

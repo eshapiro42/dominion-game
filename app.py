@@ -7,7 +7,7 @@ import string
 from collections import defaultdict
 from flask import Flask, request, send_from_directory
 from dominion.cards import cards, prosperity_cards
-from dominion.expansions import IntrigueExpansion, ProsperityExpansion
+from dominion.expansions import IntrigueExpansion, ProsperityExpansion, CornucopiaExpansion
 from dominion.game import Game, GameStartedError
 from dominion.interactions import BrowserInteraction, AutoInteraction
 
@@ -136,6 +136,7 @@ def start_game(data):
     room = data['room']
     intrigue = data['intrigue']
     prosperity = data['prosperity']
+    cornucopia = data['cornucopia']
     allow_simultaneous_reactions = data['allowSimultaneousReactions']
     distribute_cost = data['distributeCost']
     disable_attack_cards = data['disableAttacks']
@@ -152,6 +153,8 @@ def start_game(data):
         game.add_expansion(IntrigueExpansion)
     if prosperity:
         game.add_expansion(ProsperityExpansion)
+    if cornucopia:
+        game.add_expansion(CornucopiaExpansion)
     if allow_simultaneous_reactions:
         game.allow_simultaneous_reactions = True
     if distribute_cost:

@@ -8,7 +8,7 @@ from collections import defaultdict
 from math import inf
 from typing import TYPE_CHECKING, Dict, List, Type
 
-from .cards import cards, base_cards, prosperity_cards, intrigue_cards
+from .cards import cards, base_cards, prosperity_cards, intrigue_cards, cornucopia_cards
 
 if TYPE_CHECKING:
     from .cards.cards import Card
@@ -43,14 +43,14 @@ class Customization:
         self._require_trashing = True # If toggled, ensures there is at least one card that allows trashing
 
     @property
-    def expansions(self) -> set[Type[Expansion]]:
+    def expansions(self) -> set[Expansion]:
         """
         A set of expansion classes to be chosen from in the supply.
         """
         return self._expansions
 
     @expansions.setter
-    def expansions(self, expansions: set[Type[Expansion]]):
+    def expansions(self, expansions: set[Expansion]):
         self._expansions = expansions
 
     @property
@@ -186,7 +186,7 @@ class Supply:
         self._post_gain_hooks = defaultdict(list)
         self._customization = Customization()
         # TODO: Remove these (they are for debugging specific cards)
-        # self.customization.required_card_classes.add(prosperity_cards.Contraband)
+        # self.customization.required_card_classes.add(cornucopia_cards.Tournament)
 
     @property
     def num_players(self) -> int:
@@ -322,7 +322,7 @@ class Supply:
         """
         Create an empty trash pile.
         """
-        self.trash_pile = {card_class: [] for card_class in self.card_stacks}
+        self.trash_pile = defaultdict(list)
 
     def _additional_setup(self):
         """

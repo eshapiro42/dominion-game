@@ -25,6 +25,7 @@ class CardType(Enum):
     ACTION = auto()
     REACTION = auto()
     ATTACK = auto()
+    PRIZE = auto()
 
 
 class ReactionType(Enum):

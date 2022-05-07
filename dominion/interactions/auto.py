@@ -2,6 +2,7 @@ import random
 from typing import List, Optional
 
 from ..cards import cards, base_cards
+from ..expansions import CornucopiaExpansion
 from .interaction import Interaction
 
 
@@ -292,6 +293,24 @@ class AutoInteraction(Interaction):
             except (IndexError, ValueError):
                 print('That is not a valid choice.\n')
                 raise
+
+    def choose_card_from_prizes(self, prompt):
+        self.sleep_random()
+        print(prompt)
+        print()
+        # Find the Cornucopia expansion instance
+        cornucopia_expansion_instance = None
+        for expansion_instance in self.supply.customization.expansions:
+            if isinstance(expansion_instance, CornucopiaExpansion):
+                cornucopia_expansion_instance = expansion_instance
+                break
+        prizes = cornucopia_expansion_instance.prizes
+        print("choose_card_from_prizes")
+        if not prizes:
+            self.send('There are no Prizes remaining.')
+            return None
+        return random.choice(prizes)
+
 
     def choose_yes_or_no(self, prompt):
         self.sleep_random()

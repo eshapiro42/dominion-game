@@ -5,6 +5,7 @@ from threading import Event # Monkey patched to use gevent Events
 from typing import List, Optional
 
 from ..cards import cards
+from ..expansions import CornucopiaExpansion
 from ..grammar import s
 from .interaction import Interaction
 
@@ -352,6 +353,36 @@ class BrowserInteraction(Interaction):
             for card_class in gainable_card_classes:
                 if card_data["name"] == card_class.name:
                     return card_class
+
+    def choose_card_from_prizes(self, prompt):
+        # Find the Cornucopia expansion instance
+        cornucopia_expansion_instance = None
+        for expansion_instance in self.supply.customization.expansions:
+            if isinstance(expansion_instance, CornucopiaExpansion):
+                cornucopia_expansion_instance = expansion_instance
+                break
+        prizes = cornucopia_expansion_instance.prizes
+        with self.move_cards():
+            print("choose_card_from_prizes")
+            if not prizes:
+                self.send('There are no Prizes remaining.')
+                return None
+            while True:
+                try:
+                    response = self._call(
+                        "choose card from prizes",
+                        {
+                            "prompt": prompt,
+                        }
+                    )
+                    if response is None:
+                        return None
+                    for card in prizes:
+                        if response["id"] == card.id:
+                            return card
+                except (IndexError, ValueError):
+                    self.send('That is not a valid choice.')
+
        
     def choose_yes_or_no(self, prompt): 
         print("choose_yes_or_no")

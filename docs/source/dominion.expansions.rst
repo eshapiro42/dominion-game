@@ -12,6 +12,14 @@ dominion.expansions.base module
    :undoc-members:
    :show-inheritance:
 
+dominion.expansions.cornucopia module
+-------------------------------------
+
+.. automodule:: dominion.expansions.cornucopia
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 dominion.expansions.expansion module
 ------------------------------------
 

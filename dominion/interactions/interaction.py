@@ -219,6 +219,17 @@ class Interaction(metaclass=ABCMeta):
         pass
 
     @abstractmethod
+    def choose_card_from_prizes(self, prompt: str) -> Optional[Card]:
+        """
+        Request the player to choose a prize. Only relevant for games using the
+        Cornucopia expansion that include the Tournament in the supply.
+
+        Args:
+            prompt: The prompt to display to the player.
+        """
+        pass
+
+    @abstractmethod
     def choose_yes_or_no(self, prompt: str) -> bool:
         """
         Request a yes or no response from the player.
