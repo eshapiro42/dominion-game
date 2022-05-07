@@ -107,7 +107,7 @@ class Pawn(ActionCard):
             '+1 Card',
             '+1 Action',
             '+1 Buy',
-            '1 $'
+            '+1 $'
         ]
         # First, the choices are selected
         choices = []
@@ -127,7 +127,7 @@ class Pawn(ActionCard):
                 self.owner.turn.plus_actions(1)
             elif choice == '+1 Buy':
                 self.owner.turn.plus_buys(1)
-            elif choice == '1 $':
+            elif choice == '+1 $':
                 self.owner.turn.plus_coppers(1)
 
 
