@@ -345,6 +345,36 @@ class Tournament(ActionCard):
             self.game.current_turn.plus_coppers(1)
 
 
+class Harvest(ActionCard):
+    name = 'Harvest'
+    cost = 5
+    types = [CardType.ACTION]
+    image_path = ''
+
+    description = '\n'.join(
+        [
+            'Reveal the top 4 cards of your deck, then discard them. +1 $ per differently named card revealed.',
+        ]
+    )
+
+    extra_cards = 0
+    extra_actions = 0
+    extra_buys = 0
+    extra_coppers = 0
+
+    def action(self):
+        # Reveal the top 4 cards of your deck and discard them
+        revealed_cards = []
+        for _ in range(4):
+            card = self.owner.take_from_deck()
+            self.owner.discard_pile.append(card)
+            revealed_cards.append(card)
+        # Count the number of differently named cards revealed
+        num_differently_named_cards = len(set([card.name for card in revealed_cards]))
+        self.game.broadcast(f"{self.owner} played a Harvest and revealed {Card.group_and_sort_by_cost(revealed_cards)} ({s(num_differently_named_cards, 'differently named card')}).")
+        self.game.current_turn.plus_coppers(num_differently_named_cards)        
+
+
 KINGDOM_CARDS = [
     Hamlet,
     FortuneTeller,
@@ -354,7 +384,7 @@ KINGDOM_CARDS = [
     Remake,
     Tournament,
     # YoungWitch,
-    # Harvest,
+    Harvest,
     # HornOfPlenty,
     # HuntingParty,
     # Jester,
