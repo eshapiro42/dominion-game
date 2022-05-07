@@ -180,6 +180,9 @@ class Harbinger(ActionCard):
     extra_coppers = 0
 
     def action(self):
+        if not self.owner.discard_pile:
+            self.game.broadcast(f'{self.owner} has no cards in their discard pile.')
+            return
         prompt = 'You played a Harbinger. You may choose a card from your discard pile to put onto your deck.'
         card = self.interactions.choose_card_from_discard_pile(prompt=prompt, force=False)
         if card is not None:
