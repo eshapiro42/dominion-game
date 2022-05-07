@@ -104,6 +104,15 @@ class Expansion(metaclass=ABCMeta):
         """
         pass
 
+    def heartbeat(self):
+        """
+        If this expansion contains additional information that
+        needs to be sent with each heartbeat, overload this method.
+
+        E.g., sending information about the Trade Route.
+        """
+        pass
+
     def scoring(self, player: Player) -> int:
         """
         If this expansion contains additional scoring mechanisms 

@@ -274,26 +274,9 @@ class HeartBeat():
                         players_info,
                         room=self.game.room
                     )
-                # Display Trade Route info
-                if prosperity_cards.TradeRoute in self.game.supply.card_stacks:
-                    # Find remaining Trade Route post gain hooks to see which Victory cards still have coin tokens
-                    victory_card_classes = [card_class for card_class in self.game.supply.card_stacks if cards.CardType.VICTORY in card_class.types]
-                    victory_card_classes_with_coin_tokens = []
-                    for victory_card_class in victory_card_classes:
-                        for post_gain_hook in self.game.supply.post_gain_hooks[victory_card_class]:
-                            if isinstance(post_gain_hook, prosperity_cards.TradeRoute.TradeRoutePostGainHook):
-                                victory_card_classes_with_coin_tokens.append(victory_card_class)
-                                break
-                    sorted_victory_card_classes_with_coin_tokens = sorted(victory_card_classes_with_coin_tokens, key=lambda card_class: card_class.cost)
-                    victory_card_names_with_coin_tokens = [card_class.name for card_class in sorted_victory_card_classes_with_coin_tokens]
-                    socketio.emit(
-                        "trade route",
-                        {
-                            "victory_cards": victory_card_names_with_coin_tokens,
-                            "tokens": self.game.supply.trade_route,
-                        },
-                        room=self.game.room
-                    )
+                # Send expansion-specific info
+                for expansion in self.game.supply.customization.expansions:
+                    expansion.heartbeat()
             except Exception as exception:
                 print(exception)
             counter += 1
