@@ -1,5 +1,6 @@
 from .expansion import Expansion
 from ..cards import cornucopia_cards
+from ..grammar import s, it_or_them
 
 class CornucopiaExpansion(Expansion):
     name = 'Cornucopia'
@@ -31,6 +32,21 @@ class CornucopiaExpansion(Expansion):
                 room=self.game.room,
             )
             
+    def order_treasures(self, player, treasures):
+        # If any Horns of Plenty are in the played treasures, allow the player to play them last
+        if any(isinstance(treasure, cornucopia_cards.HornOfPlenty) for treasure in treasures):
+            # Find all played Horns of Plenty
+            horns_of_plenty = [treasure for treasure in treasures if isinstance(treasure, cornucopia_cards.HornOfPlenty)]
+            # Ask the player if they want to play them last
+            prompt = f"You played {s(len(horns_of_plenty), cornucopia_cards.HornOfPlenty)}. Would you like to play {it_or_them(len(horns_of_plenty))} last to maximize the number of differently named cards played this turn?"
+            if player.interactions.choose_yes_or_no(prompt):
+                # Remove the Horns of Plenty from the list of played treasures
+                treasures = [treasure for treasure in treasures if not isinstance(treasure, cornucopia_cards.HornOfPlenty)]
+                # Add the Horns of Plenty to the end of the list of played treasures
+                treasures.extend(horns_of_plenty)
+        return treasures
+
+
     @property
     def game_end_conditions(self):
         return []

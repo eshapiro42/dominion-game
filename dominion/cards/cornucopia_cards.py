@@ -168,6 +168,7 @@ class FarmingVillage(ActionCard):
 
 class HorseTraders(ReactionCard):
     name = 'Horse Traders'
+    pluralized = 'Horse Traders'
     cost = 4
     types = [CardType.ACTION, CardType.REACTION]
     image_path = ''
@@ -372,7 +373,37 @@ class Harvest(ActionCard):
         # Count the number of differently named cards revealed
         num_differently_named_cards = len(set([card.name for card in revealed_cards]))
         self.game.broadcast(f"{self.owner} played a Harvest and revealed {Card.group_and_sort_by_cost(revealed_cards)} ({s(num_differently_named_cards, 'differently named card')}).")
-        self.game.current_turn.plus_coppers(num_differently_named_cards)        
+        self.game.current_turn.plus_coppers(num_differently_named_cards)
+
+
+class HornOfPlenty(TreasureCard):
+    name = 'Horn of Plenty'
+    pluralized = 'Horns of Plenty'
+    cost = 5
+    types = [CardType.TREASURE]
+    image_path = ''
+
+    value = 0
+
+    description = '\n'.join(
+        [
+            "When you play this, gain a card costing up to $1 per differently named card you have in play (counting this). If it's a Victory card, trash this.",
+        ]
+    )
+
+    def play(self):
+        # Count the number of differently named cards in play (counting this)
+        num_differently_named_cards = len(set([card.name for card in self.owner.played_cards]))
+        # Gain a card costing up to that amount
+        self.game.broadcast(f"{self.owner} may gain a card costing up to {num_differently_named_cards} $ from their Horn of Plenty.")
+        prompt = f"Choose a card costing up to {num_differently_named_cards} to gain from your Horn of Plenty."
+        card_class_to_gain = self.owner.interactions.choose_card_class_from_supply(prompt, max_cost=num_differently_named_cards, force=True)
+        if card_class_to_gain is not None:
+            self.owner.gain(card_class_to_gain)
+        # If the gained card is a Victory card, trash this card
+        if CardType.VICTORY in card_class_to_gain.types:
+            self.game.broadcast(f"{self.owner} trashed a Horn of Plenty because they used it to gain a Victory card.")
+            self.owner.trash_played_card(self, message=False)
 
 
 KINGDOM_CARDS = [
@@ -385,7 +416,7 @@ KINGDOM_CARDS = [
     Tournament,
     # YoungWitch,
     Harvest,
-    # HornOfPlenty,
+    HornOfPlenty,
     # HuntingParty,
     # Jester,
     # Fairgrounds,
@@ -396,7 +427,8 @@ KINGDOM_CARDS = [
 
 
 class BagOfGold(ActionCard):
-    name = 'Bag of Gold'
+    name = 'Bag of Gold' 
+    pluralized = 'Bags of Gold' # Not really needed since by definition there is only one in the game
     cost = 0
     types = [CardType.ACTION, CardType.PRIZE]
     image_path = ''
@@ -442,6 +474,7 @@ class Diadem(TreasureCard):
 
 class Followers(AttackCard):
     name = 'Followers'
+    pluralized = 'Followers' # Not really needed since by definition there is only one in the game
     cost = 0
     types = [CardType.ATTACK, CardType.ACTION, CardType.PRIZE]
     image_path = ''
@@ -485,6 +518,7 @@ class Followers(AttackCard):
 
 class Princess(ActionCard):
     name = 'Princess'
+    pluralized = 'Princesses' # Not really needed since by definition there is only one in the game
     cost = 0
     types = [CardType.ACTION, CardType.PRIZE]
     image_path = ''

@@ -5,7 +5,7 @@ from abc import ABCMeta, abstractmethod
 from typing import TYPE_CHECKING, Callable, List, Optional, Tuple, Type
 
 if TYPE_CHECKING:
-    from ..cards.cards import Card
+    from ..cards.cards import Card, TreasureCard
     from ..game import Game
     from ..player import Player
     from ..supply import Supply
@@ -112,6 +112,22 @@ class Expansion(metaclass=ABCMeta):
         E.g., sending information about the Trade Route.
         """
         pass
+
+    def order_treasures(self, player: Player, treasures: List[TreasureCard]) -> List[TreasureCard]:
+        """
+        If this expansion contains cards that care about the order
+        in which Treasure cards are played, overload this method
+        and use it to allow players to adjust the order of played
+        Treasure cards.
+
+        E.g., players will normally want to play the Horn of Plenty
+        after their other Treasure cards.
+
+        Args:
+            player: The Player whose turn it is currently.
+            treasures: A list of Treasure cards that have been played.
+        """
+        return treasures
 
     def scoring(self, player: Player) -> int:
         """

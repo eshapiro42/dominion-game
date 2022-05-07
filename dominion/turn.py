@@ -526,6 +526,9 @@ class BuyPhase(Phase):
         if not treasures:
             self.game.broadcast(f"{self.player} did not play any Treasures.")
             return
+        # Allow each expansion to modify the order of Treasures played
+        for expansion_instance in self.supply.customization.expansions:
+            treasures = expansion_instance.order_treasures(self.player, treasures)
         treasures_string = cards.Card.group_and_sort_by_cost(treasures)
         self.game.broadcast(f"{self.player} played Treasures: {treasures_string}.")
         # Play the Treasures
