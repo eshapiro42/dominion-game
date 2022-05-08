@@ -1040,6 +1040,7 @@ class Thief(AttackCard):
             # Allow the attacker to gain the trashed card
             prompt = f"Would you like to gain {player}'s trashed {card_to_trash}?"
             if attacker.interactions.choose_yes_or_no(prompt=prompt):
+                card_to_trash.owner = attacker
                 attacker.discard_pile.append(card_to_trash)
                 self.game.broadcast(f"{attacker} gained {player}'s trashed {card_to_trash}.")
             else:

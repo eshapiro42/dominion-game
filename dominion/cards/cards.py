@@ -4,7 +4,7 @@ from abc import ABCMeta, abstractmethod
 from collections import defaultdict
 from enum import Enum, auto
 from gevent import Greenlet, joinall
-from typing import TYPE_CHECKING, Optional, Dict, List, Tuple, Type
+from typing import TYPE_CHECKING, Dict, List, Tuple, Type
 
 from ..grammar import a, s, Word
 
@@ -46,24 +46,25 @@ class Card(Word, metaclass=ABCMeta):
 
     description = ''
 
-    def __init__(self, owner: Optional[Player] = None):
+    def __init__(self, owner: Player | None = None):
         self._owner = owner
         self._id = Card.__lowest_id
         Card.__lowest_id += 1
 
     @property
-    def owner(self) -> Optional[Player]:
+    def owner(self) -> Player | None:
         """
         The owner of the card.
         """
         return self._owner
 
     @owner.setter
-    def owner(self, owner: Player):
+    def owner(self, owner: Player | None):
         self._owner: Player = owner
-        self.interactions: Interaction = self.owner.interactions
-        self.game: Game = self.owner.game
-        self.supply: Supply = self.owner.game.supply
+        if owner is not None:
+            self.interactions: Interaction = self.owner.interactions
+            self.game: Game = self.owner.game
+            self.supply: Supply = self.owner.game.supply
 
     @property
     def id(self) -> int:

@@ -189,10 +189,6 @@ class HorseTraders(ReactionCard):
     extra_buys = 1
     extra_coppers = 3
 
-    def __init__(self):
-        super().__init__()
-        self.num_reactions = 0
-
     def action(self):
         # Discard 2 cards
         prompt = "You played a Horse Traders. Select 2 cards to discard."
@@ -221,8 +217,6 @@ class HorseTraders(ReactionCard):
             self.player.hand.append(self.set_aside_card)
 
     def react(self):
-        self.num_reactions += 1
-        print(self.num_reactions)
         prompt = "Would you like to set this Horse Traders aside from your hand? If you do, then at the start of your next turn, you will return it to your hand and get +1 Card."
         if self.owner.interactions.choose_yes_or_no(prompt):
             self.owner.hand.remove(self)
@@ -498,7 +492,7 @@ class Jester(AttackCard):
             # Players with no cards are unaffected
             self.game.broadcast(f"{player} has no cards left to draw from and is unaffected by {attacker}'s Jester.")
             return
-        self.owner.discard_pile.append(card)
+        player.discard_pile.append(card)
         self.game.broadcast(f"{player} discarded {a(card)} via {attacker}'s Jester.")
         if CardType.VICTORY in card.types:
             # If the card is a Victory card, gain a Curse

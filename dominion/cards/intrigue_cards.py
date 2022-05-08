@@ -458,7 +458,7 @@ class Diplomat(ReactionCard):
         # Discard 3 cards
         self.game.broadcast(f"{self.owner} must discard 3 cards.")
         prompt = f"Choose 3 cards to discard."
-        cards_to_discard = self.interactions.choose_cards_from_hand(prompt, force=True, max_cards=3)
+        cards_to_discard = self.owner.interactions.choose_cards_from_hand(prompt, force=True, max_cards=3)
         for card_to_discard in cards_to_discard:
             self.owner.discard(card_to_discard)
         return None, True # Can be used again 

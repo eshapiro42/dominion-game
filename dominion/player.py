@@ -365,8 +365,8 @@ class Player:
             card: The Card to trash.
             message: Whether to broadcast a message to all Players saying that the card was trashed.
         """
-        self.supply.trash(card)
         self.hand.remove(card)
+        self.supply.trash(card)
         if message:
             self.game.broadcast(f'{self.name} trashed {a(card)}.')
 
@@ -396,7 +396,7 @@ class Player:
             card_class: The class of the Card to take.
         """
         try:
-            card = self.supply.trash_pile[card_class].pop()
+            card: Card = self.supply.trash_pile[card_class].pop()
             card.owner = self
         except IndexError: # If a card cannot be taken, there are none left
             card = None
@@ -404,13 +404,13 @@ class Player:
 
     def gain_from_trash(self, card_class: Type[Card], message: bool = True):
         """
-        Gain a card from the Trash.
+        Gain a card from the Trash (and set its owner to the Player).
 
         Args:
             card_class: The class of the Card to gain.
             message: Whether to broadcast a message to all Players saying that the card was gained.
         """
-        card = self.take_from_trash(card_class)
+        card: Card = self.take_from_trash(card_class)
         if card is not None:
             self.discard_pile.append(card)
             self.process_post_gain_hooks(card, self.discard_pile)
