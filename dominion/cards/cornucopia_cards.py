@@ -1,3 +1,5 @@
+import math
+
 from gevent import Greenlet, joinall
 
 from .cards import CardType, Card, TreasureCard, ActionCard, AttackCard, ReactionCard, VictoryCard, CurseCard, ReactionType
@@ -187,6 +189,10 @@ class HorseTraders(ReactionCard):
     extra_buys = 1
     extra_coppers = 3
 
+    def __init__(self):
+        super().__init__()
+        self.num_reactions = 0
+
     def action(self):
         # Discard 2 cards
         prompt = "You played a Horse Traders. Select 2 cards to discard."
@@ -215,11 +221,13 @@ class HorseTraders(ReactionCard):
             self.player.hand.append(self.set_aside_card)
 
     def react(self):
+        self.num_reactions += 1
+        print(self.num_reactions)
         prompt = "Would you like to set this Horse Traders aside from your hand? If you do, then at the start of your next turn, you will return it to your hand and get +1 Card."
         if self.owner.interactions.choose_yes_or_no(prompt):
             self.owner.hand.remove(self)
             self.game.broadcast(f"{self.owner} set a Horse Traders aside from their hand for next turn.")
-            pre_turn_hook = self.HorseTradersPreTurnHook(self.game, self.owner, set_aside_card=self)
+            pre_turn_hook = self.HorseTradersPreTurnHook(game=self.game, player=self.owner, set_aside_card=self)
             self.game.add_pre_turn_hook(pre_turn_hook)
         return None, False # When set aside, it is not in play or in your hand and cannot be further revealed when Attacked
 
@@ -368,6 +376,8 @@ class Harvest(ActionCard):
         revealed_cards = []
         for _ in range(4):
             card = self.owner.take_from_deck()
+            if card is None:
+                break
             self.owner.discard_pile.append(card)
             revealed_cards.append(card)
         # Count the number of differently named cards revealed
@@ -406,6 +416,129 @@ class HornOfPlenty(TreasureCard):
             self.owner.trash_played_card(self, message=False)
 
 
+class HuntingParty(ActionCard):
+    name = 'Hunting Party'
+    pluralized = 'Hunting Parties'
+    cost = 5
+    types = [CardType.ACTION]
+    image_path = ''
+
+    description = '\n'.join(
+        [
+            # '+1 Card',
+            # '+1 Action',
+            "Reveal your hand. Reveal cards from your deck until you reveal one that isn't a copy of one in your hand. Put it into your hand and discard the rest.",
+        ]
+    )
+
+    extra_cards = 1
+    extra_actions = 1
+    extra_buys = 0
+    extra_coppers = 0
+
+    def action(self):
+        # Reveal your hand
+        self.game.broadcast(f"{self.owner} revealed their hand: {Card.group_and_sort_by_cost(self.owner.hand)}.")
+        # Reveal cards from your deck until you reveal one that isn't a copy of one in your hand
+        revealed_cards = []
+        unique_revealed_card = None
+        while True:
+            revealed_card = self.owner.take_from_deck()
+            print(revealed_card)
+            if revealed_card is None:
+                self.game.broadcast(f'{self.owner} had no cards left to draw from and did not put anything into their hand.')
+                break
+            # Check whether the card is a copy of one in your hand
+            if any(card.name == revealed_card.name for card in self.owner.hand):
+                revealed_cards.append(revealed_card)
+            else:
+                unique_revealed_card = revealed_card
+                break
+        # Put it into your hand (the rest have already been discarded but that has not yet been broadcasted)
+        if revealed_cards:
+            for card in revealed_cards:
+                self.owner.discard_pile.append(card)
+            self.game.broadcast(f"{self.owner} revealed and discarded {Card.group_and_sort_by_cost(revealed_cards)} with their Hunting Party.")
+        if unique_revealed_card is not None:
+            self.owner.hand.append(unique_revealed_card)
+            self.game.broadcast(f"{self.owner} put {a(unique_revealed_card.name)} into their hand with their Hunting Party.")
+
+
+class Jester(AttackCard):
+    name = 'Jester'
+    cost = 5
+    types = [CardType.ACTION, CardType.ATTACK]
+    image_path = ''
+
+    description = '\n'.join(
+        [
+            # '+2 $',
+            "Each other player discards the top card of their deck. If it's a Victory card they gain a Curse; otherwise they gain a copy of the discarded card or you do, your choice.",
+        ]
+    )
+
+    extra_cards = 0
+    extra_actions = 0
+    extra_buys = 0
+    extra_coppers = 2
+
+    allow_simultaneous_reactions = False # If only one Curse is left in the Supply, it is important that this is resolved in turn order
+    
+    @property
+    def prompt(self):
+        return f"Each other player discards the top card of their deck. If it's a Victory card they gain a Curse; otherwise they gain a copy of the discarded card or {self.owner} does, {self.owner}'s choice."
+
+    def action(self):
+        pass
+        
+    def attack_effect(self, attacker, player):
+        # Discard the top card of your deck
+        card = player.take_from_deck()
+        if card is None:
+            # Players with no cards are unaffected
+            self.game.broadcast(f"{player} has no cards left to draw from and is unaffected by {attacker}'s Jester.")
+            return
+        self.owner.discard_pile.append(card)
+        self.game.broadcast(f"{player} discarded {a(card)} via {attacker}'s Jester.")
+        if CardType.VICTORY in card.types:
+            # If the card is a Victory card, gain a Curse
+            player.gain(base_cards.Curse)
+            return
+        # Otherwise, they gain a copy of the discarded card or the attacker does, the attacker's choice
+        card_class_to_gain = type(card)
+        if card_class_to_gain not in self.supply.card_stacks or self.supply.card_stacks[card_class_to_gain].is_empty:
+            # If the card is not in the Supply (e.g., a Prize) or its Supply pile is empty, no copy is gained
+            self.game.broadcast(f"There are no remaining copies of {card.name} to be gained.")
+            return
+        prompt = f'You played a Jester and {player} revealed and discarded a {card.name} from their deck. Who would you like to gain a copy of the {card.name}?'
+        options = [
+            f'Me ({attacker})',
+            f'{player}',
+        ]
+        choice = attacker.interactions.choose_from_options(prompt, options, force=True)
+        if choice == options[0]:
+            # The attacker gains a copy of the card
+            attacker.gain(card_class_to_gain)
+        else:
+            # The attacked player gains a copy of the card
+            player.gain(card_class_to_gain)
+
+
+class Fairgrounds(VictoryCard):
+    name = 'Fairgrounds'
+    pluralized = 'Fairgrounds'
+    cost = 6
+    types = [CardType.VICTORY]
+    image_path = ''
+
+    description = 'Worth 2 victory points per 5 differently named cards you have (round down).'
+
+    @property
+    def points(self):
+        num_differently_named_cards = len(set([card.name for card in self.owner.all_cards]))
+        return 2 * math.floor(num_differently_named_cards / 5)
+
+
 KINGDOM_CARDS = [
     Hamlet,
     FortuneTeller,
@@ -417,9 +550,9 @@ KINGDOM_CARDS = [
     # YoungWitch,
     Harvest,
     HornOfPlenty,
-    # HuntingParty,
-    # Jester,
-    # Fairgrounds,
+    HuntingParty,
+    Jester,
+    Fairgrounds,
 ]
 
 
@@ -476,7 +609,7 @@ class Followers(AttackCard):
     name = 'Followers'
     pluralized = 'Followers' # Not really needed since by definition there is only one in the game
     cost = 0
-    types = [CardType.ATTACK, CardType.ACTION, CardType.PRIZE]
+    types = [CardType.ACTION, CardType.ATTACK, CardType.PRIZE]
     image_path = ''
 
     description = '\n'.join(

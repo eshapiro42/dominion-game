@@ -8,7 +8,6 @@ class CornucopiaExpansion(Expansion):
     def __init__(self, game):
         super().__init__(game)
         self.prizes = [prize() for prize in cornucopia_cards.PRIZES]
-        print(self.prizes)
 
     @property
     def basic_card_piles(self):

@@ -276,14 +276,15 @@ class Player:
         self.discard_pile.clear()
         random.shuffle(self.deck)
 
-    def take_from_deck(self) -> Card:
+    def take_from_deck(self) -> Card | None:
         """
         Take a Card from the Player's deck.
 
         This orphans the card and it must explicitly be added to another deque.
 
         Returns:
-            card: The Card that was taken from the Player's deck.
+            card: The Card that was taken from the Player's deck, or :obj:`None`
+                  if their deck is empty even after shuffling.
         """
         try:
             card = self.deck.pop()
