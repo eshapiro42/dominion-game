@@ -293,9 +293,17 @@
         color: $dark-text-color;
     }
 
+    .attack .hoverable-text {
+        color: #ffcccc;
+    }
+
     .reaction {
         background-color: #80bfff;
         color: $dark-text-color;
+    }
+
+    .reaction .hoverable-text {
+        color: #80bfff;
     }
 
     .victory {
@@ -303,14 +311,26 @@
         color: $dark-text-color;
     }
 
+    .victory .hoverable-text {
+        color: #c1f0c1;
+    }
+
     .curse {
         background-color: #dab3ff;
         color: $dark-text-color;
     }
 
+    .curse .hoverable-text {
+        color: #dab3ff;
+    }
+
     .treasure {
         background-color: #fff0b3;
         color: $dark-text-color;
+    }
+
+    .treasure .hoverable-text {
+        color: #fff0b3;
     }
 
     .basicTreasure .description {
