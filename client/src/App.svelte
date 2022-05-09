@@ -14,6 +14,7 @@
     import PlayedCards from "./components/played_cards.svelte";
     import PlayerInfo from "./components/player_info.svelte";
     import PopUp from "./components/pop_up.svelte";
+    import Prizes from "./components/prizes.svelte";
     import SideBar from "./components/side_bar.svelte";
     import SummaryBar from "./components/summary_bar.svelte";
     import Supply from "./components/supply.svelte";
@@ -187,6 +188,8 @@
         <Trash/>
 
         <TradeRoute/>
+
+        <Prizes/>
 
         <PlayerInfo/>
     {/if}

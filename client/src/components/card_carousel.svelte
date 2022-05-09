@@ -9,7 +9,8 @@
     export let title;
     export let waitingForSelection;
     export let sortByProperty = "type";
-    export let invalidCards = [];
+    export let invalidCardNames = [];
+    export let invalidCardIds = [];
 
     export let cards = [ 
         // This is the "source of truth" for all cards in the front-end
@@ -204,7 +205,8 @@
             {#each sortedCards as card (card.id)}
                 <Card
                     {...card}
-                    {invalidCards}
+                    {invalidCardNames}
+                    {invalidCardIds}
                     {waitingForSelection}
                     {selectedAll}
                     {numSelected}

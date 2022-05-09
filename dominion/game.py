@@ -7,7 +7,7 @@ from collections import defaultdict
 from typing import TYPE_CHECKING, Callable, Optional, Dict, List, Tuple, Type
 
 from .cards.cards import Card, CardType
-from .expansions import BaseExpansion, ProsperityExpansion, IntrigueExpansion
+from .expansions import BaseExpansion, ProsperityExpansion, IntrigueExpansion, CornucopiaExpansion
 from .grammar import s
 from .interactions import CLIInteraction
 from .player import Player
@@ -17,7 +17,7 @@ from .turn import Turn
 if TYPE_CHECKING:
     from flask_socketio import SocketIO
     from .expansions.expansion import Expansion
-    from .hooks import TreasureHook, PreBuyHook
+    from .hooks import TreasureHook, PreBuyHook, PreTurnHook
     from .interactions.interaction import Interaction
 
 
@@ -57,6 +57,7 @@ class Game:
         self._current_turn = None
         self._treasure_hooks = defaultdict(list)
         self._pre_buy_hooks = defaultdict(list)
+        self._pre_turn_hooks = []
         self._game_end_conditions = []
         self._expansions = set()
         self._allow_simultaneous_reactions = False
@@ -70,6 +71,7 @@ class Game:
         self.add_expansion(BaseExpansion) # This must always be here or the game will not work
         # self.add_expansion(IntrigueExpansion)
         # self.add_expansion(ProsperityExpansion)
+        # self.add_expansion(CornucopiaExpansion)
 
     @property
     def socketio(self) -> Optional[SocketIO]:
@@ -229,6 +231,17 @@ class Game:
         self._pre_buy_hooks = pre_buy_hooks
 
     @property
+    def pre_turn_hooks(self) -> List[PreTurnHook]:
+        '''
+        A list of game-wide :obj:`PreTurnHook` instances.
+        '''
+        return self._pre_turn_hooks
+
+    @pre_turn_hooks.setter
+    def pre_turn_hooks(self, pre_turn_hooks: List[PreTurnHook]):
+        self._pre_turn_hooks = pre_turn_hooks
+
+    @property
     def game_end_conditions(self) -> List[Callable[[], Tuple[bool, Optional[str]]]]:
         """
         A list of functions that take no arguments and return
@@ -372,6 +385,12 @@ class Game:
             card_class: The card class which should activate the pre-buy hook.
         '''
         self.pre_buy_hooks[card_class].append(pre_buy_hook)
+
+    def add_pre_turn_hook(self, pre_turn_hook: PreTurnHook):
+        '''
+        Add a game-wide pre-turn hook.
+        '''
+        self.pre_turn_hooks.append(pre_turn_hook)
 
     def add_expansion(self, expansion: Type[Expansion]):
         '''

@@ -5,6 +5,7 @@ from threading import Event # Monkey patched to use gevent Events
 from typing import List, Optional
 
 from ..cards import cards
+from ..expansions import CornucopiaExpansion
 from ..grammar import s
 from .interaction import Interaction
 
@@ -143,7 +144,7 @@ class BrowserInteraction(Interaction):
         except Exception as exception:
             print(exception)
 
-    def choose_cards_from_hand(self, prompt, force, max_cards=1) -> List[cards.Card]:
+    def choose_cards_from_hand(self, prompt, force, max_cards=1, invalid_cards=None) -> List[cards.Card]:
         with self.move_cards():
             print("choose_card_from_hand")
             if not self.hand:
@@ -151,6 +152,8 @@ class BrowserInteraction(Interaction):
                 return []
             if max_cards is not None:
                 max_cards = min(max_cards, len(self.hand)) # Don't ask for more cards than we have
+            if invalid_cards is None:
+                invalid_cards = []
             while True:
                 try:
                     response = self._call(
@@ -159,6 +162,7 @@ class BrowserInteraction(Interaction):
                             "prompt": prompt,
                             "force": force,
                             "max_cards": max_cards,
+                            "invalid_cards": [card.id for card in invalid_cards]
                         }
                     )
                     if force:
@@ -177,8 +181,8 @@ class BrowserInteraction(Interaction):
                 except ArithmeticError:
                     self.send(f"You must choose exactly {s(max_cards, 'card')}.")
 
-    def choose_card_from_hand(self, prompt, force) -> Optional[cards.Card]:
-        cards_chosen = self.choose_cards_from_hand(prompt, force, max_cards=1)
+    def choose_card_from_hand(self, prompt, force, invalid_cards=None) -> Optional[cards.Card]:
+        cards_chosen = self.choose_cards_from_hand(prompt, force, max_cards=1, invalid_cards=invalid_cards)
         if not cards_chosen:
             return None
         return cards_chosen[0]
@@ -352,6 +356,36 @@ class BrowserInteraction(Interaction):
             for card_class in gainable_card_classes:
                 if card_data["name"] == card_class.name:
                     return card_class
+
+    def choose_card_from_prizes(self, prompt):
+        # Find the Cornucopia expansion instance
+        cornucopia_expansion_instance = None
+        for expansion_instance in self.supply.customization.expansions:
+            if isinstance(expansion_instance, CornucopiaExpansion):
+                cornucopia_expansion_instance = expansion_instance
+                break
+        prizes = cornucopia_expansion_instance.prizes
+        with self.move_cards():
+            print("choose_card_from_prizes")
+            if not prizes:
+                self.send('There are no Prizes remaining.')
+                return None
+            while True:
+                try:
+                    response = self._call(
+                        "choose card from prizes",
+                        {
+                            "prompt": prompt,
+                        }
+                    )
+                    if response is None:
+                        return None
+                    for card in prizes:
+                        if response["id"] == card.id:
+                            return card
+                except (IndexError, ValueError):
+                    self.send('That is not a valid choice.')
+
        
     def choose_yes_or_no(self, prompt): 
         print("choose_yes_or_no")

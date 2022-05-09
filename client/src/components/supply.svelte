@@ -4,7 +4,7 @@
     import CardCarousel from "./card_carousel.svelte";
   
     let cards = [];
-    let invalidCards;
+    let invalidCardNames;
     let waitingForSelection = {
         value: false,
         handler: null,
@@ -50,7 +50,7 @@
     $socket.on(
         "choose card class from supply",
         (data) => {
-            invalidCards = data.invalid_cards;
+            invalidCardNames = data.invalid_cards;
             waitingForSelection.value = true;
             waitingForSelection.prompt = data.prompt;
             waitingForSelection.handler = handleSupplyCardClassSelected;
@@ -77,7 +77,7 @@
     $socket.on(
         "response received",
         (data) => {
-            invalidCards = [];
+            invalidCardNames = [];
             waitingForSelection = {
                 value: false,
                 handler: null,
@@ -96,7 +96,7 @@
     <CardCarousel
         title="Supply"
         {cards}
-        {invalidCards}
+        {invalidCardNames}
         sortByProperty = "cost"
         {waitingForSelection}
         on:selected={handleSelected}

@@ -5,7 +5,7 @@ import random
 from collections import deque
 from typing import TYPE_CHECKING, Optional, Deque, List, Type
 
-from .cards import base_cards
+from .cards import base_cards, cornucopia_cards, prosperity_cards
 from .expansions import ProsperityExpansion
 from .grammar import a, s
 from .supply import SupplyStackEmptyError
@@ -276,14 +276,15 @@ class Player:
         self.discard_pile.clear()
         random.shuffle(self.deck)
 
-    def take_from_deck(self) -> Card:
+    def take_from_deck(self) -> Card | None:
         """
         Take a Card from the Player's deck.
 
         This orphans the card and it must explicitly be added to another deque.
 
         Returns:
-            card: The Card that was taken from the Player's deck.
+            card: The Card that was taken from the Player's deck, or :obj:`None`
+                  if their deck is empty even after shuffling.
         """
         try:
             card = self.deck.pop()
@@ -364,8 +365,8 @@ class Player:
             card: The Card to trash.
             message: Whether to broadcast a message to all Players saying that the card was trashed.
         """
-        self.supply.trash(card)
         self.hand.remove(card)
+        self.supply.trash(card)
         if message:
             self.game.broadcast(f'{self.name} trashed {a(card)}.')
 
@@ -395,7 +396,7 @@ class Player:
             card_class: The class of the Card to take.
         """
         try:
-            card = self.supply.trash_pile[card_class].pop()
+            card: Card = self.supply.trash_pile[card_class].pop()
             card.owner = self
         except IndexError: # If a card cannot be taken, there are none left
             card = None
@@ -403,13 +404,13 @@ class Player:
 
     def gain_from_trash(self, card_class: Type[Card], message: bool = True):
         """
-        Gain a card from the Trash.
+        Gain a card from the Trash (and set its owner to the Player).
 
         Args:
             card_class: The class of the Card to gain.
             message: Whether to broadcast a message to all Players saying that the card was gained.
         """
-        card = self.take_from_trash(card_class)
+        card: Card = self.take_from_trash(card_class)
         if card is not None:
             self.discard_pile.append(card)
             self.process_post_gain_hooks(card, self.discard_pile)

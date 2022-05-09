@@ -5,7 +5,7 @@ from abc import ABCMeta, abstractmethod
 from typing import TYPE_CHECKING, Callable, List, Optional, Tuple, Type
 
 if TYPE_CHECKING:
-    from ..cards.cards import Card
+    from ..cards.cards import Card, TreasureCard
     from ..game import Game
     from ..player import Player
     from ..supply import Supply
@@ -94,15 +94,54 @@ class Expansion(metaclass=ABCMeta):
         """
         pass
 
+    def add_additional_kingdom_cards(self):
+        """
+        If this expansion needs to add additional Kingdom cards to
+        the Supply, overload this method to perform the required
+        actions.
+
+        This occurs after the initial 10 Kingdom cards are added to
+        the Supply.
+
+        E.g., Young Witch.
+        """
+
     def additional_setup(self):
         """
         If this expansion contains additional setup mechanisms
         that need to be performed before the Game starts, overload
         this method to perform the required actions.
 
+        This occurs after all Kingdom cards are added to the Supply.
+
         E.g., registering hooks to specific cards.
         """
         pass
+
+    def heartbeat(self):
+        """
+        If this expansion contains additional information that
+        needs to be sent with each heartbeat, overload this method.
+
+        E.g., sending information about the Trade Route.
+        """
+        pass
+
+    def order_treasures(self, player: Player, treasures: List[TreasureCard]) -> List[TreasureCard]:
+        """
+        If this expansion contains cards that care about the order
+        in which Treasure cards are played, overload this method
+        and use it to allow players to adjust the order of played
+        Treasure cards.
+
+        E.g., players will normally want to play the Horn of Plenty
+        after their other Treasure cards.
+
+        Args:
+            player: The Player whose turn it is currently.
+            treasures: A list of Treasure cards that have been played.
+        """
+        return treasures
 
     def scoring(self, player: Player) -> int:
         """

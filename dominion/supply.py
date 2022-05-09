@@ -8,7 +8,7 @@ from collections import defaultdict
 from math import inf
 from typing import TYPE_CHECKING, Dict, List, Type
 
-from .cards import cards, base_cards, prosperity_cards, intrigue_cards
+from .cards import cards, base_cards, prosperity_cards, intrigue_cards, cornucopia_cards
 
 if TYPE_CHECKING:
     from .cards.cards import Card
@@ -43,14 +43,14 @@ class Customization:
         self._require_trashing = True # If toggled, ensures there is at least one card that allows trashing
 
     @property
-    def expansions(self) -> set[Type[Expansion]]:
+    def expansions(self) -> set[Expansion]:
         """
         A set of expansion classes to be chosen from in the supply.
         """
         return self._expansions
 
     @expansions.setter
-    def expansions(self, expansions: set[Type[Expansion]]):
+    def expansions(self, expansions: set[Expansion]):
         self._expansions = expansions
 
     @property
@@ -185,8 +185,9 @@ class Supply:
         self._card_stacks = {}
         self._post_gain_hooks = defaultdict(list)
         self._customization = Customization()
+        self._possible_kingdom_card_classes: List[Type(Card)] = []
         # TODO: Remove these (they are for debugging specific cards)
-        # self.customization.required_card_classes.add(prosperity_cards.Contraband)
+        # self.customization.required_card_classes.add(cornucopia_cards.YoungWitch)
 
     @property
     def num_players(self) -> int:
@@ -235,6 +236,17 @@ class Supply:
         """
         return self._customization
 
+    @property
+    def possible_kingdom_card_classes(self) -> List[Type[Card]]:
+        """
+        A list of all the card classes that can be used in the kingdom.
+        """
+        return self._possible_kingdom_card_classes
+
+    @possible_kingdom_card_classes.setter
+    def possible_kingdom_card_classes(self, possible_kingdom_card_classes: List[Type[Card]]):
+        self._possible_kingdom_card_classes = possible_kingdom_card_classes
+
     def setup(self):
         """
         Create the supply stacks and add cards to them, and perform any
@@ -247,6 +259,7 @@ class Supply:
         self._select_kingdom_cards()
         self._select_basic_cards()
         self._create_trash_pile()
+        self._add_additional_kingdom_cards()
         self._additional_setup()
 
     def _select_kingdom_cards(self):
@@ -257,21 +270,21 @@ class Supply:
         """
         selected_kingdom_card_classes = []
         # Get all possible kingdom cards from the selected expansions
-        possible_kingdom_card_classes = []
+        self.possible_kingdom_card_classes = []
         for expansion in self.customization.expansions:
-            possible_kingdom_card_classes += expansion.kingdom_card_classes
+            self.possible_kingdom_card_classes += expansion.kingdom_card_classes
         # Add in any required cards. Note that this will break things is a required card's expansion is not selected.
         for required_card_class in self.customization.required_card_classes:
-            if required_card_class not in possible_kingdom_card_classes:
+            if required_card_class not in self.possible_kingdom_card_classes:
                 raise ValueError(f"Required card class {required_card_class.name} is not in the selected expansions.")
             print(f"Adding required card class {required_card_class.name}.")
             selected_kingdom_card_classes.append(required_card_class)
-            possible_kingdom_card_classes.remove(required_card_class)
+            self.possible_kingdom_card_classes.remove(required_card_class)
         # All filtering and disabling should be done prior to fulfilling requirements!
         if self.customization.disable_attack_cards:
             # Filter out attack cards
             print("Disabling attack cards.")
-            possible_kingdom_card_classes = [card_class for card_class in copy.deepcopy(possible_kingdom_card_classes) if cards.CardType.ATTACK not in card_class.types]
+            self.possible_kingdom_card_classes = [card_class for card_class in copy.deepcopy(self.possible_kingdom_card_classes) if cards.CardType.ATTACK not in card_class.types]
         # Find and add in kingdom cards satisfying the required effects
         required_effects = [effect for effect, required in self.customization.required_effects.items() if required]
         random.shuffle(required_effects) # Shuffle the list of required effects so some cards don't get preferential treatment every game
@@ -281,28 +294,28 @@ class Supply:
                 print(f"{required_effect} is already satisfied by a previously selected card.")
                 continue
             # Otherwise, find a card that has the required effect
-            possible_kingdom_card_classes_with_required_effect = [card_class for card_class in possible_kingdom_card_classes if self.customization.card_has_effect(card_class, required_effect)]
+            possible_kingdom_card_classes_with_required_effect = [card_class for card_class in self.possible_kingdom_card_classes if self.customization.card_has_effect(card_class, required_effect)]
             card_class_with_required_effect = random.choice(possible_kingdom_card_classes_with_required_effect)
             print(f"Adding {card_class_with_required_effect.name} to satisfy {required_effect}.")
             # Add the card to the list of selected kingdom cards
             selected_kingdom_card_classes.append(card_class_with_required_effect)
             # Remove the card from the list of possible remaining kingdom cards
-            possible_kingdom_card_classes.remove(card_class_with_required_effect)
+            self.possible_kingdom_card_classes.remove(card_class_with_required_effect)
         if self.customization.distribute_cost:
             # Make sure there are at least two kingdom cards each of cost {2, 3, 4, 5} (this leaves 2 cards of any cost if no other customizations are chosen)
             print("Distributing costs")
             selected_kingdom_card_classes_by_cost = {cost: [card_class for card_class in selected_kingdom_card_classes if card_class.cost == cost] for cost in range(2, 6)}
-            possible_kingdom_card_classes_by_cost = {cost: [card_class for card_class in possible_kingdom_card_classes if card_class.cost == cost] for cost in range(2, 6)}
+            possible_kingdom_card_classes_by_cost = {cost: [card_class for card_class in self.possible_kingdom_card_classes if card_class.cost == cost] for cost in range(2, 6)}
             for cost in range(2, 6):
                 num_still_needed = max(0, 2 - len(selected_kingdom_card_classes_by_cost[cost]))
                 card_classes_of_cost = random.sample(possible_kingdom_card_classes_by_cost[cost], num_still_needed)
                 print(f"Adding {num_still_needed} cards of cost {cost}: {' and '.join(card_class.name for card_class in card_classes_of_cost)}")
                 for card_class in card_classes_of_cost:
                     selected_kingdom_card_classes.append(card_class)
-                    possible_kingdom_card_classes.remove(card_class)
+                    self.possible_kingdom_card_classes.remove(card_class)
         # Select the remaining cards at random
         num_cards_remaining = max(0, 10 - len(selected_kingdom_card_classes))
-        selected_kingdom_card_classes += random.sample(possible_kingdom_card_classes, num_cards_remaining)
+        selected_kingdom_card_classes += random.sample(self.possible_kingdom_card_classes, num_cards_remaining)
         # Sort kingdom cards first by cost, then by name
         for card_class in sorted(selected_kingdom_card_classes, key=lambda card_class: (card_class.cost, card_class.name)):
             # Stacks of ten kingdom cards each
@@ -322,7 +335,14 @@ class Supply:
         """
         Create an empty trash pile.
         """
-        self.trash_pile = {card_class: [] for card_class in self.card_stacks}
+        self.trash_pile = defaultdict(list)
+
+    def _add_additional_kingdom_cards(self):
+        """
+        Add additional Kingdom cards from the selected expansions.
+        """
+        for expansion in self.customization.expansions:
+            expansion.add_additional_kingdom_cards()
 
     def _additional_setup(self):
         """

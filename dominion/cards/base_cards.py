@@ -180,6 +180,9 @@ class Harbinger(ActionCard):
     extra_coppers = 0
 
     def action(self):
+        if not self.owner.discard_pile:
+            self.game.broadcast(f'{self.owner} has no cards in their discard pile.')
+            return
         prompt = 'You played a Harbinger. You may choose a card from your discard pile to put onto your deck.'
         card = self.interactions.choose_card_from_discard_pile(prompt=prompt, force=False)
         if card is not None:
@@ -1037,6 +1040,7 @@ class Thief(AttackCard):
             # Allow the attacker to gain the trashed card
             prompt = f"Would you like to gain {player}'s trashed {card_to_trash}?"
             if attacker.interactions.choose_yes_or_no(prompt=prompt):
+                card_to_trash.owner = attacker
                 attacker.discard_pile.append(card_to_trash)
                 self.game.broadcast(f"{attacker} gained {player}'s trashed {card_to_trash}.")
             else:

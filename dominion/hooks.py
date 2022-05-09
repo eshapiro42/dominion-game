@@ -125,3 +125,27 @@ class PostGainHook(Hook):
             where_it_went: The deque where the card ended up.
         """
         pass
+
+
+class PreTurnHook(Hook):
+    """
+    Hook to activate before a player's turn.
+
+    Args:
+        game: The game to which the hook belongs.
+        player: The player whose turn on which the hook should be activated.
+    """
+    def __init__(self, game: Game, player: Player):
+        super().__init__(game)
+        self._player = player
+
+    @property
+    def player(self) -> Player:
+        """
+        The player whose turn on which the hook should be activated.
+        """
+        return self._player
+
+    @abstractmethod
+    def __call__(self):
+        pass

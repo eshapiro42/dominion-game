@@ -107,7 +107,7 @@ class Pawn(ActionCard):
             '+1 Card',
             '+1 Action',
             '+1 Buy',
-            '1 $'
+            '+1 $'
         ]
         # First, the choices are selected
         choices = []
@@ -127,7 +127,7 @@ class Pawn(ActionCard):
                 self.owner.turn.plus_actions(1)
             elif choice == '+1 Buy':
                 self.owner.turn.plus_buys(1)
-            elif choice == '1 $':
+            elif choice == '+1 $':
                 self.owner.turn.plus_coppers(1)
 
 
@@ -458,7 +458,7 @@ class Diplomat(ReactionCard):
         # Discard 3 cards
         self.game.broadcast(f"{self.owner} must discard 3 cards.")
         prompt = f"Choose 3 cards to discard."
-        cards_to_discard = self.interactions.choose_cards_from_hand(prompt, force=True, max_cards=3)
+        cards_to_discard = self.owner.interactions.choose_cards_from_hand(prompt, force=True, max_cards=3)
         for card_to_discard in cards_to_discard:
             self.owner.discard(card_to_discard)
         return None, True # Can be used again 
@@ -616,7 +616,8 @@ class Courtier(ActionCard):
         prompt = 'Choose a card from your hand to reveal.'
         revealed_card = self.interactions.choose_card_from_hand(prompt, force=True)
         if revealed_card is not None:
-            num_types = len(revealed_card.types)
+            self.game.broadcast(f'{self.owner} revealed {a(revealed_card)} with their Courtier.')
+            num_types = len([card_type for card_type in revealed_card.types if card_type != CardType.BANE])
             self.game.broadcast(f'{self.owner} may choose {num_types} of the available options.')
             options = [
                 '+1 Action',
@@ -625,7 +626,7 @@ class Courtier(ActionCard):
                 'Gain a Gold'
             ]
             choices = []
-            for choice_num in range(num_types):
+            for choice_num in range(min(4, num_types)):
                 prompt = f'Which would you like to choose? ({choice_num + 1}/{num_types})'
                 choice = self.interactions.choose_from_options(prompt, options, force=True)
                 choices.append(choice)
