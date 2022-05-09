@@ -378,13 +378,13 @@ class Player:
             card: The Card to trash.
             message: Whether to broadcast a message to all Players saying that the card was trashed.
         """
-        self.supply.trash(card)
         try:
             self.played_cards.remove(card)
+            self.supply.trash(card)
             if message:
                 self.game.broadcast(f'{self.name} trashed {a(card)}.')
         except ValueError:
-            pass
+            self.game.broadcast(f'{self.name} could not trash the {(card)} since it was no longer in their played cards.')
 
     def take_from_trash(self, card_class: Type[Card]):
         """

@@ -273,29 +273,14 @@ class AutoInteraction(Interaction):
                 if not gainable_card_classes:
                     print('There are no cards in the Trash that you can gain.')
                     return None
-                # for idx, card_class in enumerate(sorted(buyable_card_stacks, key=lambda x: (x.types[0].value, x.cost))):
                 if force:
-                    print(f'Enter choice 1-{len(gainable_card_classes)}: ')
-                    choices = list(range(1, len(gainable_card_classes) + 1))
-                    # Weight equally
-                    weights = [1 for card in gainable_card_classes]
-                    card_num = random.choices(choices, weights, k=1)[0]
-                    print(card_num)
-                    print()
-                    card_to_gain = list(gainable_card_classes)[card_num - 1]
+                    return random.choice(gainable_card_classes)
                 else:
-                    print(f'Enter choice 1-{len(gainable_card_classes)} (0 to skip): ')
-                    choices = list(range(0, len(gainable_card_classes)))
-                    # Weight equally
-                    weights = [1] + [1 for card in gainable_card_classes]
-                    card_num = random.choices(choices, weights, k=1)[0]
-                    print(card_num)
-                    print()
-                    if card_num == 0:
+                    gainable_card_classes = ["skip"] + gainable_card_classes
+                    card_to_gain = random.choice(gainable_card_classes)
+                    if card_to_gain == "skip":
                         return None
-                    else:
-                        card_to_gain = list(gainable_card_classes)[card_num - 1]
-                return card_to_gain
+                    return card_to_gain
             except (IndexError, ValueError):
                 print('That is not a valid choice.\n')
                 raise

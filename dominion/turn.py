@@ -172,11 +172,6 @@ class Turn:
         It first activates any pre-turn hooks registered to the current player.
         It then runs the Action, Buy and Cleanup phases in that order.
         '''
-        if self.game.test:
-            print([card_class.name for card_class in self.game.supply.card_stacks])
-            for card in self.player.all_cards:
-                print(card, card.owner, self.player)
-                assert card.owner == self.player
         self.player.turns_played += 1
         self.player.interactions.new_turn()
         self.process_pre_turn_hooks()
