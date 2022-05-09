@@ -270,6 +270,9 @@ class AutoInteraction(Interaction):
                 # Only cards you can afford can be chosen (and with non-zero quantity)
                 trash_pile = self.supply.trash_pile
                 gainable_card_classes = [card_class for card_class in trash_pile if trash_pile[card_class] and card_type in card_class.types]
+                if not gainable_card_classes:
+                    print('There are no cards in the Trash that you can gain.')
+                    return None
                 # for idx, card_class in enumerate(sorted(buyable_card_stacks, key=lambda x: (x.types[0].value, x.cost))):
                 if force:
                     print(f'Enter choice 1-{len(gainable_card_classes)}: ')
