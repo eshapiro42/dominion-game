@@ -217,12 +217,10 @@ class HorseTraders(ReactionCard):
             self.player.hand.append(self.set_aside_card)
 
     def react(self):
-        prompt = "Would you like to set this Horse Traders aside from your hand? If you do, then at the start of your next turn, you will return it to your hand and get +1 Card."
-        if self.owner.interactions.choose_yes_or_no(prompt):
-            self.owner.hand.remove(self)
-            self.game.broadcast(f"{self.owner} set a Horse Traders aside from their hand for next turn.")
-            pre_turn_hook = self.HorseTradersPreTurnHook(game=self.game, player=self.owner, set_aside_card=self)
-            self.game.add_pre_turn_hook(pre_turn_hook)
+        self.owner.hand.remove(self)
+        self.game.broadcast(f"{self.owner} set a Horse Traders aside from their hand for next turn.")
+        pre_turn_hook = self.HorseTradersPreTurnHook(game=self.game, player=self.owner, set_aside_card=self)
+        self.game.add_pre_turn_hook(pre_turn_hook)
         return None, False # When set aside, it is not in play or in your hand and cannot be further revealed when Attacked
 
 

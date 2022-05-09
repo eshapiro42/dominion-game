@@ -144,7 +144,7 @@ class BrowserInteraction(Interaction):
         except Exception as exception:
             print(exception)
 
-    def choose_cards_from_hand(self, prompt, force, max_cards=1) -> List[cards.Card]:
+    def choose_cards_from_hand(self, prompt, force, max_cards=1, invalid_cards=None) -> List[cards.Card]:
         with self.move_cards():
             print("choose_card_from_hand")
             if not self.hand:
@@ -152,6 +152,8 @@ class BrowserInteraction(Interaction):
                 return []
             if max_cards is not None:
                 max_cards = min(max_cards, len(self.hand)) # Don't ask for more cards than we have
+            if invalid_cards is None:
+                invalid_cards = []
             while True:
                 try:
                     response = self._call(
@@ -160,6 +162,7 @@ class BrowserInteraction(Interaction):
                             "prompt": prompt,
                             "force": force,
                             "max_cards": max_cards,
+                            "invalid_cards": [card.id for card in invalid_cards]
                         }
                     )
                     if force:
@@ -178,8 +181,8 @@ class BrowserInteraction(Interaction):
                 except ArithmeticError:
                     self.send(f"You must choose exactly {s(max_cards, 'card')}.")
 
-    def choose_card_from_hand(self, prompt, force) -> Optional[cards.Card]:
-        cards_chosen = self.choose_cards_from_hand(prompt, force, max_cards=1)
+    def choose_card_from_hand(self, prompt, force, invalid_cards=None) -> Optional[cards.Card]:
+        cards_chosen = self.choose_cards_from_hand(prompt, force, max_cards=1, invalid_cards=invalid_cards)
         if not cards_chosen:
             return None
         return cards_chosen[0]

@@ -4,6 +4,7 @@
     import CardCarousel from "./card_carousel.svelte";
 
     let cards = [];
+    let invalidCardIds;
     let waitingForSelection = {
         value: false,
         handler: null,
@@ -102,6 +103,7 @@
     $socket.on(
         "choose cards from hand",
         (data) => {
+            invalidCardIds = data.invalid_cards;
             waitingForSelection.value = true;
             waitingForSelection.prompt = data.prompt;
             waitingForSelection.handler = handleCardsSelected;
@@ -113,6 +115,7 @@
     $socket.on(
         "response received",
         (data) => {
+            invalidCardIds = [];
             waitingForSelection = {
                 value: false,
                 handler: null,
@@ -130,6 +133,7 @@
     <CardCarousel
         title="Your Hand"
         {cards}
+        {invalidCardIds}
         sortByProperty = "type"
         {waitingForSelection}
         on:selected={handleSelected}

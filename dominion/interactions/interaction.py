@@ -134,18 +134,19 @@ class Interaction(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def choose_card_from_hand(self, prompt: str, force: bool) -> Optional[Card]:
+    def choose_card_from_hand(self, prompt: str, force: bool, invalid_cards: List[Card] | None = None) -> Card | None:
         """
         Request the player to choose a card from their hand.
 
         Args:
             prompt: The prompt to display to the player.
             force: Whether or not to force the player to choose a card.
+            invalid_cards: Cards that are not allowed to be chosen. If None (the default), all cards of the specified type are allowed.
         """
         pass
 
     @abstractmethod
-    def choose_specific_card_class_from_hand(self, prompt: str, force: bool, card_class: Type[Card]) -> Optional[Card]:
+    def choose_specific_card_class_from_hand(self, prompt: str, force: bool, card_class: Type[Card]) -> Card | None:
         """
         Request the player to choose a card of a specific card class from their hand.
 
@@ -157,7 +158,7 @@ class Interaction(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def choose_specific_card_type_from_hand(self, prompt: str, card_type: CardType) -> Optional[Card]:
+    def choose_specific_card_type_from_hand(self, prompt: str, card_type: CardType) -> Card | None:
         """
         Request the player to choose a card of the specified type from their hand.
 
@@ -168,7 +169,7 @@ class Interaction(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def choose_card_from_discard_pile(self, prompt: str, force: bool) -> Optional[Card]:
+    def choose_card_from_discard_pile(self, prompt: str, force: bool) -> Card | None:
         """
         Request the player to choose a card from their discard pile.
 

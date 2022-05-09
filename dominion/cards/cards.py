@@ -314,22 +314,25 @@ class AttackCard(ActionCard):
     def attack_player(self, player: Player):
         # First check if they have a reaction card in their hand
         immune = False
-        if any(CardType.REACTION in card.types for card in player.hand):
-            reaction_cards_in_hand = [card for card in player.hand if CardType.REACTION in card.types]
-            reaction_card_classes_to_ignore = set() # We don't want to keep asking about reaction card classes that have already been played/ignored
-            for reaction_card in reaction_cards_in_hand:
-                if type(reaction_card) in reaction_card_classes_to_ignore or not reaction_card.can_react:
-                    continue
-                else:
-                    prompt = f'{self.owner} played {a(self.name)} (an Attack card). You have a Reaction card ({reaction_card.name}) in your hand. Play it?'
-                    if player.interactions.choose_yes_or_no(prompt=prompt):
-                        self.game.broadcast(f'{player} revealed {a(reaction_card.name)}.')
-                        reaction_type, ignore_again = reaction_card.react()
-                        if reaction_type == ReactionType.IMMUNITY:
-                            immune = True
-                            self.game.broadcast(f"{player} is immune to the effects of {self.owner}'s {self.name}.")
-                        if ignore_again:
-                            reaction_card_classes_to_ignore.add(type(reaction_card))
+        # Allow the player to play reaction cards
+        reaction_cards_in_hand = set(card for card in player.hand if CardType.REACTION in card.types and card.can_react)
+        reaction_cards_to_ignore = set()
+        while (reaction_cards_remaining := reaction_cards_in_hand - reaction_cards_to_ignore):
+            invalid_cards = [card for card in player.hand if card not in reaction_cards_remaining]
+            prompt = f"{self.owner} played {a(self.name)} (an Attack card). You have {s(len(reaction_cards_remaining), 'Reaction card', print_number=False)} in your hand. You may play any or all of them, one at a time."
+            reaction_card = player.interactions.choose_card_from_hand(prompt=prompt, force=False, invalid_cards=invalid_cards)
+            if reaction_card is None:
+                # The player is forfeiting their chance to react
+                player.interactions.send('You forfeited your opportunity to react.')
+                break
+            self.game.broadcast(f"{player} revealed {a(reaction_card.name)} in reaction to {self.owner}'s {self.name}.")
+            reaction_type, ignore_again = reaction_card.react()
+            if reaction_type == ReactionType.IMMUNITY:
+                immune = True
+                self.game.broadcast(f"{player} is immune to the effects of {self.owner}'s {self.name}.")
+            if ignore_again:
+                reaction_cards_to_ignore = set(card for card in player.hand if isinstance(card, type(reaction_card)))
+            reaction_cards_in_hand = set(card for card in player.hand if CardType.REACTION in card.types and card.can_react)
         # If the player is not immune, they are forced to endure the attack effect
         if not immune:
             self.attack_effect(self.owner, player)

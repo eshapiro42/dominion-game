@@ -44,13 +44,13 @@ class AutoInteraction(Interaction):
             time_to_sleep = random.uniform(1, 3) 
             self.socketio.sleep(time_to_sleep)
 
-    def choose_card_from_hand(self, prompt, force) -> Optional[cards.Card]:
-        cards_chosen = self.choose_cards_from_hand(prompt, force, max_cards=1)
+    def choose_card_from_hand(self, prompt, force, invalid_cards=None) -> Optional[cards.Card]:
+        cards_chosen = self.choose_cards_from_hand(prompt, force, max_cards=1, invalid_cards=invalid_cards)
         if not cards_chosen:
             return None
         return cards_chosen[0]
 
-    def choose_cards_from_hand(self, prompt, force, max_cards=1) -> List[cards.Card]:
+    def choose_cards_from_hand(self, prompt, force, max_cards=1, invalid_cards=None) -> List[cards.Card]:
         self.sleep_random()
         print(prompt)
         print()
@@ -61,14 +61,17 @@ class AutoInteraction(Interaction):
             max_cards = len(self.hand)
         else:
             max_cards = min(max_cards, len(self.hand)) # Don't ask for more cards than we have
+        if invalid_cards is None:
+            invalid_cards = []
+        valid_cards = [card for card in self.hand if card not in invalid_cards]
         while True:
             try:
                 self.display_hand()
                 if force:
-                    cards_chosen = random.sample(self.hand, max_cards)
+                    cards_chosen = random.sample(valid_cards, max_cards)
                 else:
                     num_cards = random.randint(0, max_cards)
-                    cards_chosen = random.sample(self.hand, num_cards)
+                    cards_chosen = random.sample(valid_cards, num_cards)
                 return cards_chosen
             except (IndexError, ValueError):
                 print('That is not a valid choice.\n')
