@@ -94,11 +94,25 @@ class Expansion(metaclass=ABCMeta):
         """
         pass
 
+    def add_additional_kingdom_cards(self):
+        """
+        If this expansion needs to add additional Kingdom cards to
+        the Supply, overload this method to perform the required
+        actions.
+
+        This occurs after the initial 10 Kingdom cards are added to
+        the Supply.
+
+        E.g., Young Witch.
+        """
+
     def additional_setup(self):
         """
         If this expansion contains additional setup mechanisms
         that need to be performed before the Game starts, overload
         this method to perform the required actions.
+
+        This occurs after all Kingdom cards are added to the Supply.
 
         E.g., registering hooks to specific cards.
         """

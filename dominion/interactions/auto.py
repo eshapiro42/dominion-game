@@ -391,5 +391,6 @@ class AutoInteraction(Interaction):
                 raise
 
     def new_turn(self):
+        print(f"{self.player}'s turn.")
         if self.socketio is not None:
             self.socketio.emit('new turn', {'player': self.player.name}, room=self.room)

@@ -1,6 +1,9 @@
+import random
+
 from .expansion import Expansion
-from ..cards import cornucopia_cards
+from ..cards import cards, cornucopia_cards
 from ..grammar import s, it_or_them
+from ..supply import FiniteSupplyStack
 
 class CornucopiaExpansion(Expansion):
     name = 'Cornucopia'
@@ -16,6 +19,17 @@ class CornucopiaExpansion(Expansion):
     @property
     def kingdom_card_classes(self):
         return cornucopia_cards.KINGDOM_CARDS
+
+    def add_additional_kingdom_cards(self):
+        # If the Young Witch is in the Supply, it adds an extra Kingdom card pile costing 2 $ or 3 $ to the Supply. Cards from that pile are Bane cards.
+        if cornucopia_cards.YoungWitch in self.supply.card_stacks:
+            # Choose a card class to be the Bane card
+            possible_bane_card_classes = [card_class for card_class in self.supply.possible_kingdom_card_classes if card_class not in self.supply.card_stacks and card_class.cost in [2, 3]]
+            bane_card_class = random.choice(possible_bane_card_classes)
+            self.game.broadcast(f"The Young Witch is in play this game. {s(10, bane_card_class.name, print_number=False)} are Bane cards.")
+            # Add the Bane card class to the Supply and modify its example card
+            self.supply.card_stacks[bane_card_class] = FiniteSupplyStack(bane_card_class, 10)
+            self.supply.card_stacks[bane_card_class].example.types += [cards.CardType.BANE]
 
     def additional_setup(self):
         pass

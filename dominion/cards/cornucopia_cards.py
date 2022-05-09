@@ -346,6 +346,46 @@ class Tournament(ActionCard):
             self.game.current_turn.plus_coppers(1)
 
 
+class YoungWitch(AttackCard):
+    name = 'Young Witch'
+    pluralized = 'Young Witches'
+    cost = 4
+    types = [CardType.ACTION, CardType.ATTACK]
+    image_path = ''
+
+    description = '\n'.join(
+        [
+            # '+2 Cards',
+            "Discard 2 cards. Each other player may reveal a Bane card from their hand; if they don't, they gain a Curse.",
+            "Setup: Add an extra Kingdom card pile costing 2 $ or 3 $ to the Supply. Cards from that pile are Bane cards.",
+        ]
+    )
+    prompt = "Each other player may reveal a Bane card from their hand; if they don't, they gain a Curse."
+
+    extra_cards = 2
+    extra_actions = 0
+    extra_buys = 0
+    extra_coppers = 0
+
+    allow_simultaneous_reactions = False # If only one Curse is left in the Supply, it is important that this is resolved in turn order
+
+    def attack_effect(self, attacker, player):
+        # Check if the player has a Bane card in their hand
+        if any(CardType.BANE in card.types for card in player.hand):
+            prompt = f"{attacker} played a Young Witch. You have a Bane card in your hand. Would you like to reveal it to avoid gaining a Curse?"
+            if player.interactions.choose_yes_or_no(prompt):
+                self.game.broadcast(f"{player} revealed a Bane card from their hand.")
+                return
+        player.gain(base_cards.Curse)
+
+    def action(self):
+        prompt = "You played a Young Witch. Choose 2 cards to discard."
+        cards_to_discard = self.owner.interactions.choose_cards_from_hand(prompt, force=True, max_cards=2)
+        for card_to_discard in cards_to_discard:
+            self.owner.discard(card_to_discard, message=False)
+        print(f"{self.owner} discarded {Card.group_and_sort_by_cost(cards_to_discard)} with their Young Witch.")
+
+
 class Harvest(ActionCard):
     name = 'Harvest'
     cost = 5
@@ -539,7 +579,7 @@ KINGDOM_CARDS = [
     HorseTraders,
     Remake,
     Tournament,
-    # YoungWitch,
+    YoungWitch,
     Harvest,
     HornOfPlenty,
     HuntingParty,
