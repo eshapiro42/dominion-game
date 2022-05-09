@@ -6,8 +6,8 @@
     
     const dispatch = createEventDispatcher();
     
-    import GiantCard from "./giant_card.svelte";
-    import Modal from "./modal.svelte";
+    // import GiantCard from "./giant_card.svelte";
+    // import Modal from "./modal.svelte";
 
     export let name;
     export let effects;
@@ -16,6 +16,7 @@
     export let type = "";
     export let id;
     export let quantity = null;
+    export let expansion = "";
 
     export let waitingForSelection;
     export let numSelected;
@@ -121,7 +122,7 @@
     }
 </script>
 
-<Modal 
+<!-- <Modal 
     show={hovering}
     on:click = {
         () => {
@@ -139,7 +140,7 @@
             {quantity}
         />
     </span>
-</Modal>
+</Modal> -->
 
 <main
     in:fade
@@ -168,6 +169,11 @@
     {:else}
         <div class="name">{name} &ndash {quantity}</div>
     {/if}
+    <span class="hoverable-text">
+        <span class="hoverable-text-line">
+            {expansion}
+        </span>
+    </span>
     <ul class="effects">
         {#each renderedEffects as effect}
             <li>{@html effect}</li>
@@ -245,17 +251,26 @@
         transition-delay: 0.1s;
     }
 
-    // .hovering {
-    //     position: fixed;
-    //     margin: auto;
-    //     width: $giant-card-width;
-    //     min-height: $giant-card-height;
-    //     font-size: $giant-font-size;
-    //     padding: $giant-card-padding;
-    //     border-radius: $giant-card-corner-radius;
-    //     margin-right: $giant-card-margin;
-    //     z-index: 1000;
-    // }
+    main .hoverable-text {
+        visibility: hidden;
+        position: absolute;
+        top: 0px;
+        right: 0px;
+        background-color: #343338;
+        color: #dadada;
+        font-size: 85%;
+        border-radius: $corner-radius;
+        border-color: #dadada;
+        border-width: 1px;
+        margin-top: $margin;
+        margin-right: $margin;
+        padding: 7px;
+    }
+
+    main:hover .hoverable-text {
+        visibility: visible;
+        transition-delay: 1s;
+    }
 
     .selected {
         border: 3px solid red;
@@ -266,6 +281,11 @@
     .action {
         background-color: #343338;
         color: $light-text-color;
+    }
+
+    .action .hoverable-text {
+        background-color: #dadada;
+        color: #343338;
     }
 
     .attack {

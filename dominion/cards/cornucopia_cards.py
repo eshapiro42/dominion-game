@@ -766,3 +766,7 @@ PRIZES = [
     Princess,
     TrustySteed,
 ]
+
+
+for card_class in KINGDOM_CARDS + PRIZES:
+    card_class.expansion = "Cornucopia"

@@ -1004,3 +1004,7 @@ KINGDOM_CARDS = [
     KingsCourt,
     Peddler
 ]
+
+
+for card_class in BASIC_CARDS + KINGDOM_CARDS:
+    card_class.expansion = "Prosperity"

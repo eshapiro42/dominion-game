@@ -1126,3 +1126,7 @@ KINGDOM_CARDS = [
     Thief,
     Adventurer
 ]
+
+
+for card_class in BASIC_CARDS + KINGDOM_CARDS:
+    card_class.expansion = "Base"

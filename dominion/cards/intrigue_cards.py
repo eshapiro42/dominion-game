@@ -993,3 +993,7 @@ KINGDOM_CARDS = [
     Harem,
     Nobles
 ]
+
+
+for card_class in KINGDOM_CARDS:
+    card_class.expansion = "Intrigue"

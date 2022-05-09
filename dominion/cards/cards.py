@@ -160,6 +160,7 @@ class Card(Word, metaclass=ABCMeta):
             'cost': self.cost,
             'type': ', '.join([t.name.capitalize() for t in self.types]),
             'id': self.id,
+            'expansion': self.expansion,
         }
 
     def __repr__(self):
