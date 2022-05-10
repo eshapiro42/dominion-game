@@ -30,6 +30,9 @@ class CornucopiaExpansion(Expansion):
             # Add the Bane card class to the Supply and modify its example card
             self.supply.card_stacks[bane_card_class] = FiniteSupplyStack(bane_card_class, 10)
             self.supply.card_stacks[bane_card_class].example.types += [cards.CardType.BANE]
+        # If the Tournament is in the Supply, it adds Prizes
+        if cornucopia_cards.Tournament in self.supply.card_stacks:
+            self.game.broadcast("The Tournament is in play this game. Prizes are available.")
 
     def additional_setup(self):
         pass

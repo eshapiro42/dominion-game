@@ -2,6 +2,7 @@
     import {socket} from "../stores.js";
 
     let tradeRoute = false;
+    let prizes = false;
 
     $socket.on(
         "trade route",
@@ -9,6 +10,13 @@
             tradeRoute = true;
         }
     );
+
+    $socket.on(
+        "prizes",
+        (data) => {
+            prizes = true;
+        }
+    )
 </script>
 
 <main>
@@ -17,6 +25,9 @@
     <a class="section" href="#Supply">Supply</a>
     <a class="section" href="#Your Discard Pile">Discard</a>
     <a class="section" href="#Trash">Trash</a>
+    {#if prizes}
+        <a class="section" href="#Prizes">Prizes</a>
+    {/if}
     {#if (tradeRoute)}
         <a class="section" href="#Trade Route">Trade Route</a>
     {/if}
