@@ -20,6 +20,14 @@ dominion.expansions.cornucopia module
    :undoc-members:
    :show-inheritance:
 
+dominion.expansions.dominion module
+-----------------------------------
+
+.. automodule:: dominion.expansions.dominion
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 dominion.expansions.expansion module
 ------------------------------------
 

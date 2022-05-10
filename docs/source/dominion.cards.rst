@@ -28,6 +28,14 @@ dominion.cards.cornucopia\_cards module
    :undoc-members:
    :show-inheritance:
 
+dominion.cards.dominion\_cards module
+-------------------------------------
+
+.. automodule:: dominion.cards.dominion_cards
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 dominion.cards.intrigue\_cards module
 -------------------------------------
 
