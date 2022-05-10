@@ -39,27 +39,14 @@ def test_stability():
     '''
     Test completely CPU-driven games.
 
-    Expansions and number of CPU players are randomly selected for each game.
+    Expansions, supply customizations and number of CPU players are randomly selected for each game.
     '''
     game = Game(test=True)
     # Add a randomly selected set of expansions into the game
-    num_expansions = random.randint(0, len(EXPANSIONS))
+    num_expansions = random.randint(1, len(EXPANSIONS))
     expansions_to_include = random.sample(EXPANSIONS, num_expansions)
     for expansion in expansions_to_include:
         game.add_expansion(expansion)
-    # Add a random number (2-4) players into the game
-    num_players = random.randint(2, 4)
-    for _ in range(num_players):
-        game.add_player(interactions_class=AutoInteraction)
-    game.start()
-
-
-@pytest.mark.repeat(100)
-def test_supply_customization():
-    '''
-    Test combinations of Supply customization options.
-    '''
-    game = Game(test=True)
     # Add a randomly selected set of Supply customization options into the game
     options = [
         "allow_simultaneous_reactions",

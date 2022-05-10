@@ -308,7 +308,17 @@ class Supply:
             possible_kingdom_card_classes_by_cost = {cost: [card_class for card_class in self.possible_kingdom_card_classes if card_class.cost == cost] for cost in range(2, 6)}
             for cost in range(2, 6):
                 num_still_needed = max(0, 2 - len(selected_kingdom_card_classes_by_cost[cost]))
-                card_classes_of_cost = random.sample(possible_kingdom_card_classes_by_cost[cost], num_still_needed)
+                try:
+                    card_classes_of_cost = random.sample(possible_kingdom_card_classes_by_cost[cost], num_still_needed)
+                except ValueError:
+                    # It's possible that there aren't enough cards of this cost in the selected expansion to satisfy the requirement
+                    # E.g., the Prosperity expansion has no cards of cost 2
+                    try:
+                        # First try reducing the requirement
+                        card_classes_of_cost = random.sample(possible_kingdom_card_classes_by_cost[cost], 1)
+                    except ValueError:
+                        # Give up
+                        continue
                 print(f"Adding {num_still_needed} cards of cost {cost}: {' and '.join(card_class.name for card_class in card_classes_of_cost)}")
                 for card_class in card_classes_of_cost:
                     selected_kingdom_card_classes.append(card_class)

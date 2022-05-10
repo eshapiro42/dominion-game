@@ -27,7 +27,7 @@ class BaseExpansion(Expansion):
 
     @property
     def kingdom_card_classes(self):
-        return base_cards.KINGDOM_CARDS
+        return []
 
     @property
     def game_end_conditions(self):

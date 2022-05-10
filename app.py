@@ -6,8 +6,7 @@ import random
 import string
 from collections import defaultdict
 from flask import Flask, request, send_from_directory
-from dominion.cards import cards, prosperity_cards
-from dominion.expansions import IntrigueExpansion, ProsperityExpansion, CornucopiaExpansion
+from dominion.expansions import DominionExpansion, IntrigueExpansion, ProsperityExpansion, CornucopiaExpansion
 from dominion.game import Game, GameStartedError
 from dominion.interactions import BrowserInteraction, AutoInteraction
 
@@ -134,6 +133,7 @@ def add_cpu(data):
 def start_game(data):
     username = data['username']
     room = data['room']
+    dominion = data['dominion']
     intrigue = data['intrigue']
     prosperity = data['prosperity']
     cornucopia = data['cornucopia']
@@ -149,6 +149,8 @@ def start_game(data):
     socketio.emit('game started', room=room)
     game = games[room]
     # Add in customization options
+    if dominion:
+        game.add_expansion(DominionExpansion)
     if intrigue:
         game.add_expansion(IntrigueExpansion)
     if prosperity:

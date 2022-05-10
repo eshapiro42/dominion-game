@@ -16,6 +16,7 @@
     let shown = true;
 
     var expansions = [
+        {name: "Dominion", property: "dominion", selected: false},
         {name: "Intrigue", property: "intrigue", selected: false},
         {name: "Prosperity", property: "prosperity", selected: false},
         {name: "Cornucopia", property: "cornucopia", selected: false},
@@ -39,7 +40,8 @@
             property: "distributeCost", 
             selected: false,
             description: [
-                "Ensure that there are at least two cards each in the Supply of cost 2, 3, 4 and 5.",
+                "Attempts to ensure that there are at least two Kingdom cards each in the Supply of cost 2, 3, 4 and 5.",
+                "<b>Note</b>: This is not always possible. For instance, the Prosperity expansion does not include any cards of cost 2 and so if it is the only selected expansion this obviously cannot be accomplished.",
             ],
         },
         {
@@ -94,6 +96,9 @@
         if (!gameStartable) {
             alert("The game cannot be started without at least two players.");
         }
+        else if (!expansions.some((expansion) => expansion.selected)) {
+            alert("You must select at least one expansion.");
+        }           
         else {
             var gameProperties = {
                 username: $username,

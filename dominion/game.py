@@ -7,7 +7,7 @@ from collections import defaultdict
 from typing import TYPE_CHECKING, Callable, Optional, Dict, List, Tuple, Type
 
 from .cards.cards import Card, CardType
-from .expansions import BaseExpansion, ProsperityExpansion, IntrigueExpansion, CornucopiaExpansion
+from .expansions import BaseExpansion, DominionExpansion, ProsperityExpansion, IntrigueExpansion, CornucopiaExpansion
 from .grammar import s
 from .interactions import CLIInteraction
 from .player import Player
@@ -69,6 +69,7 @@ class Game:
         self._require_trashing = False
 
         self.add_expansion(BaseExpansion) # This must always be here or the game will not work
+        # self.add_expansion(DominionExpansion)
         # self.add_expansion(IntrigueExpansion)
         # self.add_expansion(ProsperityExpansion)
         # self.add_expansion(CornucopiaExpansion)
