@@ -35,15 +35,18 @@
                 "<b>Unsupported cards</b>: Followers, Mountebank, Jester, Replace, Spy, Swindler, Thief, Torturer, Witch, Young Witch.",
             ],
         },
-        {
-            name: "Distribute cost",
-            property: "distributeCost", 
-            selected: false,
-            description: [
-                "Attempts to ensure that there are at least two Kingdom cards each in the Supply of cost 2, 3, 4 and 5.",
-                "<b>Note</b>: This is not always possible. For instance, the Prosperity expansion does not include any cards of cost 2 and so if it is the only selected expansion this obviously cannot be accomplished.",
-            ],
-        },
+        // This does not currently work with only the Cornucopia expansion selected
+        // because there might not be enough remaining cards in the Supply of cost
+        // 2 or 3.
+        // {
+        //     name: "Distribute cost",
+        //     property: "distributeCost", 
+        //     selected: false,
+        //     description: [
+        //         "Attempts to ensure that there are at least two Kingdom cards each in the Supply of cost 2, 3, 4 and 5.",
+        //         "<b>Note</b>: This is not always possible. For instance, the Prosperity expansion does not include any cards of cost 2 and so if it is the only selected expansion this obviously cannot be accomplished.",
+        //     ],
+        // },
         {
             name: "Disable Attacks",
             property: "disableAttacks", 

@@ -138,7 +138,7 @@ def start_game(data):
     prosperity = data['prosperity']
     cornucopia = data['cornucopia']
     allow_simultaneous_reactions = data['allowSimultaneousReactions']
-    distribute_cost = data['distributeCost']
+    # distribute_cost = data['distributeCost']
     disable_attack_cards = data['disableAttacks']
     require_plus_two_action = data['requirePlusTwoAction']
     require_drawer = data['requireDrawer']
@@ -159,8 +159,8 @@ def start_game(data):
         game.add_expansion(CornucopiaExpansion)
     if allow_simultaneous_reactions:
         game.allow_simultaneous_reactions = True
-    if distribute_cost:
-        game.distribute_cost = True
+    # if distribute_cost:
+    #     game.distribute_cost = True
     if disable_attack_cards:
         game.disable_attack_cards = True
     if require_plus_two_action:

@@ -50,7 +50,7 @@ def test_stability():
     # Add a randomly selected set of Supply customization options into the game
     options = [
         "allow_simultaneous_reactions",
-        "distribute_cost",
+        # "distribute_cost",
         "disable_attack_cards",
         "require_plus_two_action",
         "require_drawer",
