@@ -7,6 +7,7 @@ from collections import defaultdict
 from typing import TYPE_CHECKING, Callable, Optional, Dict, List, Tuple, Type
 
 from .cards.cards import Card, CardType
+from .cards.recommended_sets.dominion_cornucopia import TheJestersWorkshop
 from .expansions import BaseExpansion, DominionExpansion, ProsperityExpansion, IntrigueExpansion, CornucopiaExpansion
 from .grammar import s
 from .interactions import CLIInteraction
@@ -19,6 +20,7 @@ if TYPE_CHECKING:
     from .expansions.expansion import Expansion
     from .hooks import TreasureHook, PreBuyHook, PreTurnHook
     from .interactions.interaction import Interaction
+    from .cards.recommended_sets import RecommendedSet
 
 
 class GameStartedError(Exception):
@@ -59,6 +61,7 @@ class Game:
         self._pre_buy_hooks = defaultdict(list)
         self._pre_turn_hooks = []
         self._game_end_conditions = []
+        self._recommended_set = None
         self._expansions = set()
         self._allow_simultaneous_reactions = False
         self._distribute_cost = False
@@ -262,6 +265,24 @@ class Game:
     @game_end_conditions.setter
     def game_end_conditions(self, game_end_conditions: List[Callable[[], Tuple[bool, Optional[str]]]]):
         self._game_end_conditions = game_end_conditions
+
+    @property
+    def recommended_set(self) -> Type[RecommendedSet] | None:
+        """
+        A recommended set to use for the supply.
+
+        If this is not None, no other supply customizations or expansions
+        outside the recommended set will be considered for inclusion.
+        """
+        return self._recommended_set
+
+    @recommended_set.setter
+    def recommended_set(self, recommended_set: Type[RecommendedSet] | None):
+        self.expansions = set()
+        expansion: Type[Expansion]
+        for expansion in recommended_set.expansions:
+            self.add_expansion(expansion)
+        self._recommended_set = recommended_set
     
     @property
     def expansions(self) -> List[Type[Expansion]]:
@@ -400,6 +421,8 @@ class Game:
         Args:
             expansion: The expansion class to add into the game.
         '''
+        if self.recommended_set is not None:
+            pass
         self.expansions.add(expansion)
 
     def add_player(self, name: Optional[str] = None, sid: Optional[str] = None, interactions_class: Type[Interaction] = CLIInteraction):
@@ -439,6 +462,10 @@ class Game:
         '''
         # NOTE: THE ORDER OF EVENTS HERE IS EXTREMELY IMPORTANT!
         self.started = True
+
+        # TODO: Remove this: it is for testing recommended sets
+        # self.recommended_set = TheJestersWorkshop
+        
         # Create the supply
         self.supply = Supply(num_players=self.num_players)
         # Create each player object
@@ -446,31 +473,40 @@ class Game:
             player = Player(game=self, name=player_name, interactions_class=player_interactions_class, socketio=self.socketio, sid=player_sid)
             self.players.append(player)
             player.interactions.start()
-        # Add in the desired expansions
-        for expansion in self.expansions:
-            expansion_instance = expansion(self)
-            self.supply.customization.expansions.add(expansion_instance)
-            self.game_end_conditions += expansion_instance.game_end_conditions
-        expansion_names = sorted([expansion.name for expansion in self.expansions if expansion != BaseExpansion])
-        if len(expansion_names) > 1:
-            # Join the last two with "and" for easier readability
-            expansion_names[-2] = f"{expansion_names[-2]} and {expansion_names[-1]}"
-            expansion_names.pop()
-            expansions_string = ", ".join(expansion_names)
-            self.broadcast(f"Using {expansions_string} expansions.")
-        elif len(expansion_names) == 1:
-            expansion_name = expansion_names[0]
-            self.broadcast(f"Using {expansion_name} expansion.")
+        # Add in the selected recommended set, if any
+        if self.recommended_set is not None:
+            self.broadcast(f'Using "{self.recommended_set.name}" Recommended Kingdom.')
+            self.supply.customization.recommended_set = self.recommended_set(self)
+            for expansion_instance in self.supply.customization.recommended_set.expansion_instances:
+                self.supply.customization.expansions.add(expansion_instance)
+                self.game_end_conditions += expansion_instance.game_end_conditions
+        # Otherwise, the supply will need to be randomly generated based on the selected expansions and customizations
+        else:
+            # Add in the desired expansions
+            for expansion in self.expansions:
+                expansion_instance = expansion(self)
+                self.supply.customization.expansions.add(expansion_instance)
+                self.game_end_conditions += expansion_instance.game_end_conditions
+            expansion_names = sorted([expansion.name for expansion in self.expansions if expansion != BaseExpansion])
+            if len(expansion_names) > 1:
+                # Join the last two with "and" for easier readability
+                expansion_names[-2] = f"{expansion_names[-2]} and {expansion_names[-1]}"
+                expansion_names.pop()
+                expansions_string = ", ".join(expansion_names)
+                self.broadcast(f"Using {expansions_string} expansions.")
+            elif len(expansion_names) == 1:
+                expansion_name = expansion_names[0]
+                self.broadcast(f"Using {expansion_name} expansion.")
+            # Add in other supply customizations
+            self.supply.customization.distribute_cost = self.distribute_cost
+            self.supply.customization.disable_attack_cards = self.disable_attack_cards
+            self.supply.customization.require_plus_two_action = self.require_plus_two_action
+            self.supply.customization.require_drawer = self.require_drawer
+            self.supply.customization.require_buy = self.require_buy
+            self.supply.customization.require_trashing = self.require_trashing
         # Notify players if simultaneous reactions are allowed
         if self.allow_simultaneous_reactions:
             self.broadcast("Simultaneous reactions are allowed.")
-        # Add in other supply customizations
-        self.supply.customization.distribute_cost = self.distribute_cost
-        self.supply.customization.disable_attack_cards = self.disable_attack_cards
-        self.supply.customization.require_plus_two_action = self.require_plus_two_action
-        self.supply.customization.require_drawer = self.require_drawer
-        self.supply.customization.require_buy = self.require_buy
-        self.supply.customization.require_trashing = self.require_trashing
         # Set up the supply
         self.supply.setup()
         # Print out the supply

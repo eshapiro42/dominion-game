@@ -312,6 +312,7 @@
     }
 
     .victory .hoverable-text {
+        background-color: #343338;
         color: #c1f0c1;
     }
 

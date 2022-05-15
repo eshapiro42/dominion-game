@@ -3,12 +3,15 @@
 
     import {socket} from "../stores.js";
 
+    import Tabs from "./tabs.svelte";
+
     const dispatch = createEventDispatcher();
 
     let username = "";
     let room = null;
     let roomCreator = false;
     let shown = true;
+    let selectedTab;
 
     function joinedRoom(success) {
         if (success) {
@@ -67,46 +70,39 @@
 </script>
 
 {#if shown}
-    <!-- Game Buttons -->
-    <div class="container">
-        <div class="accordion" id="gameJoinAccordion">
-            <div class="accordion-item">
-                <!-- Join Game Button -->
-                <h2 class="accordion-header" id="headingOne">
-                    <button class="accordion-button btn-link btn-lg nounderline" type="button" data-bs-toggle="collapse" data-bs-target="#joinGameCollapse" aria-expanded="true" aria-controls="joinGameCollapse">
-                        Join a Game
-                    </button>
-                </h2>
-                <!-- Join Game Collapse -->
-                <div id="joinGameCollapse" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#gameJoinAccordion">
-                    <div class="accordion-body text-center">
-                        <div class="form-group">
-                            <input type="text" class="form-control" placeholder="Your Name" autocomplete="off" bind:value={username} required>
-                        </div>
-                        <div class="form-group">
-                            <input type="text" class="form-control" placeholder="Room ID" autocomplete="off" bind:value={room} required>
-                        </div>
-                        <button class="btn btn-dark" on:click={joinRoom}>Let's Move It</button>
-                    </div>
+    <div class="container space-above">
+
+        <Tabs
+            tabNames={
+                [
+                    "Join a Game",
+                    "Create a Game"
+                ]
+            }
+            bind:selectedTab={selectedTab}
+        />
+
+        {#if selectedTab == "Join a Game"}
+            <div class="form-row space-above">
+                <div class="col">
+                    <input type="text" class="form-control" placeholder="Your Name" autocomplete="off" bind:value={username} required>
                 </div>
-            </div>
-            <div class="accordion-item">
-                <!-- Create Game Button -->
-                <h2 class="accordion-header" id="headingTwo">
-                    <button class="accordion-button btn-link btn-lg collapsed nounderline" type="button" data-bs-toggle="collapse" data-bs-target="#createGameCollapse" aria-expanded="false" aria-controls="createGameCollapse">
-                        Create a New Game
-                    </button>
-                </h2>
-                <!-- Create Game Collapse -->
-                <div id="createGameCollapse" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#gameJoinAccordion">
-                    <div class="accordion-body text-center">
-                        <div class="form-group">
-                            <input type="text" class="form-control" placeholder="Your Name" bind:value={username} autocomplete="off" required>
-                        </div>
-                        <button class="btn btn-dark" on:click={createRoom}>Let's Groove It</button>
-                    </div>
+                <div class="col">
+                    <input type="text" class="form-control" placeholder="Room ID" autocomplete="off" bind:value={room} required>
                 </div>
+                <button class="btn btn-dark space-above" on:click={joinRoom}>Let's Move It</button>
             </div>
-        </div>
+        {:else if selectedTab == "Create a Game"}
+            <div class="form-group space-above">
+                <input type="text" class="form-control" placeholder="Your Name" bind:value={username} autocomplete="off" required>
+            </div>
+            <button class="btn btn-dark space-above" on:click={createRoom}>Let's Groove It</button>
+        {/if}
     </div>
 {/if}
+
+<style>
+    .space-above {
+        margin-top: 50px;
+    }
+</style>

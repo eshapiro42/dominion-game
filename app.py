@@ -6,6 +6,7 @@ import random
 import string
 from collections import defaultdict
 from flask import Flask, request, send_from_directory
+from dominion.cards.recommended_sets import ALL_RECOMMENDED_SETS
 from dominion.expansions import DominionExpansion, IntrigueExpansion, ProsperityExpansion, CornucopiaExpansion
 from dominion.game import Game, GameStartedError
 from dominion.interactions import BrowserInteraction, AutoInteraction
@@ -133,44 +134,52 @@ def add_cpu(data):
 def start_game(data):
     username = data['username']
     room = data['room']
-    dominion = data['dominion']
-    intrigue = data['intrigue']
-    prosperity = data['prosperity']
-    cornucopia = data['cornucopia']
     allow_simultaneous_reactions = data['allowSimultaneousReactions']
-    # distribute_cost = data['distributeCost']
-    disable_attack_cards = data['disableAttacks']
-    require_plus_two_action = data['requirePlusTwoAction']
-    require_drawer = data['requireDrawer']
-    require_buy = data['requireBuy']
-    require_trashing = data['requireTrashing']
+    recommended_set_index = data.get('recommended_set_index')
+    dominion = data.get('dominion')
+    intrigue = data.get('intrigue')
+    prosperity = data.get('prosperity')
+    cornucopia = data.get('cornucopia')
+    # distribute_cost = data.get('distributeCost')
+    disable_attack_cards = data.get('disableAttacks')
+    require_plus_two_action = data.get('requirePlusTwoAction')
+    require_drawer = data.get('requireDrawer')
+    require_buy = data.get('requireBuy')
+    require_trashing = data.get('requireTrashing')
     # Send the game started event
     socketio.send(f'{username} has started game {room}.\n', room=room)
     socketio.emit('game started', room=room)
     game = games[room]
     # Add in customization options
-    if dominion:
-        game.add_expansion(DominionExpansion)
-    if intrigue:
-        game.add_expansion(IntrigueExpansion)
-    if prosperity:
-        game.add_expansion(ProsperityExpansion)
-    if cornucopia:
-        game.add_expansion(CornucopiaExpansion)
+    if recommended_set_index is not None:
+        # Recommended Set
+        recommended_set = ALL_RECOMMENDED_SETS[recommended_set_index]
+        game.recommended_set = recommended_set
+    else:
+        # Random Game
+        if dominion:
+            game.add_expansion(DominionExpansion)
+        if intrigue:
+            game.add_expansion(IntrigueExpansion)
+        if prosperity:
+            game.add_expansion(ProsperityExpansion)
+        if cornucopia:
+            game.add_expansion(CornucopiaExpansion)
+        # if distribute_cost:
+        #     game.distribute_cost = True
+        if disable_attack_cards:
+            game.disable_attack_cards = True
+        if require_plus_two_action:
+            game.require_plus_two_action = True
+        if require_drawer:
+            game.require_drawer = True
+        if require_buy:
+            game.require_buy = True
+        if require_trashing:
+            game.require_trashing = True
+    # Simultaneous Reactions
     if allow_simultaneous_reactions:
         game.allow_simultaneous_reactions = True
-    # if distribute_cost:
-    #     game.distribute_cost = True
-    if disable_attack_cards:
-        game.disable_attack_cards = True
-    if require_plus_two_action:
-        game.require_plus_two_action = True
-    if require_drawer:
-        game.require_drawer = True
-    if require_buy:
-        game.require_buy = True
-    if require_trashing:
-        game.require_trashing = True
     # Start the game's heartbeat
     socketio.start_background_task(game.heartbeat)
     # Start the game (nothing can happen after this)
@@ -189,6 +198,17 @@ def send_message(data):
     room = data['room']
     message = data['message']
     socketio.emit("player message", f'{username}: {message}\n', room=room)
+
+@socketio.on('request recommended sets')
+def send_recommended_sets(data):
+    room = data['room']
+    fake_game = Game()
+    socketio.emit(
+        'recommended sets',
+        data=[recommended_set(fake_game).json for recommended_set in ALL_RECOMMENDED_SETS],
+        room=room,
+    )
+    del(fake_game)
 
 @socketio.on("disconnect")
 def disconnect():

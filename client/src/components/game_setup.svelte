@@ -7,34 +7,27 @@
         username,
     } from "../stores.js";
 
+    import Tabs from "./tabs.svelte";
+
     const dispatch = createEventDispatcher();
 
     export let roomJoined;
     export let roomCreator;
     
     let gameStartable = false;
-    let shown = true;
+    let selectedTab;
+    let recommendedSets = [];
+    let recommendedSet = null;
+    let hidden = false;
 
     var expansions = [
         {name: "Dominion", property: "dominion", selected: false},
         {name: "Intrigue", property: "intrigue", selected: false},
         {name: "Prosperity", property: "prosperity", selected: false},
         {name: "Cornucopia", property: "cornucopia", selected: false},
-    ]
+    ];
 
     var supplyCustomizations = [
-        {
-            name: "Allow simultaneous reactions",
-            property: "allowSimultaneousReactions",
-            selected: false,
-            description: [
-                "Allow attacked players to react to an Attack (or certain Actions) simultaneously and asynchronously (when doing so is sensible).",
-                "This only works for Attack effects where the only required input is from the players being attacked, such as with the Militia. If the Attack requires feedback from the attacker, like with the Thief, the frontend is not currently equipped to deal with simultaneous reactions.",
-                "This also cannot be used for Attacks that require the attacked players to gain cards from the Supply, such as the Witch. That's because there may be only one of a given card left in the Supply, and therefore the effect must be resolved in turn order.",
-                "<b>Supported cards</b>: Bandit, Bishop, Bureaucrat, Fortune Teller, Goons, Masquerade, Militia, Minion, Rabble, Tournament, Vault.",
-                "<b>Unsupported cards</b>: Followers, Mountebank, Jester, Replace, Spy, Swindler, Thief, Torturer, Witch, Young Witch.",
-            ],
-        },
         // This does not currently work with only the Cornucopia expansion selected
         // because there might not be enough remaining cards in the Supply of cost
         // 2 or 3.
@@ -88,25 +81,44 @@
                 "This is currently implemented by searching for cards with the word 'trash' in their description. This may not be a totally accurate method.",
             ],
         },
-    ]
+    ];
+
+    var allowSimultaneousReactions = {
+        name: "Allow simultaneous reactions",
+        property: "allowSimultaneousReactions",
+        selected: false,
+        description: [
+            "Allow attacked players to react to an Attack (or certain Actions) simultaneously and asynchronously (when doing so is sensible).",
+            "This only works for Attack effects where the only required input is from the players being attacked, such as with the Militia. If the Attack requires feedback from the attacker, like with the Thief, the frontend is not currently equipped to deal with simultaneous reactions.",
+            "This also cannot be used for Attacks that require the attacked players to gain cards from the Supply, such as the Witch. That's because there may be only one of a given card left in the Supply, and therefore the effect must be resolved in turn order.",
+            "<b>Supported cards</b>: Bandit, Bishop, Bureaucrat, Fortune Teller, Goons, Masquerade, Militia, Minion, Rabble, Tournament, Vault.",
+            "<b>Unsupported cards</b>: Followers, Mountebank, Jester, Replace, Spy, Swindler, Thief, Torturer, Witch, Young Witch.",
+        ],
+    };
 
     function addCPU() {
         $socket.emit("add cpu", {room: $room});
     }
 
-
     function startGame() {
         if (!gameStartable) {
             alert("The game cannot be started without at least two players.");
+            return;
         }
-        else if (!expansions.some((expansion) => expansion.selected)) {
+        else if (selectedTab == "Random Kingdom" && !expansions.some((expansion) => expansion.selected)) {
             alert("You must select at least one expansion.");
-        }           
-        else {
-            var gameProperties = {
-                username: $username,
-                room: $room,
-            };
+            return;
+        }
+        else if (selectedTab == "Recommended Kingdom" && recommendedSet == null) {
+            alert("You must select a Recommended Kingdom.");
+            return;
+        }
+        var gameProperties = {
+            username: $username,
+            room: $room,
+            allowSimultaneousReactions: allowSimultaneousReactions,
+        };
+        if (selectedTab == "Random Kingdom") {
             expansions.forEach(
                 (expansion) => {
                     gameProperties[expansion.property] = expansion.selected;
@@ -117,13 +129,16 @@
                     gameProperties[customization.property] = customization.selected;
                 }
             );
-            $socket.emit(
-                "start game",
-                gameProperties
-            );
-            dispatch("started");
-            shown = false;
         }
+        else if (selectedTab == "Recommended Kingdom") {
+            gameProperties["recommended_set_index"] = recommendedSet;
+        }
+        $socket.emit(
+            "start game",
+            gameProperties
+        );
+        dispatch("started");
+        hidden = true;
     }
 
     $socket.on("game startable", function(data) {
@@ -132,49 +147,153 @@
 
     $socket.on("game started", function(data) {
         dispatch("started");
-        shown = false;
-    })
+        hidden = true;
+    });
+
+    $socket.on("recommended sets", function(data) {
+        recommendedSets = data;
+        recommendedSets.forEach(
+            (set) => {
+                set.selected = false;
+            }
+        );
+    });
+
+    $: if (roomJoined) {
+        $socket.emit(
+            "request recommended sets",
+            {
+                room: $room,
+            }
+        );
+    }
 </script>
 
-{#if shown}
-    {#if roomJoined && roomCreator}
-        <main>
+{#if !hidden}
+    {#if roomJoined}
+        {#if roomCreator}
+        <div class="container">
             <div class="buttons">
                 <button type="button" on:click={startGame} class="btn btn-primary btn-lg btn-block">Start Game</button>
                 <button type="button" on:click={addCPU} class="btn btn-secondary btn-lg btn-block">Add CPU</button>
             </div>
-            <div class="customizations">
-                {#each expansions as expansion}
-                    <label class="customization">
-                        <input type="checkbox" bind:checked={expansion.selected}>
-                        {expansion.name} Expansion
-                    </label>
-                {/each}
-            </div>
-            <div class="customizations">
-                {#each supplyCustomizations as customization}
-                    <label class="customization">
-                        <input type="checkbox" bind:checked={customization.selected}>
+
+            <main>
+                <div class="customizations">
+                    <label class="customization space-below">
+                        <input type="checkbox" bind:checked={allowSimultaneousReactions.selected}>
                         <div class="hoverable">
-                            {customization.name}
+                            Allow Simultaneous Reactions
                             <span class="hoverable-text">
-                                {#each customization.description as line}
-                                    <span class="hoverable-text-line">
+                                {#each allowSimultaneousReactions.description as line}
+                                    <span>
                                         {@html line}
                                     </span>
                                 {/each}
                             </span>
                         </div>
                     </label>
-                {/each}
-            </div>
-        </main>
-    {:else if roomJoined}
-        <main>
-            <div>
-                <p>Please wait for the host to start the game.</p>
-            </div>
-        </main>
+                </div>
+            </main>
+
+            <Tabs
+                tabNames={
+                    [
+                        "Random Kingdom",
+                        "Recommended Kingdom"
+                    ]
+                }
+                bind:selectedTab={selectedTab}
+            />
+
+            {#if selectedTab === "Random Kingdom"}
+                <main>
+                    <div class="customizations">
+                        {#each expansions as expansion}
+                            <label class="customization">
+                                <input type="checkbox" bind:checked={expansion.selected}>
+                                {expansion.name} Expansion
+                            </label>
+                        {/each}
+                    </div>
+                    <div class="customizations">
+                        {#each supplyCustomizations as customization}
+                            <label class="customization">
+                                <input type="checkbox" bind:checked={customization.selected}>
+                                <div class="hoverable">
+                                    {customization.name}
+                                    <span class="hoverable-text">
+                                        {#each customization.description as line}
+                                            <span>
+                                                {@html line}
+                                            </span>
+                                        {/each}
+                                    </span>
+                                </div>
+                            </label>
+                        {/each}
+                    </div>
+                </main>
+            {:else if selectedTab === "Recommended Kingdom"}
+                <main>
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Kingdom</th>
+                                <th>Expansions</th>
+                                <th>Kingdom Cards</th>
+                                <th>Additional Cards</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {#each recommendedSets as set, index}
+                                <tr
+                                    on:click={() => {recommendedSet = index}}
+                                    class={recommendedSet == index ? "selected" : ""}
+                                >
+                                    <td>
+                                        <b>{set.name}</b>
+                                    </td>
+                                    <td>
+                                        {#each set.expansions as expansion}
+                                            {expansion}<br>
+                                        {/each}
+                                    </td>
+                                    <td>
+                                        {#each set.cards as card}
+                                            <span>
+                                                {card}<br>
+                                            </span>
+                                        {/each}
+                                    </td>
+                                    <td>
+                                        {#if set.hasOwnProperty("additional_cards")}
+                                            {#each set.additional_cards as additionalCard}
+                                                <span>
+                                                    {#if additionalCard.role != null}
+                                                        {additionalCard.card} ({additionalCard.role})
+                                                    {:else}
+                                                        {additionalCard.card}
+                                                    {/if}
+                                                    <br>
+                                                </span>
+                                            {/each}
+                                        {/if}
+                                    </td>
+                                </tr>
+                            {/each}
+                        </tbody>
+                    </table>
+                </main>
+            {/if}
+        </div>
+        {:else}
+            <main>
+                <div>
+                    <p>Please wait for the host to start the game.</p>
+                </div>
+            </main>
+        {/if}
     {/if}
 {/if}
 
@@ -189,6 +308,7 @@
 
     .buttons {
         flex-basis: 100%;
+        margin-top: 50px;
         margin-bottom: 50px;
     }
 
@@ -227,5 +347,30 @@
 
     .hoverable:hover .hoverable-text {
         visibility: visible;
+    }
+
+    .space-below {
+        margin-bottom: 50px;
+    }
+
+    .table {
+        text-align: left;
+        vertical-align: middle;
+    }
+
+    th {
+        position: sticky;
+        background-color: #343338;
+        top: 0;
+        color: #dadada;
+        padding: 20px;
+    }
+
+    .selected {
+        background-color: #ffcccc;
+    }
+
+    td {
+        padding: 20px;
     }
 </style>
