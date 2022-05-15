@@ -1,6 +1,14 @@
 dominion.cards package
 ======================
 
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 4
+
+   dominion.cards.recommended_sets
+
 Submodules
 ----------
 
