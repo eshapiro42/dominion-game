@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING, Dict, List, Type
 from .cards import cards, base_cards, prosperity_cards, intrigue_cards, cornucopia_cards
 
 if TYPE_CHECKING:
+    from .cards.recommended_sets.recommended_set import RecommendedSet
     from .cards.cards import Card
     from .expansions.expansion import Expansion
     from .hooks import PostGainHook
@@ -33,6 +34,7 @@ class Customization:
     Customization options for the Supply.
     '''
     def __init__(self):
+        self._recommended_set = None
         self._expansions = set([])
         self._required_card_classes = set([]) # If nonempty, ensures that each card in the list ends up in the supply
         self._distribute_cost = False # If toggled, ensures there are at least two cards each of cost {2, 3, 4, 5}
@@ -41,6 +43,20 @@ class Customization:
         self._require_drawer = False # If toggled, ensures there is at least one card with '>= +1 Cards'
         self._require_buy = False # If toggled, ensures there is at least one card with '>= +1 Buys'
         self._require_trashing = True # If toggled, ensures there is at least one card that allows trashing
+
+    @property
+    def recommended_set(self) -> RecommendedSet | None:
+        """
+        A recommended set to use for the supply.
+
+        If this is not None, no other supply customizations or expansions
+        outside the recommended set will be considered for inclusion.
+        """
+        return self._recommended_set
+
+    @recommended_set.setter
+    def recommended_set(self, recommended_set: RecommendedSet | None):
+        self._recommended_set = recommended_set
 
     @property
     def expansions(self) -> set[Expansion]:
@@ -268,6 +284,12 @@ class Supply:
         the Supply. Also ensure that any other customization options are
         honored.        
         """
+        if (recommended_set := self.customization.recommended_set) is not None:
+            print(f"Using recommended set {recommended_set}: {', '.join(recommended_set.card_names)}.")
+            for card_class in sorted(recommended_set.card_classes, key=lambda card_class: (card_class.cost, card_class.name)):
+                # Stacks of ten kingdom cards each
+                self.card_stacks[card_class] = FiniteSupplyStack(card_class, 10)
+            return
         selected_kingdom_card_classes = []
         # Get all possible kingdom cards from the selected expansions
         self.possible_kingdom_card_classes = []

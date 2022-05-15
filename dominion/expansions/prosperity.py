@@ -1,24 +1,27 @@
 import random
 from .expansion import Expansion
 from ..cards import cards, base_cards, prosperity_cards
-from ..hooks import PostGainHook
 
 class ProsperityExpansion(Expansion):
     name = 'Prosperity'
 
-    def __init__(self, game):
+    def __init__(self, game, platinum_and_colony: bool | None = None):
         super().__init__(game)
-        self.platinum_and_colony = False
+        self.platinum_and_colony = platinum_and_colony
 
     @property
     def basic_card_piles(self):
-        # The odds of using Platinum and Colony are equal to the proportion of Prosperity kingdom cards in the Supply
-        num_prosperity_cards = len([card_class for card_class in self.supply.card_stacks if card_class in prosperity_cards.KINGDOM_CARDS])
-        odds = num_prosperity_cards / 10
-        print(f'Odds of using Platinum and Colony: {num_prosperity_cards}/10')
-        choices = [True, False]
-        weights = [odds, 1 - odds]
-        choice = random.choices(choices, weights, k=1)[0]
+        # If the expansion is configured to include Platinum and Colonies (e.g. via a recommended set), add the Platinum and Colonies piles to the basic piles
+        if self.platinum_and_colony is not None:
+            choice = True
+        # Otherwise, the odds of using Platinum and Colony are equal to the proportion of Prosperity kingdom cards in the Supply
+        else:
+            num_prosperity_cards = len([card_class for card_class in self.supply.card_stacks if card_class in prosperity_cards.KINGDOM_CARDS])
+            odds = num_prosperity_cards / 10
+            print(f'Odds of using Platinum and Colony: {num_prosperity_cards}/10')
+            choices = [True, False]
+            weights = [odds, 1 - odds]
+            choice = random.choices(choices, weights, k=1)[0]
         if choice:
             self.platinum_and_colony = True
             self.game.broadcast("Platinum and Colony are in play this game.")
@@ -31,6 +34,7 @@ class ProsperityExpansion(Expansion):
             platinum_pile_size = 12
             return [(prosperity_cards.Colony, colony_pile_size), ([prosperity_cards.Platinum, platinum_pile_size])]
         else:
+            self.platinum_and_colony = False
             print('Not using Platinum or Colony')
             return []
 
