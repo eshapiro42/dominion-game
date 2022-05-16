@@ -272,7 +272,7 @@ class AttackCard(ActionCard):
         """
         Whether the card is being used to attack.
         """
-        return True
+        return self._attacking
 
     @attacking.setter
     def attacking(self, attacking: bool):

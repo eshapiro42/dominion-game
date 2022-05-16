@@ -5,7 +5,7 @@ import random
 from collections import deque
 from typing import TYPE_CHECKING, Optional, Deque, List, Type
 
-from .cards import base_cards, cornucopia_cards, prosperity_cards
+from .cards import base_cards, intrigue_cards, prosperity_cards, cornucopia_cards
 from .expansions import ProsperityExpansion
 from .grammar import a, s
 from .supply import SupplyStackEmptyError
