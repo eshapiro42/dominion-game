@@ -1,7 +1,7 @@
 import pytest
 import random
-from dominion.cards import base_cards, intrigue_cards, prosperity_cards, cornucopia_cards
-from dominion.expansions import IntrigueExpansion, ProsperityExpansion, CornucopiaExpansion
+from dominion.cards import base_cards, intrigue_cards, prosperity_cards, cornucopia_cards, hinterlands_cards
+from dominion.expansions import IntrigueExpansion, ProsperityExpansion, CornucopiaExpansion, HinterlandsExpansion
 from dominion.game import Game
 from dominion.interactions import AutoInteraction
 
@@ -10,6 +10,7 @@ EXPANSIONS = [
     IntrigueExpansion,
     ProsperityExpansion,
     CornucopiaExpansion,
+    HinterlandsExpansion,
 ]
 
 
@@ -17,6 +18,7 @@ CARD_SETS = [
     intrigue_cards,
     prosperity_cards,
     cornucopia_cards,
+    hinterlands_cards,
 ]
 
 
@@ -45,7 +47,7 @@ def test_stability():
     '''
     game = Game(test=True)
     # Add a randomly selected set of expansions into the game
-    num_expansions = random.randint(1, len(EXPANSIONS))
+    num_expansions = random.randint(2, len(EXPANSIONS))
     expansions_to_include = random.sample(EXPANSIONS, num_expansions)
     for expansion in expansions_to_include:
         game.add_expansion(expansion)
