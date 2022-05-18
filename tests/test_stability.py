@@ -1,7 +1,7 @@
 import pytest
 import random
-from dominion.cards import base_cards, intrigue_cards, prosperity_cards
-from dominion.expansions import IntrigueExpansion, ProsperityExpansion
+from dominion.cards import base_cards, intrigue_cards, prosperity_cards, cornucopia_cards
+from dominion.expansions import IntrigueExpansion, ProsperityExpansion, CornucopiaExpansion
 from dominion.game import Game
 from dominion.interactions import AutoInteraction
 
@@ -9,12 +9,14 @@ from dominion.interactions import AutoInteraction
 EXPANSIONS = [
     IntrigueExpansion,
     ProsperityExpansion,
+    CornucopiaExpansion,
 ]
 
 
 CARD_SETS = [
     intrigue_cards,
     prosperity_cards,
+    cornucopia_cards,
 ]
 
 

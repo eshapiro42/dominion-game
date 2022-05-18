@@ -36,8 +36,16 @@ class CornucopiaExpansion(Expansion):
                 bane_card_class = self.bane_card_class
             # Otherwise, randomly choose a card class costing 2 $ or 3 $ to be the Bane card
             else:
-                possible_bane_card_classes = [card_class for card_class in self.supply.possible_kingdom_card_classes if card_class not in self.supply.card_stacks and self.game.current_turn.get_cost(card_class) in [2, 3]]
-                bane_card_class = random.choice(possible_bane_card_classes)
+                possible_bane_card_classes = [card_class for card_class in self.supply.possible_kingdom_card_classes if card_class not in self.supply.card_stacks and card_class._cost in [2, 3]]
+                # If there are no cards costing 2 $ or 3 $, then remove one from the Supply, replace it with something else, and use it as a Bane card
+                if not possible_bane_card_classes:
+                    card_classes_costing_2_or_3 = [card_class for card_class in self.supply.card_stacks if card_class._cost in [2, 3]]
+                    bane_card_class = random.choice(card_classes_costing_2_or_3)
+                    self.supply.card_stacks.pop(bane_card_class)
+                    replacement_card_class = random.choice(self.supply.possible_kingdom_card_classes)
+                    self.supply.card_stacks[replacement_card_class] = FiniteSupplyStack(replacement_card_class, 10)
+                else:
+                    bane_card_class = random.choice(possible_bane_card_classes)
             self.game.broadcast(f"The Young Witch is in play this game. {s(10, bane_card_class.name, print_number=False)} are Bane cards.")
             # Add the Bane card class to the Supply and modify its example card
             self.supply.card_stacks[bane_card_class] = FiniteSupplyStack(bane_card_class, 10)
