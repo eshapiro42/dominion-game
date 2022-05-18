@@ -231,7 +231,7 @@ class CLIInteraction(Interaction):
                 for idx, card_class in enumerate(gainable_card_classes):
                     types = ', '.join([type.name.lower().capitalize() for type in card_class.types])
                     card_quantity = len(trash_pile[card_class])
-                    trash_table.add_row([idx + 1, card_class.name, card_class.cost, types, card_quantity, card_class.description])
+                    trash_table.add_row([idx + 1, card_class.name, self.game.current_turn.get_cost(card_class), types, card_quantity, card_class.description])
                 print(trash_table)
                 if force:
                     card_num = int(input(f'Enter choice 1-{len(gainable_card_classes)}: '))

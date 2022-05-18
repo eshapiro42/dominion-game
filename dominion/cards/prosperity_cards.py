@@ -13,7 +13,7 @@ from ..grammar import a, s
 
 class Platinum(TreasureCard):
     name = 'Platinum'
-    cost = 9
+    _cost = 9
     types = [CardType.TREASURE]
     image_path = ''
     description = '5 $'
@@ -21,7 +21,7 @@ class Platinum(TreasureCard):
 
 class Colony(VictoryCard):
     name = 'Colony'
-    cost = 11
+    _cost = 11
     types = [CardType.VICTORY]
     description = '10 victory points'
     image_path = ''
@@ -39,7 +39,7 @@ BASIC_CARDS = [
 
 class Loan(TreasureCard):
     name = 'Loan'
-    cost = 3
+    _cost = 3
     types = [CardType.TREASURE]
     image_path = ''
 
@@ -86,7 +86,7 @@ class Loan(TreasureCard):
 
 class TradeRoute(ActionCard):
     name = 'Trade Route'
-    cost = 3
+    _cost = 3
     types = [CardType.ACTION]
     image_path = ''
 
@@ -127,7 +127,7 @@ class TradeRoute(ActionCard):
 
 class Watchtower(ReactionCard):
     name = 'Watchtower'
-    cost = 3
+    _cost = 3
     types = [CardType.ACTION, CardType.REACTION]
     image_path = ''
 
@@ -181,7 +181,7 @@ class Watchtower(ReactionCard):
 
 class Bishop(ActionCard):
     name = 'Bishop'
-    cost = 4
+    _cost = 4
     types = [CardType.ACTION]
     image_path = ''
 
@@ -230,7 +230,7 @@ class Bishop(ActionCard):
 
 class Monument(ActionCard):
     name = 'Monument'
-    cost = 4
+    _cost = 4
     types = [CardType.ACTION]
     image_path = ''
 
@@ -254,7 +254,7 @@ class Monument(ActionCard):
 class Quarry(TreasureCard):
     name = 'Quarry'
     pluralized = 'Quarries'
-    cost = 4
+    _cost = 4
     types = [CardType.TREASURE]
     image_path = ''
 
@@ -271,12 +271,12 @@ class Quarry(TreasureCard):
         # Modify Action card costs
         action_card_classes = [card_class for card_class in self.supply.card_stacks if CardType.ACTION in card_class.types]
         for card_class in action_card_classes:
-            self.supply.modify_cost(card_class, -2)
+            self.game.current_turn.modify_cost(card_class, -2)
 
 
 class Talisman(TreasureCard):
     name = 'Talisman'
-    cost = 4
+    _cost = 4
     types = [CardType.TREASURE]
     image_path = ''
 
@@ -300,14 +300,14 @@ class Talisman(TreasureCard):
     def play(self):
         # All non-Victory cards costing 4 $ or less get a post gain hook added this turn
         for card_class in self.supply.card_stacks:
-            if card_class.cost <= 4 and CardType.VICTORY not in card_class.types:
+            if self.game.current_turn.get_cost(card_class) <= 4 and CardType.VICTORY not in card_class.types:
                 post_gain_hook = self.TalismanPostGainHook(self.game, card_class)
                 self.owner.turn.add_post_gain_hook(post_gain_hook, card_class) 
 
 
 class WorkersVillage(ActionCard):
     name = "Worker's Village"
-    cost = 4
+    _cost = 4
     types = [CardType.ACTION]
     image_path = ''
 
@@ -331,7 +331,7 @@ class WorkersVillage(ActionCard):
 class City(ActionCard):
     name = 'City'
     pluralized = 'Cities'
-    cost = 5
+    _cost = 5
     types = [CardType.ACTION]
     image_path = ''
 
@@ -360,7 +360,7 @@ class City(ActionCard):
 
 class Contraband(TreasureCard):
     name = 'Contraband'
-    cost = 5
+    _cost = 5
     types = [CardType.TREASURE]
     image_path = ''
 
@@ -397,7 +397,7 @@ class Contraband(TreasureCard):
 
 class CountingHouse(ActionCard):
     name = 'Counting House'
-    cost = 5
+    _cost = 5
     types = [CardType.ACTION]
     image_path = ''
 
@@ -431,7 +431,7 @@ class CountingHouse(ActionCard):
 
 class Mint(ActionCard):
     name = 'Mint'
-    cost = 5
+    _cost = 5
     types = [CardType.ACTION]
     image_path = ''
 
@@ -469,7 +469,7 @@ class Mint(ActionCard):
 
 class Mountebank(AttackCard):
     name = 'Mountebank'
-    cost = 5
+    _cost = 5
     types = [CardType.ACTION, CardType.ATTACK]
     image_path = ''
 
@@ -506,7 +506,7 @@ class Mountebank(AttackCard):
 
 class Rabble(AttackCard):
     name = 'Rabble'
-    cost = 5
+    _cost = 5
     types = [CardType.ACTION, CardType.ATTACK]
     image_path = ''
 
@@ -579,7 +579,7 @@ class Rabble(AttackCard):
 
 class RoyalSeal(TreasureCard):
     name = 'Royal Seal'
-    cost = 5
+    _cost = 5
     types = [CardType.TREASURE]
     image_path = ''
 
@@ -613,7 +613,7 @@ class RoyalSeal(TreasureCard):
 
 class Vault(ActionCard):
     name = 'Vault'
-    cost = 5
+    _cost = 5
     types = [CardType.ACTION]
     image_path = ''
 
@@ -668,7 +668,7 @@ class Vault(ActionCard):
 
 class Venture(TreasureCard):
     name = 'Venture'
-    cost = 5
+    _cost = 5
     types = [CardType.TREASURE]
     image_path = ''
 
@@ -706,7 +706,7 @@ class Venture(TreasureCard):
 class Goons(AttackCard):
     name = 'Goons'
     pluralized = 'Goons'
-    cost = 5
+    _cost = 5
     types = [CardType.ACTION, CardType.ATTACK]
     image_path = ''
 
@@ -754,7 +754,7 @@ class Goons(AttackCard):
 
 class GrandMarket(ActionCard):
     name = 'Grand Market'
-    cost = 6
+    _cost = 6
     types = [CardType.ACTION]
     image_path = ''
 
@@ -789,7 +789,7 @@ class GrandMarket(ActionCard):
 
 class Hoard(TreasureCard):
     name = 'Hoard'
-    cost = 6
+    _cost = 6
     types = [CardType.TREASURE]
     image_path = ''
 
@@ -820,7 +820,7 @@ class Hoard(TreasureCard):
 
 class Bank(TreasureCard):
     name = 'Bank'
-    cost = 7
+    _cost = 7
     types = [CardType.TREASURE]
     image_path = ''
 
@@ -852,7 +852,7 @@ class Bank(TreasureCard):
 
 class Expand(ActionCard):
     name = 'Expand'
-    cost = 7
+    _cost = 7
     types = [CardType.ACTION]
     image_path = ''
 
@@ -879,7 +879,7 @@ class Expand(ActionCard):
 
 class Forge(ActionCard):
     name = 'Forge'
-    cost = 7
+    _cost = 7
     types = [CardType.ACTION]
     image_path = ''
 
@@ -912,7 +912,7 @@ class Forge(ActionCard):
 
 class KingsCourt(ActionCard):
     name = "King's Court"
-    cost = 7
+    _cost = 7
     types = [CardType.ACTION]
     image_path = ''
 
@@ -946,7 +946,7 @@ class KingsCourt(ActionCard):
 
 class Peddler(ActionCard):
     name = 'Peddler'
-    cost = 8
+    _cost = 8
     types = [CardType.ACTION]
     image_path = ''
 
@@ -971,7 +971,7 @@ class Peddler(ActionCard):
             player = self.game.current_turn.player
             turn = self.game.current_turn
             num_actions = len([card for card in player.played_cards if CardType.ACTION in card.types])
-            self.game.supply.modify_cost(Peddler, -2 * num_actions)
+            self.game.current_turn.modify_cost(Peddler, -2 * num_actions)
 
     def action(self):
         pass

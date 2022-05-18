@@ -4,12 +4,12 @@ from abc import ABCMeta, abstractmethod
 from collections import defaultdict
 from typing import TYPE_CHECKING, List, Dict, Type
 
-from .cards import cards
+from .cards.cards import Card, CardType
 from .grammar import a, s
 from .interactions import AutoInteraction, BrowserInteraction
 
 if TYPE_CHECKING:
-    from .cards.cards import Card, ActionCard, TreasureCard
+    from .cards.cards import ActionCard, TreasureCard
     from .game import Game
     from .hooks import TreasureHook, PostGainHook, PostTreasureHook
     from .player import Player
@@ -40,6 +40,7 @@ class Turn:
         self._post_treasure_hooks = []
         self._post_gain_hooks = defaultdict(list)
         self._invalid_card_classes = []
+        self._cost_modifiers = defaultdict(int)
 
     @property
     def player(self) -> Player:
@@ -164,6 +165,29 @@ class Turn:
     def invalid_card_classes(self, invalid_card_classes: List[Type[Card]]):
         self._invalid_card_classes = invalid_card_classes
 
+    @property
+    def cost_modifiers(self) -> Dict[Type[Card], int]:
+        """
+        A dictionary of cost modifiers for cards.
+        """
+        return self._cost_modifiers
+
+    def get_cost(self, card_like: Card | Type[Card]) -> int:
+        """
+        Get the cost of a card or card class.
+
+        Args:
+            card: The card or card class to get the cost of.
+
+        Returns:
+            The cost of the card or card class.
+        """
+        if isinstance(card_like, Card):
+            cost_modifier = self.cost_modifiers[type(card_like)]
+        else:
+            cost_modifier = self.cost_modifiers[card_like]
+        return max(card_like._cost + cost_modifier, 0)
+
     def start(self):
         '''
         Start the Turn.
@@ -286,6 +310,17 @@ class Turn:
         for hook in expired_hooks:
             self.game.pre_turn_hooks.remove(hook)
 
+    def modify_cost(self, card_class: Type[Card], modifier: int):
+        """
+        Add a cost modifier to a card class.
+
+        Args:
+            card_class: The card class to modify.
+            modifier: The modifier to add.
+        """
+        self.cost_modifiers[card_class] += modifier
+        self.game.supply.modify_cost(card_class, modifier)
+
 
 class Phase(metaclass=ABCMeta):
     '''
@@ -352,11 +387,11 @@ class ActionPhase(Phase):
         '''
         while self.turn.actions_remaining > 0:
             # If there are no action cards in the player's hand, move on
-            if not any(cards.CardType.ACTION in card.types for card in self.player.hand):
+            if not any(CardType.ACTION in card.types for card in self.player.hand):
                 self.player.interactions.send('No Action cards to play. Ending action phase.')
                 return
             prompt = f"You have {s(self.turn.actions_remaining, 'action')}. Select an Action card to play."
-            card = self.player.interactions.choose_specific_card_type_from_hand(prompt=prompt, card_type=cards.CardType.ACTION)
+            card = self.player.interactions.choose_specific_card_type_from_hand(prompt=prompt, card_type=CardType.ACTION)
             if card is None:
                 # The player is forfeiting their action phase
                 self.player.interactions.send('Action phase forfeited.')
@@ -432,7 +467,7 @@ class BuyPhase(Phase):
         '''
         self.turn.current_phase = "Buy Phase"
         # Find any Treasures in the player's hand
-        treasures_available = [card for card in self.player.hand if cards.CardType.TREASURE in card.types]
+        treasures_available = [card for card in self.player.hand if CardType.TREASURE in card.types]
         # Ask the player which Treasures they would like to play
         treasures_to_play = []
         if treasures_available:
@@ -529,7 +564,7 @@ class BuyPhase(Phase):
         # Allow each expansion to modify the order of Treasures played
         for expansion_instance in self.supply.customization.expansions:
             treasures = expansion_instance.order_treasures(self.player, treasures)
-        treasures_string = cards.Card.group_and_sort_by_cost(treasures)
+        treasures_string = Card.group_and_sort_by_cost(treasures)
         self.game.broadcast(f"{self.player} played Treasures: {treasures_string}.")
         # Play the Treasures
         for treasure in treasures:

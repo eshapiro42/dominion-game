@@ -85,7 +85,7 @@ class ProsperityExpansion(Expansion):
                     if isinstance(post_gain_hook, prosperity_cards.TradeRoute.TradeRoutePostGainHook):
                         victory_card_classes_with_coin_tokens.append(victory_card_class)
                         break
-            sorted_victory_card_classes_with_coin_tokens = sorted(victory_card_classes_with_coin_tokens, key=lambda card_class: card_class.cost)
+            sorted_victory_card_classes_with_coin_tokens = sorted(victory_card_classes_with_coin_tokens, key=lambda card_class: self.game.current_turn.get_cost(card_class))
             victory_card_names_with_coin_tokens = [card_class.name for card_class in sorted_victory_card_classes_with_coin_tokens]
             self.game.socketio.emit(
                 "trade route",

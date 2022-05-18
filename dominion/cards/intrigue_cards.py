@@ -12,7 +12,7 @@ from ..grammar import a, s
 
 class Courtyard(ActionCard):
     name = 'Courtyard'
-    cost = 2
+    _cost = 2
     types = [CardType.ACTION]
     image_path = ''
 
@@ -43,7 +43,7 @@ class Courtyard(ActionCard):
 
 class Lurker(ActionCard):
     name = 'Lurker'
-    cost = 2
+    _cost = 2
     types = [CardType.ACTION]
     image_path = ''
 
@@ -85,7 +85,7 @@ class Lurker(ActionCard):
 
 class Pawn(ActionCard):
     name = 'Pawn'
-    cost = 2
+    _cost = 2
     types = [CardType.ACTION]
     image_path = ''
 
@@ -131,7 +131,7 @@ class Pawn(ActionCard):
 
 class Masquerade(ActionCard):
     name = 'Masquerade'
-    cost = 3
+    _cost = 3
     types = [CardType.ACTION]
     image_path = ''
 
@@ -198,7 +198,7 @@ class Masquerade(ActionCard):
 
 class ShantyTown(ActionCard):
     name = 'Shanty Town'
-    cost = 3
+    _cost = 3
     types = [CardType.ACTION]
     image_path = ''
 
@@ -225,7 +225,7 @@ class ShantyTown(ActionCard):
 
 class Steward(ActionCard):
     name = 'Steward'
-    cost = 3
+    _cost = 3
     types = [CardType.ACTION]
     image_path = 'Steward'
 
@@ -263,7 +263,7 @@ class Steward(ActionCard):
 
 class Swindler(AttackCard):
     name = 'Swindler'
-    cost = 3
+    _cost = 3
     types = [CardType.ACTION, CardType.ATTACK]
     image_path = ''
 
@@ -308,7 +308,7 @@ class Swindler(AttackCard):
 
 class WishingWell(ActionCard):
     name = 'Wishing Well'
-    cost = 3
+    _cost = 3
     types = [CardType.ACTION]
     image_path = ''
 
@@ -346,7 +346,7 @@ class WishingWell(ActionCard):
 
 class Baron(ActionCard):
     name = 'Baron'
-    cost = 4
+    _cost = 4
     types = [CardType.ACTION]
     image_path = ''
 
@@ -375,7 +375,7 @@ class Baron(ActionCard):
 
 class Bridge(ActionCard):
     name = 'Bridge'
-    cost = 4
+    _cost = 4
     types = [CardType.ACTION]
     image_path = ''
 
@@ -394,12 +394,12 @@ class Bridge(ActionCard):
 
     def action(self):
         for card_class in self.supply.card_stacks:
-            self.supply.modify_cost(card_class, -1)
+            self.game.current_turn.modify_cost(card_class, -1)
 
 
 class Conspirator(ActionCard):
     name = 'Conspirator'
-    cost = 4
+    _cost = 4
     types = [CardType.ACTION]
     image_path = ''
 
@@ -426,7 +426,7 @@ class Conspirator(ActionCard):
 
 class Diplomat(ReactionCard):
     name = 'Diplomat'
-    cost = 4
+    _cost = 4
     types = [CardType.ACTION, CardType.REACTION]
     image_path = ''
 
@@ -470,7 +470,7 @@ class Diplomat(ReactionCard):
 class Ironworks(ActionCard):
     name = 'Ironworks'
     pluralized = 'Ironworks'
-    cost = 4
+    _cost = 4
     types = [CardType.ACTION]
     image_path = ''
 
@@ -502,7 +502,7 @@ class Ironworks(ActionCard):
 
 class Mill(ActionCard, VictoryCard):
     name = 'Mill'
-    cost = 4
+    _cost = 4
     types = [CardType.ACTION, CardType.VICTORY]
     image_path = ''
 
@@ -537,7 +537,7 @@ class Mill(ActionCard, VictoryCard):
 
 class MiningVillage(ActionCard):
     name = 'Mining Village'
-    cost = 4
+    _cost = 4
     types = [CardType.ACTION]
     image_path = ''
 
@@ -563,7 +563,7 @@ class MiningVillage(ActionCard):
 
 class SecretPassage(ActionCard):
     name = 'Secret Passage'
-    cost = 4
+    _cost = 4
     types = [CardType.ACTION]
     image_path = ''
 
@@ -595,7 +595,7 @@ class SecretPassage(ActionCard):
 
 class Courtier(ActionCard):
     name = 'Courtier'
-    cost = 5
+    _cost = 5
     types = [CardType.ACTION]
     image_path = ''
 
@@ -642,7 +642,7 @@ class Courtier(ActionCard):
 
 class Duke(VictoryCard):
     name = 'Duke'
-    cost = 5
+    _cost = 5
     types = [CardType.VICTORY]
     image_path = ''
 
@@ -665,7 +665,7 @@ class Duke(VictoryCard):
 
 class Minion(AttackCard):
     name = 'Minion'
-    cost = 5
+    _cost = 5
     types = [CardType.ACTION, CardType.ATTACK]
     image_path = ''
 
@@ -715,7 +715,7 @@ class Minion(AttackCard):
 
 class Patrol(ActionCard):
     name = 'Patrol'
-    cost = 5
+    _cost = 5
     types = [CardType.ACTION]
     image_path = ''
 
@@ -768,7 +768,7 @@ class Patrol(ActionCard):
 
 class Replace(AttackCard):
     name = 'Replace'
-    cost = 5
+    _cost = 5
     types = [CardType.ACTION, CardType.ATTACK]
     image_path = ''
 
@@ -813,7 +813,7 @@ class Replace(AttackCard):
 
 class Torturer(AttackCard):
     name = 'Torturer'
-    cost = 5
+    _cost = 5
     types = [CardType.ACTION, CardType.ATTACK]
     image_path = ''
 
@@ -857,7 +857,7 @@ class Torturer(AttackCard):
 
 class TradingPost(ActionCard):
     name = 'Trading Post'
-    cost = 5
+    _cost = 5
     types = [CardType.ACTION]
     image_path = ''
 
@@ -885,7 +885,7 @@ class TradingPost(ActionCard):
 
 class Upgrade(ActionCard):
     name = 'Upgrade'
-    cost = 5
+    _cost = 5
     types = [CardType.ACTION]
     image_path = ''
 
@@ -916,7 +916,7 @@ class Upgrade(ActionCard):
 
 class Harem(TreasureCard, VictoryCard):
     name = 'Harem'
-    cost = 6
+    _cost = 6
     types = [CardType.TREASURE, CardType.VICTORY]
     image_path = ''
 
@@ -934,7 +934,7 @@ class Harem(TreasureCard, VictoryCard):
 class Nobles(ActionCard, VictoryCard):
     name = 'Nobles'
     pluralized = 'Nobles'
-    cost = 6
+    _cost = 6
     types = [CardType.ACTION, CardType.VICTORY]
     image_path = ''
 

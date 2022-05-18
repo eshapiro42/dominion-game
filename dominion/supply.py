@@ -286,7 +286,7 @@ class Supply:
         """
         if (recommended_set := self.customization.recommended_set) is not None:
             print(f"Using recommended set {recommended_set}: {', '.join(recommended_set.card_names)}.")
-            for card_class in sorted(recommended_set.card_classes, key=lambda card_class: (card_class.cost, card_class.name)):
+            for card_class in sorted(recommended_set.card_classes, key=lambda card_class: (card_class._cost, card_class.name)):
                 # Stacks of ten kingdom cards each
                 self.card_stacks[card_class] = FiniteSupplyStack(card_class, 10)
             return
@@ -326,8 +326,8 @@ class Supply:
         if self.customization.distribute_cost:
             # Make sure there are at least two kingdom cards each of cost {2, 3, 4, 5} (this leaves 2 cards of any cost if no other customizations are chosen)
             print("Distributing costs")
-            selected_kingdom_card_classes_by_cost = {cost: [card_class for card_class in selected_kingdom_card_classes if card_class.cost == cost] for cost in range(2, 6)}
-            possible_kingdom_card_classes_by_cost = {cost: [card_class for card_class in self.possible_kingdom_card_classes if card_class.cost == cost] for cost in range(2, 6)}
+            selected_kingdom_card_classes_by_cost = {cost: [card_class for card_class in selected_kingdom_card_classes if card_class._cost == cost] for cost in range(2, 6)}
+            possible_kingdom_card_classes_by_cost = {cost: [card_class for card_class in self.possible_kingdom_card_classes if card_class._cost == cost] for cost in range(2, 6)}
             for cost in range(2, 6):
                 num_still_needed = max(0, 2 - len(selected_kingdom_card_classes_by_cost[cost]))
                 try:
@@ -349,7 +349,7 @@ class Supply:
         num_cards_remaining = max(0, 10 - len(selected_kingdom_card_classes))
         selected_kingdom_card_classes += random.sample(self.possible_kingdom_card_classes, num_cards_remaining)
         # Sort kingdom cards first by cost, then by name
-        for card_class in sorted(selected_kingdom_card_classes, key=lambda card_class: (card_class.cost, card_class.name)):
+        for card_class in sorted(selected_kingdom_card_classes, key=lambda card_class: (card_class._cost, card_class.name)):
             # Stacks of ten kingdom cards each
             self.card_stacks[card_class] = FiniteSupplyStack(card_class, 10)
 
@@ -419,8 +419,8 @@ class Supply:
 
     def modify_cost(self, card_class: Type[Card], increment: int):
         """
-        Temporarily modify a card's cost. (A card's cost cannot ever
-        be less than 0.)
+        Temporarily modify the cost of a card in the supply.
+        (A card's cost cannot ever be less than 0.)
 
         Once the cost modification is no longer relevant, this needs
         to be undone by calling :meth:`reset_costs`.
@@ -583,8 +583,8 @@ class FiniteSupplyStack(SupplyStack):
     """
     def __init__(self, card_class: Type[Card], size: int):
         super().__init__(card_class)
-        self._base_cost = card_class.cost
-        self._modified_cost = card_class.cost
+        self._base_cost = self.example.cost
+        self._modified_cost = self.example.cost
         self._cards_remaining = size
 
     @property

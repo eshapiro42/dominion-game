@@ -97,6 +97,13 @@ class Card(Word, metaclass=ABCMeta):
         return f"{cls.name}s"
 
     @property
+    def cost(self) -> int:
+        """
+        The cost of the card.
+        """
+        return self._cost if not hasattr(self, "game") else self.game.current_turn.get_cost(self)
+
+    @property
     @abstractmethod
     def name(self) -> str:
         """
@@ -106,7 +113,7 @@ class Card(Word, metaclass=ABCMeta):
 
     @property
     @abstractmethod
-    def cost(self) -> int:
+    def _cost(self) -> int:
         """
         The cost of the card.
         """
@@ -180,7 +187,7 @@ class Card(Word, metaclass=ABCMeta):
             card_class_counts[type(card)] += 1
         card_class_counts: List[Tuple[Type[Card], int]] = list(card_class_counts.items()) # convert from dict[card_class, count] into list[tuple(card_class, count)]
         # Sort the cards by cost (sorting by value would be tricky because of cards like Bank)
-        sorted_card_class_counts = sorted(card_class_counts, key=lambda card_tuple: card_tuple[0].cost, reverse=True)
+        sorted_card_class_counts = sorted(card_class_counts, key=lambda card_tuple: card_tuple[0]._cost, reverse=True)
         card_strings = [s(quantity, card_class) for card_class, quantity in sorted_card_class_counts]
         return ", ".join(card_strings)
 
@@ -265,7 +272,7 @@ class AttackCard(ActionCard):
 
     def __init__(self):
         super().__init__()
-        self._attacking = False
+        self._attacking = True
 
     @property
     def attacking(self) -> bool:

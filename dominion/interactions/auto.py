@@ -196,7 +196,7 @@ class AutoInteraction(Interaction):
                     weights = [
                         0 if cards.CardType.CURSE in card_class.types \
                         else 1 if card_class == base_cards.Copper or card_class == base_cards.Estate \
-                        else card_class.cost * 5 \
+                        else self.game.current_turn.get_cost(card_class) * 5 \
                         for card_class in buyable_card_stacks
                     ]
                     try:
@@ -212,7 +212,7 @@ class AutoInteraction(Interaction):
                     weights = [1] + [
                         0 if cards.CardType.CURSE in card_class.types \
                         else 1 if card_class == base_cards.Copper or card_class == base_cards.Estate \
-                        else card_class.cost * 5 \
+                        else self.game.current_turn.get_cost(card_class) * 5 \
                         for card_class in buyable_card_stacks
                     ]
                     card_num = random.choices(choices, weights, k=1)[0]
@@ -240,7 +240,7 @@ class AutoInteraction(Interaction):
                     print(f'Enter choice 1-{len(buyable_card_stacks)}: ', end='')
                     choices = list(range(1, len(buyable_card_stacks) + 1))
                     # Weight by cost (more expensive is more likely)
-                    weights = [card.cost * 5 for card in buyable_card_stacks]
+                    weights = [self.game.current_turn.get_cost(card_class) * 5 for card_class in buyable_card_stacks]
                     card_num = random.choices(choices, weights, k=1)[0]
                     print(card_num)
                     print()

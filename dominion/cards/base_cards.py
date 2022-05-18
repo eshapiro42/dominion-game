@@ -6,7 +6,7 @@ from .cards import CardType, TreasureCard, VictoryCard, CurseCard
 
 class Copper(TreasureCard):
     name = 'Copper'
-    cost = 0
+    _cost = 0
     types = [CardType.TREASURE]
     image_path = ''
     description = '1 $'
@@ -14,7 +14,7 @@ class Copper(TreasureCard):
 
 class Silver(TreasureCard):
     name = 'Silver'
-    cost = 3
+    _cost = 3
     types = [CardType.TREASURE]
     image_path = ''
     description = '2 $'
@@ -22,7 +22,7 @@ class Silver(TreasureCard):
 
 class Gold(TreasureCard):
     name = 'Gold'
-    cost = 6
+    _cost = 6
     types = [CardType.TREASURE]
     image_path = ''
     description = '3 $'
@@ -30,7 +30,7 @@ class Gold(TreasureCard):
 
 class Estate(VictoryCard):
     name = 'Estate'
-    cost = 2
+    _cost = 2
     types = [CardType.VICTORY]
     image_path = ''
     description = '1 victory point'
@@ -39,7 +39,7 @@ class Estate(VictoryCard):
 class Duchy(VictoryCard):
     name = 'Duchy'
     pluralized = 'Duchies'
-    cost = 5
+    _cost = 5
     types = [CardType.VICTORY]
     image_path = ''
     description = '3 victory points'
@@ -47,7 +47,7 @@ class Duchy(VictoryCard):
 
 class Province(VictoryCard):
     name = 'Province'
-    cost = 8
+    _cost = 8
     types = [CardType.VICTORY]
     image_path = ''
     description = '6 victory points'
@@ -55,7 +55,7 @@ class Province(VictoryCard):
 
 class Curse(CurseCard):
     name = 'Curse'
-    cost = 0
+    _cost = 0
     types = [CardType.CURSE]
     image_path = ''
     description = '-1 victory point'

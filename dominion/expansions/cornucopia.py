@@ -36,7 +36,7 @@ class CornucopiaExpansion(Expansion):
                 bane_card_class = self.bane_card_class
             # Otherwise, randomly choose a card class costing 2 $ or 3 $ to be the Bane card
             else:
-                possible_bane_card_classes = [card_class for card_class in self.supply.possible_kingdom_card_classes if card_class not in self.supply.card_stacks and card_class.cost in [2, 3]]
+                possible_bane_card_classes = [card_class for card_class in self.supply.possible_kingdom_card_classes if card_class not in self.supply.card_stacks and self.game.current_turn.get_cost(card_class) in [2, 3]]
                 bane_card_class = random.choice(possible_bane_card_classes)
             self.game.broadcast(f"The Young Witch is in play this game. {s(10, bane_card_class.name, print_number=False)} are Bane cards.")
             # Add the Bane card class to the Supply and modify its example card

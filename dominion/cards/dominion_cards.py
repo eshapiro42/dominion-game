@@ -10,7 +10,7 @@ from ..grammar import a, s
 
 class Cellar(ActionCard):
     name = 'Cellar'
-    cost = 2
+    _cost = 2
     types = [CardType.ACTION]
     image_path = ''
 
@@ -39,7 +39,7 @@ class Cellar(ActionCard):
 
 class Chapel(ActionCard):
     name = 'Chapel'
-    cost = 2
+    _cost = 2
     types = [CardType.ACTION]
     image_path = ''
 
@@ -62,7 +62,7 @@ class Chapel(ActionCard):
 
 class Moat(ReactionCard):
     name = 'Moat'
-    cost = 2
+    _cost = 2
     types = [CardType.ACTION, CardType.REACTION]
     image_path = ''
 
@@ -91,7 +91,7 @@ class Moat(ReactionCard):
 
 class Harbinger(ActionCard):
     name = 'Harbinger'
-    cost = 3
+    _cost = 3
     types = [CardType.ACTION]
     image_path = ''
 
@@ -121,7 +121,7 @@ class Harbinger(ActionCard):
 
 class Merchant(ActionCard):
     name = 'Merchant'
-    cost = 3
+    _cost = 3
     types = [CardType.ACTION]
     image_path = ''
 
@@ -155,7 +155,7 @@ class Merchant(ActionCard):
 
 class Vassal(ActionCard):
     name = 'Vassal'
-    cost = 3
+    _cost = 3
     types = [CardType.ACTION]
     image_path = ''
 
@@ -186,7 +186,7 @@ class Vassal(ActionCard):
 
 class Village(ActionCard):
     name = 'Village'
-    cost = 3
+    _cost = 3
     types = [CardType.ACTION]
     image_path = ''
 
@@ -208,7 +208,7 @@ class Village(ActionCard):
 
 class Workshop(ActionCard):
     name = 'Workshop'
-    cost = 3
+    _cost = 3
     types = [CardType.ACTION]
     image_path = ''
 
@@ -226,7 +226,7 @@ class Workshop(ActionCard):
 
 class Bureaucrat(AttackCard):
     name = 'Bureaucrat'
-    cost = 4
+    _cost = 4
     types = [CardType.ACTION, CardType.ATTACK]
     image_path = ''
 
@@ -267,7 +267,7 @@ class Bureaucrat(AttackCard):
 class Gardens(VictoryCard):
     name = 'Gardens'
     pluralized = 'Gardens'
-    cost = 4
+    _cost = 4
     types = [CardType.VICTORY]
     image_path = ''
 
@@ -281,7 +281,7 @@ class Gardens(VictoryCard):
 
 class Militia(AttackCard):
     name = 'Militia'
-    cost = 4
+    _cost = 4
     types = [CardType.ACTION, CardType.ATTACK]
     image_path = ''
 
@@ -318,7 +318,7 @@ class Militia(AttackCard):
 
 class Moneylender(ActionCard):
     name = 'Moneylender'
-    cost = 4
+    _cost = 4
     types = [CardType.ACTION]
     image_path = ''
 
@@ -339,7 +339,7 @@ class Moneylender(ActionCard):
 
 class Poacher(ActionCard):
     name = 'Poacher'
-    cost = 4
+    _cost = 4
     types = [CardType.ACTION]
     image_path = ''
 
@@ -369,7 +369,7 @@ class Poacher(ActionCard):
 
 class Remodel(ActionCard):
     name = 'Remodel'
-    cost = 4
+    _cost = 4
     types = [CardType.ACTION]
     image_path = ''
 
@@ -393,7 +393,7 @@ class Remodel(ActionCard):
 class Smithy(ActionCard):
     name = 'Smithy'
     pluralized = 'Smithies'
-    cost = 4
+    _cost = 4
     types = [CardType.ACTION]
     image_path = ''
 
@@ -414,7 +414,7 @@ class Smithy(ActionCard):
 
 class ThroneRoom(ActionCard):
     name = 'Throne Room'
-    cost = 4
+    _cost = 4
     types = [CardType.ACTION]
     image_path = ''
 
@@ -442,7 +442,7 @@ class ThroneRoom(ActionCard):
 
 class Bandit(AttackCard):
     name = 'Bandit'
-    cost = 5
+    _cost = 5
     types = [CardType.ACTION, CardType.ATTACK]
     image_path = ''
 
@@ -509,7 +509,7 @@ class Bandit(AttackCard):
 
 class CouncilRoom(ActionCard):
     name = 'Council Room'
-    cost = 5
+    _cost = 5
     types = [CardType.ACTION]
     image_path = ''
 
@@ -535,7 +535,7 @@ class CouncilRoom(ActionCard):
 
 class Festival(ActionCard):
     name = 'Festival'
-    cost = 5
+    _cost = 5
     types = [CardType.ACTION]
     image_path = ''
 
@@ -559,7 +559,7 @@ class Festival(ActionCard):
 class Laboratory(ActionCard):
     name = 'Laboratory'
     pluralized = 'Laboratories'
-    cost = 5
+    _cost = 5
     types = [CardType.ACTION]
     image_path = ''
 
@@ -582,7 +582,7 @@ class Laboratory(ActionCard):
 class Library(ActionCard):
     name = 'Library'
     pluralized = 'Libraries'
-    cost = 5
+    _cost = 5
     types = [CardType.ACTION]
     image_path = ''
 
@@ -617,7 +617,7 @@ class Library(ActionCard):
 
 class Market(ActionCard):
     name = 'Market'
-    cost = 5
+    _cost = 5
     types = [CardType.ACTION]
     image_path = ''
 
@@ -641,7 +641,7 @@ class Market(ActionCard):
 
 class Mine(ActionCard):
     name = 'Mine'
-    cost = 5
+    _cost = 5
     types = [CardType.ACTION]
     image_path = ''
 
@@ -668,7 +668,7 @@ class Mine(ActionCard):
 class Sentry(ActionCard):
     name = 'Sentry'
     pluralized = 'Sentries'
-    cost = 5
+    _cost = 5
     types = [CardType.ACTION]
     image_path = ''
 
@@ -728,7 +728,7 @@ class Sentry(ActionCard):
 class Witch(AttackCard):
     name = 'Witch'
     pluralized = 'Witches'
-    cost = 5
+    _cost = 5
     types = [CardType.ACTION, CardType.ATTACK]
     image_path = ''
 
@@ -756,7 +756,7 @@ class Witch(AttackCard):
 
 class Artisan(ActionCard):
     name = 'Artisan'
-    cost = 6
+    _cost = 6
     types = [CardType.ACTION]
     image_path = ''
 
@@ -785,7 +785,7 @@ class Artisan(ActionCard):
 
 class Chancellor(ActionCard):
     name = 'Chancellor'
-    cost = 3
+    _cost = 3
     types = [CardType.ACTION]
     image_path = ''
 
@@ -811,7 +811,7 @@ class Chancellor(ActionCard):
 
 class Woodcutter(ActionCard):
     name = 'Woodcutter'
-    cost = 3
+    _cost = 3
     types = [CardType.ACTION]
     image_path = ''
 
@@ -833,7 +833,7 @@ class Woodcutter(ActionCard):
 
 class Feast(ActionCard):
     name = 'Feast'
-    cost = 4
+    _cost = 4
     types = [CardType.ACTION]
     image_path = ''
 
@@ -858,7 +858,7 @@ class Feast(ActionCard):
 class Spy(AttackCard):
     name = 'Spy'
     pluralized = 'Spies'
-    cost = 4
+    _cost = 4
     types = [CardType.ACTION, CardType.ATTACK]
     image_path = ''
 
@@ -912,7 +912,7 @@ class Spy(AttackCard):
 class Thief(AttackCard):
     name = 'Thief'
     pluralized = 'Thieves'
-    cost = 4
+    _cost = 4
     types = [CardType.ACTION, CardType.ATTACK]
     image_path = ''
 
@@ -989,7 +989,7 @@ class Thief(AttackCard):
 
 class Adventurer(ActionCard):
     name = 'Adventurer'
-    cost = 6
+    _cost = 6
     types = [CardType.ACTION]
     image_path = ''
 

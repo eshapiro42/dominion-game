@@ -13,7 +13,7 @@ from ..grammar import a, s
 
 class Hamlet(ActionCard):
     name = 'Hamlet'
-    cost = 2
+    _cost = 2
     types = [CardType.ACTION]
     image_path = ''
 
@@ -52,7 +52,7 @@ class Hamlet(ActionCard):
 
 class FortuneTeller(AttackCard):
     name = 'Fortune Teller'
-    cost = 3
+    _cost = 3
     types = [CardType.ACTION, CardType.ATTACK]
     image_path = ''
 
@@ -101,7 +101,7 @@ class FortuneTeller(AttackCard):
 
 class Menagerie(ActionCard):
     name = 'Menagerie'
-    cost = 3
+    _cost = 3
     types = [CardType.ACTION]
     image_path = ''
 
@@ -130,7 +130,7 @@ class Menagerie(ActionCard):
 
 class FarmingVillage(ActionCard):
     name = 'Farming Village'
-    cost = 4
+    _cost = 4
     types = [CardType.ACTION]
     image_path = ''
 
@@ -171,7 +171,7 @@ class FarmingVillage(ActionCard):
 class HorseTraders(ReactionCard):
     name = 'Horse Traders'
     pluralized = 'Horse Traders'
-    cost = 4
+    _cost = 4
     types = [CardType.ACTION, CardType.REACTION]
     image_path = ''
 
@@ -226,7 +226,7 @@ class HorseTraders(ReactionCard):
 
 class Remake(ActionCard):
     name = 'Remake'
-    cost = 4
+    _cost = 4
     types = [CardType.ACTION]
     image_path = ''
 
@@ -256,7 +256,7 @@ class Remake(ActionCard):
 
 class Tournament(ActionCard):
     name = 'Tournament'
-    cost = 4
+    _cost = 4
     types = [CardType.ACTION]
     image_path = ''
 
@@ -349,7 +349,7 @@ class Tournament(ActionCard):
 class YoungWitch(AttackCard):
     name = 'Young Witch'
     pluralized = 'Young Witches'
-    cost = 4
+    _cost = 4
     types = [CardType.ACTION, CardType.ATTACK]
     image_path = ''
 
@@ -388,7 +388,7 @@ class YoungWitch(AttackCard):
 
 class Harvest(ActionCard):
     name = 'Harvest'
-    cost = 5
+    _cost = 5
     types = [CardType.ACTION]
     image_path = ''
 
@@ -421,7 +421,7 @@ class Harvest(ActionCard):
 class HornOfPlenty(TreasureCard):
     name = 'Horn of Plenty'
     pluralized = 'Horns of Plenty'
-    cost = 5
+    _cost = 5
     types = [CardType.TREASURE]
     image_path = ''
 
@@ -451,7 +451,7 @@ class HornOfPlenty(TreasureCard):
 class HuntingParty(ActionCard):
     name = 'Hunting Party'
     pluralized = 'Hunting Parties'
-    cost = 5
+    _cost = 5
     types = [CardType.ACTION]
     image_path = ''
 
@@ -498,7 +498,7 @@ class HuntingParty(ActionCard):
 
 class Jester(AttackCard):
     name = 'Jester'
-    cost = 5
+    _cost = 5
     types = [CardType.ACTION, CardType.ATTACK]
     image_path = ''
 
@@ -559,7 +559,7 @@ class Jester(AttackCard):
 class Fairgrounds(VictoryCard):
     name = 'Fairgrounds'
     pluralized = 'Fairgrounds'
-    cost = 6
+    _cost = 6
     types = [CardType.VICTORY]
     image_path = ''
 
@@ -594,7 +594,7 @@ KINGDOM_CARDS = [
 class BagOfGold(ActionCard):
     name = 'Bag of Gold' 
     pluralized = 'Bags of Gold' # Not really needed since by definition there is only one in the game
-    cost = 0
+    _cost = 0
     types = [CardType.ACTION, CardType.PRIZE]
     image_path = ''
 
@@ -617,7 +617,7 @@ class BagOfGold(ActionCard):
 
 class Diadem(TreasureCard):
     name = 'Diadem'
-    cost = 0
+    _cost = 0
     types = [CardType.TREASURE, CardType.PRIZE]
     image_path = ''
 
@@ -640,7 +640,7 @@ class Diadem(TreasureCard):
 class Followers(AttackCard):
     name = 'Followers'
     pluralized = 'Followers' # Not really needed since by definition there is only one in the game
-    cost = 0
+    _cost = 0
     types = [CardType.ACTION, CardType.ATTACK, CardType.PRIZE]
     image_path = ''
 
@@ -684,7 +684,7 @@ class Followers(AttackCard):
 class Princess(ActionCard):
     name = 'Princess'
     pluralized = 'Princesses' # Not really needed since by definition there is only one in the game
-    cost = 0
+    _cost = 0
     types = [CardType.ACTION, CardType.PRIZE]
     image_path = ''
 
@@ -704,12 +704,12 @@ class Princess(ActionCard):
     def action(self):
         # Modify card costs
         for card_class in self.supply.card_stacks:
-            self.supply.modify_cost(card_class, -2)
+            self.game.current_turn.modify_cost(card_class, -2)
 
 
 class TrustySteed(ActionCard):
     name = 'Trusty Steed'
-    cost = 0
+    _cost = 0
     types = [CardType.ACTION, CardType.PRIZE]
     image_path = ''
 
