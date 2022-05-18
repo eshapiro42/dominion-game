@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Callable, Optional, Dict, List, Tuple, Type
 
 from .cards.cards import Card, CardType
 from .cards.recommended_sets.dominion_cornucopia import TheJestersWorkshop
-from .expansions import BaseExpansion, DominionExpansion, ProsperityExpansion, IntrigueExpansion, CornucopiaExpansion
+from .expansions import BaseExpansion, DominionExpansion, ProsperityExpansion, IntrigueExpansion, CornucopiaExpansion, HinterlandsExpansion
 from .grammar import s
 from .interactions import CLIInteraction
 from .player import Player
@@ -76,6 +76,7 @@ class Game:
         # self.add_expansion(IntrigueExpansion)
         # self.add_expansion(ProsperityExpansion)
         # self.add_expansion(CornucopiaExpansion)
+        # self.add_expansion(HinterlandsExpansion)
 
     @property
     def socketio(self) -> Optional[SocketIO]:

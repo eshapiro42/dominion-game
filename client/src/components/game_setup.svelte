@@ -25,6 +25,7 @@
         {name: "Intrigue", property: "intrigue", selected: false},
         {name: "Prosperity", property: "prosperity", selected: false},
         {name: "Cornucopia", property: "cornucopia", selected: false},
+        {name: "Hinterlands", property: "hinterlands", selected: false},
     ];
 
     var supplyCustomizations = [

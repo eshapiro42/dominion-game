@@ -8,7 +8,7 @@ from collections import defaultdict
 from math import inf
 from typing import TYPE_CHECKING, Dict, List, Type
 
-from .cards import cards, base_cards, prosperity_cards, intrigue_cards, cornucopia_cards
+from .cards import cards, base_cards, prosperity_cards, intrigue_cards, cornucopia_cards, hinterlands_cards
 
 if TYPE_CHECKING:
     from .cards.recommended_sets.recommended_set import RecommendedSet
@@ -203,7 +203,7 @@ class Supply:
         self._customization = Customization()
         self._possible_kingdom_card_classes: List[Type(Card)] = []
         # TODO: Remove these (they are for debugging specific cards)
-        # self.customization.required_card_classes.add(cornucopia_cards.YoungWitch)
+        # self.customization.required_card_classes.add(hinterlands_cards.Crossroads)
 
     @property
     def num_players(self) -> int:
