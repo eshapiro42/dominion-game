@@ -6,13 +6,13 @@ from collections import deque
 from typing import TYPE_CHECKING, Optional, Deque, List, Type
 
 from .cards import base_cards, intrigue_cards, prosperity_cards, cornucopia_cards, hinterlands_cards
+from .cards.cards import Card
 from .expansions import ProsperityExpansion
 from .grammar import a, s
 from .supply import SupplyStackEmptyError
 
 if TYPE_CHECKING:
     from flask_socketio import SocketIO
-    from .cards.cards import Card
     from .game import Game
     from .interactions.interaction import Interaction
     from .supply import Supply
@@ -170,6 +170,25 @@ class Player:
                 # Remove any non-persistent hooks
                 for hook in expired_hooks:
                     self.turn.post_gain_hooks[type(card)].remove(hook)
+
+    def process_post_discard_hooks(self, discarded_card):
+        """
+        Process registered hooks after a card is discarded.
+
+        Args:
+            discarded_card: The card that was discarded.
+        """
+        # Check if there are any game-wide post-gain hooks caused by gaining the card
+        expired_hooks = []
+        if type(discarded_card) in self.game.post_discard_hooks:
+            # Activate any post-discard hooks caused by discarding the card
+            for post_discard_hook in self.game.post_discard_hooks[type(discarded_card)]:
+                post_discard_hook(self)
+                if not post_discard_hook.persistent:
+                    expired_hooks.append(post_discard_hook)
+            # Remove any non-persistent hooks
+            for hook in expired_hooks:
+                self.supply.post_gain_hooks[type(discarded_card)].remove(hook)
 
     def gain(self, card_class: Type[Card], quantity: int = 1, from_supply: bool = True, message: bool = True, ignore_hooks: bool = False):
         """
@@ -344,18 +363,42 @@ class Player:
             pass
         self.played_cards.append(card)
 
-    def discard(self, card: Card, message: bool = True):
+    def discard(self, cards: Card | List[Card], message: bool = True):
+        """
+        Add a card or list of cards to the Player's discard pile.
+
+        The card or cards must explictly be removed from wherever they came from.
+
+        Args:
+            cards: The Card (or list of Cards) to discard.
+            message: Whether to broadcast a message to all Players saying that the card was discarded.
+        """
+        if isinstance(cards, Card):
+            message = f"{self.name} discarded {a(cards.name)}."
+            cards = [cards]
+        else:
+            message = f"{self.name} discarded {Card.group_and_sort_by_cost(cards)}."
+        # All cards are discarded at once and before post-discard hooks are activated
+        self.discard_pile.extend(cards)
+        if message:
+            self.game.broadcast(message)
+        # Process post-discard hooks for each discarded card
+        for discarded_card in cards:
+            self.process_post_discard_hooks(discarded_card)
+
+    def discard_from_hand(self, card: Card, message: bool = True):
         """
         Discard a card from the Player's hand.
+
+        The card is automatically removed from the Player's hand and
+        added to the Player's discard pile.
 
         Args:
             card: The Card to discard.
             message: Whether to broadcast a message to all Players saying that the card was discarded.
         """
-        self.discard_pile.append(card)
+        self.discard(card, message=message)
         self.hand.remove(card)
-        if message:
-            self.game.broadcast(f'{self.name} discarded {a(card)}.')
 
     def trash(self, card: Card, message: bool = True):
         """

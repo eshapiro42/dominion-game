@@ -33,7 +33,11 @@ class HinterlandsExpansion(Expansion):
         if hinterlands_cards.FoolsGold in self.supply.card_stacks:
             post_gain_hook = hinterlands_cards.FoolsGold.FoolsGoldPostGainHook(self.game, base_cards.Province)
             self.supply.add_post_gain_hook(post_gain_hook, base_cards.Province)
-            
+        # If the Tunnel is in the Supply, add its post-discard hook
+        if hinterlands_cards.Tunnel in self.supply.card_stacks:
+            post_discard_hook = hinterlands_cards.Tunnel.TunnelPostDiscardHook(self.game)
+            self.game.add_post_discard_hook(post_discard_hook, hinterlands_cards.Tunnel)
+
     def heartbeat(self):
         pass
             

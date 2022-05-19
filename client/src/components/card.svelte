@@ -6,13 +6,11 @@
     
     const dispatch = createEventDispatcher();
     
-    // import GiantCard from "./giant_card.svelte";
-    // import Modal from "./modal.svelte";
-
     export let name;
     export let effects;
     export let description;
     export let cost;
+    export let types = [];
     export let type = "";
     export let id;
     export let quantity = null;
@@ -29,12 +27,12 @@
     let hovering = false;
     let selectable = true;
 
-    $: action = typeLowerCase.includes("action") && !typeLowerCase.includes("attack") && !typeLowerCase.includes("reaction");
-    $: attack = typeLowerCase.includes("attack")
-    $: reaction = typeLowerCase.includes("reaction")
-    $: victory = typeLowerCase.includes("victory");
-    $: curse = typeLowerCase.includes("curse");
-    $: treasure = typeLowerCase.includes("treasure");
+    $: action = types.includes("action") && !types.includes("attack") && !types.includes("reaction");
+    $: attack = types.includes("attack");
+    $: reaction = types.includes("reaction");
+    $: victory = types.includes("victory");
+    $: curse = types.includes("curse");
+    $: treasure = types.includes("treasure");
     $: basicTreasure = ["Copper", "Silver", "Gold", "Platinum"].includes(name);
     $: basicVictory = ["Curse", "Estate", "Duchy", "Province", "Colony"].includes(name);
 
@@ -55,7 +53,7 @@
         else {
             selectable = (
                 // Don't allow selection if this card is the wrong type
-                type.toLowerCase().includes(waitingForSelection.type.toLowerCase())
+                (types.includes(waitingForSelection.type.toLowerCase()) || waitingForSelection.type == "")
                 // Don't allow selection if the card costs more than the maximum cost
                 && (waitingForSelection.maxCost == null || cost <= waitingForSelection.maxCost)
                 // Don't allow selection if an exact cost is specified and the card doesn't have the exact cost
@@ -121,26 +119,6 @@
         }
     }
 </script>
-
-<!-- <Modal 
-    show={hovering}
-    on:click = {
-        () => {
-            hovering = false;
-        }
-    }
->
-    <span slot="contents">
-        <GiantCard
-            {name}
-            {effects}
-            {description}
-            {cost}
-            {type}
-            {quantity}
-        />
-    </span>
-</Modal> -->
 
 <main
     in:fade
@@ -209,17 +187,6 @@
     $light-text-color: #dadada;
     $point: #100e17;
     $point-light: rgb(33, 29, 47);
-
-    $giant-card-linear-multiplier: 2;
-    $giant-card-width: $giant-card-linear-multiplier * $width;
-    $giant-card-height: $giant-card-linear-multiplier * $height;
-    $giant-font-size: $giant-card-linear-multiplier * $font-size;
-    $giant-card-padding: $giant-card-linear-multiplier * $padding;
-    $giant-card-padding-basis: $giant-card-linear-multiplier * $padding-basis;
-    $giant-card-header-padding: 0px 0px $giant-card-linear-multiplier * $padding-basis 0px;
-    $giant-card-corner-radius: $giant-card-linear-multiplier * $corner-radius;
-    $giant-card-margin: $giant-card-linear-multiplier * $margin;
-
 
     main {
         border: 1px solid slategrey;

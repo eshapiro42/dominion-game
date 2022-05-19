@@ -367,7 +367,7 @@ class Baron(ActionCard):
         prompt = 'You have an Estate in your hand. Would you like to discard it for +4 $?'
         if any(isinstance(card, base_cards.Estate) for card in self.owner.hand) and self.interactions.choose_yes_or_no(prompt):
             estate_to_discard = [card for card in self.owner.hand if isinstance(card, base_cards.Estate)][0]
-            self.owner.discard(estate_to_discard)
+            self.owner.discard_from_hand(estate_to_discard)
             self.owner.turn.plus_coppers(4)
         else:
             self.owner.gain(base_cards.Estate)
@@ -458,7 +458,7 @@ class Diplomat(ReactionCard):
         prompt = f"Choose 3 cards to discard."
         cards_to_discard = self.owner.interactions.choose_cards_from_hand(prompt, force=True, max_cards=3)
         for card_to_discard in cards_to_discard:
-            self.owner.discard(card_to_discard)
+            self.owner.discard_from_hand(card_to_discard)
         return None, True # Can be used again 
 
     def action(self):
@@ -531,7 +531,7 @@ class Mill(ActionCard, VictoryCard):
             prompt = f"Choose 2 cards to discard."
             cards_to_discard = self.interactions.choose_cards_from_hand(prompt, force=True, max_cards=2)
             for card_to_discard in cards_to_discard:
-                self.owner.discard(card_to_discard)
+                self.owner.discard_from_hand(card_to_discard)
             self.owner.turn.plus_coppers(2)
 
 
@@ -689,7 +689,7 @@ class Minion(AttackCard):
             # Discard your hand
             cards_to_discard = list(player.hand) # Make a shallow copy
             for card in cards_to_discard:
-                player.discard(card)
+                player.discard_from_hand(card)
             # Draw four cards
             player.draw(4)   
 
@@ -708,7 +708,7 @@ class Minion(AttackCard):
             # Discard your hand
             cards_to_discard = list(self.owner.hand) # Make a shallow copy
             for card in cards_to_discard:
-                self.owner.discard(card)
+                self.owner.discard_from_hand(card)
             # Draw four cards
             self.owner.draw(4)
 
@@ -847,7 +847,7 @@ class Torturer(AttackCard):
             prompt = f"{attacker} has played a Torturer. Choose {s(number_to_discard, 'card')} to discard."
             cards_to_discard = player.interactions.choose_cards_from_hand(prompt, force=True, max_cards=number_to_discard)
             for card_to_discard in cards_to_discard:
-                player.discard(card_to_discard)
+                player.discard_from_hand(card_to_discard)
         elif choice == f'Gain a Curse to your hand ({num_curses_in_supply} in the Supply)':
             player.gain_to_hand(base_cards.Curse)
 

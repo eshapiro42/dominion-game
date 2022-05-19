@@ -1,13 +1,11 @@
 from __future__ import annotations
 
-import math
-
 from gevent import Greenlet, joinall
 from typing import TYPE_CHECKING, List
 
-from .cards import CardType, Card, TreasureCard, ActionCard, AttackCard, ReactionCard, VictoryCard, CurseCard, ReactionType
+from .cards import CardType, Card, TreasureCard, ActionCard, AttackCard, ReactionCard, VictoryCard
 from . import base_cards
-from ..hooks import PostGainHook, PreCleanupHook
+from ..hooks import PostGainHook, PreCleanupHook, PostDiscardHook
 from ..grammar import a, s, it_or_them
 
 if TYPE_CHECKING:
@@ -101,7 +99,7 @@ class Duchess(ActionCard):
                 prompt = f'{self.owner} played a Duchess and you revealed the top card of your deck, {a(top_card_of_deck.name)}. Would you like to discard it?'
             if player.interactions.choose_yes_or_no(prompt):
                 self.game.broadcast(f"{player.name} discarded the top card of their deck, {a(top_card_of_deck.name)}.")
-                player.discard_pile.append(top_card_of_deck)
+                player.discard(top_card_of_deck, message=False)
             else:
                 self.game.broadcast(f"{player.name} did not discard the top card of their deck.")
                 player.deck.append(top_card_of_deck)
@@ -244,6 +242,7 @@ class Develop(ActionCard):
 
 class Oasis(ActionCard):
     name = "Oasis"
+    pluralized = "Oases"
     _cost = 3
     types = [CardType.ACTION]
     image_path = ''
@@ -268,7 +267,7 @@ class Oasis(ActionCard):
         if card_to_discard is None:
             self.game.broadcast(f"{self.owner.name} had no cards in their hand to discard.")
             return
-        self.owner.discard(card_to_discard, message=True)
+        self.owner.discard_from_hand(card_to_discard)
 
 
 class Oracle(AttackCard):
@@ -321,7 +320,7 @@ class Oracle(AttackCard):
         choice = attacker.interactions.choose_from_options(prompt, options, force=True)
         if choice == options[0]:
             for card in revealed_cards:
-                player.discard_pile.append(card)
+                player.discard(card, message=False)
             self.game.broadcast(f"{player.name} discarded their revealed {s(len(revealed_cards), 'card', print_number=False)}.")
         else:
             if len(revealed_cards) == 1 or revealed_cards[0].name == revealed_cards[1].name:
@@ -364,7 +363,7 @@ class Oracle(AttackCard):
         choice = self.owner.interactions.choose_from_options(prompt, options, force=True)
         if choice == options[0]:
             for card in revealed_cards:
-                self.owner.discard_pile.append(card)
+                self.owner.discard(card, message=False)
             self.game.broadcast(f"{self.owner.name} discarded their revealed {s(len(revealed_cards), 'card', print_number=False)}.")
         else:
             if len(revealed_cards) == 1 or revealed_cards[0].name == revealed_cards[1].name:
@@ -426,6 +425,52 @@ class Scheme(ActionCard):
         self.game.broadcast(f"At the end of this turn, {self.owner.name} may put one of their played Action cards back onto their deck.")
 
 
+class Tunnel(VictoryCard, ReactionCard):
+    name = "Tunnel"
+    _cost = 3
+    types = [CardType.VICTORY, CardType.REACTION]
+    image_path = ''
+
+    description = '\n'.join(
+        [
+            "2 victory points",
+            "When you discard this other than during Clean-up, you may reveal it to gain a Gold.",
+        ]
+    )
+
+    extra_cards = 0
+    extra_actions = 0
+    extra_buys = 0
+    extra_coppers = 0
+
+    points = 2
+
+    class TunnelPostDiscardHook(PostDiscardHook):
+        persistent = True
+
+        def __call__(self, player: Player):
+            """
+            When you discard this other than during Clean-up, you may reveal it to gain a Gold.
+            """
+            turn = self.game.current_turn
+            if turn.current_phase == "Cleanup Phase":
+                return
+            if player.interactions.choose_yes_or_no(f"Would you like to reveal the Tunnel you just discarded to gain a Gold?"):
+                player.gain(base_cards.Gold, message=False)
+                self.game.broadcast(f"{player.name} discarded a Tunnel and revealed it to gain a Gold.")
+
+    @property
+    def can_react(self):
+        return False # This card's reaction is governed by a post-discard hook
+
+    def react(self):
+        pass
+
+    def action(self):
+        pass
+
+
+
 KINGDOM_CARDS = [
     Crossroads,
     Duchess,
@@ -434,7 +479,7 @@ KINGDOM_CARDS = [
     Oasis,
     Oracle,
     Scheme,
-    # Tunnel,
+    Tunnel,
     # JackOfAllTrades,
     # NobleBrigand,
     # NomadCamp,

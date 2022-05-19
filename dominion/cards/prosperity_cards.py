@@ -76,12 +76,12 @@ class Loan(TreasureCard):
                 self.supply.trash(revealed_treasure)
                 self.game.broadcast(f'{self.owner} trashed the revealed {card}.')
             elif choice == 'Discard':
-                self.owner.discard_pile.append(revealed_treasure)
+                self.owner.discard(revealed_treasure, message=False)
                 self.game.broadcast(f'{self.owner} discarded the revealed {card}.')
         # Discard the other revealed cards
         if cards_revealed:
-            self.owner.discard_pile.extend(cards_revealed)
-            self.game.broadcast(f"{self.owner} discarded the other revealed cards: {', '.join(map(str, cards_revealed))}.")
+            self.owner.discard(cards_revealed, message=False)
+            self.game.broadcast(f"{self.owner} discarded the other revealed cards: {Card.group_and_sort_by_cost(cards_revealed)}.")
 
 
 class TradeRoute(ActionCard):
@@ -498,7 +498,7 @@ class Mountebank(AttackCard):
         # If they do, ask if they would like to discard it
         if curses_in_hand and player.interactions.choose_yes_or_no(prompt=f'{attacker} played a Mountebank. You have a Curse in your hand. Would you like to reveal and discard it? If you do not, you will gain a Curse and a Copper.'):
             curse = curses_in_hand[0]
-            player.discard(curse)
+            player.discard_from_hand(curse)
         else:
             player.gain(base_cards.Curse)
             player.gain(base_cards.Copper)
@@ -545,8 +545,7 @@ class Rabble(AttackCard):
                     revealed_other_cards.append(card)
         # Player discards Actions and Treasures
         if revealed_actions_and_treasures:
-            player.discard_pile.extend(revealed_actions_and_treasures)
-            self.game.broadcast(f"{player} discarded: {', '.join(map(str, revealed_actions_and_treasures))}.")
+            player.discard(revealed_actions_and_treasures)
         # Player puts the rest back on their deck in any order they choose
         if len(revealed_other_cards) == 1:
             # If there's only one card, put it back on top of the deck
@@ -640,7 +639,7 @@ class Vault(ActionCard):
                 prompt = f"Choose 2 cards to discard."
                 cards_to_discard = player.interactions.choose_cards_from_hand(prompt=prompt, force=True, max_cards=2)
                 for card_to_discard in cards_to_discard:
-                    player.discard(card_to_discard)
+                    player.discard_from_hand(card_to_discard)
                 self.game.broadcast(f"{player} drew a card.")
                 player.draw(1)
             else:
@@ -651,7 +650,7 @@ class Vault(ActionCard):
         prompt = "Choose any number of cards from your hand to discard."
         cards_to_discard = self.owner.interactions.choose_cards_from_hand(prompt=prompt, force=False, max_cards=None)
         for card_to_discard in cards_to_discard:
-            self.owner.discard(card_to_discard)
+            self.owner.discard_from_hand(card_to_discard)
         if cards_to_discard:
             self.owner.turn.plus_coppers(len(cards_to_discard))
         else:
@@ -697,8 +696,7 @@ class Venture(TreasureCard):
             else:
                 cards_to_discard.append(card)
         if cards_to_discard:
-            self.owner.discard_pile.extend(cards_to_discard)
-            self.game.broadcast(f"{self.owner} discarded: {', '.join(map(str, cards_to_discard))}.")
+            self.owner.discard(cards_to_discard)
         if revealed_treasure is not None:
             self.owner.turn.buy_phase.play_treasures([revealed_treasure])
 
@@ -749,7 +747,7 @@ class Goons(AttackCard):
         prompt = f"{attacker} has played a Goons. Choose {s(number_to_discard, 'card')} to discard."
         cards_to_discard = player.interactions.choose_cards_from_hand(prompt=prompt, force=True, max_cards=number_to_discard)
         for card_to_discard in cards_to_discard:
-            player.discard(card_to_discard)
+            player.discard_from_hand(card_to_discard)
 
 
 class GrandMarket(ActionCard):

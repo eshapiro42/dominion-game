@@ -158,3 +158,21 @@ class PreTurnHook(Hook):
     @abstractmethod
     def __call__(self):
         pass
+
+
+class PostDiscardHook(Hook):
+    """
+    Hook to activate after a player discards a card.
+
+    Args:
+        game: The game to which the hook belongs.
+    """
+    @abstractmethod
+    def __call__(self, player: Player):
+        """
+        Logic to be executed when the hook is activated.
+
+        Args:
+            player: The player who discarded the card.
+        """
+        pass
