@@ -88,7 +88,7 @@ class PostTreasureHook(Hook):
 
 class PreBuyHook(Hook):
     """
-    Hook to activate before a player buys a card.
+    Hook to activate before a player begins buying cards.
     """
     @abstractmethod
     def __call__(self):
@@ -174,5 +174,21 @@ class PostDiscardHook(Hook):
 
         Args:
             player: The player who discarded the card.
+        """
+        pass
+
+
+class PostBuyHook(Hook):
+    """
+    Hook to activate when a player buys a card.
+    """
+    @abstractmethod
+    def __call__(self, player: Player, card: Card):
+        """
+        Logic to be executed when the hook is activated.
+
+        Args:
+            player: The player who bought the card.
+            card: The card that was bought.
         """
         pass

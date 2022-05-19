@@ -603,7 +603,6 @@ class BuyPhase(Phase):
         '''
         Activate any game-wide pre buy hooks registered to cards in the supply.
         '''
-        # Activate any game-wide pre-buy hooks registered to cards in the Supply
         expired_hooks = []
         for card_class in self.supply.card_stacks:
             for pre_buy_hook in self.game.pre_buy_hooks[card_class]:
@@ -612,7 +611,24 @@ class BuyPhase(Phase):
                     expired_hooks.append(pre_buy_hook)
             # Remove any non-persistent hooks
             for hook in expired_hooks:
-                self.game.treasure_hooks[card_class].remove(hook)
+                self.game.pre_buy_hooks[card_class].remove(hook)
+
+    def process_post_buy_hooks(self, purchased_card: Card):
+        '''
+        Activate any game-wide post buy hooks registered to a specific card class.
+
+        Args:
+            purchased_card: The card to process post buy hooks for.
+        '''
+        card_class = type(purchased_card)
+        expired_hooks = []
+        for post_buy_hook in self.game.post_buy_hooks[card_class]:
+            post_buy_hook(self.player, purchased_card)
+            if not post_buy_hook.persistent:
+                expired_hooks.append(post_buy_hook)
+        # Remove any non-persistent hooks
+        for hook in expired_hooks:
+            self.game.post_buy_hooks[card_class].remove(hook)
 
     def buy(self, card_class: Type[Card]):
         '''
@@ -630,8 +646,10 @@ class BuyPhase(Phase):
         self.turn.buys_remaining -= 1
         # Gain the desired card
         self.game.broadcast(f'{self.player} bought {a(card_class.name)}.')
-        self.player.gain(card_class, message=False)
+        purchased_card = self.player.gain(card_class, message=False)[0]
         self.turn.coppers_remaining -= self.supply.card_stacks[card_class].modified_cost
+        # Activate any post-buy hooks registered to this card class
+        self.process_post_buy_hooks(purchased_card)
 
     def gain_without_side_effects(self, prompt: str, max_cost: int, force: bool, exact_cost: bool = False):
         '''

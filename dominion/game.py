@@ -7,7 +7,6 @@ from collections import defaultdict
 from typing import TYPE_CHECKING, Callable, Optional, Dict, List, Tuple, Type
 
 from .cards.cards import Card, CardType
-from .cards.recommended_sets.dominion_cornucopia import TheJestersWorkshop
 from .expansions import BaseExpansion, DominionExpansion, ProsperityExpansion, IntrigueExpansion, CornucopiaExpansion, HinterlandsExpansion
 from .grammar import s
 from .interactions import CLIInteraction
@@ -18,7 +17,7 @@ from .turn import Turn
 if TYPE_CHECKING:
     from flask_socketio import SocketIO
     from .expansions.expansion import Expansion
-    from .hooks import TreasureHook, PreBuyHook, PreTurnHook, PostDiscardHook
+    from .hooks import TreasureHook, PreBuyHook, PreTurnHook, PostDiscardHook, PostBuyHook
     from .interactions.interaction import Interaction
     from .cards.recommended_sets import RecommendedSet
 
@@ -61,6 +60,7 @@ class Game:
         self._pre_buy_hooks = defaultdict(list)
         self._pre_turn_hooks = []
         self._post_discard_hooks = defaultdict(list)
+        self._post_buy_hooks = defaultdict(list)
         self._game_end_conditions = []
         self._recommended_set = None
         self._expansions = set()
@@ -261,6 +261,19 @@ class Game:
         self._post_discard_hooks = post_discard_hooks
 
     @property
+    def post_buy_hooks(self) -> Dict[Type[Card], List[PostBuyHook]]:
+        '''
+        A dictionary of game-wide :obj:`PostBuyHook` instances, indexed by Card class.
+
+        The values are lists of post-buy hooks, since multiple post-buy hooks can be registered to a single card.
+        '''
+        return self._post_buy_hooks
+
+    @post_buy_hooks.setter
+    def post_buy_hooks(self, post_buy_hooks: Dict[Type[Card], List[PostBuyHook]]):
+        self._post_buy_hooks = post_buy_hooks
+
+    @property
     def game_end_conditions(self) -> List[Callable[[], Tuple[bool, Optional[str]]]]:
         """
         A list of functions that take no arguments and return
@@ -438,6 +451,16 @@ class Game:
             card_class: The card class which should activate the post-discard hook.
         '''
         self.post_discard_hooks[card_class].append(post_discard_hook)
+
+    def add_post_buy_hook(self, post_buy_hook: PostBuyHook, card_class: Type[Card]):
+        '''
+        Add a game-wide post-buy hook to a specific card class.
+
+        Args:
+            post_buy_hook: The post-buy hook to add.
+            card_class: The card class which should activate the post-buy hook upon being bought.
+        '''
+        self.post_buy_hooks[card_class].append(post_buy_hook)
 
     def add_expansion(self, expansion: Type[Expansion]):
         '''

@@ -37,6 +37,10 @@ class HinterlandsExpansion(Expansion):
         if hinterlands_cards.Tunnel in self.supply.card_stacks:
             post_discard_hook = hinterlands_cards.Tunnel.TunnelPostDiscardHook(self.game)
             self.game.add_post_discard_hook(post_discard_hook, hinterlands_cards.Tunnel)
+        # If the Noble Brigand is in the Supply, add its post-buy hook
+        if hinterlands_cards.NobleBrigand in self.supply.card_stacks:
+            post_buy_hook = hinterlands_cards.NobleBrigand.NobleBrigandPostBuyHook(self.game)
+            self.game.add_post_buy_hook(post_buy_hook, hinterlands_cards.NobleBrigand)
 
     def heartbeat(self):
         pass

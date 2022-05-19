@@ -190,9 +190,9 @@ class Player:
             for hook in expired_hooks:
                 self.supply.post_gain_hooks[type(discarded_card)].remove(hook)
 
-    def gain(self, card_class: Type[Card], quantity: int = 1, from_supply: bool = True, message: bool = True, ignore_hooks: bool = False):
+    def gain(self, card_class: Type[Card], quantity: int = 1, from_supply: bool = True, message: bool = True, ignore_hooks: bool = False) -> List[Card]:
         """
-        Gain a card.
+        Gain a card (or multiple cards).
 
         Args:
             card_class: The class of the Card to gain.
@@ -200,7 +200,11 @@ class Player:
             from_supply: Whether the Card is being gained from the Supply.
             message: Whether to broadcast a message to all Players saying that the card was gained.
             ignore_hooks: Whether to activate any post-gain Hooks registered to this card.
+
+        Returns:
+            The Cards that were gained.
         """
+        gained_cards = []
         for _ in range(quantity):
             if not from_supply:
                 card = card_class()
@@ -211,11 +215,16 @@ class Player:
                     self.game.broadcast(f'{self.name} could not gain {a(card_class.name)} since that supply pile is empty.')
                     return
             card.owner = self
+            gained_cards.append(card)
             self.discard_pile.append(card)
             if message:
                 self.game.broadcast(f'{self.name} gained {a(card_class.name)}.')
             if not ignore_hooks:
                 self.process_post_gain_hooks(card, self.discard_pile)
+        if gained_cards:
+            return gained_cards
+        return None
+        
 
     def gain_without_hooks(self, card_class: Type[Card], quantity: int = 1, from_supply: bool = True, message: bool = True):
         """

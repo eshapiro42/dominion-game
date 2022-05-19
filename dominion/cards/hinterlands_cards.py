@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, List
 
 from .cards import CardType, Card, TreasureCard, ActionCard, AttackCard, ReactionCard, VictoryCard
 from . import base_cards
-from ..hooks import PostGainHook, PreCleanupHook, PostDiscardHook
+from ..hooks import PostGainHook, PreCleanupHook, PostDiscardHook, PostBuyHook
 from ..grammar import a, s, it_or_them
 
 if TYPE_CHECKING:
@@ -472,6 +472,7 @@ class Tunnel(VictoryCard, ReactionCard):
 
 class JackOfAllTrades(ActionCard):
     name = "Jack of All Trades"
+    pluralized = "Jacks of All Trades"
     _cost = 4
     types = [CardType.ACTION]
     image_path = ''
@@ -516,6 +517,88 @@ class JackOfAllTrades(ActionCard):
             self.owner.trash(card_to_trash)
 
 
+class NobleBrigand(AttackCard):
+    name = 'Noble Brigand'
+    _cost = 4
+    types = [CardType.ACTION, CardType.ATTACK]
+    image_path = ''
+
+    description = '\n'.join(
+        [
+            # "+1 $",
+            "When you buy or play this, each other player reveals the top 2 cards of their deck, trashes a revealed Silver or Gold you choose, discards the rest, and gains a Copper if they didn't reveal a Treasure. You gain the trashed cards.",
+        ]
+    )
+    
+    @property
+    def prompt(self):
+        return f"Other players must reveal the top 2 cards of their deck, trash a revealed Silver or Gold that {self.owner.name} chooses, discard the rest, and gain a Copper if they didn't reveal a Treasure. {self.owner.name} will gain the trashed cards."
+
+    extra_cards = 0
+    extra_actions = 0
+    extra_buys = 0
+    extra_coppers = 1
+
+    allow_simultaneous_reactions = False # The frontend cannot currently handle the attacker simultaneously reacting to multiple players' responses
+
+    class NobleBrigandPostBuyHook(PostBuyHook):
+        persistent = True
+
+        def __call__(self, player: Player, purchased_card: NobleBrigand):
+            # `player` is the player who bought the card. They will be the attacker.
+            for other_player in player.other_players:
+                purchased_card.attack_effect(player, other_player)
+
+    def attack_effect(self, attacker: Player, player: Player):
+        # Reveal the top 2 cards of their deck
+        revealed_cards = []
+        for _ in range(2):
+            card = player.take_from_deck()
+            if card is None:
+                break
+            revealed_cards.append(card) # These cards are now orphaned
+        if revealed_cards:
+            self.game.broadcast(f"{player.name} revealed the top {s(len(revealed_cards), 'card')} of their deck: {Card.group_and_sort_by_cost(revealed_cards)}.")
+        any_treasures_revealed = any(CardType.TREASURE in card.types for card in revealed_cards)
+        revealed_silvers = [card for card in revealed_cards if isinstance(card, base_cards.Silver)]
+        revealed_golds = [card for card in revealed_cards if isinstance(card, base_cards.Gold)]
+        # Trash a revealed Silver or Gold that the attacker chooses
+        if revealed_silvers or revealed_golds:
+            # If both a Silver and a Gold are revealed, the attacker chooses one
+            if revealed_silvers and revealed_golds:
+                prompt = f"{player.name} revealed a Silver and a Gold in response to your Noble Brigand. Which one would you like them to trash? (You will gain the trashed card.)"
+                options = [
+                    "Silver",
+                    "Gold",
+                ]
+                choice = attacker.interactions.choose_from_options(prompt, options, force=True)
+                if choice == "Silver":
+                    card_to_trash = revealed_silvers[0]
+                elif choice == "Gold":
+                    card_to_trash = revealed_golds[0]
+            # If one or two Silvers are revealed (but no Gold), choose a Silver
+            elif revealed_silvers:
+                card_to_trash = revealed_silvers[0]
+            # If one or two Golds are revealed (but no Silver), choose a Gold
+            elif revealed_golds:
+                card_to_trash = revealed_golds[0]
+            # The player trashes the Treasure and the attacker gains the trashed card
+            revealed_cards.remove(card_to_trash)
+            self.supply.trash(card_to_trash)
+            self.game.broadcast(f"{player.name} trashed {a(card_to_trash.name)}.")
+            attacker.gain_from_trash(type(card_to_trash), message=False)
+            self.game.broadcast(f"{attacker.name} gained {player.name}'s trashed {card_to_trash.name}.")
+        # Discard the rest
+        player.discard(revealed_cards)
+        # If the player did not reveal any Treasures, they gain a Copper
+        if not any_treasures_revealed:
+            player.gain(base_cards.Copper, message=False)
+            self.game.broadcast(f"{player.name} gained a Copper since they revealed no Treasures in response to {attacker.name}'s Noble Brigand.")
+
+    def action(self):
+        pass
+
+
 KINGDOM_CARDS = [
     Crossroads,
     Duchess,
@@ -526,7 +609,7 @@ KINGDOM_CARDS = [
     Scheme,
     Tunnel,
     JackOfAllTrades,
-    # NobleBrigand,
+    NobleBrigand,
     # NomadCamp,
     # SilkRoad,
     # SpiceMerchant,
