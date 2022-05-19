@@ -6,9 +6,41 @@
 
     import CardCarousel from "./card_carousel.svelte";
 
-    let waitingForSelection = false;
-
     let cards = [];
+    let waitingForSelection = {
+        value: false,
+        handler: null,
+        type: "",
+        maxCards: null,
+        force: false,
+        prompt: null,
+    }
+
+    function handleSelected(event) {
+        if (waitingForSelection.value) {
+            var selectedCards = event.detail.selectedCards;
+            waitingForSelection.handler(selectedCards);
+        }
+    }
+
+    function handleCardSelected(selectedCards) {
+        if (selectedCards.length == 0) {
+            if (waitingForSelection.force) {
+                alert("You must make a selection.");
+                return false;
+            }
+            else {
+                var confirmed = confirm("Are you sure you want to skip selecting cards from your played cards?");
+                if (!confirmed) {
+                    return false;
+                }
+                $socket.emit("response", null);
+                return true;
+            }
+        }
+        $socket.emit("response", selectedCards[0]);
+        return true;
+    }
 
     $socket.on(
         "display played cards", 
@@ -23,6 +55,31 @@
             $currentPlayer = data;
         },
     )
+
+    $socket.on(
+        "choose specific card type from played cards",
+        (data) => {
+            waitingForSelection.value = true;
+            waitingForSelection.prompt = data.prompt;
+            waitingForSelection.handler = handleCardSelected;
+            waitingForSelection.type = data.card_type.toLowerCase();
+            waitingForSelection.maxCards = 1;
+        }
+    );
+
+    $socket.on(
+        "response received",
+        (data) => {
+            waitingForSelection = {
+                value: false,
+                handler: null,
+                type: "",
+                maxCards: null,
+                force: false,
+                prompt: null,
+            };
+        }
+    );
 </script>
 
 <section id="Played Cards">
@@ -32,6 +89,7 @@
             sortByProperty = "orderSent"
             {waitingForSelection}
             {cards}
+            on:selected={handleSelected}
         />
     </main>
 </section>

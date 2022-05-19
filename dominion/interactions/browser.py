@@ -230,6 +230,31 @@ class BrowserInteraction(Interaction):
                 except (IndexError, ValueError):
                     self.send('That is not a valid choice.')
 
+    def choose_specific_card_type_from_played_cards(self, prompt, card_type):
+        with self.move_cards():
+            print("choose_specific_card_type_from_played_cards")
+            # Only cards of the correct type can be chosen
+            selectable_cards = [card for card in self.played_cards if card_type in card.types]
+            if not selectable_cards:
+                self.send(f'There are no {card_type.name.lower().capitalize()} cards in your played cards.')
+                return None
+            while True:
+                try:
+                    response = self._call(
+                        "choose specific card type from played cards",
+                        {
+                            "prompt": prompt,
+                            "card_type": card_type.name,
+                        }
+                    )
+                    if response is None:
+                        return None
+                    for card in self.played_cards:
+                        if response["id"] == card.id:
+                            return card
+                except (IndexError, ValueError):
+                    self.send('That is not a valid choice.')
+
     def choose_card_from_discard_pile(self, prompt, force):
         with self.move_cards():
             print("choose_card_from_discard_pile")

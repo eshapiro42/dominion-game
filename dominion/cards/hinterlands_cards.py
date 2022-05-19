@@ -3,12 +3,12 @@ from __future__ import annotations
 import math
 
 from gevent import Greenlet, joinall
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, List
 
 from .cards import CardType, Card, TreasureCard, ActionCard, AttackCard, ReactionCard, VictoryCard, CurseCard, ReactionType
 from . import base_cards
-from ..hooks import PostGainHook
-from ..grammar import a, s
+from ..hooks import PostGainHook, PreCleanupHook
+from ..grammar import a, s, it_or_them
 
 if TYPE_CHECKING:
     from ..player import Player
@@ -242,14 +242,198 @@ class Develop(ActionCard):
                 self.owner.gain_to_deck(card_class_to_gain, message=True)
 
 
+class Oasis(ActionCard):
+    name = "Oasis"
+    _cost = 3
+    types = [CardType.ACTION]
+    image_path = ''
+
+    description = '\n'.join(
+        [
+            # "+1 Card",
+            # "+1 Action",
+            # "+1 $",
+            "Discard a card.",
+        ]
+    )
+
+    extra_cards = 1
+    extra_actions = 1
+    extra_buys = 0
+    extra_coppers = 1
+
+    def action(self):
+        prompt = f"You played an Oasis and must discard a card."
+        card_to_discard = self.owner.interactions.choose_card_from_hand(prompt, force=True)
+        if card_to_discard is None:
+            self.game.broadcast(f"{self.owner.name} had no cards in their hand to discard.")
+            return
+        self.owner.discard(card_to_discard, message=True)
+
+
+class Oracle(AttackCard):
+    name = 'Oracle'
+    _cost = 3
+    types = [CardType.ACTION, CardType.ATTACK]
+    image_path = ''
+
+    description = '\n'.join(
+        [
+            "Each player (including you) reveals the top 2 cards of their deck, and discards them or puts them back, your choice (they choose the order).",
+            "Then, <b>+2 Cards</b>.",
+        ]
+    )
+    
+    @property
+    def prompt(self):
+        return f"Other players must reveal the top 2 cards of their deck, and discard them or put them back, {self.owner}'s choice (they choose the order)."
+
+    extra_cards = 0
+    extra_actions = 0
+    extra_buys = 0
+    extra_coppers = 0
+
+    allow_simultaneous_reactions = False # The frontend cannot currently handle the attacker simultaneously reacting to multiple players' responses
+
+    def attack_effect(self, attacker, player):
+        # Reveal the top 2 cards of the player's deck
+        revealed_cards: List[Card] = []
+        for _ in range(2):
+            revealed_card = player.take_from_deck()
+            if revealed_card is None:
+                break
+            revealed_cards.append(revealed_card)
+        if len(revealed_cards) == 2:
+            message = f"{player.name} revealed the top 2 cards of their deck: {Card.group_and_sort_by_cost(revealed_cards)}."
+        elif len(revealed_cards) == 1:
+            message = f"{player.name} revealed the top card of their deck: {a(revealed_cards[0].name)}."
+        else:
+            message = f"{player.name} had no cards in their deck to reveal."
+        self.game.broadcast(message)
+        if not revealed_cards:
+            return
+        # Ask the attacker to discard or put the revealed cards back
+        prompt = f"{message} Would you like to discard {it_or_them(len(revealed_cards))} or put them back?"
+        options = [
+            f"Discard {it_or_them(len(revealed_cards))}",
+            f"Put {it_or_them(len(revealed_cards))} back onto their deck",
+        ]
+        choice = attacker.interactions.choose_from_options(prompt, options, force=True)
+        if choice == options[0]:
+            for card in revealed_cards:
+                player.discard_pile.append(card)
+            self.game.broadcast(f"{player.name} discarded their revealed {s(len(revealed_cards), 'card', print_number=False)}.")
+        else:
+            if len(revealed_cards) == 1 or revealed_cards[0].name == revealed_cards[1].name:
+                player.deck.extend(revealed_cards)
+                self.game.broadcast(f"{player.name} put their revealed {s(len(revealed_cards), 'card', print_number=False)} back on their deck.")
+            elif len(revealed_cards) == 2:
+                prompt = f"You must return the revealed cards to your deck. Which one do you want to be on top?"
+                options = [card.name for card in revealed_cards]
+                choice = player.interactions.choose_from_options(prompt, options, force=True)
+                index = options.index(choice)
+                top_card = revealed_cards[index]
+                bottom_card = revealed_cards[1 - index]
+                player.deck.append(bottom_card)
+                player.deck.append(top_card)
+                self.game.broadcast(f"{player.name} put their revealed cards back on their deck with the {top_card} on top and the {bottom_card} beneath it.")
+
+    def action(self):
+        # Reveal the top 2 cards of the player's deck
+        revealed_cards: List[Card] = []
+        for _ in range(2):
+            revealed_card = self.owner.take_from_deck()
+            if revealed_card is None:
+                break
+            revealed_cards.append(revealed_card)
+        if len(revealed_cards) == 2:
+            message = f"{self.owner.name} revealed the top 2 cards of their deck: {Card.group_and_sort_by_cost(revealed_cards)}."
+        elif len(revealed_cards) == 1:
+            message = f"{self.owner.name} revealed the top card of their deck: {a(revealed_cards[0].name)}."
+        else:
+            message = f"{self.owner.name} had no cards in their deck to reveal."
+        self.game.broadcast(message)
+        if not revealed_cards:
+            return
+        # Ask the attacker to discard or put the revealed cards back
+        prompt = f"{message.replace(self.owner.name, 'You').replace('their', 'your')} Would you like to discard {it_or_them(len(revealed_cards))} or put them back?"
+        options = [
+            f"Discard {it_or_them(len(revealed_cards))}",
+            f"Put {it_or_them(len(revealed_cards))} back onto your deck",
+        ]
+        choice = self.owner.interactions.choose_from_options(prompt, options, force=True)
+        if choice == options[0]:
+            for card in revealed_cards:
+                self.owner.discard_pile.append(card)
+            self.game.broadcast(f"{self.owner.name} discarded their revealed {s(len(revealed_cards), 'card', print_number=False)}.")
+        else:
+            if len(revealed_cards) == 1 or revealed_cards[0].name == revealed_cards[1].name:
+                self.owner.deck.extend(revealed_cards)
+                self.game.broadcast(f"{self.owner.name} put their revealed {s(len(revealed_cards), 'card', print_number=False)} back on their deck.")
+            elif len(revealed_cards) == 2:
+                prompt = f"You must return the revealed cards to your deck. Which one do you want to be on top?"
+                options = [card.name for card in revealed_cards]
+                choice = self.owner.interactions.choose_from_options(prompt, options, force=True)
+                index = options.index(choice)
+                top_card = revealed_cards[index]
+                bottom_card = revealed_cards[1 - index]
+                self.owner.deck.append(bottom_card)
+                self.owner.deck.append(top_card)
+                self.game.broadcast(f"{self.owner.name} put their revealed cards back on their deck with the {top_card} on top and the {bottom_card} beneath it.")
+
+    def post_attack_action(self):
+        self.owner.draw(quantity=2, message=True)
+
+
+class Scheme(ActionCard):
+    name = "Scheme"
+    _cost = 3
+    types = [CardType.ACTION]
+    image_path = ''
+
+    description = '\n'.join(
+        [
+            # "+1 Card",
+            # "+1 Action",
+            "This turn, you may put one of your Action cards onto your deck when you discard it from play.",
+        ]
+    )
+
+    extra_cards = 1
+    extra_actions = 1
+    extra_buys = 0
+    extra_coppers = 0
+
+    class SchemePreCleanupHook(PreCleanupHook):
+        persistent = False
+
+        def __call__(self):
+            """
+            You may put one of your played Action cards back onto your deck.
+            """
+            player = self.game.current_turn.player
+            prompt = f"You played a Scheme this turn and may put one of your played Action cards back onto your deck."
+            action_card = player.interactions.choose_specific_card_type_from_played_cards(prompt, CardType.ACTION)
+            if action_card is None:
+                return
+            player.played_cards.remove(action_card)
+            player.deck.append(action_card)
+            self.game.broadcast(f"{player.name} put a played {action_card.name} back on their deck with their Scheme.")
+
+    def action(self):
+        pre_cleanup_hook = self.SchemePreCleanupHook(self.game)
+        self.game.current_turn.add_pre_cleanup_hook(pre_cleanup_hook)
+        self.game.broadcast(f"At the end of this turn, {self.owner.name} may put one of their played Action cards back onto their deck.")
+
+
 KINGDOM_CARDS = [
     Crossroads,
     Duchess,
     FoolsGold,
     Develop,
-    # Oasis,
-    # Oracle,
-    # Scheme,
+    Oasis,
+    Oracle,
+    Scheme,
     # Tunnel,
     # JackOfAllTrades,
     # NobleBrigand,

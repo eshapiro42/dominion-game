@@ -124,6 +124,25 @@ class AutoInteraction(Interaction):
                 print('That is not a valid choice.\n')
                 raise
 
+    def choose_specific_card_type_from_played_cards(self, prompt, card_type):
+        self.sleep_random()
+        print(prompt)
+        print()
+        # Only cards of the correct type can be chosen
+        selectable_cards = [card for card in self.played_cards if card_type in card.types]
+        if not selectable_cards:
+            print(f'There are no {card_type.name.lower().capitalize()} cards in your played cards.\n')
+            return None
+        while True:
+            try:
+                choices = [None] + selectable_cards
+                weights = [1] + [card.cost for card in selectable_cards] # Weight options by card cost, except for "skip"
+                selected_card = random.choices(choices, weights, k=1)[0]
+                return selected_card
+            except (IndexError, ValueError):
+                print('That is not a valid choice.\n')
+                raise
+
     def choose_card_from_discard_pile(self, prompt, force):
         self.sleep_random()
         print(prompt)

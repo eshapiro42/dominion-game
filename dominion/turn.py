@@ -11,7 +11,7 @@ from .interactions import AutoInteraction, BrowserInteraction
 if TYPE_CHECKING:
     from .cards.cards import ActionCard, TreasureCard
     from .game import Game
-    from .hooks import TreasureHook, PostGainHook, PostTreasureHook
+    from .hooks import TreasureHook, PostGainHook, PostTreasureHook, PreCleanupHook
     from .player import Player
     from .supply import Supply
 
@@ -39,6 +39,7 @@ class Turn:
         self._treasure_hooks = defaultdict(list)
         self._post_treasure_hooks = []
         self._post_gain_hooks = defaultdict(list)
+        self._pre_cleanup_hooks = []
         self._invalid_card_classes = []
         self._cost_modifiers = defaultdict(int)
 
@@ -155,6 +156,17 @@ class Turn:
         self._post_gain_hooks = post_gain_hooks
 
     @property
+    def pre_cleanup_hooks(self) -> List[PreCleanupHook]:
+        """
+        A list of pre-cleanup hooks registered for this turn.
+        """
+        return self._pre_cleanup_hooks
+
+    @pre_cleanup_hooks.setter
+    def pre_cleanup_hooks(self, pre_cleanup_hooks: List[PreCleanupHook]):
+        self._pre_cleanup_hooks = pre_cleanup_hooks
+
+    @property
     def invalid_card_classes(self) -> List[Type[Card]]:
         """
         A list of card classes that cannot be purchased this turn.
@@ -232,6 +244,15 @@ class Turn:
             card_class: The card class which should activate the post-gain hook.
         '''
         self.post_gain_hooks[card_class].append(post_gain_hook)
+
+    def add_pre_cleanup_hook(self, pre_cleanup_hook: PreCleanupHook):
+        '''
+        Add a turn-wide pre-cleanup hook.
+
+        Args:
+            pre_cleanup_hook: The pre-cleanup hook to add.
+        '''
+        self.pre_cleanup_hooks.append(pre_cleanup_hook)
 
     def plus_actions(self, num_actions: int, message: bool = True):
         """
@@ -639,7 +660,21 @@ class BuyPhase(Phase):
 class CleanupPhase(Phase):
     '''
     Cleanup phase of the current Turn.
-    ''' 
+    '''
+    def process_pre_cleanup_hooks(self):
+        '''
+        Activate any pre-cleanup hooks currently registered.
+        '''
+        expired_hooks = []
+        # Activate any hooks caused by playing the Treasure
+        for pre_cleanup_hook in self.turn.pre_cleanup_hooks:
+            pre_cleanup_hook()
+            if not pre_cleanup_hook.persistent:
+                expired_hooks.append(pre_cleanup_hook)
+        # Remove any non-persistent hooks
+        for hook in expired_hooks:
+            self.turn.pre_cleanup_hooks.remove(hook)
+
     def start(self):
         '''
         Start the cleanup phase.
@@ -651,6 +686,8 @@ class CleanupPhase(Phase):
         All cards in the supply have their cost modifiers reset to the default.
         '''
         self.turn.current_phase = "Cleanup Phase"
+        # Process any pre-cleanup hooks registered this turn
+        self.process_pre_cleanup_hooks()
         # Clean up the player's mat
         self.player.cleanup()
         # Show their hand for next turn

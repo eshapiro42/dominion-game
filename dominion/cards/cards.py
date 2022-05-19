@@ -354,6 +354,7 @@ class AttackCard(ActionCard):
         self.action()
         if self.attacking:
             self.attack()
+            self.post_attack_action()
 
     @property
     @abstractmethod
@@ -371,6 +372,15 @@ class AttackCard(ActionCard):
         Args:
             attacker: The player who played the attack card.
             player: The player being attacked.
+        """
+        pass
+
+    def post_attack_action(self):
+        """
+        An optional method to call after the attack is complete.
+
+        Overload for specific attack cards that require something
+        to be done after the results of the attack are resolved.
         """
         pass
 

@@ -95,6 +95,15 @@ class PreBuyHook(Hook):
         pass
 
 
+class PreCleanupHook(Hook):
+    """
+    Hook to activate before a player cleans up their played cards.
+    """
+    @abstractmethod
+    def __call__(self):
+        pass
+
+
 class PostGainHook(Hook):
     """
     Hook to activate after a player gains a card.

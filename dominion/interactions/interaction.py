@@ -169,6 +169,17 @@ class Interaction(metaclass=ABCMeta):
         pass
 
     @abstractmethod
+    def choose_specific_card_type_from_played_cards(self, prompt: str, card_type: CardType) -> Card | None:
+        """
+        Request the player to choose a card of the specified type from their played cards.
+
+        Args:
+            prompt: The prompt to display to the player.
+            card_type: The card type to be chosen.
+        """
+        pass
+
+    @abstractmethod
     def choose_card_from_discard_pile(self, prompt: str, force: bool) -> Card | None:
         """
         Request the player to choose a card from their discard pile.
