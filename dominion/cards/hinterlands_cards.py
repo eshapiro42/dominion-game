@@ -470,6 +470,51 @@ class Tunnel(VictoryCard, ReactionCard):
         pass
 
 
+class JackOfAllTrades(ActionCard):
+    name = "Jack of All Trades"
+    _cost = 4
+    types = [CardType.ACTION]
+    image_path = ''
+
+    description = '\n'.join(
+        [
+            "Gain a Silver.",
+            "Look at the top card of your deck; you may discard it.",
+            "Draw until you have 5 cards in hand.",
+            "You may trash a non-Treasure card from your hand.",
+        ]
+    )
+
+    extra_cards = 0
+    extra_actions = 0
+    extra_buys = 0
+    extra_coppers = 0
+
+    def action(self):
+        # Gain a Silver
+        self.owner.gain(base_cards.Silver)
+        # Look at the top card of your deck; you may discard it
+        top_card_of_deck = self.owner.take_from_deck()
+        prompt = f"You played a Jack of All Trades and looked at the top card of your deck. It is {a(top_card_of_deck.name)}. Would you like to discard it?"
+        if self.owner.interactions.choose_yes_or_no(prompt):
+            self.owner.discard(top_card_of_deck, message=False)
+            self.game.broadcast(f"{self.owner.name} discarded the top card of their deck, {a(top_card_of_deck)}.")
+        else:
+            self.owner.deck.append(top_card_of_deck)
+            self.game.broadcast(f"{self.owner.name} did not discard the top card of their deck.")
+        # Draw until you have 5 cards in hand
+        num_cards_to_draw = 5 - len(self.owner.hand)
+        self.owner.draw(num_cards_to_draw)
+        # You may trash a non-Treasure card from your hand
+        if all(CardType.TREASURE in card.types for card in self.owner.hand):
+            self.owner.interactions.send(f"You have no non-Treasure cards in your hand to trash.")
+            return
+        treasure_cards_in_hand = [card for card in self.owner.hand if CardType.TREASURE in card.types]
+        prompt = f"You played a Jack of All Trades. You may trash a non-Treasure card from your hand."
+        card_to_trash = self.owner.interactions.choose_card_from_hand(prompt, force=False, invalid_cards=treasure_cards_in_hand)
+        if card_to_trash is not None:
+            self.owner.trash(card_to_trash)
+
 
 KINGDOM_CARDS = [
     Crossroads,
@@ -480,7 +525,7 @@ KINGDOM_CARDS = [
     Oracle,
     Scheme,
     Tunnel,
-    # JackOfAllTrades,
+    JackOfAllTrades,
     # NobleBrigand,
     # NomadCamp,
     # SilkRoad,
