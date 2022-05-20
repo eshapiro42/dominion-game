@@ -41,6 +41,10 @@ class HinterlandsExpansion(Expansion):
         if hinterlands_cards.NobleBrigand in self.supply.card_stacks:
             post_buy_hook = hinterlands_cards.NobleBrigand.NobleBrigandPostBuyHook(self.game)
             self.game.add_post_buy_hook(post_buy_hook, hinterlands_cards.NobleBrigand)
+        # If the Nomad Camp is in the Supply, add its post-gain hook
+        if hinterlands_cards.NomadCamp in self.supply.card_stacks:
+            post_gain_hook = hinterlands_cards.NomadCamp.NomadCampPostGainHook(self.game, hinterlands_cards.NomadCamp)
+            self.supply.add_post_gain_hook(post_gain_hook, hinterlands_cards.NomadCamp) 
 
     def heartbeat(self):
         pass

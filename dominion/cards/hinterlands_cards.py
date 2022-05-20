@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import math
+
 from gevent import Greenlet, joinall
 from typing import TYPE_CHECKING, List
 
@@ -599,6 +601,53 @@ class NobleBrigand(AttackCard):
         pass
 
 
+class NomadCamp(ActionCard):
+    name = 'Nomad Camp'
+    _cost = 4
+    types = [CardType.ACTION]
+    image_path = ''
+
+    description = '\n'.join(
+        [
+            # "+1 Buy",
+            # "+2 $",
+            "This is gained onto your deck (instead of to your discard pile).",
+        ]
+    )
+
+    extra_cards = 0
+    extra_actions = 0
+    extra_buys = 1
+    extra_coppers = 2
+
+    def action(self):
+        pass
+
+    class NomadCampPostGainHook(PostGainHook):
+        persistent = True
+
+        def __call__(self, player, card, where_it_went):
+            if where_it_went is player.discard_pile:
+                player.discard_pile.remove(card)
+                player.deck.append(card)
+                player.game.broadcast(f"{player.name} gained the Nomad Camp onto their deck.")
+
+
+class SilkRoad(VictoryCard):
+    name = 'Silk Road'
+    _cost = 4
+    types = [CardType.VICTORY]
+    image_path = ''
+
+    description = 'Worth 1 victory point for every 4 Victory cards you have (round down).'
+
+    @property
+    def points(self):
+        victory_cards = [card for card in self.owner.all_cards if CardType.VICTORY in card.types]
+        num_victory_cards = len(victory_cards)
+        return math.floor(num_victory_cards / 4)
+
+
 KINGDOM_CARDS = [
     Crossroads,
     Duchess,
@@ -610,8 +659,8 @@ KINGDOM_CARDS = [
     Tunnel,
     JackOfAllTrades,
     NobleBrigand,
-    # NomadCamp,
-    # SilkRoad,
+    NomadCamp,
+    SilkRoad,
     # SpiceMerchant,
     # Trader,
     # Cache,
