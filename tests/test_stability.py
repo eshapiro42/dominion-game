@@ -70,3 +70,4 @@ def test_stability():
     for _ in range(num_players):
         game.add_player(interactions_class=AutoInteraction)
     game.start()
+    del(game)

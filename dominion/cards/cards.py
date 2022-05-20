@@ -4,7 +4,7 @@ from abc import ABCMeta, abstractmethod
 from collections import defaultdict
 from enum import Enum, auto
 from gevent import Greenlet, joinall
-from typing import TYPE_CHECKING, Dict, List, Tuple, Type
+from typing import TYPE_CHECKING, Deque, Dict, List, Tuple, Type
 
 from ..grammar import a, s, Word
 
@@ -102,6 +102,16 @@ class Card(Word, metaclass=ABCMeta):
         The cost of the card.
         """
         return self._cost if not hasattr(self, "game") else self.game.current_turn.get_cost(self)
+
+    @property
+    def gain_to(self) -> Deque[Card]:
+        """
+        The deque to which the card is being added.
+
+        Defaults to the player's discard pile. Override this for
+        cards that are gained to other locations, e.g., Nomad Camp.
+        """
+        return self.owner.discard_pile
 
     @property
     @abstractmethod

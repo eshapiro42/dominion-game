@@ -199,6 +199,8 @@ class Player:
             quantity: The number of Cards to gain.
             from_supply: Whether the Card is being gained from the Supply.
             message: Whether to broadcast a message to all Players saying that the card was gained.
+                     If the card is being gained someplace other than the player's discard pile,
+                     this will be ignored and a message will be broadcast anyway.
             ignore_hooks: Whether to activate any post-gain Hooks registered to this card.
 
         Returns:
@@ -216,11 +218,20 @@ class Player:
                     return
             card.owner = self
             gained_cards.append(card)
-            self.discard_pile.append(card)
+            if card.gain_to is self.discard_pile: 
+                self.discard_pile.append(card)
+            elif card.gain_to is self.deck:
+                self.deck.append(card)
+                self.game.broadcast(f'{self.name} gained {a(card_class.name)} onto their deck.')
+                message = False
+            elif card.gain_to is self.hand:
+                self.hand.append(card)
+                self.game.broadcast(f'{self.name} gained {a(card_class.name)} into their hand.')
+                message = False
             if message:
                 self.game.broadcast(f'{self.name} gained {a(card_class.name)}.')
             if not ignore_hooks:
-                self.process_post_gain_hooks(card, self.discard_pile)
+                self.process_post_gain_hooks(card, card.gain_to)
         if gained_cards:
             return gained_cards
         return None

@@ -150,7 +150,7 @@ class Watchtower(ReactionCard):
             if card in where_it_went:
                 game = player.game
                 if any(isinstance(card, Watchtower) for card in player.hand):
-                    prompt = f'You have a Reaction (Watchtower) in your hand. Would you like to play it?'
+                    prompt = f'You gained a {card.name} and you have a Reaction (Watchtower) in your hand. Would you like to play it?'
                     if player.interactions.choose_yes_or_no(prompt):
                         game.broadcast(f'{player} revealed a Watchtower. They may trash the {card} they just gained or put it onto their deck.')
                         prompt = f'Would you like to trash the {card} you just gained or put it onto your deck?'

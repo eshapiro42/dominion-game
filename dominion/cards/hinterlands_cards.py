@@ -623,14 +623,9 @@ class NomadCamp(ActionCard):
     def action(self):
         pass
 
-    class NomadCampPostGainHook(PostGainHook):
-        persistent = True
-
-        def __call__(self, player, card, where_it_went):
-            if where_it_went is player.discard_pile:
-                player.discard_pile.remove(card)
-                player.deck.append(card)
-                player.game.broadcast(f"{player.name} gained the Nomad Camp onto their deck.")
+    @property
+    def gain_to(self):
+        return self.owner.deck
 
 
 class SilkRoad(VictoryCard):
@@ -648,6 +643,59 @@ class SilkRoad(VictoryCard):
         return math.floor(num_victory_cards / 4)
 
 
+class SpiceMerchant(ActionCard):
+    name = 'Spice Merchant'
+    _cost = 4
+    types = [CardType.ACTION]
+    image_path = ''
+
+    description = '\n'.join(
+        [
+            "You may trash a Treasure from your hand to choose one:",
+            "<b>+2 Cards</b> and <b>+1 Action</b>;",
+            "or <b>+1 Buy</b> and <b>+2 $</b>.",
+        ]
+    )
+
+    extra_cards = 0
+    extra_actions = 0
+    extra_buys = 0
+    extra_coppers = 0
+
+    def action(self):
+        prompt = """
+            You played a Spice Merchant and may trash a Treasure from your hand. If you do, you will choose one:
+            <br>
+            <br>
+            <div>
+                <ul style="display: inline-block; padding-left: 0;">
+                    <li><b>+2 Cards</b> and <b>+1 Action</b>.</li>
+                    <li><b>+1 Buy</b> and <b>+2 $</b>.</li>
+                </ul>
+            </div>
+        """
+        if not any(CardType.TREASURE in card.types for card in self.owner.hand):
+            self.game.broadcast(f"{self.owner.name} has no Treasures in their hand to trash.")
+            return
+        treasure_to_trash = self.owner.interactions.choose_specific_card_type_from_hand(prompt, CardType.TREASURE, )
+        if treasure_to_trash is None:
+            self.game.broadcast(f"{self.owner.name} chose not to trash a Treasure.")
+            return
+        self.owner.trash(treasure_to_trash)
+        prompt = f"You played a Spice Merchant and trashed a {a(treasure_to_trash.name)}. Which option would you like to choose?"
+        options = [
+            "+2 Cards and +1 Action",
+            "+1 Buy and +2 $",
+        ]
+        choice = self.owner.interactions.choose_from_options(prompt, options, force=True)
+        if choice == "+2 Cards and +1 Action":
+            self.owner.draw(2)
+            self.owner.turn.plus_actions(1)
+        elif choice == "+1 Buy and +2 $":
+            self.owner.turn.plus_buys(1)
+            self.owner.turn.plus_coppers(2)
+        
+
 KINGDOM_CARDS = [
     Crossroads,
     Duchess,
@@ -661,7 +709,7 @@ KINGDOM_CARDS = [
     NobleBrigand,
     NomadCamp,
     SilkRoad,
-    # SpiceMerchant,
+    SpiceMerchant,
     # Trader,
     # Cache,
     # Cartographer,
