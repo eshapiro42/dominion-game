@@ -96,9 +96,9 @@ class Duchess(ActionCard):
                 self.game.broadcast(f"{player.name} has no cards in their deck.")
                 return
             if player == self.owner:
-                prompt = f'You played a Duchess and revealed the top card of your deck, {a(top_card_of_deck.name)}. Would you like to discard it?'
+                prompt = f'You played a Duchess and looked at the top card of your deck, {a(top_card_of_deck.name)}. Would you like to discard it?'
             else:
-                prompt = f'{self.owner} played a Duchess and you revealed the top card of your deck, {a(top_card_of_deck.name)}. Would you like to discard it?'
+                prompt = f'{self.owner} played a Duchess and you looked at the top card of your deck, {a(top_card_of_deck.name)}. Would you like to discard it?'
             if player.interactions.choose_yes_or_no(prompt):
                 self.game.broadcast(f"{player.name} discarded the top card of their deck, {a(top_card_of_deck.name)}.")
                 player.discard(top_card_of_deck, message=False)
@@ -694,7 +694,190 @@ class SpiceMerchant(ActionCard):
         elif choice == "+1 Buy and +2 $":
             self.owner.turn.plus_buys(1)
             self.owner.turn.plus_coppers(2)
+
+
+# class Trader(ReactionCard):
+#     name = 'Trader'
+#     _cost = 4
+#     types = [CardType.ACTION, CardType.REACTION]
+#     image_path = ''
+# 
+#     description = '\n'.join(
+#         [
+#             "Trash a card from your hand. Gain a Silver per 1 $ it costs.",
+#             "When you gain a card, you may reveal this from your hand, to exchange the card for a Silver.",
+#         ]
+#     )
+# 
+#     extra_cards = 0
+#     extra_actions = 0
+#     extra_buys = 0
+#     extra_coppers = 0
+# 
+#     class TraderPostGainHook(PostGainHook):
+#         persistent = True
+# 
+#         def __call__(self, player, card, where_it_went):
+#             if card in where_it_went:
+#                 game = player.game
+#                 if any(isinstance(card, Trader) for card in player.hand):
+#                     prompt = f'You gained a {card.name} and you have a Reaction (Watchtower) in your hand. Would you like to play it?'
+#                     if player.interactions.choose_yes_or_no(prompt):
+#                         game.broadcast(f'{player} revealed a Watchtower. They may trash the {card} they just gained or put it onto their deck.')
+#                         prompt = f'Would you like to trash the {card} you just gained or put it onto your deck?'
+#                         options = ['Trash', 'Put on deck']
+#                         choice = player.interactions.choose_from_options(prompt, options, force=False)
+#                         if choice is None:
+#                             game.broadcast(f'{player} decided not to use their Watchtower.')
+#                         elif choice == 'Trash':
+#                             where_it_went.remove(card)
+#                             game.supply.trash(card)
+#                             game.broadcast(f'{player} trashed the {card}.')
+#                         elif choice == 'Put on deck':
+#                             where_it_went.remove(card)
+#                             player.deck.append(card)
+#                             game.broadcast(f'{player} put the {card} onto their deck.')
+# 
+#     @property
+#     def can_react(self):
+#         return False # This card's reaction is governed by a post-gain hook
+# 
+#     def react(self):
+#         pass
+# 
+#     def action(self):
+#         num_cards_to_draw = 6 - len(self.owner.hand)
+#         self.owner.draw(num_cards_to_draw)
+
+
+class Cache(TreasureCard):
+    name = 'Cache'
+    _cost = 5
+    types = [CardType.TREASURE]
+    image_path = ''
+
+    value = 3
+
+    description = '\n'.join(
+        [
+            '3 $',
+            'When you gain this, gain 2 Coppers.',
+        ]
+    )
+
+    class CachePostGainHook(PostGainHook):
+        persistent = True
+
+        def __call__(self, player, card, where_it_went):
+            player.gain(base_cards.Copper, 2)
+
+    def play(self):
+        pass
+
+
+# class Cartographer(ActionCard):
+#     name = 'Cartographer'
+#     _cost = 5
+#     types = [CardType.ACTION]
+#     image_path = ''
+# 
+#     description = '\n'.join(
+#         [
+#             # "+1 Card",
+#             # "+1 Action",
+#             "Look at the top 4 cards of your deck. Discard any number of them, then put the rest back in any order.",
+#         ]
+#     )
+# 
+#     extra_cards = 1
+#     extra_actions = 1
+#     extra_buys = 0
+#     extra_coppers = 0
+# 
+#     def action(self):
+#         cards_from_deck = []
+#         for _ in range(4):
+#             card = self.owner.take_from_deck()
+#             if card is not None:
+#                 cards_from_deck.append(card)
+#         # TODO: Add a new modal type to the frontend that contains a situational card carousel
+#         # TODO: Add a new interaction method that allows the player to select multiple cards situationally
         
+
+class Embassy(ActionCard):
+    name = 'Embassy'
+    pluralized = 'Embassies'
+    _cost = 5
+    types = [CardType.ACTION]
+    image_path = ''
+
+    description = '\n'.join(
+        [
+            # "+5 Cards",
+            "Discard 3 cards.",
+            "When you gain this, each other player gains a Silver.",
+        ]
+    )
+
+    extra_cards = 5
+    extra_actions = 0
+    extra_buys = 0
+    extra_coppers = 0
+
+    class EmbassyPostGainHook(PostGainHook):
+        persistent = True
+
+        def __call__(self, player, card, where_it_went):
+            # Each other player gains a Silver
+            self.game.broadcast(f"Each other player gains a Silver.")
+            for other_player in player.other_players:
+                other_player.gain(base_cards.Silver)
+
+    def action(self):
+        prompt = "You played an Embassy and must choose 3 cards to discard."
+        cards_to_discard = self.owner.interactions.choose_cards_from_hand(prompt, force=True, max_cards=3)
+        self.owner.discard(cards_to_discard)
+
+
+class Haggler(ActionCard):
+    name = 'Haggler'
+    _cost = 5
+    types = [CardType.ACTION]
+    image_path = ''
+
+    description = '\n'.join(
+        [
+            # "+2 $",
+            "While this is in play, when you buy a card, gain a cheaper non-Victory card.",
+        ]
+    )
+
+    extra_cards = 0
+    extra_actions = 0
+    extra_buys = 0
+    extra_coppers = 2
+
+    class HagglerPostBuyHook(PostBuyHook):
+        persistent = True
+
+        def __call__(self, player, card):
+            max_cost = card.cost - 1
+            prompt = f"You bought a {card.name} and have a Haggler in play. Choose a non-Victory card costing up to {max_cost} $ to gain."
+            # Gain a cheaper non-Victory card for each Haggler in play
+            hagglers_in_play = [card for card in player.played_cards if isinstance(card, Haggler)]
+            hagglers_already_used = []
+            while hagglers_in_play:
+                haggler = hagglers_in_play[0]
+                invalid_card_classes = [card_class for card_class in self.game.supply.card_stacks if CardType.VICTORY in card_class.types]
+                card_class_to_gain = player.interactions.choose_card_class_from_supply(prompt, max_cost=max_cost, force=True, invalid_card_classes=invalid_card_classes)
+                if card_class_to_gain is not None:
+                    self.game.broadcast(f"{player.name} had a Haggler in play and gained a {card_class_to_gain.name}.")
+                    player.gain(card_class_to_gain, message=False)
+                hagglers_already_used.append(haggler)
+                hagglers_in_play = [played_card for played_card in player.played_cards if isinstance(played_card, Haggler) and played_card not in hagglers_already_used]
+
+    def action(self):
+        pass
 
 KINGDOM_CARDS = [
     Crossroads,
@@ -711,10 +894,10 @@ KINGDOM_CARDS = [
     SilkRoad,
     SpiceMerchant,
     # Trader,
-    # Cache,
+    Cache,
     # Cartographer,
-    # Embassy,
-    # Haggler,
+    Embassy,
+    Haggler,
     # Highway,
     # IllGottenGains,
     # Inn,
