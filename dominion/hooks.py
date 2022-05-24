@@ -124,13 +124,16 @@ class PostGainHook(Hook):
         return self._card_class
 
     @abstractmethod
-    def __call__(self, player: Player, card: Card, where_it_went: Deque[Card]):
+    def __call__(self, player: Player, card: Card, where_it_went: Deque[Card]) -> Deque[Card]:
         """
         Logic to be executed when the hook is activated.
 
         Args:
             player: The player who gained the card.
             card: The card that was gained.
+            where_it_went: The deque where the card ended up.
+
+        Returns:
             where_it_went: The deque where the card ended up.
         """
         pass

@@ -187,6 +187,10 @@ class HorseTraders(ReactionCard):
     extra_buys = 1
     extra_coppers = 3
 
+    @property
+    def reacts_to(self):
+        return [ReactionType.ATTACK]
+
     def action(self):
         # Discard 2 cards
         prompt = "You played a Horse Traders. Select 2 cards to discard."
@@ -196,10 +200,6 @@ class HorseTraders(ReactionCard):
             self.game.broadcast(f"{self.owner} discarded {Card.group_and_sort_by_cost(cards)}.")
         else:
             self.game.broadcast(f"{self.owner} did not have any cards to discard.")
-
-    @property
-    def can_react(self):
-        return True
 
     class HorseTradersPreTurnHook(PreTurnHook):
         persistent = False
@@ -214,12 +214,14 @@ class HorseTraders(ReactionCard):
             self.game.broadcast(f"{self.player} returns the Horse Traders they set aside to their hand.")
             self.player.hand.append(self.set_aside_card)
 
-    def react(self):
+    def react_to_attack(self):
         self.owner.hand.remove(self)
         self.game.broadcast(f"{self.owner} set a Horse Traders aside from their hand for next turn.")
         pre_turn_hook = self.HorseTradersPreTurnHook(game=self.game, player=self.owner, set_aside_card=self)
         self.game.add_pre_turn_hook(pre_turn_hook)
-        return None, False # When set aside, it is not in play or in your hand and cannot be further revealed when Attacked
+        immune = False
+        ignore_card_class_next_time = False
+        return immune, ignore_card_class_next_time # When set aside, it is not in play or in your hand and cannot be further revealed when Attacked
 
 
 class Remake(ActionCard):
@@ -474,7 +476,6 @@ class HuntingParty(ActionCard):
         unique_revealed_card = None
         while True:
             revealed_card = self.owner.take_from_deck()
-            print(revealed_card)
             if revealed_card is None:
                 self.game.broadcast(f'{self.owner} had no cards left to draw from and did not put anything into their hand.')
                 break

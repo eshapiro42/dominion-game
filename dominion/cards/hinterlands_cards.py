@@ -3,9 +3,9 @@ from __future__ import annotations
 import math
 
 from gevent import Greenlet, joinall
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING, List, Deque
 
-from .cards import CardType, Card, TreasureCard, ActionCard, AttackCard, ReactionCard, VictoryCard
+from .cards import CardType, ReactionType, Card, TreasureCard, ActionCard, AttackCard, ReactionCard, VictoryCard
 from . import base_cards
 from ..hooks import PostGainHook, PreCleanupHook, PostDiscardHook, PostBuyHook
 from ..grammar import a, s, it_or_them
@@ -78,7 +78,7 @@ class Duchess(ActionCard):
             # If there are no Duchesses remaining, nothing happens
             if game.supply.card_stacks[Duchess].is_empty:
                 game.broadcast("There are no Duchesses remaining in the Supply so one cannot be gained.")
-                return
+                return None
             # Otherwise the player may gain a Duchess
             game.broadcast(f"{player.name} may gain a Duchess.")
             prompt = "You gained a Duchy and may gain a Duchess. Would you like to gain a Duchess?"
@@ -86,7 +86,7 @@ class Duchess(ActionCard):
                 player.gain(Duchess)
             else:
                 game.broadcast(f"{player.name} did not gain a Duchess.")
-
+            return None
 
     def action(self):
         # Each player (including you) looks at the top card of their deck and may discard it
@@ -161,6 +161,7 @@ class FoolsGold(TreasureCard, ReactionCard):
                 else:
                     other_player_reaction(other_player)
             joinall(greenlets)
+            return None
 
     def play(self):
         # Worth 1 $ if it's the first time you played a Fool's Gold this turn, otherwise worth 4 $.
@@ -176,12 +177,8 @@ class FoolsGold(TreasureCard, ReactionCard):
         pass
 
     @property
-    def can_react(self):
-        return False # This card's reaction is governed by a post-gain hook
-
-    def react(self):
-        # React to an attack
-        pass
+    def reacts_to(self):
+        return [] # This card's reaction is governed by a post-gain hook
 
 
 class Develop(ActionCard):
@@ -462,11 +459,8 @@ class Tunnel(VictoryCard, ReactionCard):
                 self.game.broadcast(f"{player.name} discarded a Tunnel and revealed it to gain a Gold.")
 
     @property
-    def can_react(self):
-        return False # This card's reaction is governed by a post-discard hook
-
-    def react(self):
-        pass
+    def reacts_to(self):
+        return [] # This card's reaction is governed by a post-discard hook
 
     def action(self):
         pass
@@ -682,7 +676,7 @@ class SpiceMerchant(ActionCard):
             self.game.broadcast(f"{self.owner.name} chose not to trash a Treasure.")
             return
         self.owner.trash(treasure_to_trash)
-        prompt = f"You played a Spice Merchant and trashed a {a(treasure_to_trash.name)}. Which option would you like to choose?"
+        prompt = f"You played a Spice Merchant and trashed {a(treasure_to_trash.name)}. Which option would you like to choose?"
         options = [
             "+2 Cards and +1 Action",
             "+1 Buy and +2 $",
@@ -696,58 +690,63 @@ class SpiceMerchant(ActionCard):
             self.owner.turn.plus_coppers(2)
 
 
-# class Trader(ReactionCard):
-#     name = 'Trader'
-#     _cost = 4
-#     types = [CardType.ACTION, CardType.REACTION]
-#     image_path = ''
-# 
-#     description = '\n'.join(
-#         [
-#             "Trash a card from your hand. Gain a Silver per 1 $ it costs.",
-#             "When you gain a card, you may reveal this from your hand, to exchange the card for a Silver.",
-#         ]
-#     )
-# 
-#     extra_cards = 0
-#     extra_actions = 0
-#     extra_buys = 0
-#     extra_coppers = 0
-# 
-#     class TraderPostGainHook(PostGainHook):
-#         persistent = True
-# 
-#         def __call__(self, player, card, where_it_went):
-#             if card in where_it_went:
-#                 game = player.game
-#                 if any(isinstance(card, Trader) for card in player.hand):
-#                     prompt = f'You gained a {card.name} and you have a Reaction (Watchtower) in your hand. Would you like to play it?'
-#                     if player.interactions.choose_yes_or_no(prompt):
-#                         game.broadcast(f'{player} revealed a Watchtower. They may trash the {card} they just gained or put it onto their deck.')
-#                         prompt = f'Would you like to trash the {card} you just gained or put it onto your deck?'
-#                         options = ['Trash', 'Put on deck']
-#                         choice = player.interactions.choose_from_options(prompt, options, force=False)
-#                         if choice is None:
-#                             game.broadcast(f'{player} decided not to use their Watchtower.')
-#                         elif choice == 'Trash':
-#                             where_it_went.remove(card)
-#                             game.supply.trash(card)
-#                             game.broadcast(f'{player} trashed the {card}.')
-#                         elif choice == 'Put on deck':
-#                             where_it_went.remove(card)
-#                             player.deck.append(card)
-#                             game.broadcast(f'{player} put the {card} onto their deck.')
-# 
-#     @property
-#     def can_react(self):
-#         return False # This card's reaction is governed by a post-gain hook
-# 
-#     def react(self):
-#         pass
-# 
-#     def action(self):
-#         num_cards_to_draw = 6 - len(self.owner.hand)
-#         self.owner.draw(num_cards_to_draw)
+class Trader(ReactionCard):
+    name = 'Trader'
+    _cost = 4
+    types = [CardType.ACTION, CardType.REACTION]
+    image_path = ''
+
+    description = '\n'.join(
+        [
+            "Trash a card from your hand. Gain a Silver per 1 $ it costs.",
+            "When you gain a card, you may reveal this from your hand, to exchange the card for a Silver.",
+        ]
+    )
+
+    extra_cards = 0
+    extra_actions = 0
+    extra_buys = 0
+    extra_coppers = 0
+
+    @property
+    def reacts_to(self):
+        return [ReactionType.GAIN]
+
+    def react_to_gain(self, gained_card: Card, where_it_went: Deque, gained_from_trash: bool = False):
+        if where_it_went == self.owner.discard_pile:
+            where_it_went_string = "their discard pile"
+            self.owner.discard_pile.remove(gained_card)
+            silver = self.owner.gain(base_cards.Silver, message=False, ignore_post_gain_actions=True)[0]
+        elif where_it_went == self.owner.deck:
+            where_it_went_string = "their deck"
+            self.owner.deck.remove(gained_card)
+            silver = self.owner.gain_to_deck(base_cards.Silver, message=False, ignore_post_gain_actions=True)[0]
+        elif where_it_went == self.owner.hand:
+            where_it_went_string = "their hand"
+            self.owner.hand.remove(gained_card)
+            silver = self.owner.gain_to_hand(base_cards.Silver, message=False, ignore_post_gain_actions=True)[0]
+        elif where_it_went == self.supply.trash_pile:
+            where_it_went_string = "the Trash"
+            self.supply.trash_pile[type(gained_card)].pop()
+            silver = self.owner.gain(base_cards.Silver, message=False, ignore_post_gain_actions=True)[0]
+        if gained_from_trash:
+            where_it_came_from_string = "Trash"
+            self.supply.trash(gained_card)
+        else:
+            where_it_came_from_string = "Supply"
+            self.supply.return_card(gained_card)
+        self.game.broadcast(f"{self.owner.name}'s revealed a Trader to return the gained {gained_card.name} from {where_it_went_string} to the {where_it_came_from_string} and put a Silver in {where_it_went_string} instead.")
+        ignore_card_class_next_time = True
+        return silver, where_it_went, ignore_card_class_next_time
+
+    def action(self):
+        prompt = "You played a Trader and must choose a card from your hand to trash. You will gain a Silver per 1 $ it costs."
+        card_to_trash = self.owner.interactions.choose_card_from_hand(prompt, force=True)
+        if card_to_trash is not None:
+            self.owner.trash(card_to_trash)
+            if card_to_trash.cost > 0:
+                self.owner.gain(base_cards.Silver, quantity=card_to_trash.cost, message=False)
+                self.game.broadcast(f"{self.owner.name} trashed {a(card_to_trash.name)} with their Trader and gained {s(card_to_trash.cost, 'Silver')}.")
 
 
 class Cache(TreasureCard):
@@ -770,6 +769,7 @@ class Cache(TreasureCard):
 
         def __call__(self, player, card, where_it_went):
             player.gain(base_cards.Copper, 2)
+            return where_it_went
 
     def play(self):
         pass
@@ -832,11 +832,14 @@ class Embassy(ActionCard):
             self.game.broadcast(f"Each other player gains a Silver.")
             for other_player in player.other_players:
                 other_player.gain(base_cards.Silver)
+            return None
 
     def action(self):
         prompt = "You played an Embassy and must choose 3 cards to discard."
         cards_to_discard = self.owner.interactions.choose_cards_from_hand(prompt, force=True, max_cards=3)
-        self.owner.discard(cards_to_discard)
+        for card_to_discard in cards_to_discard:
+            self.owner.discard_from_hand(card_to_discard, message=False)
+        self.game.broadcast(f"{self.owner.name} discarded {Card.group_and_sort_by_cost(cards_to_discard)}.")
 
 
 class Haggler(ActionCard):
@@ -893,7 +896,7 @@ KINGDOM_CARDS = [
     NomadCamp,
     SilkRoad,
     SpiceMerchant,
-    # Trader,
+    Trader,
     Cache,
     # Cartographer,
     Embassy,

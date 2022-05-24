@@ -78,15 +78,17 @@ class Moat(ReactionCard):
     extra_buys = 0
     extra_coppers = 0
 
+    @property
+    def reacts_to(self):
+        return [ReactionType.ATTACK]
+
     def action(self):
         pass
 
-    @property
-    def can_react(self):
-        return True
-
-    def react(self):
-        return ReactionType.IMMUNITY, True # Will make the owner immune to attacks and prevents the Moat from being played twice
+    def react_to_attack(self):
+        immune = True
+        ignore_card_class_next_time = True
+        return immune, ignore_card_class_next_time # Will make the owner immune to attacks and prevents the Moat from being played twice
 
 
 class Harbinger(ActionCard):

@@ -1,14 +1,21 @@
+from __future__ import annotations
+
 import math
 
 from gevent import Greenlet, joinall
+from typing import TYPE_CHECKING, List, Tuple
 
-from .cards import CardType, Card, TreasureCard, ActionCard, AttackCard, ReactionCard, VictoryCard, CurseCard
+from .cards import CardType, Card, ReactionType, TreasureCard, ActionCard, AttackCard, ReactionCard, VictoryCard, CurseCard
 from . import base_cards
 from ..hooks import TreasureHook, PreBuyHook, PostGainHook
 from ..grammar import a, s
 
+if TYPE_CHECKING:
+    from ..player import Player
+
 
 # KINGDOM CARDS
+
 
 class Courtyard(ActionCard):
     name = 'Courtyard'
@@ -148,7 +155,7 @@ class Masquerade(ActionCard):
     extra_coppers = 0
 
     def action(self):
-        def player_reaction(player, player_to_left):
+        def player_reaction(player: Player, player_to_left: Player):
             # Choose a card to pass
             nonlocal cards_passed
             if player == self.owner:
@@ -162,7 +169,7 @@ class Masquerade(ActionCard):
             self.game.broadcast(f'{player} passed a card to {player_to_left}.')
 
         # Get all players with cards in hand and the closest such player to their left
-        self.game.broadcast('Each player with any cards in hand much choose a card to pass to the next such player to their left.')
+        self.game.broadcast('Each player with any cards in hand must choose a card to pass to the next such player to their left.')
         players_with_cards = [player for player in self.owner.other_players if len(player.hand) > 0]
         if len(self.owner.hand) > 0:
             players_with_cards = [self.owner] + players_with_cards
@@ -171,7 +178,7 @@ class Masquerade(ActionCard):
             self.game.broadcast('There are not enough players with cards in their hand for any cards to be passed.')
         else:
             greenlets = []
-            cards_passed = [] # This will be a list of [(card_received, old_owner, new_owner)]
+            cards_passed: List[Tuple[Card, Player, Player]] = [] # This will be a list of [(card_received, old_owner, new_owner)]
             for player in players_with_cards:
                 player_idx = players_with_cards.index(player)
                 try:
@@ -444,13 +451,14 @@ class Diplomat(ReactionCard):
     extra_coppers = 0
 
     @property
-    def can_react(self):
+    def reacts_to(self):
+        # Can only react to attacks if the player has 5 or more cards
         if len(self.owner.hand) >= 5:
-            return True
+            return [ReactionType.ATTACK]
         else:
-            return False
+            return []
 
-    def react(self):
+    def react_to_attack(self):
         # Draw 2 cards
         self.owner.draw(2)
         # Discard 3 cards
@@ -459,7 +467,9 @@ class Diplomat(ReactionCard):
         cards_to_discard = self.owner.interactions.choose_cards_from_hand(prompt, force=True, max_cards=3)
         for card_to_discard in cards_to_discard:
             self.owner.discard_from_hand(card_to_discard)
-        return None, True # Can be used again 
+        immune = False
+        ignore_card_class_next_time = False
+        return immune, ignore_card_class_next_time # Does not give immunity, but can be used again.
 
     def action(self):
         # If you have 5 or fewer cards in hand, +2 Actions

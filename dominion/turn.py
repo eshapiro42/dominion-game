@@ -710,6 +710,8 @@ class CleanupPhase(Phase):
         self.player.cleanup()
         # Show their hand for next turn
         self.player.interactions.display_hand()
+        # Set the player's turn to None
+        self.player.turn = None
         # Reset all card's cost modifiers
         self.supply.reset_costs()
         if self.game.test:
