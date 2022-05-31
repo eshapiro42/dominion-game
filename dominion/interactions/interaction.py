@@ -182,6 +182,20 @@ class Interaction(metaclass=ABCMeta):
         pass
 
     @abstractmethod
+    def choose_cards_of_specific_type_from_played_cards(self, prompt: str, force: bool, card_type: CardType, max_cards: int | None = 1, ordered: bool = False) -> List[Card]:
+        """
+        Request the player to choose cards of a specified type from their played cards.
+
+        Args:
+            prompt: The prompt to display to the player.
+            force: Whether or not to force the player to choose the maximum number of cards. If False, the player may choose fewer or no cards.
+            card_type: The card type to be chosen.
+            max_cards: The maximum number of cards to choose. If None, all cards of the specified type are allowed.
+            ordered: Whether or not the order of the cards matters (mainly for client-side display purposes).
+        """
+        pass
+
+    @abstractmethod
     def choose_specific_card_type_from_played_cards(self, prompt: str, card_type: CardType) -> Card | None:
         """
         Request the player to choose a card of the specified type from their played cards.
@@ -201,7 +215,7 @@ class Interaction(metaclass=ABCMeta):
             prompt: The prompt to display to the player.
             force: Whether or not to force the player to choose the maximum number of cards. If False, the player may choose fewer or no cards.
             card_type: The card type to be chosen.
-            max_cards: The maximum number of cards to choose.
+            max_cards: The maximum number of cards to choose. If None, all cards of the specified type are allowed.
         """
         pass
 

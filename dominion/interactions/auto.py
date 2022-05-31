@@ -130,27 +130,37 @@ class AutoInteraction(Interaction):
                 print('That is not a valid choice.\n')
                 raise
 
-    def choose_specific_card_type_from_played_cards(self, prompt, card_type):
+    def choose_cards_of_specific_type_from_played_cards(self, prompt, force, card_type, max_cards=1, ordered=False) -> List[Card]:
         self.sleep_random()
         print(prompt)
         print()
         # Only cards of the correct type can be chosen
         selectable_cards = [card for card in self.played_cards if card_type in card.types]
         if not selectable_cards:
-            print(f'There are no {card_type.name.lower().capitalize()} cards in your played cards.\n')
+            self.send(f'There are no {card_type.name.lower().capitalize()} cards in your played cards.')
+            return []
+        if max_cards is not None:
+            max_cards = min(max_cards, len(selectable_cards)) # Don't ask for more cards than are available
+        else:
+            max_cards = len(selectable_cards)
+        if force:
+            cards_chosen = random.sample(selectable_cards, max_cards)
+        else:
+            num_cards = random.randint(0, max_cards)
+            cards_chosen = random.sample(selectable_cards, num_cards)
+        return cards_chosen
+
+    def choose_specific_card_type_from_played_cards(self, prompt, card_type):
+        cards_chosen = self.choose_cards_of_specific_type_from_played_cards(prompt, force=False, card_type=card_type, max_cards=1)
+        if not cards_chosen:
             return None
-        while True:
-            try:
-                choices = [None] + selectable_cards
-                weights = [1] + [card.cost for card in selectable_cards] # Weight options by card cost, except for "skip"
-                selected_card = random.choices(choices, weights, k=1)[0]
-                return selected_card
-            except (IndexError, ValueError):
-                print('That is not a valid choice.\n')
-                raise
+        return cards_chosen[0]
+
 
     def choose_cards_of_specific_type_from_discard_pile(self, prompt, force, card_type, max_cards=1) -> List[Card]:
-        print("choose_cards_of_specific_type_from_discard_pile")
+        self.sleep_random()
+        print(prompt)
+        print()
         # Only cards of the correct type can be chosen
         selectable_cards = [card for card in self.discard_pile if card_type in card.types]
         if not selectable_cards:
@@ -422,7 +432,9 @@ class AutoInteraction(Interaction):
                 raise
 
     def choose_cards_from_list(self, prompt: str, cards: List[Card], force: bool, max_cards: int = 1, ordered: bool = False) -> List[Card]:
-        print("choose_cards_from_list")
+        self.sleep_random()
+        print(prompt)
+        print()
         if not cards:
             self.send('There are no cards to choose from.')
             return []

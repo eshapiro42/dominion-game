@@ -42,6 +42,26 @@
         return true;
     }
 
+    function handleCardsSelected(selectedCards) {
+        // TODO: This shares 99% of its code with handleCardSelected and they should be merged
+        if (selectedCards.length == 0) {
+            if (waitingForSelection.force) {
+                alert("You must make a selection.");
+                return false;
+            }
+            else {
+                var confirmed = confirm("Are you sure you want to skip selecting cards from your hand?");
+                if (!confirmed) {
+                    return false;
+                }
+                $socket.emit("response", null);
+                return true;
+            }
+        }
+        $socket.emit("response", selectedCards);
+        return true;
+    }
+
     $socket.on(
         "display played cards", 
         (data) => {
@@ -66,6 +86,19 @@
             waitingForSelection.maxCards = 1;
         }
     );
+
+    $socket.on(
+        "choose cards of specific type from played cards",
+        (data) => {
+            waitingForSelection.value = true;
+            waitingForSelection.prompt = data.prompt;
+            waitingForSelection.handler = handleCardsSelected;
+            waitingForSelection.type = data.card_type.toLowerCase();
+            waitingForSelection.maxCards = data.max_cards;
+            waitingForSelection.force = data.force;
+            waitingForSelection.ordered = data.ordered;
+        }
+    )
 
     $socket.on(
         "response received",

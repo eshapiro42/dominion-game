@@ -62,6 +62,10 @@ class HinterlandsExpansion(Expansion):
         if hinterlands_cards.Inn in self.supply.card_stacks:
             post_gain_hook = hinterlands_cards.Inn.InnPostGainHook(self.game, hinterlands_cards.Inn)
             self.supply.add_post_gain_hook(post_gain_hook, hinterlands_cards.Inn)
+        # If the Mandarin is in the Supply, add its post-gain hook
+        if hinterlands_cards.Mandarin in self.supply.card_stacks:
+            post_gain_hook = hinterlands_cards.Mandarin.MandarinPostGainHook(self.game, hinterlands_cards.Mandarin)
+            self.supply.add_post_gain_hook(post_gain_hook, hinterlands_cards.Mandarin)
 
     def heartbeat(self):
         pass

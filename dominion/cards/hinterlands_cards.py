@@ -1012,6 +1012,58 @@ class Inn(ActionCard):
             self.game.broadcast(f"{self.owner} did not have any cards to discard.")
 
 
+class Mandarin(ActionCard):
+    name = 'Mandarin'
+    _cost = 5
+    types = [CardType.ACTION]
+    image_path = ''
+
+    description = '\n'.join(
+        [
+            # "+3 $",
+            "Put a card from your hand onto your deck.",
+            "When you gain this, put all Treasures you have in play onto your deck in any order.",
+        ]
+    )
+
+    extra_cards = 0
+    extra_actions = 0
+    extra_buys = 0
+    extra_coppers = 3
+
+    class MandarinPostGainHook(PostGainHook):
+        persistent = True
+
+        def __call__(self, player, card, where_it_went):
+            # Put all Treasures you have in play onto your deck in any order.
+            treasures_in_play = [played_card for played_card in player.played_cards if CardType.TREASURE in played_card.types]
+            if not treasures_in_play:
+                self.game.broadcast(f"{player.name} did not have any Treasures in play.")
+                return where_it_went
+            elif len(set(type(treasure) for treasure in treasures_in_play)) == 1:
+                # If all Treasures are the same type, do not ask for the order
+                self.game.broadcast(f"{player.name} returned all their played Treasures ({Card.group_and_sort_by_cost(treasures_in_play)}) to their deck.")
+                return where_it_went
+            prompt = f"You gained a Mandarin and must return all your played Treasures to your deck. Please select the order in which you would like to return them. (The last Treasure you select will be on the top of your deck.)"
+            treasures_to_put_on_deck = player.interactions.choose_cards_of_specific_type_from_played_cards(prompt, force=True, card_type=CardType.TREASURE, max_cards=len(treasures_in_play), ordered=True)
+            for treasure in treasures_to_put_on_deck:
+                player.played_cards.remove(treasure)
+                player.deck.append(treasure)
+            self.game.broadcast(f"{player.name} returned all their played Treasures ({Card.group_and_sort_by_cost(treasures_in_play)}) to their deck.")
+            return where_it_went
+
+    def action(self):
+        # Put a card from your hand onto your deck
+        prompt = "You played a Mandarin and must select a card to put onto your deck."
+        card_to_put_back = self.owner.interactions.choose_card_from_hand(prompt, force=True)
+        if card_to_put_back is None:
+            self.game.broadcast(f"{self.owner} did not have any cards in their hand to put onto their deck.")
+            return
+        self.owner.hand.remove(card_to_put_back)
+        self.owner.deck.append(card_to_put_back)
+        self.game.broadcast(f"{self.owner} put {a(card_to_put_back)} from their hand onto their deck with their Mandarin.")
+
+
 KINGDOM_CARDS = [
     Crossroads,
     Duchess,
@@ -1034,7 +1086,7 @@ KINGDOM_CARDS = [
     Highway,
     IllGottenGains,
     Inn,
-    # Mandarin,
+    Mandarin,
     # Margrave,
     # Stables,
     # BorderVillage,
