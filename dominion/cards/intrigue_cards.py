@@ -261,11 +261,11 @@ class Steward(ActionCard):
         elif choice == '2 $':
             self.owner.turn.plus_coppers(2)
         elif choice == 'Trash 2 cards from your hand':
-            for trash_num in range(2):
-                prompt = f'Choose a card from your hand to trash ({trash_num + 1}/2).'
-                card_to_trash = self.interactions.choose_card_from_hand(prompt, force=True)
-                if card_to_trash is not None:
-                    self.owner.trash(card_to_trash)
+            prompt = f'You played a Steward. Choose two cards from your hand to trash.'
+            cards_to_trash = self.interactions.choose_cards_from_hand(prompt, force=True, max_cards=2)
+            for card_to_trash in cards_to_trash:
+                self.owner.trash(card_to_trash, message=False)
+            self.game.broadcast(f"{self.owner.name} trashed {Card.group_and_sort_by_cost(cards_to_trash)}.")
 
 
 class Swindler(AttackCard):
