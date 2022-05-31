@@ -210,6 +210,7 @@
                     {waitingForSelection}
                     {selectedAll}
                     {numSelected}
+                    {selectedCardIds}
                     on:clicked={handleClicked}
                 />
             {:else}

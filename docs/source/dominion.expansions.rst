@@ -36,6 +36,14 @@ dominion.expansions.expansion module
    :undoc-members:
    :show-inheritance:
 
+dominion.expansions.hinterlands module
+--------------------------------------
+
+.. automodule:: dominion.expansions.hinterlands
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 dominion.expansions.intrigue module
 -----------------------------------
 

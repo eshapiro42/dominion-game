@@ -11,9 +11,9 @@
     import GameSetup from "./components/game_setup.svelte";
     import Hand from "./components/hand.svelte";
     import Lobby from "./components/lobby.svelte";
+    import MiscellaneousSelection from "./components/miscellaneous_selection.svelte";
     import PlayedCards from "./components/played_cards.svelte";
     import PlayerInfo from "./components/player_info.svelte";
-    import PopUp from "./components/pop_up.svelte";
     import Prizes from "./components/prizes.svelte";
     import SideBar from "./components/side_bar.svelte";
     import SummaryBar from "./components/summary_bar.svelte";
@@ -25,7 +25,7 @@
     let gameStarted = false;
     let roomCreator = false;
     let roomJoined = false;
-    let popUp = {
+    let miscellaneousSelection = {
         show: false,
     };
 
@@ -40,32 +40,38 @@
         gameStarted = true;
     }
 
-    function createPopUp(prompt, force, type, range=null, options=null) {
-        popUp.prompt = prompt;
-        popUp.force = force;
-        popUp.type = type;
+    function createMiscellaneousSelection(prompt, force, type, range=null, options=null, cards=null, waitingForSelection=null) {
+        miscellaneousSelection.prompt = prompt;
+        miscellaneousSelection.force = force;
+        miscellaneousSelection.type = type;
         if (type == "range") {
-            popUp.range = range;
+            miscellaneousSelection.range = range;
         }
         else if (type == "options") {
-            popUp.options = options;
+            miscellaneousSelection.options = options;
         }
-        popUp.show = true;
+        else if (type == "cards") {
+            miscellaneousSelection.cards = cards;
+            miscellaneousSelection.waitingForSelection = waitingForSelection;
+        }
+        miscellaneousSelection.show = true;
     }
 
-    function submitPopUp(event) {
-        if (popUp.force && event.detail.selection == null) {
+    function submitMiscellaneousSelection(event) {
+        if (miscellaneousSelection.force && event.detail.selection == null) {
             alert("You must make a selection.");
             return;
         }
         $socket.emit("response", event.detail.selection);
-        popUp = {
+        miscellaneousSelection = {
             show: false,
             prompt: "",
             force: false,
             type: null,
             range: null,
             options: null,
+            cards: null,
+            waitingForSelection: null,
         }
     }
 
@@ -79,21 +85,36 @@
     $socket.on(
         "choose yes or no",
         function(data) {
-            createPopUp(data.prompt, null, "boolean");
+            createMiscellaneousSelection(data.prompt, null, "boolean");
         }
     );
 
     $socket.on(
         "choose from range",
         function(data) {
-            createPopUp(data.prompt, data.force, "range", {start: data.start, stop: data.stop});
+            createMiscellaneousSelection(data.prompt, data.force, "range", {start: data.start, stop: data.stop});
         }
     );
 
     $socket.on(
         "choose from options",
         function(data) {
-            createPopUp(data.prompt, data.force, "options", null, data.options);
+            createMiscellaneousSelection(data.prompt, data.force, "options", null, data.options);
+        }
+    );
+
+    $socket.on(
+        "choose cards from list",
+        function(data) {
+            var waitingForSelection = {
+                value: true,
+                type: "",
+                prompt: data.prompt,
+                force: data.force,
+                maxCards: data.max_cards,
+                ordered: data.ordered,
+            }
+            createMiscellaneousSelection(data.prompt, data.force, "cards", null, null, data.cards, waitingForSelection)
         }
     );
 
@@ -107,13 +128,15 @@
     $socket.on(
         "response received",
         () => {
-            popUp = {
+            miscellaneousSelection = {
                 show: false,
                 prompt: "",
                 force: false,
                 type: null,
                 range: null,
                 options: null,
+                cards: null,
+                waitingForSelection: null,
             }
         }
     )
@@ -121,7 +144,7 @@
     $socket.on(
         "game over",
         (data) => {
-            createPopUp(data.prompt, false, "alert");
+            createMiscellaneousSelection(data.prompt, false, "alert");
             $socket.disconnect();
         }
     );
@@ -150,16 +173,6 @@
         </div>
     </header>
 
-    <PopUp
-        show={popUp.show}
-        prompt={popUp.prompt}
-        force={popUp.force}
-        type={popUp.type}
-        range={popUp.range}
-        options={popUp.options}
-        on:submit={submitPopUp}
-    />
-
     <Toasts/>
 
     <Lobby 
@@ -176,6 +189,18 @@
         <SummaryBar/>
 
         <SideBar/>
+
+        <MiscellaneousSelection
+            show={miscellaneousSelection.show}
+            prompt={miscellaneousSelection.prompt}
+            force={miscellaneousSelection.force}
+            type={miscellaneousSelection.type}
+            range={miscellaneousSelection.range}
+            options={miscellaneousSelection.options}
+            cards={miscellaneousSelection.cards}
+            waitingForSelection={miscellaneousSelection.waitingForSelection}
+            on:submit={submitMiscellaneousSelection}
+        />
         
         <PlayedCards/>
 

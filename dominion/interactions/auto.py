@@ -1,9 +1,15 @@
-import random
-from typing import List, Optional
+from __future__ import annotations
 
-from ..cards import cards, base_cards
+import random
+from typing import TYPE_CHECKING, List, Optional
+
+from ..cards import base_cards
+from ..cards.cards import CardType
 from ..expansions import CornucopiaExpansion
 from .interaction import Interaction
+
+if TYPE_CHECKING:
+    from ..cards.cards import Card
 
 
 class AutoInteraction(Interaction):
@@ -44,13 +50,13 @@ class AutoInteraction(Interaction):
             time_to_sleep = random.uniform(1, 3) 
             self.socketio.sleep(time_to_sleep)
 
-    def choose_card_from_hand(self, prompt, force, invalid_cards=None) -> Optional[cards.Card]:
+    def choose_card_from_hand(self, prompt, force, invalid_cards=None) -> Optional[Card]:
         cards_chosen = self.choose_cards_from_hand(prompt, force, max_cards=1, invalid_cards=invalid_cards)
         if not cards_chosen:
             return None
         return cards_chosen[0]
 
-    def choose_cards_from_hand(self, prompt, force, max_cards=1, invalid_cards=None) -> List[cards.Card]:
+    def choose_cards_from_hand(self, prompt, force, max_cards=1, invalid_cards=None) -> List[Card]:
         self.sleep_random()
         print(prompt)
         print()
@@ -124,6 +130,53 @@ class AutoInteraction(Interaction):
                 print('That is not a valid choice.\n')
                 raise
 
+    def choose_cards_of_specific_type_from_played_cards(self, prompt, force, card_type, max_cards=1, ordered=False) -> List[Card]:
+        self.sleep_random()
+        print(prompt)
+        print()
+        # Only cards of the correct type can be chosen
+        selectable_cards = [card for card in self.played_cards if card_type in card.types]
+        if not selectable_cards:
+            self.send(f'There are no {card_type.name.lower().capitalize()} cards in your played cards.')
+            return []
+        if max_cards is not None:
+            max_cards = min(max_cards, len(selectable_cards)) # Don't ask for more cards than are available
+        else:
+            max_cards = len(selectable_cards)
+        if force:
+            cards_chosen = random.sample(selectable_cards, max_cards)
+        else:
+            num_cards = random.randint(0, max_cards)
+            cards_chosen = random.sample(selectable_cards, num_cards)
+        return cards_chosen
+
+    def choose_specific_card_type_from_played_cards(self, prompt, card_type):
+        cards_chosen = self.choose_cards_of_specific_type_from_played_cards(prompt, force=False, card_type=card_type, max_cards=1)
+        if not cards_chosen:
+            return None
+        return cards_chosen[0]
+
+
+    def choose_cards_of_specific_type_from_discard_pile(self, prompt, force, card_type, max_cards=1) -> List[Card]:
+        self.sleep_random()
+        print(prompt)
+        print()
+        # Only cards of the correct type can be chosen
+        selectable_cards = [card for card in self.discard_pile if card_type in card.types]
+        if not selectable_cards:
+            self.send(f'There are no {card_type.name.lower().capitalize()} cards in your discard pile.')
+            return []
+        if max_cards is not None:
+            max_cards = min(max_cards, len(selectable_cards)) # Don't ask for more cards than are available
+        else:
+            max_cards = len(selectable_cards)
+        if force:
+            cards_chosen = random.sample(selectable_cards, max_cards)
+        else:
+            num_cards = random.randint(0, max_cards)
+            cards_chosen = random.sample(selectable_cards, num_cards)
+        return cards_chosen
+
     def choose_card_from_discard_pile(self, prompt, force):
         self.sleep_random()
         print(prompt)
@@ -166,7 +219,7 @@ class AutoInteraction(Interaction):
         print()
         while True:
             try:
-                available_treasures = [card for card in self.hand if cards.CardType.TREASURE in card.types]
+                available_treasures = [card for card in self.hand if CardType.TREASURE in card.types]
                 if not available_treasures:
                     print('There are no treasures in your hand.\n')
                     return []
@@ -194,7 +247,7 @@ class AutoInteraction(Interaction):
                     choices = list(range(1, len(buyable_card_stacks) + 1))
                     # Weight by cost (more expensive are more likely, coppers and estates are unlikely)
                     weights = [
-                        0 if cards.CardType.CURSE in card_class.types \
+                        0 if CardType.CURSE in card_class.types \
                         else 1 if card_class == base_cards.Copper or card_class == base_cards.Estate \
                         else self.game.current_turn.get_cost(card_class) * 5 \
                         for card_class in buyable_card_stacks
@@ -210,7 +263,7 @@ class AutoInteraction(Interaction):
                     print(f'Enter choice 1-{len(buyable_card_stacks)} (0 to skip): ', end='')
                     choices = list(range(0, len(buyable_card_stacks) + 1))
                     weights = [1] + [
-                        0 if cards.CardType.CURSE in card_class.types \
+                        0 if CardType.CURSE in card_class.types \
                         else 1 if card_class == base_cards.Copper or card_class == base_cards.Estate \
                         else self.game.current_turn.get_cost(card_class) * 5 \
                         for card_class in buyable_card_stacks
@@ -377,6 +430,29 @@ class AutoInteraction(Interaction):
             except (IndexError, ValueError):
                 print('That is not a valid choice.\n')
                 raise
+
+    def choose_cards_from_list(self, prompt: str, cards: List[Card], force: bool, max_cards: int = 1, ordered: bool = False) -> List[Card]:
+        self.sleep_random()
+        print(prompt)
+        print()
+        if not cards:
+            self.send('There are no cards to choose from.')
+            return []
+        if max_cards is not None:
+            max_cards = min(max_cards, len(cards)) # Don't ask for more cards than we have
+        while True:
+            try:
+                self.display_hand()
+                if force:
+                    cards_chosen = random.sample(cards, max_cards)
+                else:
+                    num_cards = random.randint(0, max_cards)
+                    cards_chosen = random.sample(cards, num_cards)
+                return cards_chosen
+            except (IndexError, ValueError):
+                self.send('That is not a valid choice.')
+            except ArithmeticError:
+                self.send(f"You must choose exactly {s(max_cards, 'card')}.")
 
     def new_turn(self):
         print(f"{self.player}'s turn.")

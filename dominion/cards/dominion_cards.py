@@ -1,5 +1,5 @@
 import math
-from .cards import CardType, ReactionType, ActionCard, AttackCard, ReactionCard, VictoryCard
+from .cards import Card, CardType, ReactionType, ActionCard, AttackCard, ReactionCard, VictoryCard
 from .base_cards import Copper, Silver, Gold, Curse
 from ..hooks import TreasureHook
 from ..grammar import a, s
@@ -33,7 +33,7 @@ class Cellar(ActionCard):
             self.game.broadcast(f'{self.owner} did not discard or draw any cards.')
             return
         for card_to_discard in cards_to_discard:
-            self.owner.discard(card_to_discard)
+            self.owner.discard_from_hand(card_to_discard)
         self.owner.draw(len(cards_to_discard))
 
 
@@ -78,15 +78,17 @@ class Moat(ReactionCard):
     extra_buys = 0
     extra_coppers = 0
 
+    @property
+    def reacts_to(self):
+        return [ReactionType.ATTACK]
+
     def action(self):
         pass
 
-    @property
-    def can_react(self):
-        return True
-
-    def react(self):
-        return ReactionType.IMMUNITY, True # Will make the owner immune to attacks and prevents the Moat from being played twice
+    def react_to_attack(self):
+        immune = True
+        ignore_card_class_next_time = True
+        return immune, ignore_card_class_next_time # Will make the owner immune to attacks and prevents the Moat from being played twice
 
 
 class Harbinger(ActionCard):
@@ -176,8 +178,7 @@ class Vassal(ActionCard):
         if card is None:
             self.game.broadcast(f'{self.owner} has no cards left to draw from.')
             return
-        self.owner.discard_pile.append(card)
-        self.game.broadcast(f'{self.owner} discarded {a(card)}.')
+        self.owner.discard(card)
         if CardType.ACTION in card.types:
             prompt = f'You played a Vassal and revealed {a(card.name)}. Would you like to play it?'
             if self.interactions.choose_yes_or_no(prompt=prompt):
@@ -310,7 +311,7 @@ class Militia(AttackCard):
         prompt = f"{attacker} has played a Militia. Choose {s(number_to_discard, 'card')} to discard."
         cards_to_discard = player.interactions.choose_cards_from_hand(prompt=prompt, force=True, max_cards=number_to_discard)
         for card_to_discard in cards_to_discard:
-            player.discard(card_to_discard)
+            player.discard_from_hand(card_to_discard)
 
     def action(self):
         pass
@@ -364,7 +365,7 @@ class Poacher(ActionCard):
             prompt = f"You played a Poacher and there are {number_to_discard} empty Supply piles. Choose {s(number_to_discard, 'card')} to discard."
             cards_to_discard = self.owner.interactions.choose_cards_from_hand(prompt=prompt, force=True, max_cards=number_to_discard)
             for card_to_discard in cards_to_discard:
-                self.owner.discard(card_to_discard)
+                self.owner.discard_from_hand(card_to_discard)
 
 
 class Remodel(ActionCard):
@@ -473,8 +474,7 @@ class Bandit(AttackCard):
         revealed_cards = trashable_cards + other_cards
         if not trashable_cards:
             # The player discards both cards
-            self.game.broadcast(f"{player} discards {', '.join(map(str, other_cards))}.")
-            player.discard_pile.extend(other_cards)
+            player.discard(other_cards)
         elif len(trashable_cards) == 1:
             # The player trashes the only possible card
             card_to_trash = trashable_cards[0]
@@ -482,26 +482,25 @@ class Bandit(AttackCard):
             self.game.broadcast(f'{player} trashed {a(card_to_trash)}.')
             try:
                 card_to_discard = other_cards[0]
-                player.discard_pile.append(card_to_discard)
-                self.game.broadcast(f'{player} discarded {a(card_to_discard)}.')
+                player.discard(card_to_discard)
             except IndexError:
                 pass
         elif len(trashable_cards) == 2 and type(trashable_cards[0]) == type(trashable_cards[1]):
             # The player trashes either card since they're the same
             card_to_trash = trashable_cards[0]
             card_to_discard = trashable_cards[1]
-            self.game.broadcast(f'{player} trashes {a(card_to_trash)} and discards {a(card_to_discard)}.')
+            self.game.broadcast(f'{player} trashed {a(card_to_trash)} and discarded {a(card_to_discard)}.')
             self.supply.trash(card_to_trash)
-            player.discard_pile.append(card_to_discard)
+            player.discard(card_to_discard, message=False)
         else:
             # The player must choose a card to trash
             prompt = f'{attacker} played a Bandit. You must choose a card to trash.'
             card_to_trash = player.interactions.choose_from_options(prompt=prompt, options=trashable_cards, force=True)
             trashable_cards.remove(card_to_trash)
             card_to_discard = trashable_cards[0]
-            self.game.broadcast(f'{player} trashes {a(card_to_trash)} and discards {a(card_to_discard)}.')
+            self.game.broadcast(f'{player} trashed {a(card_to_trash)} and discarded {a(card_to_discard)}.')
             self.supply.trash(card_to_trash)
-            player.discard_pile.append(card_to_discard)
+            player.discard(card_to_discard, message=False)
 
     def action(self):
         self.owner.gain(Gold)
@@ -607,8 +606,7 @@ class Library(ActionCard):
                     self.owner.hand.append(card_drawn)
                     self.game.broadcast(f"+1 card → {s(len(self.owner.hand), 'card')} in hand.")
                 else:
-                    self.owner.discard_pile.append(card_drawn)
-                    self.game.broadcast(f'{self.owner} discarded {a(card_drawn)}.')
+                    self.owner.discard(card_drawn)
             else:
                 self.interactions.send('Adding it to your hand.')
                 self.owner.hand.append(card_drawn)
@@ -703,26 +701,20 @@ class Sentry(ActionCard):
                 self.game.broadcast(f'{self.owner} trashed {a(card)}.')
                 self.supply.trash(card)
             elif choice == 'Discard':
-                self.game.broadcast(f'{self.owner} discarded {a(card)}.')
-                self.owner.discard_pile.append(card)
+                self.owner.discard(card)
             elif choice == 'Return to deck':
                 self.interactions.send(f'You set the {card} aside to return to your deck.')
                 cards_kept.append(card)
-        self.interactions.send(f"Cards set aside to return to your deck: {', '.join(map(str, cards_kept))}.")
-        if len(cards_kept) == 1:
-            # If one card was kept, put it back on top of the deck
-            self.game.broadcast(f'{self.owner} put one card back on top of their deck.')
-            card_kept = cards_kept[0]
-            self.owner.deck.append(card_kept)
-        elif len(cards_kept) == 2:
-            # If more than one, put the kept cards back on top in the desired order
-            prompt = 'You must return these cards to the top of your deck. Which card would you like to be on top?'
-            top_card = self.interactions.choose_from_options(prompt=prompt, options=cards_kept, force=True)
-            cards_kept.remove(top_card)
-            bottom_card = cards_kept[0]
-            self.owner.deck.append(bottom_card)
-            self.owner.deck.append(top_card)
-            self.game.broadcast(f'{self.owner} put two cards back on top of their deck.')
+        if not cards_kept:
+            return
+        # If there is only one card (or card class) left, do not bother asking the player for the order
+        if len(set([type(card) for card in cards_kept])) != 1:
+            prompt = "You played a Sentry and must return these revealed cards to your deck in any order. (The last card you choose will be the top card of your deck.)"
+            cards_kept = self.owner.interactions.choose_cards_from_list(prompt, cards_kept, force=True, max_cards=len(cards_kept), ordered=True)
+        for card in cards_kept:
+            self.owner.deck.append(card)
+        self.owner.interactions.send(f"You put {Card.group_and_sort_by_cost(cards_kept)} back onto your deck.")
+        self.game.broadcast(f"{self.owner.name} put {s(len(cards_kept), 'card')} back on top of their deck.")
 
 
 class Witch(AttackCard):
@@ -892,8 +884,7 @@ class Spy(AttackCard):
             prompt = f'{revealer} revealed {a(card)} with your Spy. What would you like {revealer} to do with it?'
         choice = chooser.interactions.choose_from_options(prompt=prompt, options=options, force=True)
         if choice == 'Discard':
-            revealer.discard_pile.append(card)
-            self.game.broadcast(f'{revealer} discarded {a(card)}.')
+            revealer.discard(card)
         elif choice == 'Return to deck':
             revealer.deck.append(card)
             self.game.broadcast(f'{revealer} returned the {card} to their deck.')
@@ -964,8 +955,7 @@ class Thief(AttackCard):
                 card_to_discard = treasures[0]
             self.game.broadcast(f'{player} trashed {a(card_to_trash)}.')
             if card_to_discard is not None:
-                player.discard_pile.append(card_to_discard)
-                self.game.broadcast(f'{player} discarded {a(card_to_discard)}.')
+                player.discard(card_to_discard)
             # Allow the attacker to gain the trashed card
             prompt = f"Would you like to gain {player}'s trashed {card_to_trash}?"
             if attacker.interactions.choose_yes_or_no(prompt=prompt):
@@ -976,8 +966,7 @@ class Thief(AttackCard):
                 self.supply.trash(card_to_trash)
         else:
             # If no Treasures were revealed, they discard both revealed cards
-            player.discard_pile.extend(revealed_cards)
-            self.game.broadcast(f"{player} discarded: {', '.join(map(str, revealed_cards))}.")
+            player.discard(revealed_cards)
 
     @property
     def prompt(self):
@@ -1018,7 +1007,7 @@ class Adventurer(ActionCard):
             self.owner.hand.extend(revealed_treasures)
         if revealed_other_cards:
             self.game.broadcast(f"Other revealed cards: {', '.join(map(str, revealed_other_cards))}. {self.owner} discards these.")
-            self.owner.discard_pile.extend(revealed_other_cards)
+            self.owner.discard(revealed_other_cards)
 
 
 KINGDOM_CARDS = [

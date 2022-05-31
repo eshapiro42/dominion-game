@@ -8,7 +8,7 @@ from collections import defaultdict
 from math import inf
 from typing import TYPE_CHECKING, Dict, List, Type
 
-from .cards import cards, base_cards, prosperity_cards, intrigue_cards, cornucopia_cards
+from .cards import cards, base_cards, prosperity_cards, intrigue_cards, cornucopia_cards, hinterlands_cards
 
 if TYPE_CHECKING:
     from .cards.recommended_sets.recommended_set import RecommendedSet
@@ -203,7 +203,7 @@ class Supply:
         self._customization = Customization()
         self._possible_kingdom_card_classes: List[Type(Card)] = []
         # TODO: Remove these (they are for debugging specific cards)
-        # self.customization.required_card_classes.add(cornucopia_cards.YoungWitch)
+        # self.customization.required_card_classes.add(hinterlands_cards.Crossroads)
 
     @property
     def num_players(self) -> int:
@@ -396,6 +396,7 @@ class Supply:
     def draw(self, card_class: Type[Card]):
         """
         Draw a card of the specified card class from the supply.
+
         In the case of a :obj:`FiniteSupplyStack`, the quantity
         of cards in the stack will be automatically decremented.
 
@@ -403,6 +404,22 @@ class Supply:
             card_class: The card class to draw.
         """
         return self.card_stacks[card_class].draw()
+
+    def return_card(self, card: Card):
+        """
+        Return a card to the supply.
+
+        In the case of a :obj:`FiniteSupplyStack`, the quantity
+        of cards in the stack wil be automatically incremented.
+
+        The card will need to be manually removed from whatever
+        deque it was previously occupying.
+
+        Args:
+            card: The card to return to the supply.
+        """
+        card_class = type(card)
+        self.card_stacks[card_class].return_card()
 
     def trash(self, card: Card):
         """
@@ -521,6 +538,13 @@ class SupplyStack(metaclass=ABCMeta):
         """
         pass
 
+    @abstractmethod
+    def return_card(self):
+        """
+        Return a card to its stack.
+        """
+        pass
+
     @property
     @abstractmethod
     def cards_remaining(self) -> int:
@@ -563,6 +587,9 @@ class InfiniteSupplyStack(SupplyStack):
     def draw(self) -> Card:
         card = self.card_class()
         return card
+
+    def return_card(self):
+        pass
 
     @property
     def cards_remaining(self) -> int:
@@ -619,6 +646,13 @@ class FiniteSupplyStack(SupplyStack):
             return card
         else:
             raise SupplyStackEmptyError(self.card_class)
+
+    def return_card(self):
+        """
+        Return a card to its stack and increment its number of cards
+        remaining by one.
+        """
+        self._cards_remaining += 1
 
     @property
     def cards_remaining(self) -> int:

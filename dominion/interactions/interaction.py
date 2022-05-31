@@ -146,6 +146,19 @@ class Interaction(metaclass=ABCMeta):
         pass
 
     @abstractmethod
+    def choose_cards_from_hand(self, prompt: str, force: bool, max_cards: int = 1, invalid_cards: List[Card] | None = None) -> List[Card]:
+        """
+        Request the player to choose cards from their hand.
+
+        Args:
+            prompt: The prompt to display to the player.
+            force: Whether or not to force the player to choose the maximum number of cards. If False, the player may choose fewer or no cards.
+            max_cards: The maximum number of cards to choose.
+            invalid_cards: Cards that are not allowed to be chosen. If None (the default), all cards of the specified type are allowed.
+        """
+        pass
+
+    @abstractmethod
     def choose_specific_card_class_from_hand(self, prompt: str, force: bool, card_class: Type[Card]) -> Card | None:
         """
         Request the player to choose a card of a specific card class from their hand.
@@ -165,6 +178,44 @@ class Interaction(metaclass=ABCMeta):
         Args:
             prompt: The prompt to display to the player.
             card_type: The card type to be chosen.
+        """
+        pass
+
+    @abstractmethod
+    def choose_cards_of_specific_type_from_played_cards(self, prompt: str, force: bool, card_type: CardType, max_cards: int | None = 1, ordered: bool = False) -> List[Card]:
+        """
+        Request the player to choose cards of a specified type from their played cards.
+
+        Args:
+            prompt: The prompt to display to the player.
+            force: Whether or not to force the player to choose the maximum number of cards. If False, the player may choose fewer or no cards.
+            card_type: The card type to be chosen.
+            max_cards: The maximum number of cards to choose. If None, all cards of the specified type are allowed.
+            ordered: Whether or not the order of the cards matters (mainly for client-side display purposes).
+        """
+        pass
+
+    @abstractmethod
+    def choose_specific_card_type_from_played_cards(self, prompt: str, card_type: CardType) -> Card | None:
+        """
+        Request the player to choose a card of the specified type from their played cards.
+
+        Args:
+            prompt: The prompt to display to the player.
+            card_type: The card type to be chosen.
+        """
+        pass
+
+    @abstractmethod
+    def choose_cards_of_specific_type_from_discard_pile(self, prompt: str, force: bool, card_type: CardType, max_cards: int | None = 1) -> List[Card]:
+        """
+        Request the player to choose cards of a specific type from their discard pile.
+
+        Args:
+            prompt: The prompt to display to the player.
+            force: Whether or not to force the player to choose the maximum number of cards. If False, the player may choose fewer or no cards.
+            card_type: The card type to be chosen.
+            max_cards: The maximum number of cards to choose. If None, all cards of the specified type are allowed.
         """
         pass
 
@@ -265,6 +316,20 @@ class Interaction(metaclass=ABCMeta):
             prompt: The prompt to display to the player.
             options: The list of options to choose from.
             force: Whether or not to force the player to choose an option.
+        """
+        pass
+
+    @abstractmethod
+    def choose_cards_from_list(self, prompt: str, cards: List[Card], force: bool, max_cards: int = 1, ordered: bool = False) -> List[Card]:
+        """
+        Request the player to choose cards from a list of cards.
+
+        Args:
+            prompt: The prompt to display to the player.
+            cards: The list of cards to choose from.
+            force: Whether or not to force the player to choose the maximum number of cards. If False, the player may choose fewer or no cards.
+            max_cards: The maximum number of cards to choose.
+            ordered: Whether or not the order of the cards matters (mainly for client-side display purposes).
         """
         pass
 

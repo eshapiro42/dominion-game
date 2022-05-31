@@ -6,13 +6,11 @@
     
     const dispatch = createEventDispatcher();
     
-    // import GiantCard from "./giant_card.svelte";
-    // import Modal from "./modal.svelte";
-
     export let name;
     export let effects;
     export let description;
     export let cost;
+    export let types = [];
     export let type = "";
     export let id;
     export let quantity = null;
@@ -22,19 +20,21 @@
     export let numSelected;
     export let selected = false;
     export let selectedAll;
+    export let selectedCardIds = [];
     export let invalidCardNames = [];
     export let invalidCardIds = [];
 
     let typeLowerCase = type.toLowerCase();
     let hovering = false;
     let selectable = true;
+    let selectionIndex = null;
 
-    $: action = typeLowerCase.includes("action") && !typeLowerCase.includes("attack") && !typeLowerCase.includes("reaction");
-    $: attack = typeLowerCase.includes("attack")
-    $: reaction = typeLowerCase.includes("reaction")
-    $: victory = typeLowerCase.includes("victory");
-    $: curse = typeLowerCase.includes("curse");
-    $: treasure = typeLowerCase.includes("treasure");
+    $: action = types.includes("action") && !types.includes("attack") && !types.includes("reaction");
+    $: attack = types.includes("attack");
+    $: reaction = types.includes("reaction");
+    $: victory = types.includes("victory");
+    $: curse = types.includes("curse");
+    $: treasure = types.includes("treasure");
     $: basicTreasure = ["Copper", "Silver", "Gold", "Platinum"].includes(name);
     $: basicVictory = ["Curse", "Estate", "Duchy", "Province", "Colony"].includes(name);
 
@@ -55,7 +55,7 @@
         else {
             selectable = (
                 // Don't allow selection if this card is the wrong type
-                type.toLowerCase().includes(waitingForSelection.type.toLowerCase())
+                (types.includes(waitingForSelection.type.toLowerCase()) || waitingForSelection.type == "")
                 // Don't allow selection if the card costs more than the maximum cost
                 && (waitingForSelection.maxCost == null || cost <= waitingForSelection.maxCost)
                 // Don't allow selection if an exact cost is specified and the card doesn't have the exact cost
@@ -120,27 +120,14 @@
             }
         }
     }
-</script>
 
-<!-- <Modal 
-    show={hovering}
-    on:click = {
-        () => {
-            hovering = false;
-        }
+    $: if (selected) {
+        selectionIndex = selectedCardIds.indexOf(id) + 1;
     }
->
-    <span slot="contents">
-        <GiantCard
-            {name}
-            {effects}
-            {description}
-            {cost}
-            {type}
-            {quantity}
-        />
-    </span>
-</Modal> -->
+    else {
+        selectionIndex = null;
+    }
+</script>
 
 <main
     in:fade
@@ -174,6 +161,11 @@
             {expansion}
         </span>
     </span>
+    {#if selectionIndex != null && waitingForSelection.ordered}
+        <span class="selection-index">
+            {selectionIndex}
+        </span>
+    {/if}
     <ul class="effects">
         {#each renderedEffects as effect}
             <li>{@html effect}</li>
@@ -209,17 +201,6 @@
     $light-text-color: #dadada;
     $point: #100e17;
     $point-light: rgb(33, 29, 47);
-
-    $giant-card-linear-multiplier: 2;
-    $giant-card-width: $giant-card-linear-multiplier * $width;
-    $giant-card-height: $giant-card-linear-multiplier * $height;
-    $giant-font-size: $giant-card-linear-multiplier * $font-size;
-    $giant-card-padding: $giant-card-linear-multiplier * $padding;
-    $giant-card-padding-basis: $giant-card-linear-multiplier * $padding-basis;
-    $giant-card-header-padding: 0px 0px $giant-card-linear-multiplier * $padding-basis 0px;
-    $giant-card-corner-radius: $giant-card-linear-multiplier * $corner-radius;
-    $giant-card-margin: $giant-card-linear-multiplier * $margin;
-
 
     main {
         border: 1px solid slategrey;
@@ -272,6 +253,23 @@
         transition-delay: 1s;
     }
 
+    main .selection-index {
+        position: absolute;
+        bottom: 0%;
+        left: 50%;
+        transform: translate(-50%, 0);
+        background-color: #343338;
+        color: #dadada;
+        font-size: 85%;
+        border: 3px solid red;
+        border-bottom: 0;
+        border-top-left-radius: $corner-radius;
+        border-top-right-radius: $corner-radius;
+        padding: 7px;
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+
     .selected {
         border: 3px solid red;
         transform: translateY(-20px);
@@ -283,7 +281,7 @@
         color: $light-text-color;
     }
 
-    .action .hoverable-text {
+    .action .hoverable-text, .action .selection-index {
         background-color: #dadada;
         color: #343338;
     }
@@ -293,7 +291,7 @@
         color: $dark-text-color;
     }
 
-    .attack .hoverable-text {
+    .attack .hoverable-text, .attack .selection-index {
         color: #ffcccc;
     }
 
@@ -302,7 +300,7 @@
         color: $dark-text-color;
     }
 
-    .reaction .hoverable-text {
+    .reaction .hoverable-text, .reaction .selection-index {
         color: #80bfff;
     }
 
@@ -311,7 +309,7 @@
         color: $dark-text-color;
     }
 
-    .victory .hoverable-text {
+    .victory .hoverable-text, .victory .selection-index {
         background-color: #343338;
         color: #c1f0c1;
     }
@@ -321,7 +319,7 @@
         color: $dark-text-color;
     }
 
-    .curse .hoverable-text {
+    .curse .hoverable-text, .curse .selection-index {
         color: #dab3ff;
     }
 
@@ -330,7 +328,7 @@
         color: $dark-text-color;
     }
 
-    .treasure .hoverable-text {
+    .treasure .hoverable-text, .treasure .selection-index {
         color: #fff0b3;
     }
 

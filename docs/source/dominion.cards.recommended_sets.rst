@@ -4,6 +4,14 @@ dominion.cards.recommended\_sets package
 Submodules
 ----------
 
+dominion.cards.recommended\_sets.cornucopia\_hinterlands module
+---------------------------------------------------------------
+
+.. automodule:: dominion.cards.recommended_sets.cornucopia_hinterlands
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 dominion.cards.recommended\_sets.dominion module
 ------------------------------------------------
 
@@ -16,6 +24,14 @@ dominion.cards.recommended\_sets.dominion\_cornucopia module
 ------------------------------------------------------------
 
 .. automodule:: dominion.cards.recommended_sets.dominion_cornucopia
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+dominion.cards.recommended\_sets.dominion\_hinterlands module
+-------------------------------------------------------------
+
+.. automodule:: dominion.cards.recommended_sets.dominion_hinterlands
    :members:
    :undoc-members:
    :show-inheritance:
@@ -36,6 +52,14 @@ dominion.cards.recommended\_sets.dominion\_prosperity module
    :undoc-members:
    :show-inheritance:
 
+dominion.cards.recommended\_sets.hinterlands module
+---------------------------------------------------
+
+.. automodule:: dominion.cards.recommended_sets.hinterlands
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 dominion.cards.recommended\_sets.intrigue module
 ------------------------------------------------
 
@@ -48,6 +72,14 @@ dominion.cards.recommended\_sets.intrigue\_cornucopia module
 ------------------------------------------------------------
 
 .. automodule:: dominion.cards.recommended_sets.intrigue_cornucopia
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+dominion.cards.recommended\_sets.intrigue\_hinterlands module
+-------------------------------------------------------------
+
+.. automodule:: dominion.cards.recommended_sets.intrigue_hinterlands
    :members:
    :undoc-members:
    :show-inheritance:
@@ -72,6 +104,14 @@ dominion.cards.recommended\_sets.prosperity\_cornucopia module
 --------------------------------------------------------------
 
 .. automodule:: dominion.cards.recommended_sets.prosperity_cornucopia
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+dominion.cards.recommended\_sets.prosperity\_hinterlands module
+---------------------------------------------------------------
+
+.. automodule:: dominion.cards.recommended_sets.prosperity_hinterlands
    :members:
    :undoc-members:
    :show-inheritance:

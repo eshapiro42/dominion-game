@@ -1,14 +1,21 @@
+from __future__ import annotations
+
 import math
 
 from gevent import Greenlet, joinall
+from typing import TYPE_CHECKING, List, Tuple
 
-from .cards import CardType, Card, TreasureCard, ActionCard, AttackCard, ReactionCard, VictoryCard, CurseCard
+from .cards import CardType, Card, ReactionType, TreasureCard, ActionCard, AttackCard, ReactionCard, VictoryCard, CurseCard
 from . import base_cards
 from ..hooks import TreasureHook, PreBuyHook, PostGainHook
 from ..grammar import a, s
 
+if TYPE_CHECKING:
+    from ..player import Player
+
 
 # KINGDOM CARDS
+
 
 class Courtyard(ActionCard):
     name = 'Courtyard'
@@ -148,7 +155,7 @@ class Masquerade(ActionCard):
     extra_coppers = 0
 
     def action(self):
-        def player_reaction(player, player_to_left):
+        def player_reaction(player: Player, player_to_left: Player):
             # Choose a card to pass
             nonlocal cards_passed
             if player == self.owner:
@@ -162,7 +169,7 @@ class Masquerade(ActionCard):
             self.game.broadcast(f'{player} passed a card to {player_to_left}.')
 
         # Get all players with cards in hand and the closest such player to their left
-        self.game.broadcast('Each player with any cards in hand much choose a card to pass to the next such player to their left.')
+        self.game.broadcast('Each player with any cards in hand must choose a card to pass to the next such player to their left.')
         players_with_cards = [player for player in self.owner.other_players if len(player.hand) > 0]
         if len(self.owner.hand) > 0:
             players_with_cards = [self.owner] + players_with_cards
@@ -171,7 +178,7 @@ class Masquerade(ActionCard):
             self.game.broadcast('There are not enough players with cards in their hand for any cards to be passed.')
         else:
             greenlets = []
-            cards_passed = [] # This will be a list of [(card_received, old_owner, new_owner)]
+            cards_passed: List[Tuple[Card, Player, Player]] = [] # This will be a list of [(card_received, old_owner, new_owner)]
             for player in players_with_cards:
                 player_idx = players_with_cards.index(player)
                 try:
@@ -254,11 +261,11 @@ class Steward(ActionCard):
         elif choice == '2 $':
             self.owner.turn.plus_coppers(2)
         elif choice == 'Trash 2 cards from your hand':
-            for trash_num in range(2):
-                prompt = f'Choose a card from your hand to trash ({trash_num + 1}/2).'
-                card_to_trash = self.interactions.choose_card_from_hand(prompt, force=True)
-                if card_to_trash is not None:
-                    self.owner.trash(card_to_trash)
+            prompt = f'You played a Steward. Choose two cards from your hand to trash.'
+            cards_to_trash = self.interactions.choose_cards_from_hand(prompt, force=True, max_cards=2)
+            for card_to_trash in cards_to_trash:
+                self.owner.trash(card_to_trash, message=False)
+            self.game.broadcast(f"{self.owner.name} trashed {Card.group_and_sort_by_cost(cards_to_trash)}.")
 
 
 class Swindler(AttackCard):
@@ -367,7 +374,7 @@ class Baron(ActionCard):
         prompt = 'You have an Estate in your hand. Would you like to discard it for +4 $?'
         if any(isinstance(card, base_cards.Estate) for card in self.owner.hand) and self.interactions.choose_yes_or_no(prompt):
             estate_to_discard = [card for card in self.owner.hand if isinstance(card, base_cards.Estate)][0]
-            self.owner.discard(estate_to_discard)
+            self.owner.discard_from_hand(estate_to_discard)
             self.owner.turn.plus_coppers(4)
         else:
             self.owner.gain(base_cards.Estate)
@@ -444,13 +451,14 @@ class Diplomat(ReactionCard):
     extra_coppers = 0
 
     @property
-    def can_react(self):
+    def reacts_to(self):
+        # Can only react to attacks if the player has 5 or more cards
         if len(self.owner.hand) >= 5:
-            return True
+            return [ReactionType.ATTACK]
         else:
-            return False
+            return []
 
-    def react(self):
+    def react_to_attack(self):
         # Draw 2 cards
         self.owner.draw(2)
         # Discard 3 cards
@@ -458,8 +466,10 @@ class Diplomat(ReactionCard):
         prompt = f"Choose 3 cards to discard."
         cards_to_discard = self.owner.interactions.choose_cards_from_hand(prompt, force=True, max_cards=3)
         for card_to_discard in cards_to_discard:
-            self.owner.discard(card_to_discard)
-        return None, True # Can be used again 
+            self.owner.discard_from_hand(card_to_discard)
+        immune = False
+        ignore_card_class_next_time = False
+        return immune, ignore_card_class_next_time # Does not give immunity, but can be used again.
 
     def action(self):
         # If you have 5 or fewer cards in hand, +2 Actions
@@ -531,7 +541,7 @@ class Mill(ActionCard, VictoryCard):
             prompt = f"Choose 2 cards to discard."
             cards_to_discard = self.interactions.choose_cards_from_hand(prompt, force=True, max_cards=2)
             for card_to_discard in cards_to_discard:
-                self.owner.discard(card_to_discard)
+                self.owner.discard_from_hand(card_to_discard)
             self.owner.turn.plus_coppers(2)
 
 
@@ -689,7 +699,7 @@ class Minion(AttackCard):
             # Discard your hand
             cards_to_discard = list(player.hand) # Make a shallow copy
             for card in cards_to_discard:
-                player.discard(card)
+                player.discard_from_hand(card)
             # Draw four cards
             player.draw(4)   
 
@@ -708,7 +718,7 @@ class Minion(AttackCard):
             # Discard your hand
             cards_to_discard = list(self.owner.hand) # Make a shallow copy
             for card in cards_to_discard:
-                self.owner.discard(card)
+                self.owner.discard_from_hand(card)
             # Draw four cards
             self.owner.draw(4)
 
@@ -847,7 +857,7 @@ class Torturer(AttackCard):
             prompt = f"{attacker} has played a Torturer. Choose {s(number_to_discard, 'card')} to discard."
             cards_to_discard = player.interactions.choose_cards_from_hand(prompt, force=True, max_cards=number_to_discard)
             for card_to_discard in cards_to_discard:
-                player.discard(card_to_discard)
+                player.discard_from_hand(card_to_discard)
         elif choice == f'Gain a Curse to your hand ({num_curses_in_supply} in the Supply)':
             player.gain_to_hand(base_cards.Curse)
 

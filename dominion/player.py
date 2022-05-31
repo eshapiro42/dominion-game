@@ -5,14 +5,14 @@ import random
 from collections import deque
 from typing import TYPE_CHECKING, Optional, Deque, List, Type
 
-from .cards import base_cards, intrigue_cards, prosperity_cards, cornucopia_cards
+from .cards import base_cards, intrigue_cards, prosperity_cards, cornucopia_cards, hinterlands_cards
+from .cards.cards import Card, CardType, ReactionCard, ReactionType
 from .expansions import ProsperityExpansion
 from .grammar import a, s
 from .supply import SupplyStackEmptyError
 
 if TYPE_CHECKING:
     from flask_socketio import SocketIO
-    from .cards.cards import Card
     from .game import Game
     from .interactions.interaction import Interaction
     from .supply import Supply
@@ -139,7 +139,41 @@ class Player:
         # Other players are those after, then those before, in the correct turn order
         self.other_players = players_after + players_before
 
-    def process_post_gain_hooks(self, card, where_it_went):
+    def process_post_gain_reactions(self, card: Card, where_it_went: Deque, gained_from_trash: bool = False) -> Card:
+        """
+        Allow the player to react to a card being gained.
+
+        Args:
+            gained_card: The card that was gained.
+            where_it_went: The deque to which the card was added.
+            gained_from_trash: Whether the card was gained from the trash (otherwise it was gained from the Supply).
+
+        Returns:
+            The card that was gained.
+        """
+        def get_reaction_cards_in_hand():
+            # Get all reaction cards in the player's hand that can react to an attack
+            return set(card for card in self.hand if CardType.REACTION in card.types and ReactionType.GAIN in card.reacts_to)
+
+        # Allow the player to play reaction cards
+        reaction_cards_in_hand = get_reaction_cards_in_hand()
+        reaction_cards_to_ignore = set()
+        while (reaction_cards_remaining := reaction_cards_in_hand - reaction_cards_to_ignore):
+            invalid_cards = [card for card in self.hand if card not in reaction_cards_remaining]
+            prompt = f"You gained a {card.name}. You have {s(len(reaction_cards_remaining), 'playable Reaction card', print_number=False)} in your hand. You may play any or all of them, one at a time."
+            reaction_card: ReactionCard = self.interactions.choose_card_from_hand(prompt=prompt, force=False, invalid_cards=invalid_cards)
+            if reaction_card is None:
+                # The player is forfeiting their chance to react
+                self.interactions.send('You forfeited your opportunity to react.')
+                break
+            print(type(reaction_card))
+            card, where_it_went, ignore_card_class_next_time = reaction_card.react_to_gain(card, where_it_went, gained_from_trash)
+            if ignore_card_class_next_time:
+                reaction_cards_to_ignore = reaction_cards_to_ignore.union(set(card for card in self.hand if isinstance(card, type(reaction_card))))
+            reaction_cards_in_hand = get_reaction_cards_in_hand()
+        return card
+
+    def process_post_gain_hooks(self, card: Card, where_it_went: Deque):
         """
         Process registered hooks after a card is gained.
 
@@ -152,7 +186,9 @@ class Player:
         if type(card) in self.supply.post_gain_hooks:
             # Activate any post-gain hooks caused by gaining the card
             for post_gain_hook in self.supply.post_gain_hooks[type(card)]:
-                post_gain_hook(self, card, where_it_went)
+                print(type(post_gain_hook))
+                if (where := post_gain_hook(self, card, where_it_went)) is not None:
+                    where_it_went = where
                 if not post_gain_hook.persistent:
                     expired_hooks.append(post_gain_hook)
             # Remove any non-persistent hooks
@@ -164,24 +200,70 @@ class Player:
             if type(card) in self.turn.post_gain_hooks:
                 # Activate any post-gain hooks caused by gaining the card
                 for post_gain_hook in self.turn.post_gain_hooks[type(card)]:
-                    post_gain_hook(self, card, where_it_went)
+                    print(type(post_gain_hook))
+                    if (where := post_gain_hook(self, card, where_it_went)) is not None:
+                        where_it_went = where
                     if not post_gain_hook.persistent:
                         expired_hooks.append(post_gain_hook)
                 # Remove any non-persistent hooks
                 for hook in expired_hooks:
                     self.turn.post_gain_hooks[type(card)].remove(hook)
+        return where_it_went
 
-    def gain(self, card_class: Type[Card], quantity: int = 1, from_supply: bool = True, message: bool = True, ignore_hooks: bool = False):
+    def process_post_gain_actions(self, card: Card, where_it_went: Deque, gained_from_trash: bool = False) -> Card:
         """
-        Gain a card.
+        Process registered actions after a card is gained.
+
+        First runs post-gain hooks, then allows the player to choose post-gain reactions.
+
+        Args:
+            card: The card that was gained.
+            where_it_went: The deque to which the card was added.
+            gained_from_trash: Whether the card was gained from the trash (otherwise it was gained from the Supply).
+
+        Returns:
+            The card that was gained.
+        """
+        where_it_went = self.process_post_gain_hooks(card, where_it_went)
+        card = self.process_post_gain_reactions(card, where_it_went, gained_from_trash)
+        return card
+
+    def process_post_discard_hooks(self, discarded_card):
+        """
+        Process registered hooks after a card is discarded.
+
+        Args:
+            discarded_card: The card that was discarded.
+        """
+        # Check if there are any game-wide post-gain hooks caused by gaining the card
+        expired_hooks = []
+        if type(discarded_card) in self.game.post_discard_hooks:
+            # Activate any post-discard hooks caused by discarding the card
+            for post_discard_hook in self.game.post_discard_hooks[type(discarded_card)]:
+                post_discard_hook(self)
+                if not post_discard_hook.persistent:
+                    expired_hooks.append(post_discard_hook)
+            # Remove any non-persistent hooks
+            for hook in expired_hooks:
+                self.supply.post_gain_hooks[type(discarded_card)].remove(hook)
+
+    def gain(self, card_class: Type[Card], quantity: int = 1, from_supply: bool = True, message: bool = True, ignore_post_gain_actions: bool = False) -> List[Card]:
+        """
+        Gain a card (or multiple cards).
 
         Args:
             card_class: The class of the Card to gain.
             quantity: The number of Cards to gain.
             from_supply: Whether the Card is being gained from the Supply.
             message: Whether to broadcast a message to all Players saying that the card was gained.
-            ignore_hooks: Whether to activate any post-gain Hooks registered to this card.
+                     If the card is being gained someplace other than the player's discard pile,
+                     this will be ignored and a message will be broadcast anyway.
+            ignore_post_gain_actions: Whether to ignore post-gain actions (defaults to False).
+
+        Returns:
+            The Cards that were gained.
         """
+        gained_cards = []
         for _ in range(quantity):
             if not from_supply:
                 card = card_class()
@@ -190,34 +272,28 @@ class Player:
                     card = self.supply.draw(card_class)
                 except SupplyStackEmptyError:
                     self.game.broadcast(f'{self.name} could not gain {a(card_class.name)} since that supply pile is empty.')
-                    return
+                    break
             card.owner = self
-            self.discard_pile.append(card)
+            if card.gain_to is self.discard_pile: 
+                self.discard_pile.append(card)
+            elif card.gain_to is self.deck:
+                self.deck.append(card)
+                self.game.broadcast(f'{self.name} gained {a(card_class.name)} onto their deck.')
+                message = False
+            elif card.gain_to is self.hand:
+                self.hand.append(card)
+                self.game.broadcast(f'{self.name} gained {a(card_class.name)} into their hand.')
+                message = False
             if message:
                 self.game.broadcast(f'{self.name} gained {a(card_class.name)}.')
-            if not ignore_hooks:
-                self.process_post_gain_hooks(card, self.discard_pile)
-
-    def gain_without_hooks(self, card_class: Type[Card], quantity: int = 1, from_supply: bool = True, message: bool = True):
-        """
-        Gain a card without activating any post-gain Hooks registered to this card.
-
-        Equivalent to calling 
-
-        .. highlight:: python
-        .. code-block:: python
-            
-            self.gain(..., ignore_hooks=True)
-
-        Args:
-            card_class: The class of the Card to gain.
-            quantity: The number of Cards to gain.
-            from_supply: Whether the Card is being gained from the Supply.
-            message: Whether to broadcast a message to all Players saying that the card was gained.
-        """
-        self.gain(card_class, quantity, from_supply, message, ignore_hooks=True)
-
-    def gain_to_hand(self, card_class: Type[Card], quantity: int = 1, from_supply: bool = True, message: bool = True):
+            if not ignore_post_gain_actions:
+                card = self.process_post_gain_actions(card, card.gain_to)
+            gained_cards.append(card)
+        if gained_cards:
+            return gained_cards
+        return None
+        
+    def gain_to_hand(self, card_class: Type[Card], quantity: int = 1, from_supply: bool = True, message: bool = True, ignore_post_gain_actions: bool = False) -> List[Card]:
         """
         Gain a card to the Player's hand.
 
@@ -226,7 +302,12 @@ class Player:
             quantity: The number of Cards to gain.
             from_supply: Whether the Card is being gained from the Supply.
             message: Whether to broadcast a message to all Players saying that the card was gained.
+            ignore_post_gain_actions: Whether to ignore post-gain actions (defaults to False).
+
+        Returns:
+            The Card that was gained.
         """
+        gained_cards = []
         for _ in range(quantity):
             if not from_supply:
                 card = card_class()
@@ -235,14 +316,20 @@ class Player:
                     card = self.supply.draw(card_class)
                 except SupplyStackEmptyError:
                     self.game.broadcast(f'{self.name} could not gain {a(card_class.name)} since that supply pile is empty.')
-                    return
+                    break
             card.owner = self
+            gained_cards.append(card)
             self.hand.append(card)
             if message:
                 self.game.broadcast(f'{self.name} gained {a(card_class.name)} into their hand.')
-            self.process_post_gain_hooks(card, self.hand)
+            if not ignore_post_gain_actions:
+                self.process_post_gain_actions(card, self.hand)
+        if gained_cards:
+            return gained_cards
+        return None
 
-    def gain_to_deck(self, card_class: Type[Card], quantity: int = 1, from_supply: bool = True, message: bool = True):
+
+    def gain_to_deck(self, card_class: Type[Card], quantity: int = 1, from_supply: bool = True, message: bool = True, ignore_post_gain_actions: bool = False) -> List[Card]:
         """
         Gain a card to the Player's deck.
 
@@ -251,7 +338,12 @@ class Player:
             quantity: The number of Cards to gain.
             from_supply: Whether the Card is being gained from the Supply.
             message: Whether to broadcast a message to all Players saying that the card was gained.
+            ignore_post_gain_actions: Whether to ignore post-gain actions (defaults to False).
+
+        Returns:
+            The Card that was gained.
         """
+        gained_cards = []
         for _ in range(quantity):
             if not from_supply:
                 card = card_class()
@@ -260,12 +352,17 @@ class Player:
                     card = self.supply.draw(card_class)
                 except SupplyStackEmptyError:
                     self.game.broadcast(f'{self.name} could not gain {a(card_class.name)} since that supply pile is empty.')
-                    return
+                    break
             card.owner = self
+            gained_cards.append(card)
             self.deck.append(card)
             if message:
                 self.game.broadcast(f'{self.name} gained {a(card_class.name)} onto their deck.')
-            self.process_post_gain_hooks(card, self.deck)
+            if not ignore_post_gain_actions:
+                self.process_post_gain_actions(card, self.deck)
+        if gained_cards:
+            return gained_cards
+        return None
 
     def shuffle(self):
         """
@@ -275,6 +372,14 @@ class Player:
         self.deck.extend(self.discard_pile)
         self.discard_pile.clear()
         random.shuffle(self.deck)
+
+    def shuffle_deck(self, message=True):
+        """
+        Shuffle the Player's deck.
+        """
+        random.shuffle(self.deck)
+        if message:
+            self.game.broadcast(f'{self.name} shuffled their deck.')
 
     def take_from_deck(self) -> Card | None:
         """
@@ -344,18 +449,42 @@ class Player:
             pass
         self.played_cards.append(card)
 
-    def discard(self, card: Card, message: bool = True):
+    def discard(self, cards: Card | List[Card], message: bool = True):
+        """
+        Add a card or list of cards to the Player's discard pile.
+
+        The card or cards must explictly be removed from wherever they came from.
+
+        Args:
+            cards: The Card (or list of Cards) to discard.
+            message: Whether to broadcast a message to all Players saying that the card was discarded.
+        """
+        if isinstance(cards, Card):
+            message_string = f"{self.name} discarded {a(cards.name)}."
+            cards = [cards]
+        else:
+            message_string = f"{self.name} discarded {Card.group_and_sort_by_cost(cards)}."
+        # All cards are discarded at once and before post-discard hooks are activated
+        self.discard_pile.extend(cards)
+        if message:
+            self.game.broadcast(message_string)
+        # Process post-discard hooks for each discarded card
+        for discarded_card in cards:
+            self.process_post_discard_hooks(discarded_card)
+
+    def discard_from_hand(self, card: Card, message: bool = True):
         """
         Discard a card from the Player's hand.
+
+        The card is automatically removed from the Player's hand and
+        added to the Player's discard pile.
 
         Args:
             card: The Card to discard.
             message: Whether to broadcast a message to all Players saying that the card was discarded.
         """
-        self.discard_pile.append(card)
+        self.discard(card, message=message)
         self.hand.remove(card)
-        if message:
-            self.game.broadcast(f'{self.name} discarded {a(card)}.')
 
     def trash(self, card: Card, message: bool = True):
         """
@@ -402,20 +531,35 @@ class Player:
             card = None
         return card
 
-    def gain_from_trash(self, card_class: Type[Card], message: bool = True):
+    def gain_from_trash(self, card_class: Type[Card], message: bool = True, ignore_post_gain_actions: bool = False) -> Card:
         """
         Gain a card from the Trash (and set its owner to the Player).
 
         Args:
             card_class: The class of the Card to gain.
             message: Whether to broadcast a message to all Players saying that the card was gained.
+            ignore_post_gain_actions: Whether to ignore post-gain actions.
+
+        Returns:
+            The Card that was gained.
         """
         card: Card = self.take_from_trash(card_class)
         if card is not None:
-            self.discard_pile.append(card)
-            self.process_post_gain_hooks(card, self.discard_pile)
+            if card.gain_to is self.discard_pile: 
+                self.discard_pile.append(card)
+            elif card.gain_to is self.deck:
+                self.deck.append(card)
+                self.game.broadcast(f'{self.name} gained {a(card_class.name)} onto their deck.')
+                message = False
+            elif card.gain_to is self.hand:
+                self.hand.append(card)
+                self.game.broadcast(f'{self.name} gained {a(card_class.name)} into their hand.')
+                message = False
             if message:
                 self.game.broadcast(f'{self.name} gained {a(card)} from the trash.')
+            if not ignore_post_gain_actions:
+                self.process_post_gain_actions(card, card.gain_to, gained_from_trash=True)
+        return card
 
     def cleanup(self):
         """

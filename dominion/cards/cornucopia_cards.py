@@ -37,17 +37,17 @@ class Hamlet(ActionCard):
         if self.owner.interactions.choose_yes_or_no(prompt):
             prompt = f'Which card would you like to discard for +1 Action?'
             if (card := self.owner.interactions.choose_card_from_hand(prompt, force=False)) is not None:
-                self.owner.discard(card)
+                self.owner.discard_from_hand(card, message=False)
                 self.owner.turn.plus_actions(1)
-                self.game.broadcast(f"{self.owner.name} discarded {card.name} for +1 Action.")
+                self.game.broadcast(f"{self.owner.name} discarded {a(card.name)} for +1 Action.")
         # You may discard a card for +1 Buy
         prompt = f'Would you like to discard a card for +1 Buy?'
         if self.owner.interactions.choose_yes_or_no(prompt):
             prompt = f'Which card would you like to discard for +1 Buy?'
             if (card := self.owner.interactions.choose_card_from_hand(prompt, force=False)) is not None:
-                self.owner.discard(card)
+                self.owner.discard_from_hand(card, message=False)
                 self.owner.turn.plus_buys(1)
-                self.game.broadcast(f"{self.owner.name} discarded {card.name} for +1 Buy.")
+                self.game.broadcast(f"{self.owner.name} discarded {a(card.name)} for +1 Buy.")
 
 
 class FortuneTeller(AttackCard):
@@ -92,8 +92,7 @@ class FortuneTeller(AttackCard):
             self.game.broadcast(f"{player} put {a(revealed_victory_or_curse.name)} on top of their deck.")
         # Discard the rest
         if cards_to_discard:
-            player.discard_pile.extend(cards_to_discard)
-            self.game.broadcast(f"{player} discarded {Card.group_and_sort_by_cost(cards_to_discard)}.")
+            player.discard(cards_to_discard)
 
     def action(self):
         pass
@@ -164,8 +163,7 @@ class FarmingVillage(ActionCard):
             self.game.broadcast(f"{self.owner} put {a(revealed_treasure_or_action.name)} into their hand.")
         # Discard the rest
         if cards_to_discard:
-            self.owner.discard_pile.extend(cards_to_discard)
-            self.game.broadcast(f"{self.owner} discarded {Card.group_and_sort_by_cost(cards_to_discard)}.")
+            self.owner.discard(cards_to_discard)
 
 
 class HorseTraders(ReactionCard):
@@ -189,19 +187,19 @@ class HorseTraders(ReactionCard):
     extra_buys = 1
     extra_coppers = 3
 
+    @property
+    def reacts_to(self):
+        return [ReactionType.ATTACK]
+
     def action(self):
         # Discard 2 cards
         prompt = "You played a Horse Traders. Select 2 cards to discard."
         if (cards := self.owner.interactions.choose_cards_from_hand(prompt, force=True, max_cards=2)) is not None:
             for card in cards:
-                self.owner.discard(card, message=False)
+                self.owner.discard_from_hand(card, message=False)
             self.game.broadcast(f"{self.owner} discarded {Card.group_and_sort_by_cost(cards)}.")
         else:
             self.game.broadcast(f"{self.owner} did not have any cards to discard.")
-
-    @property
-    def can_react(self):
-        return True
 
     class HorseTradersPreTurnHook(PreTurnHook):
         persistent = False
@@ -216,12 +214,14 @@ class HorseTraders(ReactionCard):
             self.game.broadcast(f"{self.player} returns the Horse Traders they set aside to their hand.")
             self.player.hand.append(self.set_aside_card)
 
-    def react(self):
+    def react_to_attack(self):
         self.owner.hand.remove(self)
         self.game.broadcast(f"{self.owner} set a Horse Traders aside from their hand for next turn.")
         pre_turn_hook = self.HorseTradersPreTurnHook(game=self.game, player=self.owner, set_aside_card=self)
         self.game.add_pre_turn_hook(pre_turn_hook)
-        return None, False # When set aside, it is not in play or in your hand and cannot be further revealed when Attacked
+        immune = False
+        ignore_card_class_next_time = False
+        return immune, ignore_card_class_next_time # When set aside, it is not in play or in your hand and cannot be further revealed when Attacked
 
 
 class Remake(ActionCard):
@@ -314,7 +314,7 @@ class Tournament(ActionCard):
                 if isinstance(card, base_cards.Province):
                     break
             # Discard the Province
-            self.owner.discard(card)
+            self.owner.discard_from_hand(card)
             # Find the Cornucopia expansion instance
             cornucopia_expansion_instance = None
             for expansion_instance in self.supply.customization.expansions:
@@ -382,7 +382,7 @@ class YoungWitch(AttackCard):
         prompt = "You played a Young Witch. Choose 2 cards to discard."
         cards_to_discard = self.owner.interactions.choose_cards_from_hand(prompt, force=True, max_cards=2)
         for card_to_discard in cards_to_discard:
-            self.owner.discard(card_to_discard, message=False)
+            self.owner.discard_from_hand(card_to_discard, message=False)
         print(f"{self.owner} discarded {Card.group_and_sort_by_cost(cards_to_discard)} with their Young Witch.")
 
 
@@ -410,7 +410,7 @@ class Harvest(ActionCard):
             card = self.owner.take_from_deck()
             if card is None:
                 break
-            self.owner.discard_pile.append(card)
+            self.owner.discard(card)
             revealed_cards.append(card)
         # Count the number of differently named cards revealed
         num_differently_named_cards = len(set([card.name for card in revealed_cards]))
@@ -476,7 +476,6 @@ class HuntingParty(ActionCard):
         unique_revealed_card = None
         while True:
             revealed_card = self.owner.take_from_deck()
-            print(revealed_card)
             if revealed_card is None:
                 self.game.broadcast(f'{self.owner} had no cards left to draw from and did not put anything into their hand.')
                 break
@@ -489,7 +488,7 @@ class HuntingParty(ActionCard):
         # Put it into your hand (the rest have already been discarded but that has not yet been broadcasted)
         if revealed_cards:
             for card in revealed_cards:
-                self.owner.discard_pile.append(card)
+                self.owner.discard(card, message=False)
             self.game.broadcast(f"{self.owner} revealed and discarded {Card.group_and_sort_by_cost(revealed_cards)} with their Hunting Party.")
         if unique_revealed_card is not None:
             self.owner.hand.append(unique_revealed_card)
@@ -530,7 +529,7 @@ class Jester(AttackCard):
             # Players with no cards are unaffected
             self.game.broadcast(f"{player} has no cards left to draw from and is unaffected by {attacker}'s Jester.")
             return
-        player.discard_pile.append(card)
+        player.discard(card, message=False)
         self.game.broadcast(f"{player} discarded {a(card)} via {attacker}'s Jester.")
         if CardType.VICTORY in card.types:
             # If the card is a Victory card, gain a Curse
@@ -678,7 +677,7 @@ class Followers(AttackCard):
         prompt = f"{attacker} has played a Followers. Choose {s(number_to_discard, 'card')} to discard."
         cards_to_discard = player.interactions.choose_cards_from_hand(prompt=prompt, force=True, max_cards=number_to_discard)
         for card_to_discard in cards_to_discard:
-            player.discard(card_to_discard)
+            player.discard_from_hand(card_to_discard)
 
 
 class Princess(ActionCard):

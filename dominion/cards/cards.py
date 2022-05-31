@@ -4,7 +4,7 @@ from abc import ABCMeta, abstractmethod
 from collections import defaultdict
 from enum import Enum, auto
 from gevent import Greenlet, joinall
-from typing import TYPE_CHECKING, Dict, List, Tuple, Type
+from typing import TYPE_CHECKING, Deque, Dict, List, Tuple, Type
 
 from ..grammar import a, s, Word
 
@@ -33,7 +33,8 @@ class ReactionType(Enum):
     """
     Emumeration of all reaction types.
     """
-    IMMUNITY = auto()
+    ATTACK = auto()
+    GAIN = auto()
 
 
 class Card(Word, metaclass=ABCMeta):
@@ -104,6 +105,16 @@ class Card(Word, metaclass=ABCMeta):
         return self._cost if not hasattr(self, "game") else self.game.current_turn.get_cost(self)
 
     @property
+    def gain_to(self) -> Deque[Card]:
+        """
+        The deque to which the card is being added.
+
+        Defaults to the player's discard pile. Override this for
+        cards that are gained to other locations, e.g., Nomad Camp.
+        """
+        return self.owner.discard_pile
+
+    @property
     @abstractmethod
     def name(self) -> str:
         """
@@ -165,7 +176,8 @@ class Card(Word, metaclass=ABCMeta):
             # 'description': self.description.replace("\n", "<br>"),
             'description': self.description.split("\n"),
             'cost': self.cost,
-            'type': ', '.join([t.name.capitalize() for t in self.types]),
+            'types': [t.name.lower() for t in self.types], # List of types (all lowercase)
+            'type': ', '.join([t.name.capitalize() for t in self.types]), # String of types
             'id': self.id,
             'expansion': self.expansion,
         }
@@ -321,29 +333,32 @@ class AttackCard(ActionCard):
                 self.attack_player(player)
 
     def attack_player(self, player: Player):
+        def get_reaction_cards_in_hand():
+            # Get all reaction cards in the player's hand that can react to an attack
+            return set(card for card in player.hand if CardType.REACTION in card.types and ReactionType.ATTACK in card.reacts_to)
+
         # First check if they have a reaction card in their hand
         immune = False
         # Allow the player to play reaction cards
-        reaction_cards_in_hand = set(card for card in player.hand if CardType.REACTION in card.types and card.can_react)
+        reaction_cards_in_hand = get_reaction_cards_in_hand()
         reaction_cards_to_ignore = set()
         while (reaction_cards_remaining := reaction_cards_in_hand - reaction_cards_to_ignore):
             invalid_cards = [card for card in player.hand if card not in reaction_cards_remaining]
-            prompt = f"{self.owner} played {a(self.name)} (an Attack card). You have {s(len(reaction_cards_remaining), 'Reaction card', print_number=False)} in your hand. You may play any or all of them, one at a time."
+            prompt = f"{self.owner} played {a(self.name)} (an Attack card). You have {s(len(reaction_cards_remaining), 'playable Reaction card', print_number=False)} in your hand. You may play any or all of them, one at a time."
             reaction_card = player.interactions.choose_card_from_hand(prompt=prompt, force=False, invalid_cards=invalid_cards)
             if reaction_card is None:
                 # The player is forfeiting their chance to react
                 player.interactions.send('You forfeited your opportunity to react.')
                 break
             self.game.broadcast(f"{player} revealed {a(reaction_card.name)} in reaction to {self.owner}'s {self.name}.")
-            reaction_type, ignore_again = reaction_card.react()
-            if reaction_type == ReactionType.IMMUNITY:
-                immune = True
-                self.game.broadcast(f"{player} is immune to the effects of {self.owner}'s {self.name}.")
-            if ignore_again:
-                reaction_cards_to_ignore = set(card for card in player.hand if isinstance(card, type(reaction_card)))
-            reaction_cards_in_hand = set(card for card in player.hand if CardType.REACTION in card.types and card.can_react)
+            immune, ignore_card_class_next_time = reaction_card.react_to_attack()
+            if ignore_card_class_next_time:
+                reaction_cards_to_ignore = reaction_cards_to_ignore.union(set(card for card in player.hand if isinstance(card, type(reaction_card))))
+            reaction_cards_in_hand = get_reaction_cards_in_hand()
         # If the player is not immune, they are forced to endure the attack effect
-        if not immune:
+        if immune:
+            self.game.broadcast(f"{player} is immune to the effects of {self.owner}'s {self.name}.")
+        else:
             self.attack_effect(self.owner, player)
 
     def play(self):
@@ -354,6 +369,7 @@ class AttackCard(ActionCard):
         self.action()
         if self.attacking:
             self.attack()
+            self.post_attack_action()
 
     @property
     @abstractmethod
@@ -374,6 +390,15 @@ class AttackCard(ActionCard):
         """
         pass
 
+    def post_attack_action(self):
+        """
+        An optional method to call after the attack is complete.
+
+        Overload for specific attack cards that require something
+        to be done after the results of the attack are resolved.
+        """
+        pass
+
 
 class ReactionCard(ActionCard):
     '''
@@ -381,28 +406,54 @@ class ReactionCard(ActionCard):
     '''
     @property
     @abstractmethod
-    def can_react(self) -> bool:
+    def reacts_to(self) -> List[ReactionType]:
         """
-        Whether the card can react to an attack.
+        When the card can react.
         """
         pass
 
-    @abstractmethod
-    def react(self) -> Tuple[ReactionType, bool]:
+    def react_to_attack(self) -> Tuple[bool, bool]:
         """
-        Complete the reactive directions on the card.
+        How to react to attack cards if this card is in a player's hand.
+
+        Overload for any reaction card that reacts to attacks.
 
         Returns a tuple containing:
 
-            reaction_type (:class:`ReactionType`): 
-                The type of reaction.
+            immune (:class:`ReactionType`): 
+                Whether the reaction makes the player immune to the attack.
 
-            ignore_again (:class:`bool`): 
-                Whether the reaction can only be played once in
+            ignore_card_class_next_time (:class:`bool`): 
+                Whether this class of reaction card can only be played once in
                 response to an attack.
 
-                If False, this reaction can be played multiple times
+                If False, this class of reaction card can be played multiple times
                 in response to an attack.
+        """
+        pass
+
+    def react_to_gain(self, gained_card: Card, where_it_went: Deque, gained_from_trash: bool = False) -> Tuple[Deque, bool]:
+        """
+        How to react to gaining cards if this card is in a player's hand.
+
+        Overload for any reaction card that reacts to gaining cards.
+
+        Args:
+            gained_card: The card that was gained.
+            where_it_went: The location where the card was gained.
+            gained_from_trash: Whether the card was gained from the trash (otherwise it was gained from the Supply).
+
+        Returns a tuple containing:
+
+            where_it_went (:class:`Deque`):
+                The location where the card was gained.
+
+            ignore_card_class_next_time (:class:`bool`):
+                Whether this class of reaction card only be played once in
+                response to gaining a card.
+
+                If False, this class of reaction card can be played multiple times
+                in response to gaining a card.
         """
         pass
 

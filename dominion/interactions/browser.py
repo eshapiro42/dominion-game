@@ -4,7 +4,7 @@ from contextlib import contextmanager
 from threading import Event # Monkey patched to use gevent Events
 from typing import List, Optional
 
-from ..cards import cards
+from ..cards.cards import Card
 from ..expansions import CornucopiaExpansion
 from ..grammar import s
 from .interaction import Interaction
@@ -144,7 +144,7 @@ class BrowserInteraction(Interaction):
         except Exception as exception:
             print(exception)
 
-    def choose_cards_from_hand(self, prompt, force, max_cards=1, invalid_cards=None) -> List[cards.Card]:
+    def choose_cards_from_hand(self, prompt, force, max_cards=1, invalid_cards=None) -> List[Card]:
         with self.move_cards():
             print("choose_card_from_hand")
             if not self.hand:
@@ -181,7 +181,7 @@ class BrowserInteraction(Interaction):
                 except ArithmeticError:
                     self.send(f"You must choose exactly {s(max_cards, 'card')}.")
 
-    def choose_card_from_hand(self, prompt, force, invalid_cards=None) -> Optional[cards.Card]:
+    def choose_card_from_hand(self, prompt, force, invalid_cards=None) -> Optional[Card]:
         cards_chosen = self.choose_cards_from_hand(prompt, force, max_cards=1, invalid_cards=invalid_cards)
         if not cards_chosen:
             return None
@@ -230,6 +230,91 @@ class BrowserInteraction(Interaction):
                 except (IndexError, ValueError):
                     self.send('That is not a valid choice.')
 
+    def choose_cards_of_specific_type_from_played_cards(self, prompt, force, card_type, max_cards=1, ordered=False) -> List[Card]:
+        with self.move_cards():
+            print("choose_cards_of_specific_type_from_played_cards")
+            # Only cards of the correct type can be chosen
+            selectable_cards = [card for card in self.played_cards if card_type in card.types]
+            if not selectable_cards:
+                self.send(f'There are no {card_type.name.lower().capitalize()} cards in your played cards.')
+                return []
+            if max_cards is not None:
+                max_cards = min(max_cards, len(selectable_cards)) # Don't ask for more cards than are available
+            else:
+                max_cards = len(selectable_cards)
+            while True:
+                try:
+                    response = self._call(
+                        "choose cards of specific type from played cards",
+                        {
+                            "prompt": prompt,
+                            "force": force,
+                            "max_cards": max_cards,
+                            "card_type": card_type.name,
+                            "ordered": ordered,
+                        }
+                    )
+                    if force:
+                        if response is None or (len(response) < max_cards and max_cards is not None):
+                            raise ArithmeticError("Not enough cards chosen.")
+                    if response is None:
+                        return []
+                    chosen_cards = []
+                    for card_data in response:
+                        for card in self.played_cards:
+                            if card_data["id"] == card.id:
+                                chosen_cards.append(card)
+                    return chosen_cards
+                except (IndexError, ValueError):
+                    self.send('That is not a valid choice.')
+                except ArithmeticError:
+                    self.send(f"You must choose exactly {s(max_cards, 'card')}.")
+
+    def choose_specific_card_type_from_played_cards(self, prompt, card_type):
+        cards_chosen = self.choose_cards_of_specific_type_from_played_cards(prompt, force=False, card_type=card_type, max_cards=1)
+        if not cards_chosen:
+            return None
+        return cards_chosen[0]
+
+    def choose_cards_of_specific_type_from_discard_pile(self, prompt, force, card_type, max_cards=1) -> List[Card]:
+        with self.move_cards():
+            print("choose_cards_of_specific_type_from_discard_pile")
+            # Only cards of the correct type can be chosen
+            selectable_cards = [card for card in self.discard_pile if card_type in card.types]
+            if not selectable_cards:
+                self.send(f'There are no {card_type.name.lower().capitalize()} cards in your discard pile.')
+                return []
+            if max_cards is not None:
+                max_cards = min(max_cards, len(selectable_cards)) # Don't ask for more cards than are available
+            else:
+                max_cards = len(selectable_cards)
+            while True:
+                try:
+                    response = self._call(
+                        "choose cards of specific type from discard pile",
+                        {
+                            "prompt": prompt,
+                            "force": force,
+                            "max_cards": max_cards,
+                            "card_type": card_type.name,
+                        }
+                    )
+                    if force:
+                        if response is None or (len(response) < max_cards and max_cards is not None):
+                            raise ArithmeticError("Not enough cards chosen.")
+                    if response is None:
+                        return []
+                    chosen_cards = []
+                    for card_data in response:
+                        for card in self.discard_pile:
+                            if card_data["id"] == card.id:
+                                chosen_cards.append(card)
+                    return chosen_cards
+                except (IndexError, ValueError):
+                    self.send('That is not a valid choice.')
+                except ArithmeticError:
+                    self.send(f"You must choose exactly {s(max_cards, 'card')}.")
+        
     def choose_card_from_discard_pile(self, prompt, force):
         with self.move_cards():
             print("choose_card_from_discard_pile")
@@ -422,7 +507,7 @@ class BrowserInteraction(Interaction):
         print("choose_from_options")
         option_names = []
         for option in options:
-            if isinstance(option, cards.Card) or inspect.isclass(option):
+            if isinstance(option, Card) or inspect.isclass(option):
                 option_names.append(option.name)
             else:
                 option_names.append(option)
@@ -438,6 +523,43 @@ class BrowserInteraction(Interaction):
         if response is not None:
             return options[response]
         return None
+
+    def choose_cards_from_list(self, prompt: str, cards: List[Card], force: bool, max_cards: int = 1, ordered: bool = False) -> List[Card]:
+        with self.move_cards():
+            print("choose_cards_from_list")
+            if not cards:
+                self.send('There are no cards to choose from.')
+                return []
+            if max_cards is not None:
+                max_cards = min(max_cards, len(cards)) # Don't ask for more cards than we have
+            while True:
+                try:
+                    response = self._call(
+                        "choose cards from list",
+                        {
+                            "prompt": prompt,
+                            "force": force,
+                            "max_cards": max_cards,
+                            "cards": [card.json for card in cards],
+                            "ordered": ordered,
+                        }
+                    )
+                    if force:
+                        if response is None or (len(response) < max_cards and max_cards is not None):
+                            raise ArithmeticError("Not enough cards chosen.")
+                    if response is None:
+                        return []
+                    chosen_cards = []
+                    for card_data in response:
+                        for card in cards:
+                            if card_data["id"] == card.id:
+                                chosen_cards.append(card)
+                    return chosen_cards
+                except (IndexError, ValueError):
+                    self.send('That is not a valid choice.')
+                except ArithmeticError:
+                    self.send(f"You must choose exactly {s(max_cards, 'card')}.")
+
 
     def new_turn(self):
         self.socketio.emit('new turn', {'player': self.player.name}, room=self.room)
