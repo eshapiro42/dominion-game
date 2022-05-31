@@ -538,45 +538,31 @@ class Rabble(AttackCard):
         for _ in range(3):
             card = player.take_from_deck()
             if card is None:
-                self.game.broadcast(f'{player} has no more cards to draw from.')
                 break
             else:
-                self.game.broadcast(f'{player} revealed {a(card)}.')
                 if CardType.TREASURE in card.types or CardType.ACTION in card.types:
                     revealed_actions_and_treasures.append(card)
                 else:
                     revealed_other_cards.append(card)
+        if len(all_revealed_cards := revealed_actions_and_treasures + revealed_other_cards) == 3:
+            self.game.broadcast(f"{player} revealed {Card.group_and_sort_by_cost(all_revealed_cards)} from their deck.")
+        elif all_revealed_cards:
+            self.game.broadcast(f"{player} revealed {Card.group_and_sort_by_cost(all_revealed_cards)} from their deck but did not have enough cards to reveal 3.")
+        else:
+            self.game.broadcast(f"{player} had no cards in their deck to reveal.")
         # Player discards Actions and Treasures
         if revealed_actions_and_treasures:
             player.discard(revealed_actions_and_treasures)
         # Player puts the rest back on their deck in any order they choose
-        if len(revealed_other_cards) == 1:
-            # If there's only one card, put it back on top of the deck
-            card = revealed_other_cards[0]
-            self.game.broadcast(f'{player} put {a(card)} back on top of their deck.')
+        if not revealed_other_cards:
+            return
+        # If there is only one card (or card class) left, do not bother asking the player for the order
+        if len(set([type(card) for card in revealed_other_cards])) != 1:
+            prompt = "You played a Rabble and must return these revealed cards to your deck in any order. (The last card you choose will be the top card of your deck.)"
+            revealed_other_cards = player.interactions.choose_cards_from_list(prompt, revealed_other_cards, force=True, max_cards=len(revealed_other_cards), ordered=True)
+        for card in revealed_other_cards:
             player.deck.append(card)
-        elif len(revealed_other_cards) == 2:
-            # If there are two, ask which should be on top
-            prompt = f"You must return these cards to the top of your deck: {', '.join(map(str, revealed_other_cards))}. Which card would you like to be on top?"
-            top_card = player.interactions.choose_from_options(prompt=prompt, options=revealed_other_cards, force=True)
-            revealed_other_cards.remove(top_card)
-            bottom_card = revealed_other_cards[0]
-            player.deck.append(bottom_card)
-            player.deck.append(top_card)
-            self.game.broadcast(f'{player} put {a(bottom_card)} and {a(top_card)} back on top of their deck.')
-        elif len(revealed_other_cards) == 3:
-            # If there are three, ask which should be on top and in the middle
-            prompt = f"You must return these cards to the top of your deck: {', '.join(map(str, revealed_other_cards))}. Which card would you like to be on top?"
-            top_card = player.interactions.choose_from_options(prompt=prompt, options=revealed_other_cards, force=True)
-            revealed_other_cards.remove(top_card)
-            prompt = f"Which card would you like to be in the middle?"
-            middle_card = player.interactions.choose_from_options(prompt=prompt, options=revealed_other_cards, force=True)
-            revealed_other_cards.remove(middle_card)
-            bottom_card = revealed_other_cards[0]
-            player.deck.append(bottom_card)
-            player.deck.append(middle_card)
-            player.deck.append(top_card)
-            self.game.broadcast(f'{player} put {a(bottom_card)}, {a(middle_card)} and {a(top_card)} back on top of their deck.')
+        self.game.broadcast(f"{player} put {Card.group_and_sort_by_cost(revealed_other_cards)} back on top of their deck.")
 
 
 class RoyalSeal(TreasureCard):

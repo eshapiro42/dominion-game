@@ -293,6 +293,20 @@ class Interaction(metaclass=ABCMeta):
         pass
 
     @abstractmethod
+    def choose_cards_from_list(self, prompt: str, cards: List[Card], force: bool, max_cards: int = 1, ordered: bool = False) -> List[Card]:
+        """
+        Request the player to choose cards from a list of cards.
+
+        Args:
+            prompt: The prompt to display to the player.
+            cards: The list of cards to choose from.
+            force: Whether or not to force the player to choose the maximum number of cards. If False, the player may choose fewer or no cards.
+            max_cards: The maximum number of cards to choose.
+            ordered: Whether or not the order of the cards matters (mainly for client-side display purposes).
+        """
+        pass
+
+    @abstractmethod
     def new_turn(self):
         """
         Notify the player about the start of a new turn.

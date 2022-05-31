@@ -1,5 +1,5 @@
 import math
-from .cards import CardType, ReactionType, ActionCard, AttackCard, ReactionCard, VictoryCard
+from .cards import Card, CardType, ReactionType, ActionCard, AttackCard, ReactionCard, VictoryCard
 from .base_cards import Copper, Silver, Gold, Curse
 from ..hooks import TreasureHook
 from ..grammar import a, s
@@ -705,22 +705,16 @@ class Sentry(ActionCard):
             elif choice == 'Return to deck':
                 self.interactions.send(f'You set the {card} aside to return to your deck.')
                 cards_kept.append(card)
-        if cards_kept:
-            self.interactions.send(f"Cards set aside to return to your deck: {', '.join(map(str, cards_kept))}.")
-        if len(cards_kept) == 1:
-            # If one card was kept, put it back on top of the deck
-            self.game.broadcast(f'{self.owner} put one card back on top of their deck.')
-            card_kept = cards_kept[0]
-            self.owner.deck.append(card_kept)
-        elif len(cards_kept) == 2:
-            # If more than one, put the kept cards back on top in the desired order
-            prompt = 'You must return these cards to the top of your deck. Which card would you like to be on top?'
-            top_card = self.interactions.choose_from_options(prompt=prompt, options=cards_kept, force=True)
-            cards_kept.remove(top_card)
-            bottom_card = cards_kept[0]
-            self.owner.deck.append(bottom_card)
-            self.owner.deck.append(top_card)
-            self.game.broadcast(f'{self.owner} put two cards back on top of their deck.')
+        if not cards_kept:
+            return
+        # If there is only one card (or card class) left, do not bother asking the player for the order
+        if len(set([type(card) for card in cards_kept])) != 1:
+            prompt = "You played a Sentry and must return these revealed cards to your deck in any order. (The last card you choose will be the top card of your deck.)"
+            cards_kept = self.owner.interactions.choose_cards_from_list(prompt, cards_kept, force=True, max_cards=len(cards_kept), ordered=True)
+        for card in cards_kept:
+            self.owner.deck.append(card)
+        self.owner.interactions.send(f"You put {Card.group_and_sort_by_cost(cards_kept)} back onto your deck.")
+        self.game.broadcast(f"{self.owner.name} put {s(len(cards_kept), 'card')} back on top of their deck.")
 
 
 class Witch(AttackCard):

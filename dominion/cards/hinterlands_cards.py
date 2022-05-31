@@ -775,33 +775,55 @@ class Cache(TreasureCard):
         pass
 
 
-# class Cartographer(ActionCard):
-#     name = 'Cartographer'
-#     _cost = 5
-#     types = [CardType.ACTION]
-#     image_path = ''
-# 
-#     description = '\n'.join(
-#         [
-#             # "+1 Card",
-#             # "+1 Action",
-#             "Look at the top 4 cards of your deck. Discard any number of them, then put the rest back in any order.",
-#         ]
-#     )
-# 
-#     extra_cards = 1
-#     extra_actions = 1
-#     extra_buys = 0
-#     extra_coppers = 0
-# 
-#     def action(self):
-#         cards_from_deck = []
-#         for _ in range(4):
-#             card = self.owner.take_from_deck()
-#             if card is not None:
-#                 cards_from_deck.append(card)
-#         # TODO: Add a new modal type to the frontend that contains a situational card carousel
-#         # TODO: Add a new interaction method that allows the player to select multiple cards situationally
+class Cartographer(ActionCard):
+    name = 'Cartographer'
+    _cost = 5
+    types = [CardType.ACTION]
+    image_path = ''
+
+    description = '\n'.join(
+        [
+            # "+1 Card",
+            # "+1 Action",
+            "Look at the top 4 cards of your deck. Discard any number of them, then put the rest back in any order.",
+        ]
+    )
+
+    extra_cards = 1
+    extra_actions = 1
+    extra_buys = 0
+    extra_coppers = 0
+
+    def action(self):
+        # Look at the top 4 cards of your deck
+        cards_from_deck = []
+        for _ in range(4):
+            card = self.owner.take_from_deck()
+            if card is not None:
+                cards_from_deck.append(card)
+        if not cards_from_deck:
+            self.game.broadcast(f"{self.owner.name} has no cards in their deck.")
+            return
+        if len(cards_from_deck) < 4:
+            self.game.broadcast(f"{self.owner.name} only had {len(cards_from_deck)} cards in their deck to reveal.")
+        # Discard any number of them
+        prompt = f"You played a Cartographer. These are the top {len(cards_from_deck)} cards of your deck. Choose any number of them to discard. You will then put the rest back in any order."
+        cards_to_discard = self.owner.interactions.choose_cards_from_list(prompt, cards_from_deck, force=False, max_cards=len(cards_from_deck))
+        if cards_to_discard:
+            self.owner.discard(cards_to_discard, message=False)
+            self.game.broadcast(f"{self.owner.name} discarded {Card.group_and_sort_by_cost(cards_to_discard)} from their deck with their Cartographer.")
+        # Put the rest back in any order
+        cards_to_put_back = [card for card in cards_from_deck if card not in cards_to_discard]
+        if not cards_to_put_back:
+            return
+        # If there is only one card (or card class) left, do not bother asking the player for the order
+        if len(set([type(card) for card in cards_to_put_back])) != 1:
+            prompt = "You played a Cartographer and must return these revealed cards to your deck in any order. (The last card you choose will be the top card of your deck.)"
+            cards_to_put_back = self.owner.interactions.choose_cards_from_list(prompt, cards_to_put_back, force=True, max_cards=len(cards_to_put_back), ordered=True)
+        for card in cards_to_put_back:
+            self.owner.deck.append(card)
+        self.owner.interactions.send(f"You put {Card.group_and_sort_by_cost(cards_to_put_back)} back onto your deck.")
+        self.game.broadcast(f"{self.owner.name} put {s(len(cards_to_put_back), 'card')} back on top of their deck.")
         
 
 class Embassy(ActionCard):
@@ -898,7 +920,7 @@ KINGDOM_CARDS = [
     SpiceMerchant,
     Trader,
     Cache,
-    # Cartographer,
+    Cartographer,
     Embassy,
     Haggler,
     # Highway,

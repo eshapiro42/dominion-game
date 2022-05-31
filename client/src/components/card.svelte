@@ -20,12 +20,14 @@
     export let numSelected;
     export let selected = false;
     export let selectedAll;
+    export let selectedCardIds = [];
     export let invalidCardNames = [];
     export let invalidCardIds = [];
 
     let typeLowerCase = type.toLowerCase();
     let hovering = false;
     let selectable = true;
+    let selectionIndex = null;
 
     $: action = types.includes("action") && !types.includes("attack") && !types.includes("reaction");
     $: attack = types.includes("attack");
@@ -118,6 +120,13 @@
             }
         }
     }
+
+    $: if (selected) {
+        selectionIndex = selectedCardIds.indexOf(id) + 1;
+    }
+    else {
+        selectionIndex = null;
+    }
 </script>
 
 <main
@@ -152,6 +161,11 @@
             {expansion}
         </span>
     </span>
+    {#if selectionIndex != null && waitingForSelection.ordered}
+        <span class="selection-index">
+            {selectionIndex}
+        </span>
+    {/if}
     <ul class="effects">
         {#each renderedEffects as effect}
             <li>{@html effect}</li>
@@ -239,6 +253,23 @@
         transition-delay: 1s;
     }
 
+    main .selection-index {
+        position: absolute;
+        bottom: 0%;
+        left: 50%;
+        transform: translate(-50%, 0);
+        background-color: #343338;
+        color: #dadada;
+        font-size: 85%;
+        border: 3px solid red;
+        border-bottom: 0;
+        border-top-left-radius: $corner-radius;
+        border-top-right-radius: $corner-radius;
+        padding: 7px;
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+
     .selected {
         border: 3px solid red;
         transform: translateY(-20px);
@@ -250,7 +281,7 @@
         color: $light-text-color;
     }
 
-    .action .hoverable-text {
+    .action .hoverable-text, .action .selection-index {
         background-color: #dadada;
         color: #343338;
     }
@@ -260,7 +291,7 @@
         color: $dark-text-color;
     }
 
-    .attack .hoverable-text {
+    .attack .hoverable-text, .attack .selection-index {
         color: #ffcccc;
     }
 
@@ -269,7 +300,7 @@
         color: $dark-text-color;
     }
 
-    .reaction .hoverable-text {
+    .reaction .hoverable-text, .reaction .selection-index {
         color: #80bfff;
     }
 
@@ -278,7 +309,7 @@
         color: $dark-text-color;
     }
 
-    .victory .hoverable-text {
+    .victory .hoverable-text, .victory .selection-index {
         background-color: #343338;
         color: #c1f0c1;
     }
@@ -288,7 +319,7 @@
         color: $dark-text-color;
     }
 
-    .curse .hoverable-text {
+    .curse .hoverable-text, .curse .selection-index {
         color: #dab3ff;
     }
 
@@ -297,7 +328,7 @@
         color: $dark-text-color;
     }
 
-    .treasure .hoverable-text {
+    .treasure .hoverable-text, .treasure .selection-index {
         color: #fff0b3;
     }
 
