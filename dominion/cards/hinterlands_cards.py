@@ -904,6 +904,32 @@ class Haggler(ActionCard):
     def action(self):
         pass
 
+
+class Highway(ActionCard):
+    name = 'Highway'
+    _cost = 5
+    types = [CardType.ACTION]
+    image_path = ''
+
+    description = '\n'.join(
+        [
+            # "+1 Card",
+            # "+1 Action",
+            "While this is in play, cards cost 1 $ less, but not less than 0 $.",
+        ]
+    )
+
+    extra_cards = 1
+    extra_actions = 1
+    extra_buys = 0
+    extra_coppers = 0
+
+    def action(self):
+        # Modify card costs
+        for card_class in self.supply.card_stacks:
+            self.game.current_turn.modify_cost(card_class, -1)
+
+
 KINGDOM_CARDS = [
     Crossroads,
     Duchess,
@@ -923,7 +949,7 @@ KINGDOM_CARDS = [
     Cartographer,
     Embassy,
     Haggler,
-    # Highway,
+    Highway,
     # IllGottenGains,
     # Inn,
     # Mandarin,
