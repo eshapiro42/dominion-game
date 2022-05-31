@@ -58,6 +58,10 @@ class HinterlandsExpansion(Expansion):
         if hinterlands_cards.IllGottenGains in self.supply.card_stacks:
             post_gain_hook = hinterlands_cards.IllGottenGains.IllGottenGainsPostGainHook(self.game, hinterlands_cards.IllGottenGains)
             self.supply.add_post_gain_hook(post_gain_hook, hinterlands_cards.IllGottenGains)
+        # If the Inn is in the Supply, add its post-gain hook
+        if hinterlands_cards.Inn in self.supply.card_stacks:
+            post_gain_hook = hinterlands_cards.Inn.InnPostGainHook(self.game, hinterlands_cards.Inn)
+            self.supply.add_post_gain_hook(post_gain_hook, hinterlands_cards.Inn)
 
     def heartbeat(self):
         pass

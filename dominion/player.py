@@ -373,6 +373,14 @@ class Player:
         self.discard_pile.clear()
         random.shuffle(self.deck)
 
+    def shuffle_deck(self, message=True):
+        """
+        Shuffle the Player's deck.
+        """
+        random.shuffle(self.deck)
+        if message:
+            self.game.broadcast(f'{self.name} shuffled their deck.')
+
     def take_from_deck(self) -> Card | None:
         """
         Take a Card from the Player's deck.

@@ -149,6 +149,24 @@ class AutoInteraction(Interaction):
                 print('That is not a valid choice.\n')
                 raise
 
+    def choose_cards_of_specific_type_from_discard_pile(self, prompt, force, card_type, max_cards=1) -> List[Card]:
+        print("choose_cards_of_specific_type_from_discard_pile")
+        # Only cards of the correct type can be chosen
+        selectable_cards = [card for card in self.discard_pile if card_type in card.types]
+        if not selectable_cards:
+            self.send(f'There are no {card_type.name.lower().capitalize()} cards in your discard pile.')
+            return []
+        if max_cards is not None:
+            max_cards = min(max_cards, len(selectable_cards)) # Don't ask for more cards than are available
+        else:
+            max_cards = len(selectable_cards)
+        if force:
+            cards_chosen = random.sample(selectable_cards, max_cards)
+        else:
+            num_cards = random.randint(0, max_cards)
+            cards_chosen = random.sample(selectable_cards, num_cards)
+        return cards_chosen
+
     def choose_card_from_discard_pile(self, prompt, force):
         self.sleep_random()
         print(prompt)

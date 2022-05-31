@@ -963,6 +963,55 @@ class IllGottenGains(TreasureCard):
             self.owner.gain_to_hand(base_cards.Copper)
 
 
+class Inn(ActionCard):
+    name = 'Inn'
+    _cost = 5
+    types = [CardType.ACTION]
+    image_path = ''
+
+    description = '\n'.join(
+        [
+            # "+2 Cards",
+            # "+2 Actions",
+            "Discard 2 cards.",
+            "When you gain this, look through your discard pile, reveal any number of Action cards from it (which can include this), and shuffle them into your deck.",
+        ]
+    )
+
+    extra_cards = 2
+    extra_actions = 2
+    extra_buys = 0
+    extra_coppers = 0
+
+    class InnPostGainHook(PostGainHook):
+        persistent = True
+
+        def __call__(self, player, card, where_it_went):
+            # Look through your discard pile, reveal any number of Action cards from it (which can include this), and shuffle them into your deck.
+            prompt = "You gained an Inn. You may reveal any number of Action cards from your discard pile to shuffle into your deck."
+            cards_to_shuffle = player.interactions.choose_cards_of_specific_type_from_discard_pile(prompt, force=False, card_type=CardType.ACTION, max_cards=None)
+            if not cards_to_shuffle:
+                self.game.broadcast(f"{player.name} did not reveal any Action cards from their discard pile.")
+                return where_it_went
+            for card_to_shuffle in cards_to_shuffle:
+                player.discard_pile.remove(card_to_shuffle)
+            player.deck.extend(cards_to_shuffle)
+            player.shuffle_deck(message=False)
+            self.game.broadcast(f"{player.name} revealed {Card.group_and_sort_by_cost(cards_to_shuffle)} from their discard pile and shuffled {it_or_them(len(cards_to_shuffle))} into their deck.")
+            if card in cards_to_shuffle:
+                return player.deck
+            return where_it_went
+
+    def action(self):
+        prompt = "You played an Inn. Select 2 cards to discard."
+        if (cards := self.owner.interactions.choose_cards_from_hand(prompt, force=True, max_cards=2)) is not None:
+            for card in cards:
+                self.owner.discard_from_hand(card, message=False)
+            self.game.broadcast(f"{self.owner} discarded {Card.group_and_sort_by_cost(cards)}.")
+        else:
+            self.game.broadcast(f"{self.owner} did not have any cards to discard.")
+
+
 KINGDOM_CARDS = [
     Crossroads,
     Duchess,
@@ -984,7 +1033,7 @@ KINGDOM_CARDS = [
     Haggler,
     Highway,
     IllGottenGains,
-    # Inn,
+    Inn,
     # Mandarin,
     # Margrave,
     # Stables,

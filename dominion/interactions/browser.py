@@ -255,6 +255,45 @@ class BrowserInteraction(Interaction):
                 except (IndexError, ValueError):
                     self.send('That is not a valid choice.')
 
+    def choose_cards_of_specific_type_from_discard_pile(self, prompt, force, card_type, max_cards=1) -> List[Card]:
+        with self.move_cards():
+            print("choose_cards_of_specific_type_from_discard_pile")
+            # Only cards of the correct type can be chosen
+            selectable_cards = [card for card in self.discard_pile if card_type in card.types]
+            if not selectable_cards:
+                self.send(f'There are no {card_type.name.lower().capitalize()} cards in your discard pile.')
+                return []
+            if max_cards is not None:
+                max_cards = min(max_cards, len(selectable_cards)) # Don't ask for more cards than are available
+            else:
+                max_cards = len(selectable_cards)
+            while True:
+                try:
+                    response = self._call(
+                        "choose cards of specific type from discard pile",
+                        {
+                            "prompt": prompt,
+                            "force": force,
+                            "max_cards": max_cards,
+                            "card_type": card_type.name,
+                        }
+                    )
+                    if force:
+                        if response is None or (len(response) < max_cards and max_cards is not None):
+                            raise ArithmeticError("Not enough cards chosen.")
+                    if response is None:
+                        return []
+                    chosen_cards = []
+                    for card_data in response:
+                        for card in self.discard_pile:
+                            if card_data["id"] == card.id:
+                                chosen_cards.append(card)
+                    return chosen_cards
+                except (IndexError, ValueError):
+                    self.send('That is not a valid choice.')
+                except ArithmeticError:
+                    self.send(f"You must choose exactly {s(max_cards, 'card')}.")
+        
     def choose_card_from_discard_pile(self, prompt, force):
         with self.move_cards():
             print("choose_card_from_discard_pile")

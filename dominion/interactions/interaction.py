@@ -193,6 +193,19 @@ class Interaction(metaclass=ABCMeta):
         pass
 
     @abstractmethod
+    def choose_cards_of_specific_type_from_discard_pile(self, prompt: str, force: bool, card_type: CardType, max_cards: int | None = 1) -> List[Card]:
+        """
+        Request the player to choose cards of a specific type from their discard pile.
+
+        Args:
+            prompt: The prompt to display to the player.
+            force: Whether or not to force the player to choose the maximum number of cards. If False, the player may choose fewer or no cards.
+            card_type: The card type to be chosen.
+            max_cards: The maximum number of cards to choose.
+        """
+        pass
+
+    @abstractmethod
     def choose_card_from_discard_pile(self, prompt: str, force: bool) -> Card | None:
         """
         Request the player to choose a card from their discard pile.
