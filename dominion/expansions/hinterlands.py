@@ -54,6 +54,10 @@ class HinterlandsExpansion(Expansion):
             post_buy_hook = hinterlands_cards.Haggler.HagglerPostBuyHook(self.game)
             for card_stack in self.supply.card_stacks:
                 self.game.add_post_buy_hook(post_buy_hook, card_stack)
+        # If the Ill-Gotten Gains is in the Supply, add its post-gain hook
+        if hinterlands_cards.IllGottenGains in self.supply.card_stacks:
+            post_gain_hook = hinterlands_cards.IllGottenGains.IllGottenGainsPostGainHook(self.game, hinterlands_cards.IllGottenGains)
+            self.supply.add_post_gain_hook(post_gain_hook, hinterlands_cards.IllGottenGains)
 
     def heartbeat(self):
         pass

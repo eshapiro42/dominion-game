@@ -930,6 +930,39 @@ class Highway(ActionCard):
             self.game.current_turn.modify_cost(card_class, -1)
 
 
+class IllGottenGains(TreasureCard):
+    name = 'Ill-Gotten Gains'
+    pluralized = 'Ill-Gotten Gains'
+    _cost = 5
+    types = [CardType.TREASURE]
+    image_path = ''
+
+    value = 1
+
+    description = '\n'.join(
+        [
+            "1 $",
+            "When you play this, you may gain a Copper to your hand.",
+            "When you gain this, each other player gains a Curse."
+        ]
+    )
+
+    class IllGottenGainsPostGainHook(PostGainHook):
+        persistent = True
+
+        def __call__(self, player, card, where_it_went):
+            # Each other player gains a Curse
+            self.game.broadcast(f"Each other player gains a Curse.")
+            for other_player in player.other_players:
+                other_player.gain(base_cards.Curse)
+            return None
+
+    def play(self):
+        prompt = "You played an Ill-Gotten Gains. Would you like to gain a Copper to your hand?"
+        if self.owner.interactions.choose_yes_or_no(prompt):
+            self.owner.gain_to_hand(base_cards.Copper)
+
+
 KINGDOM_CARDS = [
     Crossroads,
     Duchess,
@@ -950,7 +983,7 @@ KINGDOM_CARDS = [
     Embassy,
     Haggler,
     Highway,
-    # IllGottenGains,
+    IllGottenGains,
     # Inn,
     # Mandarin,
     # Margrave,
