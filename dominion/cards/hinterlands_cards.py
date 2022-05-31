@@ -1109,6 +1109,38 @@ class Margrave(AttackCard):
         pass
 
 
+class Stables(ActionCard):
+    name = 'Stables'
+    pluralized = 'Stables'
+    _cost = 5
+    types = [CardType.ACTION]
+    image_path = ''
+
+    description = '\n'.join(
+        [
+            "You may discard a Treasure, for <b>+3 Cards</b> and <b>+1 Action</b>.",
+        ]
+    )
+
+    extra_cards = 0
+    extra_actions = 0
+    extra_buys = 0
+    extra_coppers = 0
+
+    def action(self):
+        # You may discard a Treasure
+        prompt = "You played a Stables. You may discard a Treasure for +3 Cards and +1 Action."
+        treasure_to_discard = self.owner.interactions.choose_specific_card_type_from_hand(prompt, card_type=CardType.TREASURE)
+        if treasure_to_discard is None:
+            self.game.broadcast(f"{self.owner} did not discard a Treasure with their Stables.")
+            return
+        self.owner.discard_from_hand(treasure_to_discard, message=False)
+        # If you do, +3 Cards and +1 Action
+        self.game.broadcast(f"{self.owner} discarded {a(treasure_to_discard)} with their Stables for +3 Cards and +1 Action.")
+        self.owner.draw(3)
+        self.owner.turn.plus_actions(1)
+        
+
 KINGDOM_CARDS = [
     Crossroads,
     Duchess,
@@ -1133,7 +1165,7 @@ KINGDOM_CARDS = [
     Inn,
     Mandarin,
     Margrave,
-    # Stables,
+    Stables,
     # BorderVillage,
     # Farmland,
 ]

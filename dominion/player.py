@@ -460,14 +460,14 @@ class Player:
             message: Whether to broadcast a message to all Players saying that the card was discarded.
         """
         if isinstance(cards, Card):
-            message = f"{self.name} discarded {a(cards.name)}."
+            message_string = f"{self.name} discarded {a(cards.name)}."
             cards = [cards]
         else:
-            message = f"{self.name} discarded {Card.group_and_sort_by_cost(cards)}."
+            message_string = f"{self.name} discarded {Card.group_and_sort_by_cost(cards)}."
         # All cards are discarded at once and before post-discard hooks are activated
         self.discard_pile.extend(cards)
         if message:
-            self.game.broadcast(message)
+            self.game.broadcast(message_string)
         # Process post-discard hooks for each discarded card
         for discarded_card in cards:
             self.process_post_discard_hooks(discarded_card)
