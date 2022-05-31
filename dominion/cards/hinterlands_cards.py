@@ -1139,7 +1139,44 @@ class Stables(ActionCard):
         self.game.broadcast(f"{self.owner} discarded {a(treasure_to_discard)} with their Stables for +3 Cards and +1 Action.")
         self.owner.draw(3)
         self.owner.turn.plus_actions(1)
-        
+
+
+class BorderVillage(ActionCard):
+    name = 'Border Village'
+    _cost = 6
+    types = [CardType.ACTION]
+    image_path = ''
+
+    description = '\n'.join(
+        [
+            # "+1 Card",
+            # "+2 Actions",
+            "When you gain this, gain a cheaper card.",
+        ]
+    )
+
+    extra_cards = 1
+    extra_actions = 2
+    extra_buys = 0
+    extra_coppers = 0
+
+    class BorderVillagePostGainHook(PostGainHook):
+        persistent = True
+
+        def __call__(self, player, card, where_it_went):
+            # Gain a cheaper card
+            max_cost = card.cost - 1
+            prompt = f"You gained a Border Village and must gain a cheaper card (costing up to {max_cost})."
+            cheaper_card_class = player.interactions.choose_card_class_from_supply(prompt, max_cost=max_cost, force=True)
+            if not cheaper_card_class:
+                return where_it_went
+            self.game.broadcast(f"{player} gained {a(cheaper_card_class.name)} after gaining their Border Village.")
+            player.gain(cheaper_card_class, message=False)
+            return where_it_went
+
+    def action(self):
+        pass
+
 
 KINGDOM_CARDS = [
     Crossroads,
@@ -1166,7 +1203,7 @@ KINGDOM_CARDS = [
     Mandarin,
     Margrave,
     Stables,
-    # BorderVillage,
+    BorderVillage,
     # Farmland,
 ]
 
