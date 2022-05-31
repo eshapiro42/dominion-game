@@ -1064,6 +1064,51 @@ class Mandarin(ActionCard):
         self.game.broadcast(f"{self.owner} put {a(card_to_put_back)} from their hand onto their deck with their Mandarin.")
 
 
+class Margrave(AttackCard):
+    name = 'Margrave'
+    _cost = 5
+    types = [CardType.ACTION, CardType.ATTACK]
+    image_path = ''
+
+    description = '\n'.join(
+        [
+            # "+3 Cards",
+            # "+1 Buy",
+            "Each other player draws a card, then discards down to 3 cards in hand.",
+        ]
+    )
+    prompt = 'Other players must discard down to 3 cards in their hands.'
+
+    extra_cards = 3
+    extra_actions = 0
+    extra_buys = 1
+    extra_coppers = 0
+
+    allow_simultaneous_reactions = True
+
+    def attack_effect(self, attacker, player):
+        # Draw a card
+        drawn_cards = player.draw(message=False)
+        if drawn_cards:
+            self.game.broadcast(f"{player} drew a card.")
+        else:
+            self.game.broadcast(f"{player} did not have any cards to draw.")
+        # Discard down to 3 cards in hand
+        number_to_discard = max(len(player.hand) - 3, 0)
+        if number_to_discard == 0:
+            self.game.broadcast(f"{player} only has {s(len(player.hand), 'card')} in their hand.")
+            return
+        self.game.broadcast(f"{player} must discard {s(number_to_discard, 'card')}.")
+        prompt = f"{attacker} has played a Margrave. Choose {s(number_to_discard, 'card')} to discard."
+        cards_to_discard = player.interactions.choose_cards_from_hand(prompt=prompt, force=True, max_cards=number_to_discard)
+        for card_to_discard in cards_to_discard:
+            player.discard_from_hand(card_to_discard, message=False)
+        self.game.broadcast(f"{player} discarded {Card.group_and_sort_by_cost(cards_to_discard)}.")
+        
+    def action(self):
+        pass
+
+
 KINGDOM_CARDS = [
     Crossroads,
     Duchess,
@@ -1087,7 +1132,7 @@ KINGDOM_CARDS = [
     IllGottenGains,
     Inn,
     Mandarin,
-    # Margrave,
+    Margrave,
     # Stables,
     # BorderVillage,
     # Farmland,
