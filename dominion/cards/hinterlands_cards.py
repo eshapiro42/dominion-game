@@ -1178,6 +1178,41 @@ class BorderVillage(ActionCard):
         pass
 
 
+class Farmland(VictoryCard):
+    name = 'Farmland'
+    _cost = 6
+    types = [CardType.VICTORY]
+    image_path = ''
+
+    description = '\n'.join(
+        [
+            "2 victory points",
+            "When you buy this, trash a card from your hand and gain a card costing exactly 2 $ more than it.",
+        ]
+    )
+
+    points = 2
+
+    class FarmlandPostBuyHook(PostBuyHook):
+        persistent = True
+
+        def __call__(self, player, card):
+            # Trash a card from your hand
+            prompt = "You bought a Farmland. You must trash a card from your hand. You will then gain a card costing exactly 2 $ more than the trashed card."    
+            card_to_trash = player.interactions.choose_card_from_hand(prompt, force=True)
+            if not card_to_trash:
+                self.game.broadcast(f"{player} had no cards in their hand to trash.")
+                return
+            player.trash(card_to_trash)
+            cost = card_to_trash.cost + 2
+            prompt = f"You bought a Farmland and trashed {a(card_to_trash)}. You must gain a card costing exactly {cost} $."
+            card_class_to_gain = player.interactions.choose_card_class_from_supply(prompt, max_cost=cost, force=True, exact_cost=True) 
+            if card_class_to_gain is None:
+                self.game.broadcast(f"{player} could not gain a card costing exactly {cost} $.")
+                return
+            player.gain(card_class_to_gain)
+            
+
 KINGDOM_CARDS = [
     Crossroads,
     Duchess,
@@ -1204,7 +1239,7 @@ KINGDOM_CARDS = [
     Margrave,
     Stables,
     BorderVillage,
-    # Farmland,
+    Farmland,
 ]
 
 

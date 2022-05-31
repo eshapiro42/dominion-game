@@ -70,6 +70,10 @@ class HinterlandsExpansion(Expansion):
         if hinterlands_cards.BorderVillage in self.supply.card_stacks:
             post_gain_hook = hinterlands_cards.BorderVillage.BorderVillagePostGainHook(self.game, hinterlands_cards.BorderVillage)
             self.supply.add_post_gain_hook(post_gain_hook, hinterlands_cards.BorderVillage)
+        # If the Farmland is in the Supply, add its post-buy hook
+        if hinterlands_cards.Farmland in self.supply.card_stacks:
+            post_buy_hook = hinterlands_cards.Farmland.FarmlandPostBuyHook(self.game)
+            self.game.add_post_buy_hook(post_buy_hook, hinterlands_cards.Farmland)
 
     def heartbeat(self):
         pass
