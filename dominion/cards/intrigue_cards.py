@@ -765,15 +765,15 @@ class Patrol(ActionCard):
         self.owner.hand.extend(victory_and_curse_cards)
         self.game.broadcast(f"{self.owner} put {s(len(victory_and_curse_cards), 'card')} into their hand: {', '.join(map(str, victory_and_curse_cards))}.")
         # Put the rest back in any order
-        choice_num = 0
-        choice_count = len(remaining_cards)
-        while remaining_cards:
-            prompt = f'Which card would you like to put on your deck next? ({choice_num + 1}/{choice_count}).'
-            choice = self.interactions.choose_from_options(prompt, remaining_cards, force=True)
-            choice_num += 1
-            self.owner.deck.append(choice)
-            self.game.broadcast(f'{self.owner} put {a(choice)} onto their deck.')
-            remaining_cards.remove(choice)    
+        if not remaining_cards:
+            return
+        # If there is only one card (or card class) left, do not bother asking the player for the order
+        if len(set([type(card) for card in remaining_cards])) != 1:
+            prompt = "You played a Patrol and must return these revealed cards to your deck in any order. (The last card you choose will be the top card of your deck.)"
+            remaining_cards = self.interactions.choose_cards_from_list(prompt, remaining_cards, force=True, max_cards=len(remaining_cards), ordered=True)
+        for card in remaining_cards:
+            self.owner.deck.append(card)
+        self.game.broadcast(f"{self.owner} put {Card.group_and_sort_by_cost(remaining_cards)} back on top of their deck.")
 
 
 class Replace(AttackCard):
