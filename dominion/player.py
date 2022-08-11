@@ -5,9 +5,9 @@ import random
 from collections import deque
 from typing import TYPE_CHECKING, Optional, Deque, List, Type
 
-from .cards import base_cards, intrigue_cards, prosperity_cards, cornucopia_cards, hinterlands_cards
+from .cards import base_cards, intrigue_cards, prosperity_cards, cornucopia_cards, hinterlands_cards, guilds_cards
 from .cards.cards import Card, CardType, ReactionCard, ReactionType
-from .expansions import ProsperityExpansion
+from .expansions import ProsperityExpansion, GuildsExpansion
 from .grammar import a, s
 from .supply import SupplyStackEmptyError
 
@@ -625,4 +625,6 @@ class Player:
         }
         if ProsperityExpansion in self.game.expansions:
             info["victory_tokens"] = self.victory_tokens
+        if GuildsExpansion in self.game.expansions:
+            info["coffers"] = self.coffers
         return info

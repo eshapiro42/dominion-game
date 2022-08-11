@@ -39,6 +39,12 @@
                             <div>{playerInfo.victory_tokens}</div>
                         </div>
                     {/if}
+                    {#if "coffers" in playerInfo}
+                    <div class="playerInfoItem">
+                        <div>Coffers</div>
+                        <div>{playerInfo.coffers}</div>
+                    </div>
+                    {/if}
                 </div>
             {/each}
         </div>

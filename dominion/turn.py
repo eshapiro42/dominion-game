@@ -5,6 +5,7 @@ from collections import defaultdict
 from typing import TYPE_CHECKING, List, Dict, Type
 
 from .cards.cards import Card, CardType
+from .expansions import GuildsExpansion
 from .grammar import a, s
 from .interactions import AutoInteraction, BrowserInteraction
 
@@ -303,16 +304,19 @@ class Turn:
         """
         Send information about the turn to the client.
         """
+        current_turn_info = {
+            "current_phase": self.current_phase,
+            "actions": s(self.actions_remaining, "Action"),
+            "buys": s(self.buys_remaining, "Buy"),
+            "coppers": self.coppers_remaining,
+            "hand_size": s(len(self.player.hand), "Card"),
+            "turns_played": self.player.turns_played,
+        }
+        if GuildsExpansion in self.game.expansions:
+            current_turn_info["coffers"] = s(self.player.coffers, "Coffer")
         self.game.socketio.emit(
             "current turn info",
-            {
-                "current_phase": self.current_phase,
-                "actions": s(self.actions_remaining, "Action"),
-                "buys": s(self.buys_remaining, "Buy"),
-                "coppers": self.coppers_remaining,
-                "hand_size": s(len(self.player.hand), "Card"),
-                "turns_played": self.player.turns_played,
-            },
+            current_turn_info,
             room=self.game.room,
         )
 
@@ -487,6 +491,9 @@ class BuyPhase(Phase):
         they would like to buy (then gain them).
         '''
         self.turn.current_phase = "Buy Phase"
+        # Run any expansion-specific pre buy actions
+        for expansion_instance in self.supply.customization.expansions:
+            expansion_instance.additional_pre_buy_phase_actions()
         # Find any Treasures in the player's hand
         treasures_available = [card for card in self.player.hand if CardType.TREASURE in card.types]
         # Ask the player which Treasures they would like to play

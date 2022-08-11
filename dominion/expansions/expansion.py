@@ -105,6 +105,7 @@ class Expansion(metaclass=ABCMeta):
 
         E.g., Young Witch.
         """
+        pass
 
     def additional_setup(self):
         """
@@ -115,6 +116,16 @@ class Expansion(metaclass=ABCMeta):
         This occurs after all Kingdom cards are added to the Supply.
 
         E.g., registering hooks to specific cards.
+        """
+        pass
+
+    def additional_pre_buy_phase_actions(self):
+        """
+        If this expansion contains additional logic that
+        needs to be performed before a player's Buy phase,
+        overload this method to perform the required actions.
+        
+        E.g., using Coffers in the Guilds expansion.        
         """
         pass
 

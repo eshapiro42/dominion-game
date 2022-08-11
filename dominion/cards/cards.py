@@ -4,7 +4,7 @@ from abc import ABCMeta, abstractmethod
 from collections import defaultdict
 from enum import Enum, auto
 from gevent import Greenlet, joinall
-from typing import TYPE_CHECKING, Deque, Dict, List, Tuple, Type
+from typing import TYPE_CHECKING, Optional, Deque, Dict, List, Tuple, Type
 
 from ..grammar import a, s, Word
 
@@ -97,6 +97,44 @@ class Card(Word, metaclass=ABCMeta):
         """
         return f"{cls.name}s"
 
+    @classmethod
+    @property
+    def can_overpay(cls) -> bool:
+        """
+        Whether the card can be overpaid for.
+
+        Defaults to False. Override this for any card that can be overpaid for.
+
+        Specific to Guilds expansion.
+        """
+        return False
+
+    @classmethod
+    def overpay(cls, amount_overpaid: int):
+        """
+        Action to perform when a card is overpaid for.
+
+        Does nothing by default. Override this for any card that can be overpaid for.
+
+        Args:
+            amount_overpaid: The amount of coppers by which the card was overpaid.
+
+        Specific to Guilds expansion.
+        """
+        pass
+
+    @property
+    def overpay_description(self) -> Optional[str]:
+        """
+        A string describing the effect of overpaying for this card, which
+        should start with a lower-case letter.
+
+        Defaults to None. Override this for any card that can be overpaid for.
+
+        Specific to Guilds expansion.
+        """
+        pass
+
     @property
     def cost(self) -> int:
         """
@@ -183,6 +221,9 @@ class Card(Word, metaclass=ABCMeta):
         }
 
     def __repr__(self):
+        return self.name
+
+    def __str__(self):
         return self.name
 
     @staticmethod

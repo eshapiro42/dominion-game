@@ -10,6 +10,7 @@
     let coppers = 0;
     let handSize = 5;
     let turnsPlayed = 0;
+    let coffers = null;
 
     $socket.on(
         "current turn info",
@@ -20,6 +21,9 @@
             coppers = data.coppers;
             handSize = data.hand_size;
             turnsPlayed = data.turns_played;
+            if ("coffers" in data) {
+                coffers = data.coffers;
+            };
         }
     );
 </script>
@@ -56,6 +60,13 @@
                 {handSize}
             </div>
         </div>
+        {#if coffers != null}
+            <div>
+                <div>
+                    {coffers}
+                </div>
+            </div>
+        {/if}
         <div>
             <div>
                 Turn #{turnsPlayed}

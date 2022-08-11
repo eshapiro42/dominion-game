@@ -170,18 +170,19 @@
                             No
                         </button>
                     {:else}
-
-                        <button on:click={submit}>Send</button>
+                        <button on:click={submit}>
+                            Send
+                        </button>
 
                         {#if !force}
-                        <button on:click={
-                            () => {
-                                selection = null;
-                                submit()
-                            }
-                        }>
-                            Skip
-                        </button>
+                            <button on:click={
+                                () => {
+                                    selection = null;
+                                    submit()
+                                }
+                            }>
+                                Skip
+                            </button>
                         {/if}
                     {/if}
 
@@ -227,7 +228,7 @@
     }
 
     .options {
-        text-align: left;
+        text-align: center;
         padding-bottom: 25px;
     }
 </style>
