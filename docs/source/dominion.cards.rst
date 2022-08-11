@@ -44,6 +44,14 @@ dominion.cards.dominion\_cards module
    :undoc-members:
    :show-inheritance:
 
+dominion.cards.guilds\_cards module
+-----------------------------------
+
+.. automodule:: dominion.cards.guilds_cards
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 dominion.cards.hinterlands\_cards module
 ----------------------------------------
 
