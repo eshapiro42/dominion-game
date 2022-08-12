@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Callable, List, Optional, Tuple, Type
 
 from .expansion import Expansion
 from ..cards import guilds_cards
-from ..grammar import s
+from ..grammar import s, GrammaticalPerson, format_pronouns
 from ..hooks import PostBuyHook
 
 if TYPE_CHECKING:
@@ -26,11 +26,13 @@ class OverpayPostBuyHook(PostBuyHook):
         # `player` is the player who bought the card
         if player.turn.coppers_remaining == 0:
             return
-        prompt = f"You bought a {purchased_card} and may overpay for it in order to {purchased_card.overpay_description}"
+        player_description = format_pronouns(purchased_card.overpay_description, GrammaticalPerson.SECOND_PERSON)
+        prompt = f"You bought a {purchased_card} and may overpay for it in order to{player_description} By how much would you like to overpay?"
         amount_overpaid = player.interactions.choose_from_range(prompt, minimum=1, maximum=player.turn.coppers_remaining, force=False)
         if amount_overpaid is None or amount_overpaid == 0:
             return
-        self.game.broadcast(f"{player} overpaid for their {purchased_card} by {amount_overpaid} $ and may {purchased_card.overpay_description}")
+        broadcast_description = format_pronouns(purchased_card.overpay_description, GrammaticalPerson.THIRD_PERSON)
+        self.game.broadcast(f"{player} overpaid for their {purchased_card} by {amount_overpaid} $ and may{broadcast_description}")
         purchased_card.overpay(amount_overpaid)
 
 

@@ -121,10 +121,6 @@
                 class:show
                 class="panel"
             >
-                <div class="title">
-                    <h4>{title}</h4>
-                </div>
-
                 <div class="flex-item">
                     <h5>{@html renderedPrompt}</h5>
                 </div>
@@ -195,6 +191,7 @@
 <style>
     main {
         margin-top: 20px;
+        padding-top: 20px;
         border: 1px solid slategrey;
         display: flex;
         flex-direction: column;
@@ -214,13 +211,6 @@
 
     .show {
         animation: blinking 3s infinite;
-    }
-
-    .title {
-        width: 100%;
-        height: 100%;
-        text-align: center;
-        margin-top: 25px;
     }
 
     .flex-item {

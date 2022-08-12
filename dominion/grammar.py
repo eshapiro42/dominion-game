@@ -1,5 +1,6 @@
 from abc import abstractmethod, ABCMeta
-
+from enum import Enum, auto
+from string import Template
 from typing import Type
 
 
@@ -92,3 +93,65 @@ def it_or_them(num: int) -> str:
     if abs(num) == 1:
         return "it"
     return "them"
+
+
+# Pronouns
+
+
+class GrammaticalPerson(Enum):
+    SECOND_PERSON = auto() # you/you/your/yours/yourself
+    THIRD_PERSON = auto() # they/them/their/theirs/themselves
+
+
+class PronounType(Enum):
+    SUBJECT_PRONOUN = auto() # you/they
+    OBJECT_PRONOUN = auto() # you/them
+    POSSESSIVE_ADJECTIVE = auto() # your/their
+    POSSESSIVE_PRONOUN = auto() # yours/theirs
+    REFLEXIVE_PRONOUN = auto() # yourself/themselves
+
+
+PRONOUN = {
+    GrammaticalPerson.SECOND_PERSON: {
+        PronounType.SUBJECT_PRONOUN: "you",
+        PronounType.OBJECT_PRONOUN: "you",
+        PronounType.POSSESSIVE_ADJECTIVE: "your",
+        PronounType.POSSESSIVE_PRONOUN: "yours",
+        PronounType.REFLEXIVE_PRONOUN: "yourself",
+    },
+    GrammaticalPerson.THIRD_PERSON: {
+        PronounType.SUBJECT_PRONOUN: "they",
+        PronounType.OBJECT_PRONOUN: "them",
+        PronounType.POSSESSIVE_ADJECTIVE: "their",
+        PronounType.POSSESSIVE_PRONOUN: "theirs",
+        PronounType.REFLEXIVE_PRONOUN: "themselves",
+    },
+}
+
+
+def format_pronouns(string_to_format: str, grammatical_person: GrammaticalPerson) -> str:
+    """
+    Format a string with placeholders for different pronoun types
+    that will be filled in with the appropriate pronoun for that
+    grammatical person.
+
+    Placeholders correspond to the members of the :obj:`PronounType`
+    enumeration.
+
+    E.g.:
+
+    .. highlight:: python
+    .. code-block:: python
+            
+        string_to_format = "How are $SUBJECT_PRONOUN enjoying $POSSESSIVE_ADJECTIVE tea?"
+        format_pronouns(string_to_format, GrammaticalPerson.SECOND_PERSON) = "How are you enjoying your tea?"
+
+    Args:
+        string_to_format: The string containing pronoun placeholders to be formatted.
+        grammatical_person: The grammatical person.
+
+    Returns:
+        A string with all pronouns formatted.
+    """
+    substitutions = {pronoun_type.name: PRONOUN[grammatical_person][pronoun_type] for pronoun_type in PronounType}
+    return Template(string_to_format).safe_substitute(substitutions)
