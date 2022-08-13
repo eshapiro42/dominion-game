@@ -54,7 +54,6 @@ class Stonemason(ActionCard):
     )
 
     can_overpay = True
-
     overpay_description = " gain two Action cards each costing the amount overpaid."
 
     extra_cards = 0
@@ -119,7 +118,6 @@ class Doctor(ActionCard):
     )
 
     can_overpay = True
-
     overpay_description = ", per $$ overpaid, look at the top card of $POSSESSIVE_ADJECTIVE deck and either trash it, discard it, or put it back."
 
     extra_cards = 0
@@ -129,7 +127,7 @@ class Doctor(ActionCard):
 
     def action(self):
         # Name a card
-        prompt = f"You played a Doctor. Please name a card. You will then reveal the top 3 cards, trash the matches and put the rest back in and order."
+        prompt = f"You played a Doctor. Please name a card. You will then reveal the top 3 cards of your deck, trash the matches and put the rest back in any order."
         options = list(self.supply.card_stacks.keys())
         named_card_class = self.interactions.choose_from_options(prompt, options, force=True)
         self.game.broadcast(f'{self.owner} named {named_card_class.name}.')
@@ -180,12 +178,75 @@ class Doctor(ActionCard):
                 self.owner.deck.append(top_card)
 
 
+class Masterpiece(TreasureCard):
+    name = 'Masterpiece'
+    _cost = 3
+    types = [CardType.TREASURE]
+    image_path = ''
+
+    value = 1
+
+    description = '\n'.join(
+        [
+            "1 $",
+            "Overpay: Gain a Silver per $ overpaid.",
+        ]
+    )
+
+    can_overpay = True
+    overpay_description = " gain a Silver per $ overpaid."
+
+    def overpay(self, amount_overpaid: int):
+        self.owner.gain(base_cards.Silver, quantity=amount_overpaid)
+
+
+class Advisor(ActionCard):
+    name = 'Advisor'
+    _cost = 4
+    types = [CardType.ACTION]
+    image_path = ''
+
+    description = '\n'.join(
+        [
+            # "+1 Action",
+            "Reval the top 3 cards of your deck. The player to your left chooses one of them. Discard that card and put the rest into your hand.",
+        ]
+    )
+
+    extra_cards = 0
+    extra_actions = 1
+    extra_buys = 0
+    extra_coppers = 0
+
+    def action(self):
+        # Reveal the top 3 cards of your deck
+        revealed_cards = [card for _ in range(3) if (card := self.owner.take_from_deck()) is not None]
+        if not revealed_cards:
+            self.game.broadcast(f"{self.owner} had no cards left in their deck to reveal.")
+            return
+        self.game.broadcast(f"{self.owner} revealed {Card.group_and_sort_by_cost(revealed_cards)}.")
+        # The player to your left chooses one of them
+        if len(set([type(card) for card in revealed_cards])) == 1:
+            # If there's only one type of card, don't bother asking which should be discarded
+            card_to_discard = revealed_cards[0]
+        else:
+            player_to_left = self.owner.other_players[0]
+            self.game.broadcast(f"{player_to_left} must choose a revealed card for {self.owner} to discard.")
+            prompt = f"{self.owner} played an Advisor and revealed these cards. You are the player to their left. Which card should {self.owner} discard? They will put the rest into their hand."
+            card_to_discard = player_to_left.interactions.choose_cards_from_list(prompt, revealed_cards, force=True)[0]
+        # Discard that card and put the rest into your hand
+        self.owner.discard(card_to_discard)
+        revealed_cards.remove(card_to_discard)
+        self.owner.hand.extend(revealed_cards)
+        self.game.broadcast(f"{self.owner} put {Card.group_and_sort_by_cost(revealed_cards)} into their hand.")
+
+
 KINGDOM_CARDS = [
     CandlestickMaker,
     Stonemason,
     Doctor,
-    # Masterpiece,
-    # Advisor,
+    Masterpiece,
+    Advisor,
     # Herald,
     # Plaza,
     # Taxman,

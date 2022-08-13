@@ -3,11 +3,11 @@ on:
   push:
     branches:
       - main
-      - svelte_client
+      - guilds
   pull_request:
     branches:
       - main
-      - svelte_client
+      - guilds
 
 jobs:
   build:

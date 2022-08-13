@@ -155,3 +155,4 @@ def format_pronouns(string_to_format: str, grammatical_person: GrammaticalPerson
     """
     substitutions = {pronoun_type.name: PRONOUN[grammatical_person][pronoun_type] for pronoun_type in PronounType}
     return Template(string_to_format).safe_substitute(substitutions)
+    
