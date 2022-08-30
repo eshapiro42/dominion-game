@@ -24,15 +24,20 @@ class OverpayPostBuyHook(PostBuyHook):
 
     def __call__(self, player: Player, purchased_card: Card):
         # `player` is the player who bought the card
+        # Check if the player has enough coppers left this turn to overpay
         if player.turn.coppers_remaining == 0:
             return
+        # Ask the player if they would like to overpay
         player_description = format_pronouns(purchased_card.overpay_description, GrammaticalPerson.SECOND_PERSON)
         prompt = f"You bought a {purchased_card} and may overpay for it in order to{player_description} By how much would you like to overpay?"
         amount_overpaid = player.interactions.choose_from_range(prompt, minimum=1, maximum=player.turn.coppers_remaining, force=False)
         if amount_overpaid is None or amount_overpaid == 0:
             return
+        # Subtract the amount overpaid from the remaining coppers this turn
+        self.game.current_turn.coppers_remaining -= amount_overpaid
         broadcast_description = format_pronouns(purchased_card.overpay_description, GrammaticalPerson.THIRD_PERSON)
         self.game.broadcast(f"{player} overpaid for their {purchased_card} by {amount_overpaid} $ and may{broadcast_description}")
+        # Call the `overpay` method of the purchased card
         purchased_card.overpay(amount_overpaid)
 
 
@@ -55,8 +60,12 @@ class GuildsExpansion(Expansion):
         # Each player starts off with no coffers
         player: Player
         for player in self.game.players:
-            # TODO: Set this to 0
-            player.coffers: int = 2
+            player.coffers: int = 0
+        # If the Baker is in the Supply, each player gets +1 Coffers
+        if guilds_cards.Baker in self.supply.card_stacks:
+            self.game.broadcast("The Baker is in the Supply so each player gets +1 Coffers.")
+            for player in self.game.players:
+                player.coffers += 1
         # Add an `OverpayPostBuyHook` to any card in the supply that can be overpaid for.
         overpay_post_buy_hook = OverpayPostBuyHook(self.game)
         for card_class in self.supply.card_stacks:
