@@ -195,3 +195,12 @@ class PostBuyHook(Hook):
             card: The card that was bought.
         """
         pass
+
+
+class PostBuyPhaseHook(Hook):
+    """
+    Hook to activate after a turn's buy phase.
+    """
+    @abstractmethod
+    def __call__(self):
+        pass

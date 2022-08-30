@@ -5,13 +5,14 @@ from collections import defaultdict
 from typing import TYPE_CHECKING, List, Dict, Type
 
 from .cards.cards import Card, CardType
+from .expansions import GuildsExpansion
 from .grammar import a, s
 from .interactions import AutoInteraction, BrowserInteraction
 
 if TYPE_CHECKING:
     from .cards.cards import ActionCard, TreasureCard
     from .game import Game
-    from .hooks import TreasureHook, PostGainHook, PostTreasureHook, PreCleanupHook
+    from .hooks import TreasureHook, PostGainHook, PostTreasureHook, PreCleanupHook, PostBuyPhaseHook
     from .player import Player
     from .supply import Supply
 
@@ -39,6 +40,7 @@ class Turn:
         self._treasure_hooks = defaultdict(list)
         self._post_treasure_hooks = []
         self._post_gain_hooks = defaultdict(list)
+        self._post_buy_phase_hooks = []
         self._pre_cleanup_hooks = []
         self._invalid_card_classes = []
         self._cost_modifiers = defaultdict(int)
@@ -156,6 +158,17 @@ class Turn:
         self._post_gain_hooks = post_gain_hooks
 
     @property
+    def post_buy_phase_hooks(self) -> List[PostBuyPhaseHook]:
+        """
+        A list of post buy phase hooks registered for this turn.
+        """
+        return self._post_buy_phase_hooks
+
+    @post_buy_phase_hooks.setter
+    def post_buy_phase_hooks(self, post_buy_phase_hooks: List[PostBuyPhaseHook]):
+        self._post_buy_phase_hooks = post_buy_phase_hooks
+
+    @property
     def pre_cleanup_hooks(self) -> List[PreCleanupHook]:
         """
         A list of pre-cleanup hooks registered for this turn.
@@ -245,6 +258,15 @@ class Turn:
         '''
         self.post_gain_hooks[card_class].append(post_gain_hook)
 
+    def add_post_buy_phase_hook(self, post_buy_phase_hook: PostBuyPhaseHook):
+        '''
+        Add a turn-wide post buy phase hook.
+
+        Args:
+            post_buy_phase_hook: The post buy phase hook to add.
+        '''
+        self.post_buy_phase_hooks.append(post_buy_phase_hook)
+
     def add_pre_cleanup_hook(self, pre_cleanup_hook: PreCleanupHook):
         '''
         Add a turn-wide pre-cleanup hook.
@@ -303,16 +325,19 @@ class Turn:
         """
         Send information about the turn to the client.
         """
+        current_turn_info = {
+            "current_phase": self.current_phase,
+            "actions": s(self.actions_remaining, "Action"),
+            "buys": s(self.buys_remaining, "Buy"),
+            "coppers": self.coppers_remaining,
+            "hand_size": s(len(self.player.hand), "Card"),
+            "turns_played": self.player.turns_played,
+        }
+        if GuildsExpansion in self.game.expansions:
+            current_turn_info["coffers"] = s(self.player.coffers, "Coffer")
         self.game.socketio.emit(
             "current turn info",
-            {
-                "current_phase": self.current_phase,
-                "actions": s(self.actions_remaining, "Action"),
-                "buys": s(self.buys_remaining, "Buy"),
-                "coppers": self.coppers_remaining,
-                "hand_size": s(len(self.player.hand), "Card"),
-                "turns_played": self.player.turns_played,
-            },
+            current_turn_info,
             room=self.game.room,
         )
 
@@ -487,6 +512,10 @@ class BuyPhase(Phase):
         they would like to buy (then gain them).
         '''
         self.turn.current_phase = "Buy Phase"
+        self.cards_gained: int = 0 # Used occasionally with cards like Merchant Guild
+        # Run any expansion-specific pre buy actions
+        for expansion_instance in self.supply.customization.expansions:
+            expansion_instance.additional_pre_buy_phase_actions()
         # Find any Treasures in the player's hand
         treasures_available = [card for card in self.player.hand if CardType.TREASURE in card.types]
         # Ask the player which Treasures they would like to play
@@ -523,6 +552,8 @@ class BuyPhase(Phase):
             else:
                 self.buy(card_class)
         self.player.interactions.send('No buys left. Ending buy phase.')
+        # Activate any post buy phase hooks registered for this turn
+        self.process_post_buy_phase_hooks()
 
     def process_treasure_hooks(self, treasure: TreasureCard):
         '''
@@ -629,6 +660,19 @@ class BuyPhase(Phase):
         # Remove any non-persistent hooks
         for hook in expired_hooks:
             self.game.post_buy_hooks[card_class].remove(hook)
+
+    def process_post_buy_phase_hooks(self):
+        '''
+        Activate any turn-wide post buy phase hooks registered to this turn.
+        '''
+        expired_hooks = []
+        for post_buy_phase_hook in self.turn.post_buy_phase_hooks:
+            post_buy_phase_hook()
+            if not post_buy_phase_hook.persistent:
+                expired_hooks.append(post_buy_phase_hook)
+        # Remove any non-persistent hooks
+        for hook in expired_hooks:
+            self.turn.post_buy_phase_hooks.remove(hook)
 
     def buy(self, card_class: Type[Card]):
         '''

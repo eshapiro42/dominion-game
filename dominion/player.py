@@ -5,11 +5,12 @@ import random
 from collections import deque
 from typing import TYPE_CHECKING, Optional, Deque, List, Type
 
-from .cards import base_cards, intrigue_cards, prosperity_cards, cornucopia_cards, hinterlands_cards
+from .cards import base_cards, intrigue_cards, prosperity_cards, cornucopia_cards, hinterlands_cards, guilds_cards
 from .cards.cards import Card, CardType, ReactionCard, ReactionType
-from .expansions import ProsperityExpansion
+from .expansions import ProsperityExpansion, GuildsExpansion
 from .grammar import a, s
 from .supply import SupplyStackEmptyError
+from .turn import BuyPhase
 
 if TYPE_CHECKING:
     from flask_socketio import SocketIO
@@ -290,6 +291,9 @@ class Player:
                 card = self.process_post_gain_actions(card, card.gain_to)
             gained_cards.append(card)
         if gained_cards:
+            # If it is this player's turn and these card are gained during the buy phase, increment the counter (needed for cards like Merchant Guild)
+            if self.turn is not None and self.turn.current_phase == "Buy Phase":
+                self.turn.buy_phase.cards_gained += len(gained_cards)
             return gained_cards
         return None
         
@@ -325,6 +329,9 @@ class Player:
             if not ignore_post_gain_actions:
                 self.process_post_gain_actions(card, self.hand)
         if gained_cards:
+            # If it is this player's turn and these card are gained during the buy phase, increment the counter (needed for cards like Merchant Guild)
+            if self.turn is not None and self.turn.current_phase == "Buy Phase":
+                self.turn.buy_phase.cards_gained += len(gained_cards)
             return gained_cards
         return None
 
@@ -361,6 +368,9 @@ class Player:
             if not ignore_post_gain_actions:
                 self.process_post_gain_actions(card, self.deck)
         if gained_cards:
+            # If it is this player's turn and these card are gained during the buy phase, increment the counter (needed for cards like Merchant Guild)
+            if self.turn is not None and self.turn.current_phase == "Buy Phase":
+                self.turn.buy_phase.cards_gained += len(gained_cards)
             return gained_cards
         return None
 
@@ -625,4 +635,6 @@ class Player:
         }
         if ProsperityExpansion in self.game.expansions:
             info["victory_tokens"] = self.victory_tokens
+        if GuildsExpansion in self.game.expansions:
+            info["coffers"] = self.coffers
         return info

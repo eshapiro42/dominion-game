@@ -121,10 +121,6 @@
                 class:show
                 class="panel"
             >
-                <div class="title">
-                    <h4>{title}</h4>
-                </div>
-
                 <div class="flex-item">
                     <h5>{@html renderedPrompt}</h5>
                 </div>
@@ -170,18 +166,19 @@
                             No
                         </button>
                     {:else}
-
-                        <button on:click={submit}>Send</button>
+                        <button on:click={submit}>
+                            Send
+                        </button>
 
                         {#if !force}
-                        <button on:click={
-                            () => {
-                                selection = null;
-                                submit()
-                            }
-                        }>
-                            Skip
-                        </button>
+                            <button on:click={
+                                () => {
+                                    selection = null;
+                                    submit()
+                                }
+                            }>
+                                Skip
+                            </button>
                         {/if}
                     {/if}
 
@@ -194,6 +191,7 @@
 <style>
     main {
         margin-top: 20px;
+        padding-top: 20px;
         border: 1px solid slategrey;
         display: flex;
         flex-direction: column;
@@ -215,19 +213,12 @@
         animation: blinking 3s infinite;
     }
 
-    .title {
-        width: 100%;
-        height: 100%;
-        text-align: center;
-        margin-top: 25px;
-    }
-
     .flex-item {
         flex: 0 0 100%;
     }
 
     .options {
-        text-align: left;
+        text-align: center;
         padding-bottom: 25px;
     }
 </style>

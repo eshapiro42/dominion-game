@@ -26,6 +26,7 @@
         {name: "Prosperity", property: "prosperity", selected: false},
         {name: "Cornucopia", property: "cornucopia", selected: false},
         {name: "Hinterlands", property: "hinterlands", selected: false},
+        {name: "Guilds", property: "guilds", selected: false},
     ];
 
     var supplyCustomizations = [
@@ -92,8 +93,8 @@
             "Allow attacked players to react to an Attack (or certain Actions) simultaneously and asynchronously (when doing so is sensible).",
             "This only works for Attack effects where the only required input is from the players being attacked, such as with the Militia. If the Attack requires feedback from the attacker, like with the Thief, the frontend is not currently equipped to deal with simultaneous reactions.",
             "This also cannot be used for Attacks that require the attacked players to gain cards from the Supply, such as the Witch. That's because there may be only one of a given card left in the Supply, and therefore the effect must be resolved in turn order.",
-            "<b>Supported cards</b>: Bandit, Bishop, Bureaucrat, Duchess, Fool's Gold, Fortune Teller, Goons, Margrave, Masquerade, Militia, Minion, Rabble, Tournament, Vault.",
-            "<b>Unsupported cards</b>: Followers, Mountebank, Noble Brigand, Jester, Oracle, Replace, Spy, Swindler, Thief, Torturer, Witch, Young Witch.",
+            "<b>Supported cards</b>: Bandit, Bishop, Bureaucrat, Duchess, Fool's Gold, Fortune Teller, Goons, Margrave, Masquerade, Militia, Minion, Rabble, Taxman, Tournament, Vault.",
+            "<b>Unsupported cards</b>: Followers, Mountebank, Noble Brigand, Jester, Oracle, Replace, Soothsayer, Spy, Swindler, Thief, Torturer, Witch, Young Witch.",
         ],
     };
 

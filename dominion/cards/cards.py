@@ -4,7 +4,7 @@ from abc import ABCMeta, abstractmethod
 from collections import defaultdict
 from enum import Enum, auto
 from gevent import Greenlet, joinall
-from typing import TYPE_CHECKING, Deque, Dict, List, Tuple, Type
+from typing import TYPE_CHECKING, Any, Optional, Deque, Dict, List, Tuple, Type
 
 from ..grammar import a, s, Word
 
@@ -97,6 +97,44 @@ class Card(Word, metaclass=ABCMeta):
         """
         return f"{cls.name}s"
 
+    @classmethod
+    @property
+    def can_overpay(cls) -> bool:
+        """
+        Whether the card can be overpaid for.
+
+        Defaults to False. Override this for any card that can be overpaid for.
+
+        Specific to Guilds expansion.
+        """
+        return False
+
+    @classmethod
+    def overpay(cls, amount_overpaid: int):
+        """
+        Action to perform when a card is overpaid for.
+
+        Does nothing by default. Override this for any card that can be overpaid for.
+
+        Args:
+            amount_overpaid: The amount of coppers by which the card was overpaid.
+
+        Specific to Guilds expansion.
+        """
+        pass
+
+    @property
+    def overpay_description(self) -> Optional[str]:
+        """
+        A string describing the effect of overpaying for this card, which
+        should start with a lower-case letter.
+
+        Defaults to None. Override this for any card that can be overpaid for.
+
+        Specific to Guilds expansion.
+        """
+        pass
+
     @property
     def cost(self) -> int:
         """
@@ -183,6 +221,9 @@ class Card(Word, metaclass=ABCMeta):
         }
 
     def __repr__(self):
+        return self.name
+
+    def __str__(self):
         return self.name
 
     @staticmethod
@@ -320,19 +361,19 @@ class AttackCard(ActionCard):
         """
         return False
 
-    def attack(self):
+    def attack(self, attack_parameter: Any = None):
         if self.prompt is not None:
             self.game.broadcast(self.prompt)
         # Simultaneous reactions are only allowed if the attack card allows it AND if simultaneous reactions are enabled for the game
         if self.allow_simultaneous_reactions and self.game.allow_simultaneous_reactions:
-            greenlets = [Greenlet.spawn(self.attack_player, player) for player in self.owner.other_players]
+            greenlets = [Greenlet.spawn(self.attack_player, player, attack_parameter) for player in self.owner.other_players]
             joinall(greenlets)
         else:
             for player in self.owner.other_players:
                 self.game.broadcast(f"{player} must react to {self.owner}'s {self.name}.")
-                self.attack_player(player)
+                self.attack_player(player, attack_parameter)
 
-    def attack_player(self, player: Player):
+    def attack_player(self, player: Player, attack_parameter: Any = None):
         def get_reaction_cards_in_hand():
             # Get all reaction cards in the player's hand that can react to an attack
             return set(card for card in player.hand if CardType.REACTION in card.types and ReactionType.ATTACK in card.reacts_to)
@@ -359,17 +400,28 @@ class AttackCard(ActionCard):
         if immune:
             self.game.broadcast(f"{player} is immune to the effects of {self.owner}'s {self.name}.")
         else:
-            self.attack_effect(self.owner, player)
+            try:
+                self.attack_effect(self.owner, player, attack_parameter)
+            except TypeError:
+                from .guilds_cards import Taxman
+                if isinstance(self, Taxman):
+                    raise
+                # The attack_effect method need not take an attack_parameter argument
+                self.attack_effect(self.owner, player)
 
     def play(self):
         """
         Complete the directions on the card and perform the attack,
         if applicable.
         """
-        self.action()
+        attack_parameter = self.action()
         if self.attacking:
-            self.attack()
-            self.post_attack_action()
+            self.attack(attack_parameter)
+            try:
+                self.post_attack_action(attack_parameter)
+            except TypeError:
+                # The post_attack_action method need not take an attack_parameter argument
+                self.post_attack_action()
 
     @property
     @abstractmethod
@@ -380,22 +432,26 @@ class AttackCard(ActionCard):
         pass
 
     @abstractmethod
-    def attack_effect(self, attacker: Player, player: Player):
+    def attack_effect(self, attacker: Player, player: Player, attack_parameter: Any):
         """
         The effect of the attack on a single other player.
 
         Args:
             attacker: The player who played the attack card.
             player: The player being attacked.
+            attack_parameters: An optional parameter returned by the :meth:`action` method.
         """
         pass
 
-    def post_attack_action(self):
+    def post_attack_action(self, attack_parameter: Any):
         """
         An optional method to call after the attack is complete.
 
         Overload for specific attack cards that require something
         to be done after the results of the attack are resolved.
+
+        Args:
+            attack_parameters: An optional parameter returned by the :meth:`action` method.
         """
         pass
 

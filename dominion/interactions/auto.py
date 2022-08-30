@@ -156,7 +156,6 @@ class AutoInteraction(Interaction):
             return None
         return cards_chosen[0]
 
-
     def choose_cards_of_specific_type_from_discard_pile(self, prompt, force, card_type, max_cards=1) -> List[Card]:
         self.sleep_random()
         print(prompt)
@@ -191,7 +190,7 @@ class AutoInteraction(Interaction):
                     print(f'Enter choice 1-{len(self.discard_pile)}: ', end='')
                     # Weight options by cost
                     choices = list(range(1, len(self.discard_pile) + 1))
-                    weights = [card.cost * 5 for card in self.discard_pile]
+                    weights = [(card.cost if card.cost != 0 else 0.001) * 5 for card in self.discard_pile]
                     card_num = random.choices(choices, weights, k=1)[0]
                     print(card_num)
                     print()
@@ -199,7 +198,7 @@ class AutoInteraction(Interaction):
                 else:
                     print(f'Enter choice 1-{len(self.discard_pile)} (0 to skip): ', end='')
                     choices = list(range(0, len(self.discard_pile) + 1))
-                    weights = [1] + [card.cost * 5 for card in self.discard_pile]
+                    weights = [1] + [(card.cost if card.cost != 0 else 0.001) * 5 for card in self.discard_pile]
                     card_num = random.choices(choices, weights, k=1)[0]
                     print(card_num)
                     print()
