@@ -7,7 +7,7 @@ import string
 from collections import defaultdict
 from flask import Flask, request, send_from_directory
 from dominion.cards.recommended_sets import ALL_RECOMMENDED_SETS
-from dominion.expansions import DominionExpansion, IntrigueExpansion, ProsperityExpansion, CornucopiaExpansion, HinterlandsExpansion
+from dominion.expansions import DominionExpansion, IntrigueExpansion, ProsperityExpansion, CornucopiaExpansion, HinterlandsExpansion, GuildsExpansion
 from dominion.game import Game, GameStartedError
 from dominion.interactions import BrowserInteraction, AutoInteraction
 
@@ -141,6 +141,7 @@ def start_game(data):
     prosperity = data.get('prosperity')
     cornucopia = data.get('cornucopia')
     hinterlands = data.get('hinterlands')
+    guilds = data.get('guilds')
     # distribute_cost = data.get('distributeCost')
     disable_attack_cards = data.get('disableAttacks')
     require_plus_two_action = data.get('requirePlusTwoAction')
@@ -168,6 +169,8 @@ def start_game(data):
             game.add_expansion(CornucopiaExpansion)
         if hinterlands:
             game.add_expansion(HinterlandsExpansion)
+        if guilds:
+            game.add_expansion(GuildsExpansion)
         # if distribute_cost:
         #     game.distribute_cost = True
         if disable_attack_cards:

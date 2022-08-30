@@ -26,6 +26,7 @@
         {name: "Prosperity", property: "prosperity", selected: false},
         {name: "Cornucopia", property: "cornucopia", selected: false},
         {name: "Hinterlands", property: "hinterlands", selected: false},
+        {name: "Guilds", property: "guilds", selected: false},
     ];
 
     var supplyCustomizations = [
