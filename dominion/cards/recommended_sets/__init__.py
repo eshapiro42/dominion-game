@@ -7,14 +7,17 @@ from .dominion_intrigue import RECOMMENDED_SETS as dominion_intrigue_recommended
 from .dominion_prosperity import RECOMMENDED_SETS as dominion_prosperity_recommended_sets
 from .dominion_cornucopia import RECOMMENDED_SETS as dominion_cornucopia_recommended_sets
 from .dominion_hinterlands import RECOMMENDED_SETS as dominion_hinterlands_recommended_sets
+from .dominion_guilds import RECOMMENDED_SETS as dominion_guilds_recommended_sets
 from .intrigue import RECOMMENDED_SETS as intrigue_recommended_sets
 from .intrigue_prosperity import RECOMMENDED_SETS as intrigue_prosperity_recommended_sets
 from .intrigue_cornucopia import RECOMMENDED_SETS as intrigue_cornucopia_recommended_sets
 from .intrigue_hinterlands import RECOMMENDED_SETS as intrigue_hinterlands_recommended_sets
+from .intrigue_guilds import RECOMMENDED_SETS as intrigue_guilds_recommended_sets
 from .prosperity import RECOMMENDED_SETS as prosperity_recommended_sets
 from .prosperity_cornucopia import RECOMMENDED_SETS as prosperity_cornucopia_recommended_sets
 from .prosperity_hinterlands import RECOMMENDED_SETS as prosperity_hinterlands_recommended_sets
 from .cornucopia_hinterlands import RECOMMENDED_SETS as cornucopia_hinterlands_recommended_sets
+from .cornucopia_guilds import RECOMMENDED_SETS as cornucopia_guilds_recommended_sets
 from .hinterlands import RECOMMENDED_SETS as hinterlands_recommended_sets
 
 if TYPE_CHECKING:
@@ -28,14 +31,17 @@ ALL_RECOMMENDED_SETS = (
     + dominion_prosperity_recommended_sets
     + dominion_cornucopia_recommended_sets
     + dominion_hinterlands_recommended_sets
+    + dominion_guilds_recommended_sets
     + intrigue_recommended_sets
     + intrigue_prosperity_recommended_sets
     + intrigue_cornucopia_recommended_sets
     + intrigue_hinterlands_recommended_sets
+    + intrigue_guilds_recommended_sets
     + prosperity_recommended_sets
     + prosperity_cornucopia_recommended_sets
     + prosperity_hinterlands_recommended_sets
     + cornucopia_hinterlands_recommended_sets
+    + cornucopia_guilds_recommended_sets
     + hinterlands_recommended_sets
 )
 
