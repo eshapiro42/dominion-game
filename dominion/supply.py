@@ -203,7 +203,7 @@ class Supply:
         self._customization = Customization()
         self._possible_kingdom_card_classes: List[Type(Card)] = []
         # TODO: Remove these (they are for debugging specific cards)
-        self.customization.required_card_classes.add(intrigue_cards.Lurker)
+        # self.customization.required_card_classes.add(guilds_cards.Stonemason)
 
     @property
     def num_players(self) -> int:
