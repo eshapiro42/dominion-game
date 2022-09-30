@@ -6,7 +6,7 @@ import random
 from abc import ABCMeta, abstractmethod
 from collections import defaultdict
 from math import inf
-from typing import TYPE_CHECKING, Dict, List, Type
+from typing import TYPE_CHECKING, Dict, DefaultDict, List, Type
 
 from .cards import cards, base_cards, prosperity_cards, intrigue_cards, cornucopia_cards, hinterlands_cards, guilds_cards
 
@@ -203,7 +203,7 @@ class Supply:
         self._customization = Customization()
         self._possible_kingdom_card_classes: List[Type(Card)] = []
         # TODO: Remove these (they are for debugging specific cards)
-        # self.customization.required_card_classes.add(guilds_cards.Stonemason)
+        self.customization.required_card_classes.add(intrigue_cards.Lurker)
 
     @property
     def num_players(self) -> int:
@@ -367,7 +367,7 @@ class Supply:
         """
         Create an empty trash pile.
         """
-        self.trash_pile = defaultdict(list)
+        self.trash_pile: DefaultDict[Type[Card], List[Card]] = defaultdict(list)
 
     def _add_additional_kingdom_cards(self):
         """

@@ -67,21 +67,22 @@ class Lurker(ActionCard):
     extra_coppers = 0
 
     def action(self):
+        actions_in_trash = any(CardType.ACTION in card_class.types for card_class in self.supply.trash_pile)
         # Choose one
         prompt = f'Which would you like to choose?'
         options = [
             'Trash an Action card from the Supply',
-            'Gain an Action card from the trash'
+            'Gain an Action card from the trash' + (' (currently none)' if not actions_in_trash else '')
         ]
         choice = self.interactions.choose_from_options(prompt, options, force=True)
-        if choice == 'Trash an Action card from the Supply':
+        if choice == options[0]:
             prompt = f'Choose an Action card from the Supply to trash.'
             card_class = self.interactions.choose_specific_card_type_from_supply(prompt, max_cost=math.inf, card_type=CardType.ACTION, force=True)
             if card_class is not None:
                 card_to_trash = self.supply.draw(card_class)
                 self.supply.trash(card_to_trash)
                 self.game.broadcast(f'{self.owner} trashed {a(card_to_trash)} from the Supply.')
-        elif choice == 'Gain an Action card from the trash':
+        elif choice == options[1]:
             prompt = f'Choose an Action card from the trash to gain.'
             card_class_to_gain = self.interactions.choose_specific_card_type_from_trash(prompt, max_cost=math.inf, card_type=CardType.ACTION, force=True)
             if card_class_to_gain is not None:
