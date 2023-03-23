@@ -20,14 +20,6 @@ dominion.interactions.browser module
    :undoc-members:
    :show-inheritance:
 
-dominion.interactions.cli module
---------------------------------
-
-.. automodule:: dominion.interactions.cli
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 dominion.interactions.interaction module
 ----------------------------------------
 

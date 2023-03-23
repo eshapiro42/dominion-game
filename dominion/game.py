@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Callable, Optional, Dict, List, Tuple, Type
 from .cards.cards import Card, CardType
 from .expansions import BaseExpansion, DominionExpansion, ProsperityExpansion, IntrigueExpansion, CornucopiaExpansion, HinterlandsExpansion, GuildsExpansion
 from .grammar import s
-from .interactions import CLIInteraction
+from .interactions import AutoInteraction
 from .player import Player
 from .supply import Supply
 from .turn import Turn
@@ -474,7 +474,7 @@ class Game:
             pass
         self.expansions.add(expansion)
 
-    def add_player(self, name: Optional[str] = None, sid: Optional[str] = None, interactions_class: Type[Interaction] = CLIInteraction):
+    def add_player(self, name: Optional[str] = None, sid: Optional[str] = None, interactions_class: Type[Interaction] = AutoInteraction):
         '''
         Add a new player into the game.
         
@@ -485,7 +485,7 @@ class Game:
         Args:
             name: The player's name. If :obj:`None`, the player will be called a "Player N", where N is their player number.
             sid: The player's Socket.IO SID. Required for networked play.
-            interactions_class: The player's interaction class. Defaults to :class:`~.cli.CLIInteraction`.
+            interactions_class: The player's interaction class. Defaults to :class:`~.auto.AutoInteraction`.
         '''
         # Players can only be added before the game starts
         if self.started:

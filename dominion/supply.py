@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import copy
-import prettytable
 import random
 from abc import ABCMeta, abstractmethod
 from collections import defaultdict
@@ -457,19 +456,6 @@ class Supply:
         """
         for card_class in self.card_stacks:
             self.card_stacks[card_class].modified_cost = self.card_stacks[card_class].base_cost
-
-    def get_table(self):
-        supply_table = prettytable.PrettyTable(hrules=prettytable.ALL)
-        supply_table.field_names = ['Number', 'Card', 'Cost', 'Type', 'Quantity', 'Description']
-        for idx, card_class in enumerate(sorted(self.card_stacks.keys(), key=lambda x: (x.types[0].value, x.cost))):
-            quantity = self.card_stacks[card_class].cards_remaining
-            types = ', '.join([type.name.lower().capitalize() for type in card_class.types])
-            supply_table.add_row([idx + 1, card_class.name, self.card_stacks[card_class].modified_cost, types, quantity, card_class.description])
-        return supply_table
-
-    def __str__(self):
-        supply_table = self.get_table()
-        return supply_table.get_string()
 
     def card_name_to_card_class(self, card_name: str) -> Type[Card]:
         '''Convert a card name to a card class. If you need to use this function, you're almost definitely doing something wrong.
