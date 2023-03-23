@@ -68,6 +68,6 @@ def test_stability():
     # Add a random number (2-4) players into the game
     num_players = random.randint(2, 4)
     for _ in range(num_players):
-        game.add_player(interactions_class=AutoInteraction)
+        game.add_player()
     game.start()
     del(game)
