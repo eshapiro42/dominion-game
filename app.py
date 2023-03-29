@@ -5,7 +5,7 @@ import flask_socketio
 import random
 import string
 from collections import defaultdict
-from flask import Flask, request, send_from_directory
+from flask import Flask, Blueprint, abort, request, send_from_directory, jsonify
 from dominion.cards.recommended_sets import ALL_RECOMMENDED_SETS
 from dominion.expansions import DominionExpansion, IntrigueExpansion, ProsperityExpansion, CornucopiaExpansion, HinterlandsExpansion, GuildsExpansion
 from dominion.game import Game, GameStartedError
@@ -36,6 +36,8 @@ connected_players = defaultdict(list)
 disconnected_players = defaultdict(list)
 # Global dictionary of CPUs, indexed by room ID, {room: CPU_COUNT}
 cpus = {}
+# Global variable for admin use
+allow_game_creation = True
 
 
 @socketio.on('join room')
@@ -87,6 +89,9 @@ def join_room(data):
 
 @socketio.on('create room')
 def create_room(data):
+    if not allow_game_creation:
+        socketio.send("The server is not allowing new games to be created at this time.", to=request.sid)
+        return None
     username = data['username']
     if data['client_type'] == 'browser':
         interaction_class = BrowserInteraction
@@ -236,14 +241,7 @@ def disconnect():
             game.kill_scheduled = True
             socketio.sleep(30)
             if game.kill_scheduled:
-                game.killed = True
-                game.heartbeat.stop()
-                # Erase the game from existence
-                games.pop(room, None)
-                connected_players.pop(room, None)
-                disconnected_players.pop(room, None)
-                cpus.pop(room, None)
-                socketio.send(f'Game {room} has ended.\n', room=room)
+                kill_game(room)
     except KeyError:
         pass
 
@@ -263,6 +261,18 @@ def handle_response(response_data):
     # Process the response
     player.interactions.response = response_data
     player.interactions.event.set()
+
+
+def kill_game(room):
+    game = games[room]
+    game.killed = True
+    game.heartbeat.stop()
+    # Erase the game from existence
+    games.pop(room, None)
+    connected_players.pop(room, None)
+    disconnected_players.pop(room, None)
+    cpus.pop(room, None)
+    socketio.send(f'Game {room} has ended.\n', room=room)
 
 
 class HeartBeat():
@@ -314,6 +324,65 @@ class HeartBeat():
 
     def stop(self):
         self.run = False
+
+
+admin = Blueprint("admin", __name__)
+
+
+@admin.before_request
+def reject_remote_addr():
+    if request.remote_addr not in ["127.0.0.1", "localhost", "0.0.0.0"]:
+        abort(403)
+
+
+@admin.route("/num_active_games")
+def admin_num_active_games():
+    return str(len(games))
+
+
+@admin.route("/list_active_games")
+def admin_list_active_games():
+    return jsonify(connected_players)
+
+
+@admin.route("/kill_game/<room>")
+def admin_kill_game(room):
+    if room not in games:
+        abort(404)
+    socketio.send(f"An administrator has killed game {room}.")
+    kill_game(room)
+    return f"Game {room} has been killed."
+
+
+@admin.route("/forbid_new_games")
+def admin_forbid_new_games():
+    global allow_game_creation
+    allow_game_creation = False
+    return "Game creation is now forbidden."
+
+
+@admin.route("/allow_new_games")
+def admin_allow_new_games():
+    global allow_game_creation
+    allow_game_creation = True
+    return "Game creation is now allowed."
+
+
+@admin.route("/broadcast_message/<message>")
+def admin_broadcast_message(message):
+    socketio.send(message)
+    return "Message broadcasted."
+
+
+@admin.route("/kill_server")
+def kill_server():
+    print("An administrator has stopped the game server.")
+    socketio.send("An administrator has stopped the game server. You have been disconnected.")
+    socketio.stop()
+    exit()
+
+
+app.register_blueprint(admin, url_prefix="/admin")
 
 
 if __name__ == '__main__':
