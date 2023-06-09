@@ -4,7 +4,7 @@ from abc import ABCMeta, abstractmethod
 from collections import defaultdict
 from typing import TYPE_CHECKING, List, Dict, Type
 
-from .cards.cards import Card, CardType
+from .cards.cards import Card, CardType, CurseCard
 from .expansions import GuildsExpansion
 from .grammar import a, s
 from .interactions import AutoInteraction, BrowserInteraction
@@ -708,6 +708,11 @@ class BuyPhase(Phase):
         Args:
             card_class: The class of card to buy. 
         '''
+        # If the player is buying a curse card, double-check that they are not doing so by accident
+        if issubclass(card_class, CurseCard):
+            prompt = f"Are you sure you want to buy a {card_class.name}?"
+            if not self.player.interactions.choose_yes_or_no(prompt):
+                return
         # Buying a card uses one buy
         self.turn.buys_remaining -= 1
         # Gain the desired card
