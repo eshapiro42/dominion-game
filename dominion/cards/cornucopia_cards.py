@@ -204,20 +204,16 @@ class HorseTraders(ReactionCard):
     class HorseTradersPreTurnHook(PreTurnHook):
         persistent = False
 
-        def __init__(self, game, player, set_aside_card: Card):
-            super().__init__(game, player)
-            self.set_aside_card = set_aside_card
-
         def __call__(self):
             self.game.broadcast(f"{self.player} draws an additional card from the Horse Traders they set aside.")
             self.player.draw(1)
             self.game.broadcast(f"{self.player} returns the Horse Traders they set aside to their hand.")
-            self.player.hand.append(self.set_aside_card)
+            self.player.hand.append(self.card)
 
     def react_to_attack(self):
         self.owner.hand.remove(self)
         self.game.broadcast(f"{self.owner} set a Horse Traders aside from their hand for next turn.")
-        pre_turn_hook = self.HorseTradersPreTurnHook(game=self.game, player=self.owner, set_aside_card=self)
+        pre_turn_hook = self.HorseTradersPreTurnHook(game=self.game, player=self.owner, card=self)
         self.game.add_pre_turn_hook(pre_turn_hook)
         immune = False
         ignore_card_class_next_time = False

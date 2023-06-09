@@ -146,10 +146,12 @@ class PreTurnHook(Hook):
     Args:
         game: The game to which the hook belongs.
         player: The player whose turn on which the hook should be activated.
+        card: The card from which the hook originated. (Needed to show a player their options at the start of the turn.)
     """
-    def __init__(self, game: Game, player: Player):
+    def __init__(self, game: Game, player: Player, card: Card):
         super().__init__(game)
         self._player = player
+        self._card = card
 
     @property
     def player(self) -> Player:
@@ -157,6 +159,13 @@ class PreTurnHook(Hook):
         The player whose turn on which the hook should be activated.
         """
         return self._player
+    
+    @property
+    def card(self) -> Card:
+        """
+        The card from which the hook originated. (Needed to show a player their options at the start of the turn.)
+        """
+        return self._card
 
     @abstractmethod
     def __call__(self):

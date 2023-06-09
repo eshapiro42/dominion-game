@@ -345,13 +345,35 @@ class Turn:
         '''
         Activate any pre turn hooks registered to the current player.
         '''
-        # Activate any pre turn hooks registered to the current player
+        # Get a list of all pre-turn hooks registered to the current player
+        player_pre_turn_hooks = [hook for hook in self.game.pre_turn_hooks if hook.player == self.player]
+        corresponding_cards = [hook.card for hook in player_pre_turn_hooks]
         expired_hooks = []
-        for pre_turn_hook in self.game.pre_turn_hooks:
-            if pre_turn_hook.player == self.player:
-                pre_turn_hook()
-                if not pre_turn_hook.persistent:
-                    expired_hooks.append(pre_turn_hook)
+        while player_pre_turn_hooks:
+            # If all cards with pre-turn hooks are the same, don't bother asking for the order
+            if len(set([type(card) for card in corresponding_cards])) == 1:
+                for hook in player_pre_turn_hooks:
+                    hook()
+                    if not hook.persistent:
+                        expired_hooks.append(hook)
+                break
+            # Otherwise, allow the player to select the hooks they want to activate in any order
+            # NOTE: This code path has not been thoroughly tested because at the time of writing, only one type of card (cornucopia_cards.HorseTraders) implements a pre-turn hook
+            else:
+                prompt = "Multiple previously played cards have given you pre-turn actions. You may activate them in any order. Please choose one to activate."
+                chosen_card = self.player.interactions.choose_cards_from_list(prompt=prompt, cards=corresponding_cards, force=True)[0]
+                # Figure out which hook corresponds to the chosen card
+                chosen_hook = None
+                for hook in player_pre_turn_hooks:
+                    if hook.card == chosen_card:
+                        chosen_hook = hook
+                chosen_hook()
+                if not chosen_hook.persistent:
+                    expired_hooks.append(chosen_hook)
+                # Remove the chosen hook from the player's options
+                player_pre_turn_hooks.remove(chosen_hook)
+                # Recalculate cards corresponding to remaining hooks
+                corresponding_cards = [hook.card for hook in player_pre_turn_hooks]
         # Remove any non-persistent hooks
         for hook in expired_hooks:
             self.game.pre_turn_hooks.remove(hook)
