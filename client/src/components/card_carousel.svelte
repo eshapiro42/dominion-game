@@ -225,6 +225,9 @@
 <style lang="scss">
     $margin: 5px;
 
+    $scrollbar-color: #34333880;
+    $scrollbar-color-hover: #343338;
+
     @keyframes blinking {
         0%, 30%, 70%, 100% {
             background-color: #fff;
@@ -237,6 +240,22 @@
     main {
         margin-top: 20px;
         border: 1px solid slategrey;
+
+        ::-webkit-scrollbar {
+            height: 10px;
+        }
+        ::-webkit-scrollbar-track {
+            background-color: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            border-radius: 20px;
+            border: 2px solid transparent;
+            background-clip: content-box;
+            background-color: $scrollbar-color;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background-color: $scrollbar-color-hover;
+        }
     }
 
     .active {

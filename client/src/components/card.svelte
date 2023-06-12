@@ -202,6 +202,12 @@
     $point: #100e17;
     $point-light: rgb(33, 29, 47);
 
+    $dark-scrollbar-color: #34333880;
+    $dark-scrollbar-color-hover: #343338;
+    $light-scrollbar-color: #d9d9d980;
+    $light-scrollbar-color-hover: #dadada;
+
+
     main {
         border: 1px solid slategrey;
         display: flex;
@@ -224,6 +230,18 @@
         overflow-y: hidden;
         overflow-x: hidden;
         font-family: "Segoe UI", sans-serif;
+
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+        ::-webkit-scrollbar-track {
+            background-color: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            border-radius: 20px;
+            border: 2px solid transparent;
+            background-clip: content-box;
+        }
     }
 
     main:hover {
@@ -279,6 +297,14 @@
     .action {
         background-color: #343338;
         color: $light-text-color;
+
+        ::-webkit-scrollbar-thumb {
+            background-color: $light-scrollbar-color;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background-color: $light-scrollbar-color-hover;
+        }
     }
 
     .action .hoverable-text, .action .selection-index {
@@ -289,6 +315,14 @@
     .attack {
         background-color: #ffcccc;
         color: $dark-text-color;
+
+        ::-webkit-scrollbar-thumb {
+            background-color: $dark-scrollbar-color;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background-color: $dark-scrollbar-color-hover;
+        }
     }
 
     .attack .hoverable-text, .attack .selection-index {
@@ -298,6 +332,14 @@
     .reaction {
         background-color: #80bfff;
         color: $dark-text-color;
+
+        ::-webkit-scrollbar-thumb {
+            background-color: $dark-scrollbar-color;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background-color: $dark-scrollbar-color-hover;
+        }
     }
 
     .reaction .hoverable-text, .reaction .selection-index {
@@ -307,6 +349,14 @@
     .victory {
         background-color: #c1f0c1;
         color: $dark-text-color;
+
+        ::-webkit-scrollbar-thumb {
+            background-color: $dark-scrollbar-color;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background-color: $dark-scrollbar-color-hover;
+        }
     }
 
     .victory .hoverable-text, .victory .selection-index {
@@ -317,6 +367,14 @@
     .curse {
         background-color: #dab3ff;
         color: $dark-text-color;
+
+        ::-webkit-scrollbar-thumb {
+            background-color: $dark-scrollbar-color;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background-color: $dark-scrollbar-color-hover;
+        }
     }
 
     .curse .hoverable-text, .curse .selection-index {
@@ -326,6 +384,14 @@
     .treasure {
         background-color: #fff0b3;
         color: $dark-text-color;
+
+        ::-webkit-scrollbar-thumb {
+            background-color: $dark-scrollbar-color;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background-color: $dark-scrollbar-color-hover;
+        }
     }
 
     .treasure .hoverable-text, .treasure .selection-index {
