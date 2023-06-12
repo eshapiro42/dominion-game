@@ -1,6 +1,6 @@
 bidict==0.22.0
 click==8.1.2
-Flask==2.1.1
+Flask==2.2.5
 Flask-SocketIO==5.1.1
 gevent==21.12.0
 gevent-websocket==0.10.1
