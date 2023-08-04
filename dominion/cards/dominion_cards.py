@@ -146,7 +146,7 @@ class Merchant(ActionCard):
 
         def __call__(self):
             player = self.game.current_turn.player
-            self.game.broadcast(f'{player} played a Silver and gets +1 $ from his Merchant.')
+            self.game.broadcast(f'{player} played a Silver and gets +1 $ from their Merchant.')
             player.turn.coppers_remaining += 1
 
 
@@ -858,7 +858,7 @@ class Spy(AttackCard):
         [
             # '+1 Card',
             # '+1 Action',
-            'Each player (including you) reveals the top card of his deck and either discards it or puts it back, your choice.'
+            'Each player (including you) reveals the top card of their deck and either discards it or puts it back, your choice.'
         ]
     )
 
@@ -897,7 +897,7 @@ class Spy(AttackCard):
 
     @property
     def prompt(self):
-        return f"Each player reveals the top card of his deck and either discards it or puts it back, {self.owner}'s choice."
+        return f"Each player reveals the top card of their deck and either discards it or puts it back, {self.owner}'s choice."
 
 
 class Thief(AttackCard):
@@ -909,7 +909,7 @@ class Thief(AttackCard):
 
     description = '\n'.join(
         [
-            'Each other player reveals the top 2 cards of his deck. If they revealed any Treasure cards, they trash one of them that you choose.',
+            'Each other player reveals the top 2 cards of their deck. If they revealed any Treasure cards, they trash one of them that you choose.',
             'You may gain any or all of these trashed cards. They discard the other revealed cards.'
         ]
     )
@@ -970,7 +970,7 @@ class Thief(AttackCard):
 
     @property
     def prompt(self):
-        return f'Each other player reveals the top 2 cards of his deck. If they revealed any Treasure cards, they trash one of them that {self.owner} chooses. {self.owner} may gain any or all of these trashed cards. They discard the other revealed cards.'
+        return f'Each other player reveals the top 2 cards of their deck. If they revealed any Treasure cards, they trash one of them that {self.owner} chooses. {self.owner} may gain any or all of these trashed cards. They discard the other revealed cards.'
 
     def action(self):
         pass
