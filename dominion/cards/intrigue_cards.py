@@ -601,7 +601,7 @@ class SecretPassage(ActionCard):
             index = self.interactions.choose_from_range(prompt, minimum, maximum, force=True) - 1
             self.owner.hand.remove(card)
             self.owner.deck.insert(len(self.owner.deck) - index, card)
-            self.game.broadcast(f'{self.owner} put a card from his hand into position {index + 1} in his deck.')
+            self.game.broadcast(f'{self.owner} put a card from their hand into position {index + 1} in their deck.')
 
 
 class Courtier(ActionCard):
