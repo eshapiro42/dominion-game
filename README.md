@@ -42,7 +42,7 @@ The server also handles getting answers from each client (which card to play, wh
 
 The backend is written in `Python` and uses `Flask-SocketIO` as an HTTP and `Socket.IO` server. Make sure you have `Python 3.8` or newer installed. I recommend using the official installers from [Python.org](https://www.python.org/downloads/).
 
-If you are using Windows (which I do not recommended), you will need to install Microsoft Visual C++ 14.0 or higher or you will encounter issues trying to install Python dependencies. You can install it from [Microsoft C++ Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/). If you're using Linux or WSL, you can skip this step.
+If you are using Windows (which I do not recommend), you will need to install Microsoft Visual C++ 14.0 or higher or you will encounter issues trying to install Python dependencies. You can install it from [Microsoft C++ Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/). If you're using Linux or WSL, you can skip this step.
 
 Navigate into the `dominion-game` repository that you just cloned and create a new virtual environment there. Make sure you are using the desired version of `Python` to create the virtual environment (i.e., replace `python3.10` in the second line below with whichever interpreter you are using).
 
