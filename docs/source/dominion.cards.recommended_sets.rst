@@ -4,22 +4,6 @@ dominion.cards.recommended\_sets package
 Submodules
 ----------
 
-dominion.cards.recommended\_sets.\*hinterlands\_guilds module
--------------------------------------------------------------
-
-.. automodule:: dominion.cards.recommended_sets.*hinterlands_guilds
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-dominion.cards.recommended\_sets.\*prosperity\_guilds module
-------------------------------------------------------------
-
-.. automodule:: dominion.cards.recommended_sets.*prosperity_guilds
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 dominion.cards.recommended\_sets.cornucopia\_guilds module
 ----------------------------------------------------------
 
