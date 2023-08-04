@@ -68,11 +68,6 @@ class ProsperityExpansion(Expansion):
         if prosperity_cards.Peddler in self.supply.card_stacks:
             pre_buy_hook = prosperity_cards.Peddler.PeddlerPreBuyHook(self.game)
             self.game.add_pre_buy_hook(pre_buy_hook, prosperity_cards.Peddler)
-        # If the Talisman is in the Supply, add its post-buy hook to all cards in the Supply
-        if prosperity_cards.Talisman in self.supply.card_stacks:
-            post_buy_hook = prosperity_cards.Talisman.TalismanPostBuyHook(self.game)
-            for card_class in self.supply.card_stacks:
-                self.game.add_post_buy_hook(post_buy_hook, card_class)
 
     def heartbeat(self):
         # Display Trade Route info

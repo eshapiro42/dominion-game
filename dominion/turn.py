@@ -12,7 +12,7 @@ from .interactions import AutoInteraction, BrowserInteraction
 if TYPE_CHECKING:
     from .cards.cards import ActionCard, TreasureCard
     from .game import Game
-    from .hooks import TreasureHook, PostGainHook, PostTreasureHook, PreCleanupHook, PostBuyPhaseHook
+    from .hooks import TreasureHook, PostGainHook, PostTreasureHook, PreCleanupHook, PostBuyPhaseHook, PostBuyHook
     from .player import Player
     from .supply import Supply
 
@@ -41,6 +41,7 @@ class Turn:
         self._post_treasure_hooks = []
         self._post_gain_hooks = defaultdict(list)
         self._post_buy_phase_hooks = []
+        self._post_buy_hooks = defaultdict(list)
         self._pre_cleanup_hooks = []
         self._invalid_card_classes = []
         self._cost_modifiers = defaultdict(int)
@@ -169,6 +170,17 @@ class Turn:
         self._post_buy_phase_hooks = post_buy_phase_hooks
 
     @property
+    def post_buy_hooks(self) -> List[PostBuyHook]:
+        """
+        A list of post buy hooks registered for this turn.
+        """
+        return self._post_buy_hooks
+
+    @post_buy_hooks.setter
+    def post_buy_hooks(self, post_buy_hooks: List[PostBuyHook]):
+        self._post_buy_hooks = post_buy_hooks
+
+    @property
     def pre_cleanup_hooks(self) -> List[PreCleanupHook]:
         """
         A list of pre-cleanup hooks registered for this turn.
@@ -266,6 +278,16 @@ class Turn:
             post_buy_phase_hook: The post buy phase hook to add.
         '''
         self.post_buy_phase_hooks.append(post_buy_phase_hook)
+
+    def add_post_buy_hook(self, post_buy_hook: PostBuyHook, card_class: Type[Card]):
+        '''
+        Add a turn-wide post-buy hook to a specific card class.
+
+        Args:
+            post_buy_hook: The post-buy hook to add.
+            card_class: The card class which should activate the post-buy hook upon being bought.
+        '''
+        self.post_buy_hooks[card_class].append(post_buy_hook)
 
     def add_pre_cleanup_hook(self, pre_cleanup_hook: PreCleanupHook):
         '''
@@ -674,6 +696,7 @@ class BuyPhase(Phase):
             purchased_card: The card to process post buy hooks for.
         '''
         card_class = type(purchased_card)
+        # Activate any game-wide post-buy-hooks
         expired_hooks = []
         for post_buy_hook in self.game.post_buy_hooks[card_class]:
             post_buy_hook(self.player, purchased_card)
@@ -682,7 +705,16 @@ class BuyPhase(Phase):
         # Remove any non-persistent hooks
         for hook in expired_hooks:
             self.game.post_buy_hooks[card_class].remove(hook)
-
+        # Activate any turn-wide post-buy-hooks
+        expired_hooks = []
+        for post_buy_hook in self.turn.post_buy_hooks[card_class]:
+            post_buy_hook(self.player, purchased_card)
+            if not post_buy_hook.persistent:
+                expired_hooks.append(post_buy_hook)
+        # Remove any non-persistent hooks
+        for hook in expired_hooks:
+            self.turn.post_buy_hooks[card_class].remove(hook)
+        
     def process_post_buy_phase_hooks(self):
         '''
         Activate any turn-wide post buy phase hooks registered to this turn.

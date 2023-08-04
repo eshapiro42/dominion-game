@@ -298,14 +298,23 @@ class Talisman(TreasureCard):
     class TalismanPostBuyHook(PostBuyHook):
         persistent = True
 
+        def __init__(self, game, talisman: Card):
+            super().__init__(game)
+            self.talisman = talisman
+
         def __call__(self, player: Player, purchased_card: Card):
+            # If the Talisman is no longer in play, nothing happens
+            if not self.talisman in player.played_cards:
+                return
             if purchased_card.cost <= 4 and CardType.VICTORY not in purchased_card.types:
                 card_class = type(purchased_card)
                 if player.gain(card_class, message=False):
                     self.game.broadcast(f'{player} gained an extra {purchased_card.name} from their Talisman.')
 
     def play(self):
-        pass
+        post_buy_hook = self.TalismanPostBuyHook(self.game, talisman=self)
+        for card_class in self.supply.card_stacks:
+            self.owner.turn.add_post_buy_hook(post_buy_hook, card_class)
 
 
 class WorkersVillage(ActionCard):
