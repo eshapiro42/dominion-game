@@ -19,8 +19,25 @@
 {#if (show)}
     <section id="Trade Route">
         <main class="panel">
-            <div class="title">
-                <h4>{title}</h4>
+            <div class="hoverable">
+                <div class="title">
+                    <h4>{title}</h4>
+                </div>
+                <span class="hoverable-text">
+                    <span>
+                        At the start of the game, there is a Coin token on each Victory card pile being used.
+                    </span>
+                    <span>
+                        Whenever any player gains the first card from a Victory card pile, its Coin token is moved to this mat.     
+                    </span>
+                </span>
+            </div>
+
+            <div class="description">
+                <h6>
+                </h6>
+                <h6>
+                </h6>
             </div>
 
             <div class="columns">
@@ -85,4 +102,34 @@
         align-self: center;
         padding: 10px;
     }
+
+    .hoverable {
+        position: relative;
+        display: inline-block;
+        border-bottom: 1px dotted #343338;
+    }
+
+    .hoverable .hoverable-text {
+        visibility: hidden;
+        position: absolute;
+        left: 50px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 10px;
+        z-index: 1;
+        font-size: 85%;
+        width: 300px;
+        background-color: #343338;
+        color: #dadada;
+        text-align: left;
+        overflow-wrap: break-word;
+        border-radius: 10px;
+        padding: 10px;
+    }
+
+    .hoverable:hover .hoverable-text {
+        visibility: visible;
+    }
+
 </style>
