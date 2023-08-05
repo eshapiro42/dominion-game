@@ -735,6 +735,17 @@ class Trader(ReactionCard):
         else:
             where_it_came_from_string = "Supply"
             self.supply.return_card(gained_card)
+            except KeyError:
+                if CardType.PRIZE in gained_card.types:
+                    cornucopia_expansion_instance = None
+                    for expansion_instance in self.supply.customization.expansions:
+                        if expansion_instance.name == "Cornucopia":
+                            cornucopia_expansion_instance = expansion_instance
+                            break
+                    prizes = cornucopia_expansion_instance.prizes
+                    prizes.append(gained_card)
+                else:
+                    raise
         self.game.broadcast(f"{self.owner.name}'s revealed a Trader to return the gained {gained_card.name} from {where_it_went_string} to the {where_it_came_from_string} and put a Silver in {where_it_went_string} instead.")
         ignore_card_class_next_time = True
         return silver, where_it_went, ignore_card_class_next_time
