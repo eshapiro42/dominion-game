@@ -71,6 +71,10 @@
     }
 
     $socket.on("message", function(data) {
+        data = data
+            .replaceAll("$", `<i class="fa-solid fa-coins"></i>`)
+            .replaceAll("victory points", `<i class="bi bi-shield-shaded"></i>`)
+            .replaceAll("victory point", `<i class="bi bi-shield-shaded"></i>`);
         addMessage(data);
     });
 
@@ -99,7 +103,7 @@
                     <div class="toast"
                         class:playerMessage="{toast.playerMessage}"
                     >
-                        {toast.text}
+                        {@html toast.text}
                     </div>
                 {/each}
                 <div class="messageInputs">
@@ -118,7 +122,7 @@
             <div class="toast"
                 class:playerMessage="{toast.playerMessage}"
             >
-                {toast.text}
+                {@html toast.text}
             </div>
         {/each}
     </div>
