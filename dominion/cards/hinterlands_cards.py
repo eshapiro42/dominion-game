@@ -35,6 +35,9 @@ class Crossroads(ActionCard):
     extra_buys = 0
     extra_coppers = 0
 
+    has_plus_two_actions = True
+    has_plus_one_card = True
+
     def action(self):
         # Reveal your hand
         self.game.broadcast(f"{self.owner.name} revealed their hand: {Card.group_and_sort_by_cost(self.owner.hand)}.")
@@ -290,6 +293,8 @@ class Oracle(AttackCard):
     extra_actions = 0
     extra_buys = 0
     extra_coppers = 0
+
+    has_plus_one_card = True
 
     allow_simultaneous_reactions = False # The frontend cannot currently handle the attacker simultaneously reacting to multiple players' responses
 
@@ -656,6 +661,9 @@ class SpiceMerchant(ActionCard):
     extra_buys = 0
     extra_coppers = 0
 
+    has_plus_one_card = True
+    has_plus_one_buy = True
+
     def action(self):
         prompt = """
             You played a Spice Merchant and may trash a Treasure from your hand. If you do, you will choose one:
@@ -734,7 +742,8 @@ class Trader(ReactionCard):
             self.supply.trash(gained_card)
         else:
             where_it_came_from_string = "Supply"
-            self.supply.return_card(gained_card)
+            try:
+                self.supply.return_card(gained_card)
             except KeyError:
                 if CardType.PRIZE in gained_card.types:
                     cornucopia_expansion_instance = None
@@ -1137,6 +1146,8 @@ class Stables(ActionCard):
     extra_actions = 0
     extra_buys = 0
     extra_coppers = 0
+
+    has_plus_one_card = True
 
     def action(self):
         # You may discard a Treasure

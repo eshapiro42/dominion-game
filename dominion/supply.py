@@ -181,10 +181,10 @@ class Customization:
             Whether the card class has the effect.
         """
         return {
-            "plus_two_action": hasattr(card_class, "extra_actions") and card_class.extra_actions >= 2,
-            "drawer": hasattr(card_class, "extra_cards") and card_class.extra_cards >= 1,
-            "buy": hasattr(card_class, "extra_buys") and card_class.extra_buys >= 1,
-            "trashing": "trash" in card_class.description.lower(),
+            "plus_two_action": card_class.has_plus_two_actions,
+            "drawer": card_class.has_plus_one_card,
+            "buy": card_class.has_plus_one_buy,
+            "trashing": card_class.has_trashing,
         }[effect_string]
 
 

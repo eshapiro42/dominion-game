@@ -151,6 +151,57 @@ class Card(Word, metaclass=ABCMeta):
         cards that are gained to other locations, e.g., Nomad Camp.
         """
         return self.owner.discard_pile
+    
+    @classmethod
+    @property
+    def has_plus_two_actions(self) -> bool:
+        """
+        Whether the card gives >= +2 Actions.
+
+        By default, this is calculated from the `extra_actions` property. However,
+        since only Action cards have this property and not all cards that give
+        >= +2 Actions have that property set, this should be overridden for any
+        cards that need explicit handling.
+        """
+        return hasattr(self, "extra_actions") and self.extra_actions >= 2
+    
+    @classmethod
+    @property
+    def has_plus_one_card(self) -> bool:
+        """
+        Whether the card gives >= +1 Cards.
+
+        By default, this is calculated from the `extra_cards` property. However,
+        since only Action cards have this property and not all cards that give
+        >= +1 Cards have that property set, this should be overridden for any
+        cards that need explicit handling.
+        """
+        return hasattr(self, "extra_cards") and self.extra_cards >= 1
+    
+    @classmethod
+    @property
+    def has_plus_one_buy(self) -> bool:
+        """
+        Whether the card gives >= +1 Buys.
+
+        By default, this is calculated from the `extra_buys` property. However,
+        since only Action cards have this property and not all cards that give
+        >= +1 Buys have that property set, this should be overridden for any
+        cards that need explicit handling.
+        """
+        return hasattr(self, "extra_buys") and self.extra_buys >= 1
+    
+    @classmethod
+    @property
+    def has_trashing(self) -> bool:
+        """
+        Whether the card allows Trashing.
+
+        TODO: This is currently calculated from the card description. This
+        implementation may not be totally accurate if a card mentions Trashing
+        but does not itself allow Trashing of cards.
+        """
+        return "trash" in self.description.lower()
 
     @property
     @abstractmethod

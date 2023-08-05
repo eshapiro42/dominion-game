@@ -108,6 +108,9 @@ class Pawn(ActionCard):
     extra_buys = 0
     extra_coppers = 0
 
+    has_plus_one_card = True
+    has_plus_one_buy = True
+
     def action(self):
         options = [
             '+1 Card',
@@ -222,6 +225,8 @@ class ShantyTown(ActionCard):
     extra_buys = 0
     extra_coppers = 0
 
+    has_plus_one_card = True
+
     def action(self):
         self.game.broadcast(f"{self.owner} reveals their hand: {', '.join(map(str, self.owner.hand))}.")
         if not any(CardType.ACTION in card.types for card in self.owner.hand):
@@ -247,6 +252,8 @@ class Steward(ActionCard):
     extra_actions = 0
     extra_buys = 0
     extra_coppers = 0
+
+    has_plus_one_card = True
 
     def action(self):
         # Choose one
@@ -621,6 +628,8 @@ class Courtier(ActionCard):
     extra_buys = 0
     extra_coppers = 0
 
+    has_plus_one_buy = True
+
     def action(self):
         prompt = 'Choose a card from your hand to reveal.'
         revealed_card = self.interactions.choose_card_from_hand(prompt, force=True)
@@ -692,6 +701,8 @@ class Minion(AttackCard):
     extra_actions = 1
     extra_buys = 0
     extra_coppers = 0
+
+    has_plus_one_card = True
 
     allow_simultaneous_reactions = True
 
@@ -959,6 +970,9 @@ class Nobles(ActionCard, VictoryCard):
     extra_actions = 0
     extra_buys = 0
     extra_coppers = 0
+
+    has_plus_two_actions = True
+    has_plus_one_card = True
 
     points = 2
 

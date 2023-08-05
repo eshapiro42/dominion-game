@@ -386,6 +386,8 @@ class Contraband(TreasureCard):
         ]
     )
 
+    has_plus_one_buy = True
+
     class ContrabandPostTreasureHook(PostTreasureHook):
         persistent = False
         

@@ -31,6 +31,9 @@ class Hamlet(ActionCard):
     extra_buys = 0
     extra_coppers = 0
 
+    has_plus_two_actions = True
+    has_plus_one_buy = True
+
     def action(self):
         # You may discard a card for +1 Action
         prompt = f'Would you like to discard a card for +1 Action?'
@@ -115,6 +118,8 @@ class Menagerie(ActionCard):
     extra_actions = 1
     extra_buys = 0
     extra_coppers = 0
+
+    has_plus_one_card = True
 
     def action(self):
         # Reveal your hand
@@ -267,6 +272,8 @@ class Tournament(ActionCard):
     extra_actions = 1
     extra_buys = 0
     extra_coppers = 0
+
+    has_plus_one_card = True
 
     def action(self):
         def player_reaction(player):
@@ -719,6 +726,9 @@ class TrustySteed(ActionCard):
     extra_actions = 0
     extra_buys = 0
     extra_coppers = 0
+
+    has_plus_two_actions = False # While technically this could be True, there is only one of these in the game and it's not even in the Supply.
+    has_plus_one_cards = False # While technically this could be True, there is only one of these in the game and it's not even in the Supply.
 
     def action(self):
         options = [
