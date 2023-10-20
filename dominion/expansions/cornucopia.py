@@ -37,9 +37,9 @@ class CornucopiaExpansion(Expansion):
             # Otherwise, randomly choose a card class costing 2 $ or 3 $ to be the Bane card
             else:
                 possible_bane_card_classes = [card_class for card_class in self.supply.possible_kingdom_card_classes if card_class not in self.supply.card_stacks and card_class._cost in [2, 3]]
-                # If there are no cards costing 2 $ or 3 $, then remove one from the Supply, replace it with something else, and use it as a Bane card
+                # If there are no cards costing 2 $ or 3 $, then remove such a Kingdom card from the Supply, replace it with something else, and use it as a Bane card
                 if not possible_bane_card_classes:
-                    card_classes_costing_2_or_3 = [card_class for card_class in self.supply.card_stacks if card_class._cost in [2, 3]]
+                    card_classes_costing_2_or_3 = [card_class for card_class in self.supply.card_stacks if card_class._cost in [2, 3] and card_class not in self.supply.basic_card_piles]
                     bane_card_class = random.choice(card_classes_costing_2_or_3)
                     self.supply.card_stacks.pop(bane_card_class)
                     replacement_card_class = random.choice(self.supply.possible_kingdom_card_classes)

@@ -356,10 +356,10 @@ class Supply:
         """
         Add basic cards from the selected expansions into the supply.
         """
-        basic_card_piles = []
+        self.basic_card_piles = []
         for expansion in self.customization.expansions:
-            basic_card_piles += expansion.basic_card_piles
-        for card_class, pile_size in basic_card_piles:
+            self.basic_card_piles += expansion.basic_card_piles
+        for card_class, pile_size in self.basic_card_piles:
             self.card_stacks[card_class] = FiniteSupplyStack(card_class, pile_size)
 
     def _create_trash_pile(self):
