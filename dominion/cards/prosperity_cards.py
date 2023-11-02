@@ -705,7 +705,7 @@ class Venture(TreasureCard):
 class Goons(AttackCard):
     name = 'Goons'
     pluralized = 'Goons'
-    _cost = 5
+    _cost = 6
     types = [CardType.ACTION, CardType.ATTACK]
     image_path = ''
 
