@@ -5,7 +5,9 @@ import flask_socketio
 import random
 import string
 from collections import defaultdict
+from config import Config
 from flask import Flask, Blueprint, abort, request, send_from_directory, jsonify
+from flask_httpauth import HTTPBasicAuth
 from dominion.cards.recommended_sets import ALL_RECOMMENDED_SETS
 from dominion.expansions import DominionExpansion, IntrigueExpansion, ProsperityExpansion, CornucopiaExpansion, HinterlandsExpansion, GuildsExpansion
 from dominion.game import Game, GameStartedError
@@ -15,6 +17,12 @@ from dominion.interactions import BrowserInteraction, AutoInteraction
 app = Flask(__name__)
 app.config.from_object("config.Config")
 socketio = flask_socketio.SocketIO(app, async_mode="gevent", logger=False, engineio_logger=False)
+auth = HTTPBasicAuth()
+
+
+@auth.verify_password
+def verify_password(username, password):
+    return username == "admin" and password == Config.ADMIN_PASSWORD
 
 
 @app.route("/")
@@ -330,9 +338,9 @@ admin = Blueprint("admin", __name__)
 
 
 @admin.before_request
-def reject_remote_addr():
-    if request.remote_addr not in ["127.0.0.1", "localhost", "0.0.0.0"]:
-        abort(403)
+@auth.login_required
+def login_required():
+    pass
 
 
 @admin.route("/num_active_games")

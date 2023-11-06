@@ -1,40 +1,51 @@
 import requests
 import time
 
+from requests.auth import HTTPBasicAuth
+
 
 class Administrator:
-    def __init__(self, host: str = "http://localhost", port: int = 5000):
+    def __init__(
+            self, 
+            password: str,
+            host: str = "http://localhost",
+            port: int = 5000,
+    ):
+        self.auth = HTTPBasicAuth("admin", password)
         self.host = host
         self.port = port
         self.admin_base_url = f"{self.host}:{self.port}/admin"
 
-    # BASIC ADMIN APIS
+    def api_call(self, api):
+        return requests.get(f"{self.admin_base_url}/{api}", auth=self.auth)
+
+    # BASIC ADMIN APIS__
     def num_active_games(self):
-        r = requests.get(f"{self.admin_base_url}/num_active_games")
+        r = self.api_call("num_active_games")
         return r.json()
     
     def list_active_games(self):
-        r = requests.get(f"{self.admin_base_url}/list_active_games")
+        r = self.api_call("list_active_games")
         return r.json()
 
     def kill_game(self, room: str):
-        r = requests.get(f"{self.admin_base_url}/kill_game/{room}")
+        r = self.api_call(f"kill_game/{room}")
         return r.text
     
     def forbid_new_games(self):
-        r = requests.get(f"{self.admin_base_url}/forbid_new_games")
+        r = self.api_call("forbid_new_games")
         return r.text
     
     def allow_new_games(self):
-        r = requests.get(f"{self.admin_base_url}/allow_new_games")
+        r = self.api_call("allow_new_games")
         return r.text
     
     def broadcast_message(self, message: str):
-        r = requests.get(f"{self.admin_base_url}/broadcast_message/{message}")
+        r = self.api_call(f"broadcast_message/{message}")
         return r.text
     
     def kill_server(self):
-        r = requests.get(f"{self.admin_base_url}/kill_server")
+        r = self.api_call("kill_server")
         return r.text
 
     # COMPOSITE APIS

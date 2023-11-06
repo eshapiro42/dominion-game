@@ -9,3 +9,4 @@ class Config:
     ENV = environ.get("ENV")
     DEBUG = environ.get("DEBUG")
     SECRET_KEY = environ.get("SECRET_KEY")
+    ADMIN_PASSWORD = environ.get("ADMIN_PASSWORD")
