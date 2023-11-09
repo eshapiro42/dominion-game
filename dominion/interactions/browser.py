@@ -394,12 +394,14 @@ class BrowserInteraction(Interaction):
                 except (IndexError, ValueError, TypeError):
                     self.send('That is not a valid choice.')
 
-    def choose_specific_card_type_from_supply(self, prompt, max_cost, card_type, force):
+    def choose_specific_card_type_from_supply(self, prompt, max_cost, card_type, force, exact_cost=False):
         with self.move_cards():
             print("choose_specific_card_type_from_supply")
             # Only cards you can afford can be chosen (and with non-zero quantity)
             stacks = self.supply.card_stacks
             buyable_card_stacks = [card_class for card_class in stacks if card_type in card_class.types and stacks[card_class].modified_cost <= max_cost and stacks[card_class].cards_remaining > 0]
+            if exact_cost:
+                buyable_card_stacks = [card_class for card_class in buyable_card_stacks if stacks[card_class].modified_cost == max_cost]
             if not buyable_card_stacks:
                 self.send('There are no cards in the Supply that you can buy.')
                 return None
@@ -410,6 +412,7 @@ class BrowserInteraction(Interaction):
                     "max_cost": max_cost if max_cost != math.inf else None,
                     "card_type": card_type.name,
                     "force": force,
+                    "exact_cost": exact_cost,
                 }
             )
             if card_data is None:

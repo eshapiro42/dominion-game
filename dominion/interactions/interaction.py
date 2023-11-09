@@ -245,7 +245,7 @@ class Interaction(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def choose_specific_card_type_from_supply(self, prompt: str, max_cost: int, card_type: CardType, force: bool) -> Optional[Type[Card]]:
+    def choose_specific_card_type_from_supply(self, prompt: str, max_cost: int, card_type: CardType, force: bool, exact_cost: bool = False) -> Optional[Type[Card]]:
         """
         Request the player to choose a card of the specified type from the supply.
 
@@ -254,6 +254,7 @@ class Interaction(metaclass=ABCMeta):
             max_cost: The maximum cost of the card class to be chosen.
             card_type: The card type to be chosen.
             force: Whether or not to force the player to choose a card class.
+            exact_cost: Whether or not to choose a card class with the exact specified cost.
         """
         pass
 

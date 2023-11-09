@@ -86,19 +86,18 @@ class Stonemason(ActionCard):
     def overpay(self, amount_overpaid: int):
         # Gain two action cards each costing the amount overpaid
         for num in range(2):
-            gainable_card_classes = [card_class for card_class in self.supply.card_stacks if CardType.ACTION in card_class.types and card_class.cost == amount_overpaid]
+            stacks = self.supply.card_stacks
+            gainable_card_classes = [card_class for card_class in stacks if CardType.ACTION in card_class.types and stacks[card_class].modified_cost == amount_overpaid and stacks[card_class].cards_remaining > 0]
             if not gainable_card_classes:
                 self.game.broadcast(f"There are no available Action cards for {self.owner} to gain costing {amount_overpaid} $.")
                 return
             prompt = f"You overpaid for your purchased Stonemason by {amount_overpaid} $. Please choose an Action card ({num + 1} of 2) to gain costing {amount_overpaid} $."
-            # TODO: Add `exact_cost` parameter to `Interaction.choose_specific_card_type_from_supply` to avoid this sort of hack
-            invalid_card_classes = [card_class for card_class in self.supply.card_stacks if CardType.ACTION not in card_class.types]
-            card_class_to_gain = self.owner.interactions.choose_card_class_from_supply(
+            card_class_to_gain = self.owner.interactions.choose_specific_card_type_from_supply(
                 prompt=prompt,
                 max_cost=amount_overpaid,
-                invalid_card_classes=invalid_card_classes,
-                exact_cost=True,
+                card_type=CardType.ACTION,
                 force=True,
+                exact_cost=True,
             )
             if card_class_to_gain is None:
                 return

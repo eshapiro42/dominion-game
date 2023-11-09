@@ -279,7 +279,7 @@ class AutoInteraction(Interaction):
                 print('That is not a valid choice.\n')
                 raise
 
-    def choose_specific_card_type_from_supply(self, prompt, max_cost, card_type, force):
+    def choose_specific_card_type_from_supply(self, prompt, max_cost, card_type, force, exact_cost=False):
         self.sleep_random()
         print(prompt)
         print()
@@ -288,6 +288,8 @@ class AutoInteraction(Interaction):
                 # Only cards you can afford can be chosen (and with non-zero quantity)
                 stacks = self.supply.card_stacks
                 buyable_card_stacks = [card_class for card_class in stacks if stacks[card_class].modified_cost <= max_cost and stacks[card_class].cards_remaining > 0 and card_type in card_class.types]
+                if exact_cost:
+                    buyable_card_stacks = [card_class for card_class in buyable_card_stacks if stacks[card_class].modified_cost == max_cost]
                 if force:
                     print(f'Enter choice 1-{len(buyable_card_stacks)}: ', end='')
                     choices = list(range(1, len(buyable_card_stacks) + 1))
