@@ -1,24 +1,30 @@
 import pytest
 import random
-from dominion.cards import base_cards, intrigue_cards, prosperity_cards, cornucopia_cards, hinterlands_cards
-from dominion.expansions import IntrigueExpansion, ProsperityExpansion, CornucopiaExpansion, HinterlandsExpansion
+from dominion.cards import base_cards, dominion_cards, intrigue_cards, prosperity_cards, cornucopia_cards, hinterlands_cards, guilds_cards
+from dominion.expansions import BaseExpansion, DominionExpansion, IntrigueExpansion, ProsperityExpansion, CornucopiaExpansion, HinterlandsExpansion, GuildsExpansion
 from dominion.game import Game
 from dominion.interactions import AutoInteraction
 
 
 EXPANSIONS = [
+    BaseExpansion,
+    DominionExpansion,
     IntrigueExpansion,
     ProsperityExpansion,
     CornucopiaExpansion,
     HinterlandsExpansion,
+    GuildsExpansion,
 ]
 
 
 CARD_SETS = [
+    base_cards,
+    dominion_cards,
     intrigue_cards,
     prosperity_cards,
     cornucopia_cards,
     hinterlands_cards,
+    guilds_cards,
 ]
 
 
