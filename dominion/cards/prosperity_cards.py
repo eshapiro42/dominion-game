@@ -430,8 +430,7 @@ class CountingHouse(ActionCard):
         coppers_in_discard_pile = [card for card in self.owner.discard_pile if isinstance(card, base_cards.Copper)]
         if coppers_in_discard_pile:
             prompt = f"You played a Counting House. You have {s(len(coppers_in_discard_pile), 'Copper')} in your discard pile. How many Coppers would you like to put into your hand?"
-            options = list(range(1, len(coppers_in_discard_pile) + 1))
-            num_coppers = self.owner.interactions.choose_from_options(prompt, options, force=False)
+            num_coppers = self.owner.interactions.choose_from_range(prompt, 1, len(coppers_in_discard_pile), force=False)
             if num_coppers:
                 for _ in range(num_coppers):
                     copper = coppers_in_discard_pile.pop()
