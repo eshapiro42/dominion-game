@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, List, Optional
 from ..cards import base_cards
 from ..cards.cards import CardType
 from ..expansions import CornucopiaExpansion
+from ..grammar import s
 from .interaction import Interaction
 
 if TYPE_CHECKING:
