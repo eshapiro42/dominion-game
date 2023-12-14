@@ -70,6 +70,8 @@ class AutoInteraction(Interaction):
         if invalid_cards is None:
             invalid_cards = []
         valid_cards = [card for card in self.hand if card not in invalid_cards]
+        if not valid_cards:
+            return [None]
         while True:
             try:
                 self.display_hand()
