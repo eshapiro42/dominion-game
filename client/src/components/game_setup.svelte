@@ -430,14 +430,17 @@
                                         <td>
                                             {card.type}
                                         </td>
-                                        {#if young_witch_selected && [2, 3].includes(card.cost)}
+                                        {#if young_witch_selected}
                                             <td>
-                                                <button on:click|stopPropagation={
-                                                    () => {
-                                                        card.selected = false;
-                                                        baneCard = (baneCard !== card ? card : null);
-                                                    }}>
-                                                    {baneCard === card ? "Selected as Bane" : "Select as Bane"}
+                                                {#if [2, 3].includes(card.cost)}
+                                                    <button on:click|stopPropagation={
+                                                        () => {
+                                                            card.selected = false;
+                                                            baneCard = (baneCard !== card ? card : null);
+                                                        }}>
+                                                        {baneCard === card ? "Selected as Bane" : "Select as Bane"}
+                                                    </button>
+                                                {/if}
                                             </td>
                                         {/if}
                                     </tr>
@@ -460,6 +463,7 @@
                             saved_kingdom["contents"] = await saved_kingdom["file"].text();
                         }}>
                         Select File
+                    </button>
                 </main>
             {/if}
         </div>
