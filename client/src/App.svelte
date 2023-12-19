@@ -28,6 +28,16 @@
     let miscellaneousSelection = {
         show: false,
     };
+    let saveFileOptions = {
+        types: [
+            {
+                description: "JSON Files",
+                accept: {
+                    "application/json": [".json"],
+                }
+            }
+        ]
+    };
 
     function joinedRoom(event) {
         $room = event.detail.room;
@@ -149,6 +159,16 @@
         }
     );
 
+    $socket.on(
+        "kingdom json",
+        async (data) => {
+            const fileHandle = await window.showSaveFilePicker(saveFileOptions);
+            const writable = await fileHandle.createWritable();
+            await writable.write(JSON.stringify(data));
+            await writable.close();
+        }
+    );
+
     $: headerClass = gameStarted ? "panel" : ""; // This will re-center the header once the game has started
 </script>
 
@@ -169,6 +189,15 @@
                         Classic Font
                     </option>
                 </select>
+                <button on:click|stopPropagation={
+                    () => {
+                        $socket.emit(
+                            "request kingdom json",
+                            {room: $room}
+                        );
+                    }}>
+                    Save Kingdom
+                </button>
             {/if}
         </div>
     </header>

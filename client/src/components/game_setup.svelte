@@ -18,7 +18,24 @@
     let selectedTab;
     let recommendedSets = [];
     let recommendedSet = null;
+    let allKingdomCards = [];
+    let customKingdom = {};
     let hidden = false;
+    let young_witch_selected = false;
+    let baneCard = null;
+    let num_cards_selected = 0;
+    let saved_kingdom = {}
+    let openFileOptions = {
+        multiple: false,
+        types: [
+            {
+                description: "JSON Files",
+                accept: {
+                    "application/json": [".json"],
+                }
+            }
+        ]
+    };
 
     var expansions = [
         {name: "Dominion", property: "dominion", selected: false},
@@ -115,6 +132,14 @@
             alert("You must select a Recommended Kingdom.");
             return;
         }
+        else if (selectedTab == "Custom Kingdom" && cards_selected.length !== 10) {
+            alert("You must select exactly ten cards (excluding Bane cards).");
+            return;
+        }
+        else if (selectedTab == "Saved Kingdom" && saved_kingdom["data"]["cards"].length !== 10) {
+            alert("The loaded Saved Kingdom must contain exactly ten cards (excluding Bane cards).");
+            return;
+        }
         var gameProperties = {
             username: $username,
             room: $room,
@@ -134,6 +159,12 @@
         }
         else if (selectedTab == "Recommended Kingdom") {
             gameProperties["recommended_set_index"] = recommendedSet;
+        }
+        else if (selectedTab == "Custom Kingdom") {
+            gameProperties["custom_set_data"] = custom_kingdom_data;
+        }
+        else if (selectedTab == "Saved Kingdom") {
+            gameProperties["custom_set_data"] = saved_kingdom["data"];
         }
         $socket.emit(
             "start game",
@@ -161,6 +192,19 @@
         );
     });
 
+    $socket.on("all kingdom cards", function(data) {
+        allKingdomCards = data;
+        Object.entries(allKingdomCards).forEach(
+            ([expansion, cards]) => {
+                cards.forEach(
+                    (card) => {
+                        card.selected = false;
+                    }
+                );
+            }
+        );
+    });
+
     $: if (roomJoined) {
         $socket.emit(
             "request recommended sets",
@@ -168,6 +212,63 @@
                 room: $room,
             }
         );
+        $socket.emit(
+            "request all kingdom cards",
+            {
+                room: $room,
+            }
+        );
+    }
+
+    // Custom Kingdom reactive variables
+    $: young_witch_selected = allKingdomCards.length == 0 ? false : allKingdomCards["Cornucopia"].find(obj => obj.name === "Young Witch").selected;
+    $: if (baneCard !== null) {
+        baneCard.selected = false;
+    }
+    $: cards_selected = [].concat(...Object.values(allKingdomCards).map(cards => cards.filter(card => card.selected)));
+    $: allow_card_selection = cards_selected.length < 10;
+    $: custom_kingdom_data = {
+        cards: cards_selected.map(card => card.name),
+        additional_cards: (baneCard !== null) ? [{card: baneCard.name, role: "Bane"}] : null,
+    }
+
+    // Saved Kingdom reactive variables
+    $: if (saved_kingdom.hasOwnProperty("contents")) {
+        try {
+            saved_kingdom["data"] = JSON.parse(saved_kingdom["contents"]);
+        } catch (error) {
+            saved_kingdom = {};
+            alert("The provided file is not valid JSON.");
+        }
+        if (Object.keys(saved_kingdom).length !== 0) {
+            if (!saved_kingdom["data"].hasOwnProperty("cards")) {
+                saved_kingdom = {};
+                alert("The provided file does not contain a 'cards' field.")
+            }
+            else if (!saved_kingdom["data"].hasOwnProperty("additional_cards")) {
+                saved_kingdom = {};
+                alert("The provided file does not contain an 'additional_cards' field.")
+            }
+            else {
+                let allCardNames = [].concat(...Object.values(allKingdomCards).map(cards => cards.map(card => card.name)));
+                saved_kingdom["data"]["cards"].forEach(
+                    (card_name) => {
+                        if (!allCardNames.includes(card_name)) {
+                            saved_kingdom = {};
+                            alert(`The provided file contains an invalid card name: ${card_name}.`);
+                        }
+                    }
+                );
+                saved_kingdom["data"]["additional_cards"].forEach(
+                    (additional_card_data) => {
+                        let card_name = additional_card_data["card"]
+                        if (!allCardNames.includes(card_name)) {
+                            alert(`The provided file contains an invalid card name: ${card_name}.`);
+                        }
+                    }
+                );
+            }
+        }
     }
 </script>
 
@@ -202,7 +303,9 @@
                 tabNames={
                     [
                         "Random Kingdom",
-                        "Recommended Kingdom"
+                        "Recommended Kingdom",
+                        "Custom Kingdom",
+                        "Saved Kingdom",
                     ]
                 }
                 bind:selectedTab={selectedTab}
@@ -287,6 +390,77 @@
                         </tbody>
                     </table>
                 </main>
+            {:else if selectedTab === "Custom Kingdom"}
+                <main>
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Expansion</th>
+                                <th>Card</th>
+                                <th>Cost</th>
+                                <th>Type</th>
+                                {#if young_witch_selected}
+                                    <th>Bane</th>
+                                {/if}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {#each Object.entries(allKingdomCards) as [expansion, cards]}
+                                {#each cards as card, idx}
+                                    <tr 
+                                        on:click={
+                                            () => {
+                                                if (!card.selected && !allow_card_selection) {
+                                                        return;
+                                                    }
+                                                card.selected = (card == baneCard ? false : !card.selected)
+                                            }
+                                        }
+                                        class="{card.selected ? "selected" : ""} {card == baneCard ? "bane" : ""}"
+                                    >
+                                        <td>
+                                            {card.expansion}
+                                        </td>
+                                        <td>
+                                            <b>{card.name}</b>
+                                        </td>
+                                        <td>
+                                            {card.cost}
+                                        </td>
+                                        <td>
+                                            {card.type}
+                                        </td>
+                                        {#if young_witch_selected && [2, 3].includes(card.cost)}
+                                            <td>
+                                                <button on:click|stopPropagation={
+                                                    () => {
+                                                        card.selected = false;
+                                                        baneCard = (baneCard !== card ? card : null);
+                                                    }}>
+                                                    {baneCard === card ? "Selected as Bane" : "Select as Bane"}
+                                            </td>
+                                        {/if}
+                                    </tr>
+                                {/each}
+                            {/each}
+                        </tbody>
+                    </table>
+                </main>
+            {:else if selectedTab === "Saved Kingdom"}
+                <main>
+                    {#if saved_kingdom.hasOwnProperty("file_handle")}
+                        Loaded {saved_kingdom["file_handle"].name}.
+                    {:else}
+                        No file loaded.
+                    {/if}
+                    <button on:click={
+                        async () => {
+                            [saved_kingdom["file_handle"]] = await window.showOpenFilePicker(openFileOptions);
+                            saved_kingdom["file"] = await saved_kingdom["file_handle"].getFile();
+                            saved_kingdom["contents"] = await saved_kingdom["file"].text();
+                        }}>
+                        Select File
+                </main>
             {/if}
         </div>
         {:else}
@@ -370,6 +544,10 @@
 
     .selected {
         background-color: #ffcccc;
+    }
+
+    .bane {
+        background-color: #dab3ff;
     }
 
     td {

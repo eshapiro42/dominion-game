@@ -19,6 +19,7 @@ if TYPE_CHECKING:
     from .expansions.expansion import Expansion
     from .hooks import TreasureHook, PreBuyHook, PreTurnHook, PostDiscardHook, PostBuyHook
     from .interactions.interaction import Interaction
+    from .cards.custom_sets import CustomSet
     from .cards.recommended_sets import RecommendedSet
 
 
@@ -63,6 +64,7 @@ class Game:
         self._post_buy_hooks = defaultdict(list)
         self._game_end_conditions = []
         self._recommended_set = None
+        self._custom_set = None
         self._expansions = set()
         self._allow_simultaneous_reactions = False
         self._distribute_cost = False
@@ -312,7 +314,25 @@ class Game:
         for expansion in recommended_set.expansions:
             self.add_expansion(expansion)
         self._recommended_set = recommended_set
-    
+
+    @property
+    def custom_set(self) -> Type[CustomSet] | None:
+        """
+        A custom set to use for the supply.
+
+        If this is not None, no other supply customizations or expansions
+        outside the custom set will be considered for inclusion.
+        """
+        return self._custom_set
+
+    @custom_set.setter
+    def custom_set(self, custom_set: Type[CustomSet] | None):
+        self.expansions = set()
+        expansion: Type[Expansion]
+        for expansion in custom_set.expansions:
+            self.add_expansion(expansion)
+        self._custom_set = custom_set
+
     @property
     def expansions(self) -> List[Type[Expansion]]:
         """
@@ -529,6 +549,15 @@ class Game:
             for expansion_instance in self.supply.customization.recommended_set.expansion_instances:
                 self.supply.customization.expansions.add(expansion_instance)
                 self.game_end_conditions += expansion_instance.game_end_conditions
+        # Add in the custom set, if any
+        elif self.custom_set is not None:
+            game_creator_name = self.player_names[0]
+            self.broadcast(f"Using {game_creator_name}'s Custom Kingdom.")
+            self.supply.customization.custom_set = self.custom_set(self)
+            for expansion_instance in self.supply.customization.custom_set.expansion_instances:
+                self.supply.customization.expansions.add(expansion_instance)
+                self.game_end_conditions += expansion_instance.game_end_conditions
+            print(self.supply.customization.custom_set.expansion_instances)
         # Otherwise, the supply will need to be randomly generated based on the selected expansions and customizations
         else:
             # Add in the desired expansions

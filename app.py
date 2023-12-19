@@ -8,6 +8,9 @@ from collections import defaultdict
 from config import Config
 from flask import Flask, Blueprint, abort, request, send_from_directory, jsonify
 from flask_httpauth import HTTPBasicAuth
+from typing import Any, Dict, DefaultDict, List, Tuple
+from dominion.cards import ALL_KINGDOM_CARDS, ALL_KINGDOM_CARDS_BY_EXPANSION
+from dominion.cards.custom_sets import CustomSet
 from dominion.cards.recommended_sets import ALL_RECOMMENDED_SETS
 from dominion.expansions import DominionExpansion, IntrigueExpansion, ProsperityExpansion, CornucopiaExpansion, HinterlandsExpansion, GuildsExpansion
 from dominion.game import Game, GameStartedError
@@ -35,17 +38,17 @@ def home(path):
 
 
 # Global dictionary of games, indexed by room ID
-games = {}
+games: Dict[str, Game] = {}
 # Global dictionary of sids, {sid: (room, data)}
-sids = {}
+sids: Dict[str, Tuple[str, Any]] = {}
 # Global dictionary of connected players, indexed by room ID, {room: [username, ...], ...}
-connected_players = defaultdict(list)
+connected_players: DefaultDict[str, List[str]] = defaultdict(list)
 # Global dictionary of disconnected players, indexed by room ID, {room: [username, ...], ...}
-disconnected_players = defaultdict(list)
+disconnected_players: DefaultDict[str, List[str]] = defaultdict(list)
 # Global dictionary of CPUs, indexed by room ID, {room: CPU_COUNT}
-cpus = {}
+cpus: Dict[str, int] = {}
 # Global variable for admin use
-allow_game_creation = True
+allow_game_creation: bool = True
 
 
 @socketio.on('join room')
@@ -149,6 +152,7 @@ def start_game(data):
     room = data['room']
     allow_simultaneous_reactions = data['allowSimultaneousReactions']
     recommended_set_index = data.get('recommended_set_index')
+    custom_set_data = data.get('custom_set_data')
     dominion = data.get('dominion')
     intrigue = data.get('intrigue')
     prosperity = data.get('prosperity')
@@ -167,11 +171,18 @@ def start_game(data):
     game = games[room]
     # Add in customization options
     if recommended_set_index is not None:
+        print("Recommended set detected.")
         # Recommended Set
         recommended_set = ALL_RECOMMENDED_SETS[recommended_set_index]
         game.recommended_set = recommended_set
+    elif custom_set_data is not None:
+        # Custom Set
+        print("Custom set detected.")
+        custom_set = CustomSet.from_json(custom_set_data)
+        game.custom_set = custom_set
     else:
         # Random Game
+        print("Creating random game from selected expansions.")
         if dominion:
             game.add_expansion(DominionExpansion)
         if intrigue:
@@ -228,6 +239,40 @@ def send_recommended_sets(data):
         room=room,
     )
     del(fake_game)
+
+@socketio.on('request all kingdom cards')
+def send_all_cards(data):
+    room = data['room']
+    all_kingdom_cards_json = {expansion.name: [card_class().json for card_class in sorted(expansion_card_classes, key=lambda card_class: card_class._cost)] for expansion, expansion_card_classes in ALL_KINGDOM_CARDS_BY_EXPANSION.items()}
+    socketio.emit(
+        'all kingdom cards',
+        data=all_kingdom_cards_json,
+        room=room,
+    )
+
+@socketio.on("request kingdom json")
+def send_kingdom_json(data):
+    room = data["room"]
+    game = games[room]
+    supply = game.supply
+    json_data = {"cards": [], "additional_cards": None}
+    # Check whether there is a Bane card
+    bane_card_class = None
+    for expansion_instance in supply.customization.expansions:
+        if isinstance(expansion_instance, CornucopiaExpansion):
+            bane_card_class = expansion_instance.bane_card_class
+            if bane_card_class is not None:
+                json_data["additional_cards"] = [{"card": bane_card_class.name, "role": "Bane"}]
+    for card_class in supply.card_stacks.keys():
+        if card_class not in ALL_KINGDOM_CARDS or card_class == bane_card_class:
+            continue
+        json_data["cards"].append(card_class.name)
+    print(f"Sending Kingdom JSON: {json_data}.")
+    socketio.emit(
+        "kingdom json",
+        data=json_data,
+        room=room,
+    )
 
 @socketio.on("disconnect")
 def disconnect():

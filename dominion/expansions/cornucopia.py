@@ -46,7 +46,7 @@ class CornucopiaExpansion(Expansion):
                     self.supply.card_stacks[replacement_card_class] = FiniteSupplyStack(replacement_card_class, 10)
                 else:
                     bane_card_class = random.choice(possible_bane_card_classes)
-            self.game.broadcast(f"The Young Witch is in play this game. {s(10, bane_card_class.name, print_number=False)} are Bane cards.")
+            self.game.broadcast(f"The Young Witch is in play this game. {s(10, bane_card_class, print_number=False)} are Bane cards.")
             # Add the Bane card class to the Supply and modify its example card
             self.supply.card_stacks[bane_card_class] = FiniteSupplyStack(bane_card_class, 10)
             self.supply.card_stacks[bane_card_class].example.types += [cards.CardType.BANE]
