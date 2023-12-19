@@ -222,6 +222,9 @@
 
     // Custom Kingdom reactive variables
     $: young_witch_selected = allKingdomCards.length == 0 ? false : allKingdomCards["Cornucopia"].find(obj => obj.name === "Young Witch").selected;
+    $: if (!young_witch_selected) {
+        baneCard = null;
+    }
     $: if (baneCard !== null) {
         baneCard.selected = false;
     }
