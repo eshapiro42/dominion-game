@@ -4,7 +4,7 @@ from abc import ABCMeta, abstractmethod
 from collections import defaultdict
 from enum import Enum, auto
 from gevent import Greenlet, joinall
-from typing import TYPE_CHECKING, Any, Optional, Deque, Dict, List, Tuple, Type
+from typing import TYPE_CHECKING, Any, Optional, Deque, Dict, List, Tuple, Type, NewType
 
 from ..grammar import a, s, Word
 
@@ -13,6 +13,9 @@ if TYPE_CHECKING:
     from ..interactions.interaction import Interaction
     from ..player import Player
     from ..supply import Supply
+
+
+CardJSON = NewType("CardJSON", Dict)
 
 
 class CardType(Enum):
@@ -245,7 +248,7 @@ class Card(Word, metaclass=ABCMeta):
         pass
 
     @property
-    def json(self):
+    def json(self) -> CardJSON:
         extra_cards = self.extra_cards if hasattr(self, 'extra_cards') else 0
         extra_actions = self.extra_actions if hasattr(self, 'extra_actions') else 0
         extra_buys = self.extra_buys if hasattr(self, 'extra_buys') else 0

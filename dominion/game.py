@@ -3,10 +3,10 @@ from __future__ import annotations
 import itertools
 import random
 
-from collections import defaultdict
+from collections import defaultdict, Counter
 from typing import TYPE_CHECKING, Callable, Optional, Dict, List, Tuple, Type
 
-from .cards.cards import Card, CardType
+from .cards.cards import Card, CardType, CardJSON
 from .expansions import BaseExpansion, DominionExpansion, ProsperityExpansion, IntrigueExpansion, CornucopiaExpansion, HinterlandsExpansion, GuildsExpansion
 from .grammar import s
 from .interactions import AutoInteraction
@@ -602,6 +602,42 @@ class Game:
         if not debug:
             self.game_loop()
 
+    def end(self, explanation: str):
+        print(self.scores)
+        # Game is over. Print out info.
+        self.broadcast(explanation)
+        self.broadcast('Game over!')
+        victory_points_dict, turns_played_dict, winners = self.scores
+        winners_str = ', '.join(map(str, winners))
+        winners_str = f'{s(len(winners), "Winner").split(" ")[-1]}: {winners_str}.'
+        self.broadcast(winners_str)
+        end_game_data = {
+            "explanation": explanation,
+            "winners": winners_str,
+            "playerData": [
+                {
+                    "name": player.name,
+                    "score": victory_points_dict[player],
+                    "turns": turns_played_dict[player],
+                }
+                for player in self.players
+            ]
+        }
+        print(end_game_data)
+        for player in self.players:
+            card_class_counter: Counter[Type[Card]] = Counter([type(card) for card in player.all_cards])
+            all_cards_json: List[CardJSON] = []
+            for card_class, quantity in card_class_counter.items():
+                card_json = card_class().json
+                card_json["quantity"] = quantity
+                all_cards_json.append(card_json)
+            if self.socketio is not None:
+                self.socketio.emit(
+                    'game over',
+                    {'endGameData': end_game_data, 'cards': all_cards_json},
+                    to=player.sid,
+                )
+
     def game_loop(self):
         '''
         The main game loop. Cycles through turns for each player and checks for
@@ -613,45 +649,7 @@ class Game:
             # Check if the game ended after each turn
             ended, explanation = self.ended
             if ended:
-                # Game is over. Print out info.
-                self.broadcast(explanation)
-                self.broadcast('Game over!')
-                victory_points_dict, turns_played_dict, winners = self.scores
-                scores_str = ', '.join([f'{k}: {v}' for k, v in victory_points_dict.items()])
-                self.broadcast(f'Scores: {scores_str}')
-                turns_str = ', '.join([f'{k}: {v}' for k, v in turns_played_dict.items()])
-                self.broadcast(f'Turns played: {turns_str}')
-                winners_str = ', '.join(map(str, winners))
-                self.broadcast(f'{s(len(winners), "Winner").split(" ")[-1]}: {winners_str}.')
-                for player in self.players:
-                    victory_cards = [card for card in player.all_cards if CardType.VICTORY in card.types]
-                    other_cards = [card for card in player.all_cards if CardType.VICTORY not in card.types]
-                    victory_cards_string = Card.group_and_sort_by_cost(victory_cards)
-                    other_cards_string = Card.group_and_sort_by_cost(other_cards)
-                    if victory_cards and other_cards:
-                        all_cards_string = ", ".join((victory_cards_string, other_cards_string))
-                        self.broadcast(f"{player}'s cards: {all_cards_string}.")
-                    elif victory_cards:
-                        self.broadcast(f"{player}'s cards: {victory_cards_string}.")
-                    elif other_cards:
-                        self.broadcast(f"{player}'s cards: {other_cards_string}.")
-                if self.socketio is not None:
-                    # Send formatted game end info to players
-                    newsection = "<br><br>"
-                    prompt = f"""
-                        <b>Game over!</b>
-                        {explanation}
-                        {newsection}
-                        <b>{s(len(winners), "Winner").split(" ")[-1]}:</b> {winners_str}
-                        {newsection}
-                        <b>Scores:</b> {scores_str}
-                        {newsection}
-                        <b>Turns played:</b> {turns_str}
-                    """
-                    self.socketio.emit(
-                        'game over',
-                        {'prompt': prompt},
-                    )
+                self.end(explanation)
                 break
 
     def broadcast(self, message: str):
@@ -700,7 +698,7 @@ class Game:
         # Figure out the most victory points attained
         most_victory_points = max(victory_points_dict.values())
         # Figure out which players got that many victory points
-        players_with_most_victory_points = []
+        players_with_most_victory_points: List[Player] = []
         for player, victory_points in victory_points_dict.items():
             if victory_points == most_victory_points:
                 players_with_most_victory_points.append(player)

@@ -9,6 +9,7 @@
 
     import DiscardPile from "./components/discard_pile.svelte";
     import GameSetup from "./components/game_setup.svelte";
+    import GameOver from "./components/game_over.svelte";
     import Hand from "./components/hand.svelte";
     import Lobby from "./components/lobby.svelte";
     import MiscellaneousSelection from "./components/miscellaneous_selection.svelte";
@@ -28,6 +29,9 @@
     let miscellaneousSelection = {
         show: false,
     };
+    let gameOver = {
+        show: false,
+    }
     let saveFileOptions = {
         types: [
             {
@@ -83,6 +87,12 @@
             cards: null,
             waitingForSelection: null,
         }
+    }
+
+    function createGameOver(endGameData, cards) {
+        gameOver.endGameData = endGameData;
+        gameOver.cards = cards;
+        gameOver.show = true;
     }
 
     $socket.on(
@@ -154,7 +164,7 @@
     $socket.on(
         "game over",
         (data) => {
-            createMiscellaneousSelection(data.prompt, false, "alert");
+            createGameOver(data.endGameData, data.cards);
             $socket.disconnect();
         }
     );
@@ -230,7 +240,13 @@
             waitingForSelection={miscellaneousSelection.waitingForSelection}
             on:submit={submitMiscellaneousSelection}
         />
-        
+
+        <GameOver
+            show={gameOver.show}
+            endGameData={gameOver.endGameData}
+            cards={gameOver.cards}
+        />
+
         <PlayedCards/>
 
         <Hand/>
