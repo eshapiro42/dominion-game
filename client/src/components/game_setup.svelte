@@ -14,6 +14,7 @@
     export let roomJoined;
     export let roomCreator;
     
+    let playersInRoom = [];
     let gameStartable = false;
     let selectedTab;
     let recommendedSets = [];
@@ -205,6 +206,10 @@
         );
     });
 
+    $socket.on("players in room", function(data) {
+        playersInRoom = data;
+    });
+
     $: if (roomJoined) {
         $socket.emit(
             "request recommended sets",
@@ -277,199 +282,208 @@
 
 {#if !hidden}
     {#if roomJoined}
+        <table class="table table-hover table-center">
+            <thead>
+                <tr><td><b>Players in Room</b></td></tr>
+            </thead>
+            <tbody>
+                {#each playersInRoom as player}
+                <tr><td>{player}</td></tr>
+                {/each}
+            </tbody>
+        </table>
         {#if roomCreator}
-        <div class="container">
-            <div class="buttons">
-                <button type="button" on:click={startGame} class="btn btn-primary btn-lg btn-block">Start Game</button>
-                <button type="button" on:click={addCPU} class="btn btn-secondary btn-lg btn-block">Add CPU</button>
-            </div>
-
-            <main>
-                <div class="customizations">
-                    <label class="customization space-below">
-                        <input type="checkbox" bind:checked={allowSimultaneousReactions.selected}>
-                        <div class="hoverable">
-                            Allow Simultaneous Reactions
-                            <span class="hoverable-text">
-                                {#each allowSimultaneousReactions.description as line}
-                                    <span>
-                                        {@html line}
-                                    </span>
-                                {/each}
-                            </span>
-                        </div>
-                    </label>
+            <div class="container">
+                <div class="buttons">
+                    <button type="button" on:click={startGame} class="btn btn-primary btn-lg btn-block">Start Game</button>
+                    <button type="button" on:click={addCPU} class="btn btn-secondary btn-lg btn-block">Add CPU</button>
                 </div>
-            </main>
-
-            <Tabs
-                tabNames={
-                    [
-                        "Random Kingdom",
-                        "Recommended Kingdom",
-                        "Custom Kingdom",
-                        "Saved Kingdom",
-                    ]
-                }
-                bind:selectedTab={selectedTab}
-            />
-
-            {#if selectedTab === "Random Kingdom"}
                 <main>
                     <div class="customizations">
-                        {#each expansions as expansion}
-                            <label class="customization">
-                                <input type="checkbox" bind:checked={expansion.selected}>
-                                {expansion.name} Expansion
-                            </label>
-                        {/each}
-                    </div>
-                    <div class="customizations">
-                        {#each supplyCustomizations as customization}
-                            <label class="customization">
-                                <input type="checkbox" bind:checked={customization.selected}>
-                                <div class="hoverable">
-                                    {customization.name}
-                                    <span class="hoverable-text">
-                                        {#each customization.description as line}
-                                            <span>
-                                                {@html line}
-                                            </span>
-                                        {/each}
-                                    </span>
-                                </div>
-                            </label>
-                        {/each}
+                        <label class="customization space-below">
+                            <input type="checkbox" bind:checked={allowSimultaneousReactions.selected}>
+                            <div class="hoverable">
+                                Allow Simultaneous Reactions
+                                <span class="hoverable-text">
+                                    {#each allowSimultaneousReactions.description as line}
+                                        <span>
+                                            {@html line}
+                                        </span>
+                                    {/each}
+                                </span>
+                            </div>
+                        </label>
                     </div>
                 </main>
-            {:else if selectedTab === "Recommended Kingdom"}
-                <main>
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th>Kingdom</th>
-                                <th>Expansions</th>
-                                <th>Kingdom Cards</th>
-                                <th>Additional Cards</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {#each recommendedSets as set, index}
-                                <tr
-                                    on:click={() => {recommendedSet = index}}
-                                    class={recommendedSet == index ? "selected" : ""}
-                                >
-                                    <td>
-                                        <b>{set.name}</b>
-                                    </td>
-                                    <td>
-                                        {#each set.expansions as expansion}
-                                            {expansion}<br>
-                                        {/each}
-                                    </td>
-                                    <td>
-                                        {#each set.cards as card}
-                                            <span>
-                                                {card}<br>
-                                            </span>
-                                        {/each}
-                                    </td>
-                                    <td>
-                                        {#if set.hasOwnProperty("additional_cards")}
-                                            {#each set.additional_cards as additionalCard}
+
+                <Tabs
+                    tabNames={
+                        [
+                            "Random Kingdom",
+                            "Recommended Kingdom",
+                            "Custom Kingdom",
+                            "Saved Kingdom",
+                        ]
+                    }
+                    bind:selectedTab={selectedTab}
+                />
+
+                {#if selectedTab === "Random Kingdom"}
+                    <main>
+                        <div class="customizations">
+                            {#each expansions as expansion}
+                                <label class="customization">
+                                    <input type="checkbox" bind:checked={expansion.selected}>
+                                    {expansion.name} Expansion
+                                </label>
+                            {/each}
+                        </div>
+                        <div class="customizations">
+                            {#each supplyCustomizations as customization}
+                                <label class="customization">
+                                    <input type="checkbox" bind:checked={customization.selected}>
+                                    <div class="hoverable">
+                                        {customization.name}
+                                        <span class="hoverable-text">
+                                            {#each customization.description as line}
                                                 <span>
-                                                    {#if additionalCard.role != null}
-                                                        {additionalCard.card} ({additionalCard.role})
-                                                    {:else}
-                                                        {additionalCard.card}
-                                                    {/if}
-                                                    <br>
+                                                    {@html line}
                                                 </span>
                                             {/each}
-                                        {/if}
-                                    </td>
-                                </tr>
+                                        </span>
+                                    </div>
+                                </label>
                             {/each}
-                        </tbody>
-                    </table>
-                </main>
-            {:else if selectedTab === "Custom Kingdom"}
-                <main>
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th>Expansion</th>
-                                <th>Card</th>
-                                <th>Cost</th>
-                                <th>Type</th>
-                                {#if young_witch_selected}
-                                    <th>Bane</th>
-                                {/if}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {#each Object.entries(allKingdomCards) as [expansion, cards]}
-                                {#each cards as card, idx}
-                                    <tr 
-                                        on:click={
-                                            () => {
-                                                if (!card.selected && !allow_card_selection) {
-                                                        return;
-                                                    }
-                                                card.selected = (card == baneCard ? false : !card.selected)
-                                            }
-                                        }
-                                        class="{card.selected ? "selected" : ""} {card == baneCard ? "bane" : ""}"
+                        </div>
+                    </main>
+                {:else if selectedTab === "Recommended Kingdom"}
+                    <main>
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Kingdom</th>
+                                    <th>Expansions</th>
+                                    <th>Kingdom Cards</th>
+                                    <th>Additional Cards</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {#each recommendedSets as set, index}
+                                    <tr
+                                        on:click={() => {recommendedSet = index}}
+                                        class={recommendedSet == index ? "selected" : ""}
                                     >
                                         <td>
-                                            {card.expansion}
+                                            <b>{set.name}</b>
                                         </td>
                                         <td>
-                                            <b>{card.name}</b>
+                                            {#each set.expansions as expansion}
+                                                {expansion}<br>
+                                            {/each}
                                         </td>
                                         <td>
-                                            {card.cost}
+                                            {#each set.cards as card}
+                                                <span>
+                                                    {card}<br>
+                                                </span>
+                                            {/each}
                                         </td>
                                         <td>
-                                            {card.type}
+                                            {#if set.hasOwnProperty("additional_cards")}
+                                                {#each set.additional_cards as additionalCard}
+                                                    <span>
+                                                        {#if additionalCard.role != null}
+                                                            {additionalCard.card} ({additionalCard.role})
+                                                        {:else}
+                                                            {additionalCard.card}
+                                                        {/if}
+                                                        <br>
+                                                    </span>
+                                                {/each}
+                                            {/if}
                                         </td>
-                                        {#if young_witch_selected}
-                                            <td>
-                                                {#if [2, 3].includes(card.cost)}
-                                                    <button on:click|stopPropagation={
-                                                        () => {
-                                                            card.selected = false;
-                                                            baneCard = (baneCard !== card ? card : null);
-                                                        }}>
-                                                        {baneCard === card ? "Selected as Bane" : "Select as Bane"}
-                                                    </button>
-                                                {/if}
-                                            </td>
-                                        {/if}
                                     </tr>
                                 {/each}
-                            {/each}
-                        </tbody>
-                    </table>
-                </main>
-            {:else if selectedTab === "Saved Kingdom"}
-                <main>
-                    {#if saved_kingdom.hasOwnProperty("file_handle")}
-                        Loaded {saved_kingdom["file_handle"].name}.
-                    {:else}
-                        No file loaded.
-                    {/if}
-                    <button on:click={
-                        async () => {
-                            [saved_kingdom["file_handle"]] = await window.showOpenFilePicker(openFileOptions);
-                            saved_kingdom["file"] = await saved_kingdom["file_handle"].getFile();
-                            saved_kingdom["contents"] = await saved_kingdom["file"].text();
-                        }}>
-                        Select File
-                    </button>
-                </main>
-            {/if}
-        </div>
+                            </tbody>
+                        </table>
+                    </main>
+                {:else if selectedTab === "Custom Kingdom"}
+                    <main>
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Expansion</th>
+                                    <th>Card</th>
+                                    <th>Cost</th>
+                                    <th>Type</th>
+                                    {#if young_witch_selected}
+                                        <th>Bane</th>
+                                    {/if}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {#each Object.entries(allKingdomCards) as [expansion, cards]}
+                                    {#each cards as card, idx}
+                                        <tr 
+                                            on:click={
+                                                () => {
+                                                    if (!card.selected && !allow_card_selection) {
+                                                            return;
+                                                        }
+                                                    card.selected = (card == baneCard ? false : !card.selected)
+                                                }
+                                            }
+                                            class="{card.selected ? "selected" : ""} {card == baneCard ? "bane" : ""}"
+                                        >
+                                            <td>
+                                                {card.expansion}
+                                            </td>
+                                            <td>
+                                                <b>{card.name}</b>
+                                            </td>
+                                            <td>
+                                                {card.cost}
+                                            </td>
+                                            <td>
+                                                {card.type}
+                                            </td>
+                                            {#if young_witch_selected}
+                                                <td>
+                                                    {#if [2, 3].includes(card.cost)}
+                                                        <button on:click|stopPropagation={
+                                                            () => {
+                                                                card.selected = false;
+                                                                baneCard = (baneCard !== card ? card : null);
+                                                            }}>
+                                                            {baneCard === card ? "Selected as Bane" : "Select as Bane"}
+                                                        </button>
+                                                    {/if}
+                                                </td>
+                                            {/if}
+                                        </tr>
+                                    {/each}
+                                {/each}
+                            </tbody>
+                        </table>
+                    </main>
+                {:else if selectedTab === "Saved Kingdom"}
+                    <main>
+                        {#if saved_kingdom.hasOwnProperty("file_handle")}
+                            Loaded {saved_kingdom["file_handle"].name}.
+                        {:else}
+                            No file loaded.
+                        {/if}
+                        <button on:click={
+                            async () => {
+                                [saved_kingdom["file_handle"]] = await window.showOpenFilePicker(openFileOptions);
+                                saved_kingdom["file"] = await saved_kingdom["file_handle"].getFile();
+                                saved_kingdom["contents"] = await saved_kingdom["file"].text();
+                            }}>
+                            Select File
+                        </button>
+                    </main>
+                {/if}
+            </div>
         {:else}
             <main>
                 <div>
@@ -539,6 +553,10 @@
     .table {
         text-align: left;
         vertical-align: middle;
+    }
+
+    .table-center {
+        text-align: center;
     }
 
     th {

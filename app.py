@@ -72,6 +72,7 @@ def join_room(data):
         game.kill_scheduled = False # Cancel erasure of the game if necessary
         game_startable_before = game.startable
         game.add_player(username, sid, interactions_class=interaction_class)
+        socketio.emit("players in room", game.player_names)
         socketio.send(f'{username} has entered room {room}.\n', room=room)
         # If the game just became startable, push an event
         game_startable_after = game.startable
@@ -124,6 +125,7 @@ def create_room(data):
     game.heartbeat = HeartBeat(game)
     # Add the player to the game
     game.add_player(username, sid, interactions_class=interaction_class)
+    socketio.emit("players in room", game.player_names)
     socketio.send(f'{username} has created room {room}\n', room=room)
     return room # This activates the client's set_room() callback
 
@@ -140,6 +142,7 @@ def add_cpu(data):
     game_startable_before = game.startable
     cpu_name = f'CPU {cpu_num}'
     game.add_player(cpu_name, sid=None, interactions_class=AutoInteraction)
+    socketio.emit("players in room", game.player_names)
     socketio.send(f'{cpu_name} has entered room {room}.\n', room=room)
     # If the game just became startable, push an event
     game_startable_after = game.startable
