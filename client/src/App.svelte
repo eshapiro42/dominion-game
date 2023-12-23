@@ -180,6 +180,24 @@
     );
 
     $: headerClass = gameStarted ? "panel" : ""; // This will re-center the header once the game has started
+
+    $: if ($currentPlayer === $username && $currentPlayer !== "") {
+        // If the tab is not active, flash the title until it is active
+        // If the tab is already active, this should just flash once
+        document.title = "Your Turn!";
+        let flashInterval = setInterval(
+            () => {
+                if (!document.hidden) {
+                    document.title = "Dominion";
+                    clearInterval(flashInterval);
+                }
+                else {
+                    document.title = (document.title == "Dominion" ? "Your Turn!" : "Dominion");
+                }
+            },
+            1000,
+        );
+    }
 </script>
 
 <main>
