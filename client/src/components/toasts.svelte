@@ -126,8 +126,8 @@
 
 <style>
     main {
-        right: 5px;
-        top: 5px;
+        right: 15px;
+        top: 10px;
         max-width: 40vw;
         position: fixed;
         text-align: right;
