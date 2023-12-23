@@ -30,7 +30,7 @@
 <style>
     ul {
         display: flex;
-        flex-wrap: wrap;
+        flex-wrap: nowrap;
         list-style-type: none;
         margin: 0;
         padding: 0;
