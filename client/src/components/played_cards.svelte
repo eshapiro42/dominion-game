@@ -50,7 +50,7 @@
                 return false;
             }
             else {
-                var confirmed = confirm("Are you sure you want to skip selecting cards from your hand?");
+                var confirmed = confirm("Are you sure you want to skip selecting cards from your played cards?");
                 if (!confirmed) {
                     return false;
                 }
