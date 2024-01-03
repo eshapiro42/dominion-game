@@ -287,6 +287,8 @@ class Herald(ActionCard):
             # Choose any card from your discard pile
             prompt = f"Please choose a card ({num + 1} of {max_cards}) from your discard pile to put onto your deck."
             card = self.owner.interactions.choose_card_from_discard_pile(prompt, force=True)
+            if card is None:
+                break
             # Put that card onto your deck
             self.owner.discard_pile.remove(card)
             self.owner.deck.append(card)
