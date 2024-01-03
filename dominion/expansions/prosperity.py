@@ -13,7 +13,7 @@ class ProsperityExpansion(Expansion):
     def basic_card_piles(self):
         # If the expansion is configured to include Platinum and Colonies (e.g. via a recommended set), add the Platinum and Colonies piles to the basic piles
         if self.platinum_and_colony is not None:
-            choice = True
+            choice = self.platinum_and_colony
         # Otherwise, the odds of using Platinum and Colony are equal to the proportion of Prosperity kingdom cards in the Supply
         else:
             num_prosperity_cards = len([card_class for card_class in self.supply.card_stacks if card_class in prosperity_cards.KINGDOM_CARDS])

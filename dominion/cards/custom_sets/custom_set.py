@@ -4,7 +4,7 @@ from abc import ABCMeta, abstractmethod
 from typing import TYPE_CHECKING, Dict, List, Set, Tuple, Type
 
 from ...cards import ALL_KINGDOM_CARDS_BY_EXPANSION
-from ...expansions import BaseExpansion, CornucopiaExpansion
+from ...expansions import BaseExpansion, CornucopiaExpansion, ProsperityExpansion
 
 if TYPE_CHECKING:
     from ..cards import Card
@@ -24,7 +24,6 @@ class CustomSet(metaclass=ABCMeta):
     '''
     def __init__(self, game: Game):
         self.game = game
-        self._expansion_instances = None
 
     @property
     @abstractmethod
@@ -48,24 +47,29 @@ class CustomSet(metaclass=ABCMeta):
         A list of names of the cards that comprise this set.
         """
         return [card_class.name for card_class in self.card_classes]
-
+    
     @property
-    def additional_cards(self) -> List[Tuple[Type[Card], str]]:
+    def bane_card_name(self) -> str | None:
         """
-        A list of additional card classes that are not part
-        of the basic set of Kingdom cards.
-
-        Override this method if there are any such cards in the
-        custom set.
-
-        E.g., Bane cards or Platinum and Colony cards.
-
-        Returns:
-            A list of tuples of the form (card_class, role),
-            where card_class is the card class and role is a string
-            describing the role of the card in the set.
+        The name of the card to use as Bane (when playing with Young Witch)
+        or None.
         """
-        return []
+        return None
+    
+    @property
+    def use_platinum_and_colony(self) -> bool | None:
+        """
+        Whether to use Platinum and Colony.
+        
+        If True, they will both be used even in no Kingdom cards from
+        Prosperity are in play.
+
+        If False, they will not be used.
+
+        If None, whether they are used is determined randomly based on
+        the number of Prosperity Kingdom cards in play.
+        """
+        return None
 
     @property
     def expansion_instances(self) -> List[Expansion] | None:
@@ -77,9 +81,26 @@ class CustomSet(metaclass=ABCMeta):
         Override this method if the expansions being added into the game
         require specific options.
         """
-        if self._expansion_instances is None:
-            self._expansion_instances = [BaseExpansion(self.game)] + [expansion(self.game) for expansion in self.expansions]
-        return self._expansion_instances
+        instances = [BaseExpansion(self.game)]
+        if CornucopiaExpansion in self.expansions:
+            if self.bane_card_name is None:
+                instances.append(CornucopiaExpansion(self.game))
+            else:
+                for expansion, expansion_card_classes in ALL_KINGDOM_CARDS_BY_EXPANSION.items():
+                    for expansion_card_class in expansion_card_classes:
+                        if self.bane_card_name == expansion_card_class.name:
+                            bane_card_class = expansion_card_class
+                            self.expansions.add(expansion)
+                instances.append(CornucopiaExpansion(self.game, bane_card_class=bane_card_class))
+        if self.use_platinum_and_colony:
+            instances.append(ProsperityExpansion(self.game, platinum_and_colony=True))
+        elif ProsperityExpansion in self.expansions:
+            if self.use_platinum_and_colony == False:
+                instances.append(ProsperityExpansion(self.game, platinum_and_colony=False))
+            elif self.use_platinum_and_colony is None:
+                instances.append(ProsperityExpansion(self.game))
+        instances += [expansion(self.game) for expansion in self.expansions if expansion not in [CornucopiaExpansion, ProsperityExpansion]]
+        return instances
 
     @property
     def json(self) -> CustomSetJSON:
@@ -111,25 +132,12 @@ class CustomSet(metaclass=ABCMeta):
                         if card_name == expansion_card_class.name:
                             card_classes.add(expansion_card_class)
                             expansions.add(expansion)
-            if json["additional_cards"]:
-                print(json["additional_cards"])
-                for additional_card in json["additional_cards"]:
-                    card_name = additional_card["card"]
-                    card_role = additional_card["role"]
-                    if card_role == "Bane":
-                        for expansion, expansion_card_classes in ALL_KINGDOM_CARDS_BY_EXPANSION.items():
-                            for expansion_card_class in expansion_card_classes:
-                                if card_name == expansion_card_class.name:
-                                    bane_card_class = expansion_card_class
-                                    expansions.add(expansion)
-                                    additional_cards = [(bane_card_class, "Bane")]
-                        @property
-                        def expansion_instances(self) -> List[Expansion] | None:
-                            if self._expansion_instances is None:
-                                self._expansion_instances = [
-                                    BaseExpansion(self.game),
-                                    *(expansion(self.game) for expansion in self.expansions if expansion != CornucopiaExpansion),
-                                    CornucopiaExpansion(self.game, bane_card_class=self.bane_card_class),
-                                ]
-                            return self._expansion_instances
+            if json.get("bane_card_name", None) is not None:
+                @property
+                def bane_card_name(self):
+                    return json.get("bane_card_name", None)
+            if json.get("use_platinum_and_colony", None) is not None:
+                @property
+                def use_platinum_and_colony(self):
+                    return json.get("use_platinum_and_colony", None)
         return ConstructedCustomSet

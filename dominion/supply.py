@@ -310,7 +310,7 @@ class Supply:
                 self.card_stacks[card_class] = FiniteSupplyStack(card_class, 10)
             return
         elif (custom_set := self.customization.custom_set) is not None:
-            print(f"Using custom set: {', '.join(custom_set.card_names)}{f' with additional cards {custom_set.additional_cards}' if custom_set.additional_cards else ''}.")
+            print(f"Using custom set: {', '.join(custom_set.card_names)}{f'. Bane card: {custom_set.bane_card_name}'}{f'. Platinum and Colony: {custom_set.use_platinum_and_colony}'}.")
             for card_class in sorted(list(custom_set.card_classes), key=lambda card_class: (card_class._cost, card_class.name)):
                 # Stacks of ten kingdom cards each
                 self.card_stacks[card_class] = FiniteSupplyStack(card_class, 10)

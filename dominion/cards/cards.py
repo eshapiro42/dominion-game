@@ -268,8 +268,8 @@ class Card(Word, metaclass=ABCMeta):
             # 'description': self.description.replace("\n", "<br>"),
             'description': self.description.split("\n"),
             'cost': self.cost,
-            'types': [t.name.lower() for t in self.types], # List of types (all lowercase)
-            'type': ', '.join([t.name.capitalize() for t in self.types]), # String of types
+            'types': [t.name.lower() for t in list(set(self.types))], # List of types (all lowercase)
+            'type': ', '.join([t.name.capitalize() for t in list(set(self.types))]), # String of types
             'id': self.id,
             'expansion': self.expansion,
         }

@@ -49,7 +49,8 @@ disconnected_players: DefaultDict[str, List[str]] = defaultdict(list)
 cpus: Dict[str, int] = {}
 # Global variable for admin use
 allow_game_creation: bool = True
-
+# All Kingdom cards (for building custom kingdoms)
+all_kingdom_cards_json = [{"expansion": expansion.name, "cards": [card_class().json for card_class in sorted(expansion_card_classes, key=lambda card_class: card_class._cost)]} for expansion, expansion_card_classes in ALL_KINGDOM_CARDS_BY_EXPANSION.items()]
 
 @socketio.on('join room')
 def join_room(data):
@@ -246,7 +247,6 @@ def send_recommended_sets(data):
 @socketio.on('request all kingdom cards')
 def send_all_cards(data):
     room = data['room']
-    all_kingdom_cards_json = {expansion.name: [card_class().json for card_class in sorted(expansion_card_classes, key=lambda card_class: card_class._cost)] for expansion, expansion_card_classes in ALL_KINGDOM_CARDS_BY_EXPANSION.items()}
     socketio.emit(
         'all kingdom cards',
         data=all_kingdom_cards_json,
@@ -259,13 +259,16 @@ def send_kingdom_json(data):
     game = games[room]
     supply = game.supply
     json_data = {"cards": [], "additional_cards": None}
-    # Check whether there is a Bane card
     bane_card_class = None
     for expansion_instance in supply.customization.expansions:
         if isinstance(expansion_instance, CornucopiaExpansion):
+            # Check whether there is a Bane card
             bane_card_class = expansion_instance.bane_card_class
             if bane_card_class is not None:
-                json_data["additional_cards"] = [{"card": bane_card_class.name, "role": "Bane"}]
+                json_data["bane_card_name"] = bane_card_class.name
+        if isinstance(expansion_instance, ProsperityExpansion):
+            # Check whether Platinum and Colony are in use
+            json_data["use_platinum_and_colony"] = expansion_instance.platinum_and_colony
     for card_class in supply.card_stacks.keys():
         if card_class not in ALL_KINGDOM_CARDS or card_class == bane_card_class:
             continue
