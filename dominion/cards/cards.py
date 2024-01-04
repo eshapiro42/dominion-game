@@ -268,7 +268,7 @@ class Card(Word, metaclass=ABCMeta):
         try:
             cornucopia_expansion_instance: CornucopiaExpansion = [expansion_instance for expansion_instance in self.supply.customization.expansions if expansion_instance.name == "Cornucopia"][0]
             bane_card_class = cornucopia_expansion_instance.bane_card_class
-            if isinstance(self, bane_card_class):
+            if bane_card_class is not None and isinstance(self, bane_card_class):
                 list_of_types.insert(0, "bane")
                 string_of_types = "Bane, " + string_of_types
         except (AttributeError, IndexError):
