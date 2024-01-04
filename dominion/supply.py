@@ -604,7 +604,6 @@ class SupplyStack(metaclass=ABCMeta):
                 card_stack_json['types'].insert(0, "bane")
                 card_stack_json['type'] = "Bane, " + card_stack_json['type']
         except IndexError:
-            raise
             # If the Cornucopia expansion is not in play, obviously this will throw an index error
             pass
         return card_stack_json
