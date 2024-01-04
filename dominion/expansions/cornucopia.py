@@ -43,13 +43,13 @@ class CornucopiaExpansion(Expansion):
                     bane_card_class = random.choice(card_classes_costing_2_or_3)
                     self.supply.card_stacks.pop(bane_card_class)
                     replacement_card_class = random.choice(self.supply.possible_kingdom_card_classes)
-                    self.supply.card_stacks[replacement_card_class] = FiniteSupplyStack(replacement_card_class, 10)
+                    self.supply.card_stacks[replacement_card_class] = FiniteSupplyStack(self.supply, replacement_card_class, 10)
                 else:
                     bane_card_class = random.choice(possible_bane_card_classes)
+            self.bane_card_class = bane_card_class
             self.game.broadcast(f"The Young Witch is in play this game. {s(10, bane_card_class, print_number=False)} are Bane cards.")
-            # Add the Bane card class to the Supply and modify its example card
-            self.supply.card_stacks[bane_card_class] = FiniteSupplyStack(bane_card_class, 10)
-            self.supply.card_stacks[bane_card_class].example.types += [cards.CardType.BANE]
+            # Add the Bane card class to the Supply
+            self.supply.card_stacks[bane_card_class] = FiniteSupplyStack(self.supply, bane_card_class, 10)
         # If the Tournament is in the Supply, it adds Prizes
         if cornucopia_cards.Tournament in self.supply.card_stacks:
             self.game.broadcast("The Tournament is in play this game. Prizes are available.")

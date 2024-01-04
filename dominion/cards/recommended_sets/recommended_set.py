@@ -90,15 +90,26 @@ class RecommendedSet(metaclass=ABCMeta):
         """
         A JSON representation of this recommended set.
         """
+        # Construct JSON for additional cards separately
+        # This is necessary for cards like Bane cards which require modifications
+        additional_cards_json = []
+        for card_class, role in self.additional_cards:
+            if role == "Bane":
+                card_instance_json = card_class().json
+                if "bane" not in card_instance_json['types']:
+                    card_instance_json['types'].insert(0, "bane")
+                    card_instance_json['type'] = "Bane, " + card_instance_json['type']
+            else:
+                card_instance_json = card_class().json
+            additional_cards_json.append(
+                {
+                    "card": card_instance_json,
+                    "role": role
+                }
+            )
         return {
             "name": self.name,
             "expansions": [expansion.name for expansion in self.expansions],
-            "cards": [card_class.name for card_class in self.card_classes],
-            "additional_cards": [
-                {
-                    "card": card_class.name,
-                    "role": role,
-                }
-                for card_class, role in self.additional_cards
-            ],
+            "cards": [card_class().json for card_class in self.card_classes],
+            "additional_cards": additional_cards_json,
         }

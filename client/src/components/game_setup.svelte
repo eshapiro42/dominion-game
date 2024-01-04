@@ -8,6 +8,7 @@
     } from "../stores.js";
 
     import CustomKingdomSetup from "./custom_kingdom_setup.svelte";
+    import RecommendedKingdomSetup from "./recommended_kingdom_setup.svelte";
     import Tabs from "./tabs.svelte";
 
     const dispatch = createEventDispatcher();
@@ -338,54 +339,10 @@
                     </main>
                 {:else if selectedTab === "Recommended Kingdom"}
                     <main>
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>Kingdom</th>
-                                    <th>Expansions</th>
-                                    <th>Kingdom Cards</th>
-                                    <th>Additional Cards</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {#each recommendedSets as set, index}
-                                    <tr
-                                        on:click={() => {recommendedSet = index}}
-                                        class={recommendedSet == index ? "selected" : ""}
-                                    >
-                                        <td>
-                                            <b>{set.name}</b>
-                                        </td>
-                                        <td>
-                                            {#each set.expansions as expansion}
-                                                {expansion}<br>
-                                            {/each}
-                                        </td>
-                                        <td>
-                                            {#each set.cards as card}
-                                                <span>
-                                                    {card}<br>
-                                                </span>
-                                            {/each}
-                                        </td>
-                                        <td>
-                                            {#if set.hasOwnProperty("additional_cards")}
-                                                {#each set.additional_cards as additionalCard}
-                                                    <span>
-                                                        {#if additionalCard.role != null}
-                                                            {additionalCard.card} ({additionalCard.role})
-                                                        {:else}
-                                                            {additionalCard.card}
-                                                        {/if}
-                                                        <br>
-                                                    </span>
-                                                {/each}
-                                            {/if}
-                                        </td>
-                                    </tr>
-                                {/each}
-                            </tbody>
-                        </table>
+                        <RecommendedKingdomSetup 
+                            {recommendedSets}
+                            bind:recommendedSet={recommendedSet}
+                    />
                     </main>
                 {:else if selectedTab === "Custom Kingdom"}
                     <main>
@@ -485,18 +442,6 @@
 
     .table-center {
         text-align: center;
-    }
-
-    th {
-        position: sticky;
-        background-color: #343338;
-        top: 0;
-        color: #dadada;
-        padding: 20px;
-    }
-
-    .selected {
-        background-color: #ffcccc;
     }
 
     td {

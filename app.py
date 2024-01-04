@@ -236,13 +236,11 @@ def send_message(data):
 @socketio.on('request recommended sets')
 def send_recommended_sets(data):
     room = data['room']
-    fake_game = Game()
     socketio.emit(
         'recommended sets',
-        data=[recommended_set(fake_game).json for recommended_set in ALL_RECOMMENDED_SETS],
+        data=[recommended_set(Game()).json for recommended_set in ALL_RECOMMENDED_SETS],
         room=room,
     )
-    del(fake_game)
 
 @socketio.on('request all kingdom cards')
 def send_all_cards(data):

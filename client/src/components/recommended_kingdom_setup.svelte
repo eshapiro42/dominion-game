@@ -1,30 +1,12 @@
 <script>
     import Card from "./card.svelte";
 
-    export let customKingdomData = {};
-    export let allKingdomCards = [];
+    export let recommendedSets = [];
+    export let recommendedSet = null;
 
-    let allKingdomCardsSorted = [];
-    let baneCard = null;
-    let usePlatinumAndColony = null;
-    let invalidCardIds = [];
     let sortByProperty = "cost";
     let displayAs = "row";
-    let selectedAll = false;
-    let selectedCardIds = [];
-    let selectedCardNames = [];
-    let youngWitchSelected = false;
-    let availableBaneCards = [];
-    let waitingForSelection = {
-        value: true,
-        handler: null,
-        type: "",
-        maxCards: 10,
-        maxCost: null,
-        force: false,
-        prompt: "",
-        ordered: true,
-    }
+
     let sortByOptions = [
         {text: "Type", property: "type"},
         {text: "Cost", property: "cost"},
@@ -32,20 +14,26 @@
         // {text: "Order Sent", property: "orderSent"},
     ]
 
-    $: numSelected = selectedCardIds.length;
+    let waitingForSelection = {
+        value: false,
+        handler: null,
+        type: "",
+        maxCards: null,
+        maxCost: null,
+        force: false,
+        prompt: "",
+        ordered: false,
+    }
+
     $: displayAsRow = displayAs == "row";
     $: displayAsGrid = displayAs == "grid";
 
-    $: availableBaneCards = allKingdomCards
-        .flatMap(expansion => expansion.cards)
-        .filter(card => card.cost <=3)
-        .filter(card => !selectedCardNames.includes(card.name));
-
-    $: allKingdomCardsSorted = allKingdomCards.map(
-        expansionData => (
+    $: recommendedSetsSorted = recommendedSets.map(
+        setData => (
             {
-                expansion: expansionData.expansion,
-                cards: expansionData.cards.sort(
+                name: setData.name,
+                expansions: setData.expansions,
+                cards: setData.cards.sort(
                     (a, b) => {
                         if (sortByProperty == "orderSent") {
                             return 0;
@@ -61,51 +49,10 @@
                         }
                     }
                 ),
+                additional_cards: setData.additional_cards,
             }
         )
     );
-
-    $: if (baneCard !== null) {
-        invalidCardIds = [baneCard.id]
-    } else {
-        invalidCardIds = [];
-    }    
-
-    $: customKingdomData = {
-        cards: selectedCardNames,
-        bane_card_name: baneCard !== null ? baneCard.name : null,
-        use_platinum_and_colony: usePlatinumAndColony
-    }
-
-    function handleClicked(event) {
-        selectedAll = false;
-        var cardSelected = event.detail.selected;
-        var cardId = event.detail.id;
-        var cardName = event.detail.name;
-        if (cardSelected) {
-            selectedCardIds = selectedCardIds.concat(cardId);
-            selectedCardNames = selectedCardNames.concat(cardName);
-            if (cardName === "Young Witch") {
-                youngWitchSelected = true;
-            }
-        }
-        else {
-            selectedCardIds = selectedCardIds.filter(
-                (selectedCardId) => {
-                    return selectedCardId != cardId;
-                }
-            );
-            selectedCardNames = selectedCardNames.filter(
-                (selectedCardName) => {
-                    return selectedCardName != cardName;
-                }
-            );
-            if (cardName === "Young Witch") {
-                youngWitchSelected = false;
-                baneCard = null;
-            }
-        }
-    }
 </script>
 
 <main>
@@ -129,42 +76,31 @@
         </div>
     </div>
 
-    {#each allKingdomCardsSorted as expansionData}
+    {#each recommendedSetsSorted as set, index}
+        <div 
+            class="panel {recommendedSet == index ? "selected" : ""}"
+            on:click={
+                () => {
+                    recommendedSet = index;
+                }
+            }
+        >
         <hr>
-        <div class="panel">
             <div class="title">
-                <h4>{expansionData.expansion}</h4>
+                <h4>{set.name}</h4>
+                <p>{set.expansions.join(", ")}<p>
             </div>
-            {#if youngWitchSelected && expansionData.expansion == "Cornucopia"}
-                Bane Card
-                <select bind:value={baneCard}>
-                    <option value={null} selected>Random</option>
-                    {#each availableBaneCards as availableBaneCard}
-                        <option value={availableBaneCard}>{availableBaneCard.name}</option>
-                    {/each}
-                </select>
-            {:else if expansionData.expansion == "Prosperity"}
-                Use Platinum and Colony?
-                <select bind:value={usePlatinumAndColony}>
-                    <option value={null} selected>Random</option>
-                    <option value={true}>Yes</option>
-                    <option value={false}>No</option>
-                </select>
-            {/if}
             <div
                 class="cards"
                 class:displayAsRow
                 class:displayAsGrid
             >
-                {#each expansionData.cards as card (card.id)}
+                {#each set.cards as card}
                     <Card
                         {...card}
                         {waitingForSelection}
-                        {selectedAll}
-                        {numSelected}
-                        {selectedCardIds}
-                        {invalidCardIds}
-                        on:clicked={handleClicked}
+                        selectedAll=false
+                        numSelected=0
                     />
                 {:else}
                     <div class="text">
@@ -172,6 +108,22 @@
                     </div>
                 {/each}
             </div>
+            {#if set.additional_cards.length > 0}
+                <div
+                    class="cards"
+                    class:displayAsRow
+                    class:displayAsGrid
+                >
+                    {#each set.additional_cards as card}
+                    <Card
+                        {...card.card}
+                        {waitingForSelection}
+                        selectedAll=false
+                        numSelected=0
+                    />
+                    {/each}
+                </div>
+            {/if}
         </div>
     {/each}
 </main>
@@ -267,5 +219,13 @@
 
     .panel {
         left: 0px;
+    }
+
+    .panel:hover:not(.selected) {
+        background-color: #f0f0f0;
+    }
+    
+    .selected {
+        background-color: #cde6fe;
     }
 </style>

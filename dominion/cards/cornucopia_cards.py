@@ -1,11 +1,15 @@
 import math
 
 from gevent import Greenlet, joinall
+from typing import TYPE_CHECKING
 
 from .cards import CardType, Card, TreasureCard, ActionCard, AttackCard, ReactionCard, VictoryCard, CurseCard, ReactionType
 from . import base_cards
 from ..hooks import PreTurnHook
 from ..grammar import a, s
+
+if TYPE_CHECKING:
+    from ..expansions import CornucopiaExpansion
 
 
 # KINGDOM CARDS
@@ -374,7 +378,9 @@ class YoungWitch(AttackCard):
 
     def attack_effect(self, attacker, player):
         # Check if the player has a Bane card in their hand
-        if any(CardType.BANE in card.types for card in player.hand):
+        cornucopia_expansion_instance: CornucopiaExpansion = [expansion_instance for expansion_instance in self.supply.customization.expansions if expansion_instance.name == "Cornucopia"][0]
+        bane_card_class = cornucopia_expansion_instance.bane_card_class
+        if any(isinstance(card, bane_card_class) for card in player.hand):
             prompt = f"{attacker} played a Young Witch. You have a Bane card in your hand. Would you like to reveal it to avoid gaining a Curse?"
             if player.interactions.choose_yes_or_no(prompt):
                 self.game.broadcast(f"{player} revealed a Bane card from their hand.")

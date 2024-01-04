@@ -25,7 +25,7 @@ if TYPE_CHECKING:
     from ...expansions.expansion import Expansion
 
 
-ALL_RECOMMENDED_SETS = (
+ALL_RECOMMENDED_SETS: List[RecommendedSet] = (
     dominion_recommended_sets
     + dominion_intrigue_recommended_sets
     + dominion_prosperity_recommended_sets

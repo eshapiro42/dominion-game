@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, Any, Optional, Deque, Dict, List, Tuple, Type,
 from ..grammar import a, s, Word
 
 if TYPE_CHECKING:
+    from ..expansions import CornucopiaExpansion
     from ..game import Game
     from ..interactions.interaction import Interaction
     from ..player import Player
@@ -29,7 +30,6 @@ class CardType(Enum):
     REACTION = auto()
     ATTACK = auto()
     PRIZE = auto()
-    BANE = auto()
 
 
 class ReactionType(Enum):
@@ -143,7 +143,7 @@ class Card(Word, metaclass=ABCMeta):
         """
         The cost of the card.
         """
-        return self._cost if not hasattr(self, "game") else self.game.current_turn.get_cost(self)
+        return self._cost if (not hasattr(self, "game") or self.game.current_turn is None) else self.game.current_turn.get_cost(self)
 
     @property
     def gain_to(self) -> Deque[Card]:
@@ -262,14 +262,27 @@ class Card(Word, metaclass=ABCMeta):
             effects.append(f"+{s(extra_buys, 'Buy')}")
         if extra_coppers:
             effects.append(f"+{extra_coppers} $")
+        list_of_types = [t.name.lower() for t in list(set(self.types))] # List of types (all lowercase)
+        string_of_types = ', '.join([t.name.capitalize() for t in list(set(self.types))]) # String of types
+        # If the card is a Bane card, modify the displayed types
+        try:
+            cornucopia_expansion_instance: CornucopiaExpansion = [expansion_instance for expansion_instance in self.supply.customization.expansions if expansion_instance.name == "Cornucopia"][0]
+            bane_card_class = cornucopia_expansion_instance.bane_card_class
+            if isinstance(self, bane_card_class):
+                list_of_types.insert(0, "bane")
+                string_of_types = "Bane, " + string_of_types
+        except (AttributeError, IndexError):
+            # If the game has not started, the card does not have an owner yet
+            # If the Cornucopia expansion is not in play, obviously this will throw an index error
+            pass
+        # Build the card's dictionary
         return {
             'name': self.name,
             'effects': effects,
-            # 'description': self.description.replace("\n", "<br>"),
             'description': self.description.split("\n"),
             'cost': self.cost,
-            'types': [t.name.lower() for t in list(set(self.types))], # List of types (all lowercase)
-            'type': ', '.join([t.name.capitalize() for t in list(set(self.types))]), # String of types
+            'types': list_of_types,
+            'type': string_of_types,
             'id': self.id,
             'expansion': self.expansion,
         }

@@ -635,7 +635,7 @@ class Courtier(ActionCard):
         revealed_card = self.interactions.choose_card_from_hand(prompt, force=True)
         if revealed_card is not None:
             self.game.broadcast(f'{self.owner} revealed {a(revealed_card)} with their Courtier.')
-            num_types = len([card_type for card_type in revealed_card.types if card_type != CardType.BANE])
+            num_types = len(revealed_card.types)
             self.game.broadcast(f'{self.owner} may choose {num_types} of the available options.')
             options = [
                 '+1 Action',

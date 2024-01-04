@@ -13,6 +13,7 @@ if TYPE_CHECKING:
     from .cards.custom_sets import CustomSet
     from .cards.recommended_sets import RecommendedSet
     from .cards.cards import Card
+    from .expansions import CornucopiaExpansion
     from .expansions.expansion import Expansion
     from .hooks import PostGainHook
 
@@ -307,13 +308,13 @@ class Supply:
             print(f"Using recommended set {recommended_set}: {', '.join(recommended_set.card_names)}.")
             for card_class in sorted(recommended_set.card_classes, key=lambda card_class: (card_class._cost, card_class.name)):
                 # Stacks of ten kingdom cards each
-                self.card_stacks[card_class] = FiniteSupplyStack(card_class, 10)
+                self.card_stacks[card_class] = FiniteSupplyStack(self, card_class, 10)
             return
         elif (custom_set := self.customization.custom_set) is not None:
             print(f"Using custom set: {', '.join(custom_set.card_names)}{f'. Bane card: {custom_set.bane_card_name}'}{f'. Platinum and Colony: {custom_set.use_platinum_and_colony}'}.")
             for card_class in sorted(list(custom_set.card_classes), key=lambda card_class: (card_class._cost, card_class.name)):
                 # Stacks of ten kingdom cards each
-                self.card_stacks[card_class] = FiniteSupplyStack(card_class, 10)
+                self.card_stacks[card_class] = FiniteSupplyStack(self, card_class, 10)
             return
         print("Randomly selecting kingdom cards.")
         selected_kingdom_card_classes = []
@@ -373,7 +374,7 @@ class Supply:
         # Sort kingdom cards first by cost, then by name
         for card_class in sorted(selected_kingdom_card_classes, key=lambda card_class: (card_class._cost, card_class.name)):
             # Stacks of ten kingdom cards each
-            self.card_stacks[card_class] = FiniteSupplyStack(card_class, 10)
+            self.card_stacks[card_class] = FiniteSupplyStack(self, card_class, 10)
 
     def _select_basic_cards(self):
         """
@@ -383,7 +384,7 @@ class Supply:
         for expansion in self.customization.expansions:
             self.basic_card_piles += expansion.basic_card_piles
         for card_class, pile_size in self.basic_card_piles:
-            self.card_stacks[card_class] = FiniteSupplyStack(card_class, pile_size)
+            self.card_stacks[card_class] = FiniteSupplyStack(self, card_class, pile_size)
 
     def _create_trash_pile(self):
         """
@@ -507,7 +508,18 @@ class Supply:
             quantity = len(self.trash_pile[card_class])
             try:
                 card_json = self.trash_pile[card_class][0].json
+                # Add the quantity of cards to the card stack JSON
                 card_json["quantity"] = quantity
+                # Bane card must be handled specially for the Trash since cards in the Trash have no owner
+                try:
+                    cornucopia_expansion_instance: CornucopiaExpansion = [expansion_instance for expansion_instance in self.customization.expansions if expansion_instance.name == "Cornucopia"][0]
+                    bane_card_class = cornucopia_expansion_instance.bane_card_class
+                    if card_class == bane_card_class and "bane" not in card_json['types']:
+                        card_json['types'].insert(0, "bane")
+                        card_json['type'] = "Bane, " + card_json['type']
+                except IndexError:
+                    # If the Cornucopia expansion is not in play, obviously this will throw an index error
+                    pass
                 json.append(card_json)
             except IndexError:
                 pass
@@ -521,19 +533,27 @@ class SupplyStack(metaclass=ABCMeta):
     Args:
         card_class: The card class of the cards in the stack.
     """
-    def __init__(self, card_class: Type[Card]):
+    def __init__(self, supply: Supply, card_class: Type[Card]):
+        self._supply = supply
         self._card_class = card_class
         self._example = self.card_class()
 
     @property
-    def card_class(self):
+    def supply(self) -> Supply:
+        """
+        The Supply to which this stack belongs
+        """
+        return self._supply
+
+    @property
+    def card_class(self) -> Type[Card]:
         """
         The class of card in this stack.
         """
         return self._card_class
 
     @property
-    def example(self):
+    def example(self) -> Card:
         """
         An orphaned example card that data can be pulled from.
         This card is not in the supply.
@@ -576,6 +596,17 @@ class SupplyStack(metaclass=ABCMeta):
         card_stack_json = self.example.json
         card_stack_json["cost"] = self.modified_cost
         card_stack_json["quantity"] = quantity
+        # Bane card must be handled specially for the Supply since cards in the Supply have no owner
+        try:
+            cornucopia_expansion_instance: CornucopiaExpansion = [expansion_instance for expansion_instance in self.supply.customization.expansions if expansion_instance.name == "Cornucopia"][0]
+            bane_card_class = cornucopia_expansion_instance.bane_card_class
+            if self.card_class == bane_card_class and "bane" not in card_stack_json['types']:
+                card_stack_json['types'].insert(0, "bane")
+                card_stack_json['type'] = "Bane, " + card_stack_json['type']
+        except IndexError:
+            raise
+            # If the Cornucopia expansion is not in play, obviously this will throw an index error
+            pass
         return card_stack_json
 
 
@@ -589,8 +620,8 @@ class InfiniteSupplyStack(SupplyStack):
     Args:
         card_class: The card class of the cards in the stack.
     """
-    def __init__(self, card_class: Type[Card]):
-        super().__init__(card_class)
+    def __init__(self, supply: Supply, card_class: Type[Card]):
+        super().__init__(supply, card_class)
         self._cards_remaining = inf
 
     def draw(self) -> Card:
@@ -617,8 +648,8 @@ class FiniteSupplyStack(SupplyStack):
         card_class: The card class of the cards in the stack.
         size: The number of cards in the stack.
     """
-    def __init__(self, card_class: Type[Card], size: int):
-        super().__init__(card_class)
+    def __init__(self, supply: Supply, card_class: Type[Card], size: int):
+        super().__init__(supply, card_class)
         self._base_cost = self.example.cost
         self._modified_cost = self.example.cost
         self._cards_remaining = size
