@@ -74,7 +74,7 @@
             waitingForSelection.handler = handleCardSelected;
             waitingForSelection.maxCards = 1;
             waitingForSelection.maxCost = null;
-            waitingForSelection.force = false;
+            waitingForSelection.force = data.force;
             waitingForSelection.prompt = data.prompt;
         },
     );
