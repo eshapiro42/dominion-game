@@ -70,7 +70,7 @@
 </script>
 
 {#if shown}
-    <div class="container space-above">
+    <div class="panel space-above">
 
         <Tabs
             tabNames={
@@ -83,7 +83,15 @@
         />
 
         {#if selectedTab == "Join a Game"}
-            <div class="form-row space-above">
+            <div class="form-row space-above"
+                on:keyup={
+                    (event) => {
+                        if (event.key == "Enter") {
+                            joinRoom();
+                        }
+                    }
+                }
+            >
                 <div class="col">
                     <input type="text" class="form-control" placeholder="Your Name" autocomplete="off" bind:value={username} required>
                 </div>
@@ -93,7 +101,15 @@
                 <button class="btn btn-dark space-above" on:click={joinRoom}>Let's Move It</button>
             </div>
         {:else if selectedTab == "Create a Game"}
-            <div class="form-group space-above">
+            <div class="form-group space-above"
+                on:keyup={
+                    (event) => {
+                        if (event.key == "Enter") {
+                            createRoom();
+                        }
+                    }
+                }
+            >
                 <input type="text" class="form-control" placeholder="Your Name" bind:value={username} autocomplete="off" required>
             </div>
             <button class="btn btn-dark space-above" on:click={createRoom}>Let's Groove It</button>
@@ -104,5 +120,9 @@
 <style>
     .space-above {
         margin-top: 50px;
+    }
+
+    .panel {
+        left: 0px;
     }
 </style>

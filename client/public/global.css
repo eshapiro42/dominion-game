@@ -98,6 +98,7 @@ button:focus {
 @media (min-width: 1400px) {
 	.panel {
 		max-width: 90vw;
+		min-width: 90vw;
 	}
 }
 /* Do not show sidebar on mobile devices */

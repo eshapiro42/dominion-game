@@ -261,8 +261,8 @@
 
 {#if !hidden}
     {#if roomJoined}
-        <div class="container">
-            <table class="table table-hover table-center">
+        <div class="panel">
+            <table class="table table-hover table-center table-bordered">
                 <thead>
                     <tr><td><b>Players in Room</b></td></tr>
                 </thead>
@@ -274,7 +274,7 @@
             </table>
         </div>
         {#if roomCreator}
-            <div class="container">
+            <div class="panel">
                 <div class="buttons">
                     <button type="button" on:click={startGame} class="btn btn-primary btn-lg btn-block">Start Game</button>
                     <button type="button" on:click={addCPU} class="btn btn-secondary btn-lg btn-block">Add CPU</button>
@@ -446,5 +446,9 @@
 
     td {
         padding: 20px;
+    }
+
+    .panel {
+        left: 0px;
     }
 </style>
