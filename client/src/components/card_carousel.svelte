@@ -285,11 +285,6 @@
         gap: 10px;
     }
 
-    .table {
-        text-align: left;
-        vertical-align: middle;
-    }
-
     .text {
         display: flex;
         width: 100%;
