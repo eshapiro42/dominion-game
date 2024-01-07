@@ -1,6 +1,8 @@
 <script>
     import Card from "./card.svelte";
 
+    import sortCards from "../common.js";
+
     export let recommendedSets = [];
     export let recommendedSet = null;
 
@@ -33,22 +35,7 @@
             {
                 name: setData.name,
                 expansions: setData.expansions,
-                cards: setData.cards.sort(
-                    (a, b) => {
-                        if (sortByProperty == "orderSent") {
-                            return 0;
-                        }
-                        if (a[sortByProperty] < b[sortByProperty]) {
-                            return -1;
-                        }
-                        else if (a[sortByProperty] > b[sortByProperty]) {
-                            return 1;
-                        }
-                        else {
-                            return 0;
-                        }
-                    }
-                ),
+                cards: sortCards(setData.cards, sortByProperty),
                 additional_cards: setData.additional_cards,
             }
         )

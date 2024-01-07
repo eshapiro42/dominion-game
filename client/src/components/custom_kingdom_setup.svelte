@@ -1,6 +1,8 @@
 <script>
     import Card from "./card.svelte";
 
+    import sortCards from "../common.js";
+
     export let customKingdomData = {};
     export let allKingdomCards = [];
 
@@ -45,22 +47,7 @@
         expansionData => (
             {
                 expansion: expansionData.expansion,
-                cards: expansionData.cards.sort(
-                    (a, b) => {
-                        if (sortByProperty == "orderSent") {
-                            return 0;
-                        }
-                        if (a[sortByProperty] < b[sortByProperty]) {
-                            return -1;
-                        }
-                        else if (a[sortByProperty] > b[sortByProperty]) {
-                            return 1;
-                        }
-                        else {
-                            return 0;
-                        }
-                    }
-                ),
+                cards: sortCards(expansionData.cards, sortByProperty),
             }
         )
     );

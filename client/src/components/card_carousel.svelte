@@ -6,6 +6,8 @@
     import Card from "./card.svelte";
     import SelectionPrompt from "./selection_prompt.svelte";
 
+    import sortCards from "../common.js";
+
     export let title;
     export let waitingForSelection;
     export let sortByProperty = "type";
@@ -93,22 +95,7 @@
         {text: "Order Sent", property: "orderSent"},
     ]
 
-    $: sortedCards = cards.sort(
-        (a, b) => {
-            if (sortByProperty == "orderSent") {
-                return 0;
-            }
-            if (a[sortByProperty] < b[sortByProperty]) {
-                return -1;
-            }
-            else if (a[sortByProperty] > b[sortByProperty]) {
-                return 1;
-            }
-            else {
-                return 0;
-            }
-        }
-    );
+    $: sortedCards = sortCards(cards, sortByProperty);
 
     $: numSelected = selectedCardIds.length;
 
