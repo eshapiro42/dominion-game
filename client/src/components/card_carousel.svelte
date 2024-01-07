@@ -13,11 +13,6 @@
     export let sortByProperty = "type";
     export let invalidCardNames = [];
     export let invalidCardIds = [];
-    export let endGameData = {
-        explanation: "",
-        winners: "",
-        playerData: [],
-    };
 
     export let cards = [ 
         // This is the "source of truth" for all cards in the front-end
@@ -99,7 +94,7 @@
 
     $: numSelected = selectedCardIds.length;
 
-    $: active = waitingForSelection.value || title == "Game Over";
+    $: active = waitingForSelection.value;
 
     $: if (active) {
         // Scroll to the active carousel after a short delay to allow the page to render
@@ -171,41 +166,6 @@
                 </div>
             {:else}
                 <h4>{title}</h4>
-            {/if}
-            {#if (title == "Game Over")}
-                <div class="endGameData">
-                    <br>
-                    <h5>{endGameData.explanation}</h5>
-                    <br>
-                    <h5>{endGameData.winners}</h5>
-                    <br>
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th>Player</th>
-                                <th>Victory Points</th>
-                                <th>Turns Taken</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {#each endGameData.playerData as playerData}
-                                <tr>
-                                    <td>
-                                        <b>{playerData.name}</b>
-                                    </td>
-                                    <td>
-                                        {playerData.score}
-                                    </td>
-                                    <td>
-                                        {playerData.turns}
-                                    </td>
-                                </tr>
-                            {/each}
-                        </tbody>
-                    </table>
-                    <br>
-                    <h5>Your Cards</h5>
-                </div>
             {/if}
             <div class="dropdowns">
                 <div class="sort">

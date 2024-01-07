@@ -88,6 +88,7 @@
         setTimeout(
             () => {
                 location.hash = "#" + title;
+                history.pushState("", document.title, window.location.pathname + window.location.search);
             },
             300,
         );

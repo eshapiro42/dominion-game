@@ -614,29 +614,32 @@ class Game:
         end_game_data = {
             "explanation": explanation,
             "winners": winners_str,
-            "playerData": [
+            "playerData": [],
+            "showVictoryTokens": ProsperityExpansion in self.expansions and any(player.victory_tokens > 0 for player in self.players),
+        }
+        for player in self.players:
+            card_class_counter: Counter[Type[Card]] = Counter([type(card) for card in player.all_cards])
+            player_cards_json: List[CardJSON] = []
+            for card_class, quantity in card_class_counter.items():
+                card_json = card_class().json
+                card_json["quantity"] = quantity
+                player_cards_json.append(card_json)
+            end_game_data["playerData"].append(
                 {
                     "name": player.name,
                     "score": victory_points_dict[player],
                     "turns": turns_played_dict[player],
+                    "cards": player_cards_json,
+                    "victoryTokens": player.victory_tokens if end_game_data["showVictoryTokens"] else None,
                 }
-                for player in self.players
-            ]
-        }
+            )
         print(end_game_data)
-        for player in self.players:
-            card_class_counter: Counter[Type[Card]] = Counter([type(card) for card in player.all_cards])
-            all_cards_json: List[CardJSON] = []
-            for card_class, quantity in card_class_counter.items():
-                card_json = card_class().json
-                card_json["quantity"] = quantity
-                all_cards_json.append(card_json)
-            if self.socketio is not None:
-                self.socketio.emit(
-                    'game over',
-                    {'endGameData': end_game_data, 'cards': all_cards_json},
-                    to=player.sid,
-                )
+        if self.socketio is not None:
+            self.socketio.emit(
+                'game over',
+                {'endGameData': end_game_data},
+                room=self.room,
+            )
 
     def game_loop(self):
         '''

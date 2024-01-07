@@ -262,7 +262,6 @@
         <GameOver
             show={gameOver.show}
             endGameData={gameOver.endGameData}
-            cards={gameOver.cards}
         />
 
         <PlayedCards/>
