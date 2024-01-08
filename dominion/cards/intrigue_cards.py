@@ -962,7 +962,8 @@ class Nobles(ActionCard, VictoryCard):
 
     description = '\n'.join(
         [
-            'Choose one: +3 Cards; or +2 Actions.'
+            'Choose one: +3 Cards; or +2 Actions.',
+            "2 victory points",
         ]
     )
 
