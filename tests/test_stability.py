@@ -1,40 +1,19 @@
 import pytest
-import random
-from dominion.cards import base_cards, dominion_cards, intrigue_cards, prosperity_cards, cornucopia_cards, hinterlands_cards, guilds_cards
-from dominion.expansions import BaseExpansion, DominionExpansion, IntrigueExpansion, ProsperityExpansion, CornucopiaExpansion, HinterlandsExpansion, GuildsExpansion
+
+from typing import List, Type
+
+from dominion.cards.cards import Card
+from dominion.expansions.expansion import Expansion
 from dominion.game import Game
-from dominion.interactions import AutoInteraction
 
 
-EXPANSIONS = [
-    BaseExpansion,
-    DominionExpansion,
-    IntrigueExpansion,
-    ProsperityExpansion,
-    CornucopiaExpansion,
-    HinterlandsExpansion,
-    GuildsExpansion,
-]
-
-
-CARD_SETS = [
-    base_cards,
-    dominion_cards,
-    intrigue_cards,
-    prosperity_cards,
-    cornucopia_cards,
-    hinterlands_cards,
-    guilds_cards,
-]
-
-
-def test_instantiate_cards():
+def test_instantiate_cards(all_card_sets: List[Type[Card]]):
     '''
     Test instantiation of all card classes.
     '''
     # Compile all cards across all expansions
     card_classes = []
-    for card_set in CARD_SETS:
+    for card_set in all_card_sets:
         if hasattr(card_set, 'BASIC_CARDS'):
             card_classes += card_set.BASIC_CARDS
         if hasattr(card_set, 'KINGDOM_CARDS'):
@@ -44,36 +23,19 @@ def test_instantiate_cards():
         card = card_class()
 
 
+def test_instantiate_expansions(all_expansions: List[Expansion], random_game: Game):
+    '''
+    Test instantiation of all expansion classes.
+    '''
+    for expansion_class in all_expansions:
+        expansion_instance = expansion_class(random_game)
+
+
 @pytest.mark.repeat(1000)
-def test_stability():
+def test_stability(random_game: Game):
     '''
     Test completely CPU-driven games.
 
     Expansions, supply customizations and number of CPU players are randomly selected for each game.
     '''
-    game = Game(test=True)
-    # Add a randomly selected set of expansions into the game
-    num_expansions = random.randint(2, len(EXPANSIONS))
-    expansions_to_include = random.sample(EXPANSIONS, num_expansions)
-    for expansion in expansions_to_include:
-        game.add_expansion(expansion)
-    # Add a randomly selected set of Supply customization options into the game
-    options = [
-        "allow_simultaneous_reactions",
-        # "distribute_cost",
-        "disable_attack_cards",
-        "require_plus_two_action",
-        "require_drawer",
-        "require_buy",
-        "require_trashing",
-    ]
-    num_options = random.randint(0, len(options))
-    options_to_include = random.sample(options, num_options)
-    for option in options_to_include:
-        setattr(game, option, True)
-    # Add a random number (2-4) players into the game
-    num_players = random.randint(2, 4)
-    for _ in range(num_players):
-        game.add_player()
-    game.start()
-    del(game)
+    random_game.start()
