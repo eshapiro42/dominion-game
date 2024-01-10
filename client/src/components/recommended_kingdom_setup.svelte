@@ -1,7 +1,7 @@
 <script>
     import Card from "./card.svelte";
 
-    import sortCards from "../common.js";
+    import {sortCards} from "../common.js";
 
     export let recommendedSets = [];
     export let recommendedSet = null;

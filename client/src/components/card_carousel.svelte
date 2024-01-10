@@ -6,7 +6,7 @@
     import Card from "./card.svelte";
     import SelectionPrompt from "./selection_prompt.svelte";
 
-    import sortCards from "../common.js";
+    import {sortCards} from "../common.js";
 
     export let title;
     export let waitingForSelection;
