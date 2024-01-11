@@ -44,6 +44,9 @@
     $: treasure_reaction = types.includes("treasure") && types.includes("reaction");
     $: victory_reaction = types.includes("victory") && types.includes("reaction");
 
+    // Bane "type"
+    $: bane = types.includes("bane");
+
     function renderText(text) {
         return text
             .replaceAll("$", `<i class="fa-solid fa-coins"></i>`)
@@ -155,6 +158,7 @@
     class:victory_treasure
     class:treasure_reaction
     class:victory_reaction
+    class:bane
     class:unselectable
     class:selected
     class:classic={$classicFont}
@@ -510,6 +514,10 @@
 
     .victory_reaction .hoverable-text, .treasure .selection-index {
         color: #c1f0c1;
+    }
+
+    .bane {
+        box-shadow: $shadow, inset 0 0 15px #dab3ff
     }
 
     .name {
