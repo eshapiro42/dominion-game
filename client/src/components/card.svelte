@@ -24,11 +24,11 @@
     export let invalidCardNames = [];
     export let invalidCardIds = [];
 
-    let typeLowerCase = type.toLowerCase();
     let hovering = false;
     let selectable = true;
     let selectionIndex = null;
 
+    // Primordial types
     $: action = types.includes("action") && !types.includes("attack") && !types.includes("reaction");
     $: attack = types.includes("attack");
     $: reaction = types.includes("reaction");
@@ -37,6 +37,12 @@
     $: treasure = types.includes("treasure");
     $: basicTreasure = ["Copper", "Silver", "Gold", "Platinum"].includes(name);
     $: basicVictory = ["Curse", "Estate", "Duchy", "Province", "Colony"].includes(name);
+
+    // Combined types
+    $: victory_action = types.includes("victory") && types.includes("action");
+    $: victory_treasure = types.includes("victory") && types.includes("treasure");
+    $: treasure_reaction = types.includes("treasure") && types.includes("reaction");
+    $: victory_reaction = types.includes("victory") && types.includes("reaction");
 
     function renderText(text) {
         return text
@@ -145,6 +151,10 @@
     class:treasure
     class:basicTreasure
     class:basicVictory
+    class:victory_action
+    class:victory_treasure
+    class:treasure_reaction
+    class:victory_reaction
     class:unselectable
     class:selected
     class:classic={$classicFont}
@@ -406,6 +416,100 @@
     .basicVictory .description {
         padding-top: 40px;
         font-size: 60px;
+    }
+
+    .victory_action {
+        background-color: #c1f0c1;
+        background: repeating-linear-gradient(
+            -45deg,
+            #c1f0c1,
+            #c1f0c1 30px,
+            rgba(52, 51, 56, 0.05) 30px,
+            rgba(52, 51, 56, 0.05) 60px,
+        ), #c1f0c1;
+        color: $dark-text-color;
+
+        ::-webkit-scrollbar-thumb {
+            background-color: $dark-scrollbar-color;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background-color: $dark-scrollbar-color-hover;
+        }
+    }
+
+    .victory_action .hoverable-text, .treasure .selection-index {
+        color: #c1f0c1;
+    }
+
+    .victory_treasure {
+        background: repeating-linear-gradient(
+            -45deg,
+            #fff0b3,
+            #fff0b3 30px,
+            rgba(193, 240, 193, 0.2) 30px,
+            rgba(193, 240, 193, 0.2) 60px,
+        ), #fff0b3;
+        color: $dark-text-color;
+
+        ::-webkit-scrollbar-thumb {
+            background-color: $dark-scrollbar-color;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background-color: $dark-scrollbar-color-hover;
+        }
+    }
+
+    .victory_treasure .hoverable-text, .treasure .selection-index {
+        color: #fff0b3;
+    }
+
+    .treasure_reaction {
+        background: repeating-linear-gradient(
+            -45deg,
+            #fff0b3,
+            #fff0b3 30px,
+            rgba(128, 191, 255, 0.1) 30px,
+            rgba(128, 191, 255, 0.1) 60px,
+        ), #fff0b3;
+        color: $dark-text-color;
+
+        ::-webkit-scrollbar-thumb {
+            background-color: $dark-scrollbar-color;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background-color: $dark-scrollbar-color-hover;
+        }
+    }
+
+    .treasure_reaction .hoverable-text, .treasure .selection-index {
+        color: #fff0b3;
+    }
+
+    .victory_reaction {
+        background-color: #c1f0c1;
+        background: repeating-linear-gradient(
+            -45deg,
+            #c1f0c1,
+            #c1f0c1 30px,
+            rgba(128, 191, 255, 0.1) 30px,
+            rgba(128, 191, 255, 0.1) 60px,
+        ), #c1f0c1;
+        color: $dark-text-color;
+
+        ::-webkit-scrollbar-thumb {
+            background-color: $dark-scrollbar-color;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background-color: $dark-scrollbar-color-hover;
+        }
+    }
+
+    .victory_reaction .hoverable-text, .treasure .selection-index {
+        color: #c1f0c1;
     }
 
     .name {
