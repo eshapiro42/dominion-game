@@ -98,7 +98,7 @@
                 <div class="col">
                     <input type="text" class="form-control" placeholder="Room ID" autocomplete="off" bind:value={room} required>
                 </div>
-                <button class="btn btn-dark space-above" on:click={joinRoom}>Let's Move It</button>
+                <button class="space-above" on:click={joinRoom}>Let's Move It</button>
             </div>
         {:else if selectedTab == "Create a Game"}
             <div class="form-group space-above"
@@ -112,7 +112,7 @@
             >
                 <input type="text" class="form-control" placeholder="Your Name" bind:value={username} autocomplete="off" required>
             </div>
-            <button class="btn btn-dark space-above" on:click={createRoom}>Let's Groove It</button>
+            <button class="space-above" on:click={createRoom}>Let's Groove It</button>
         {/if}
     </div>
 {/if}

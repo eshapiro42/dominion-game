@@ -276,8 +276,8 @@
         {#if roomCreator}
             <div class="panel">
                 <div class="buttons">
-                    <button type="button" on:click={startGame} class="btn btn-primary btn-lg btn-block">Start Game</button>
-                    <button type="button" on:click={addCPU} class="btn btn-secondary btn-lg btn-block">Add CPU</button>
+                    <button type="button" on:click={startGame}>Start Game</button>
+                    <button type="button" on:click={addCPU}>Add CPU</button>
                 </div>
                 <main>
                     <div class="customizations">
