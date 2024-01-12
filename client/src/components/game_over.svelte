@@ -58,6 +58,15 @@
         >
             <div class="title">
                 <h4>Game Over</h4>
+                <button class="offsetButton"
+                    on:click={
+                        () => {
+                            window.location.reload(true);
+                        }
+                    }
+                >
+                    Return to Lobby
+                </button>
             </div>
             <div class="endGameData">
                 <br>
@@ -222,6 +231,10 @@
         height: 100%;
         text-align: center;
         margin-top: 25px;
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        gap: 30px;
     }
 
     .dropdowns {
@@ -249,5 +262,9 @@
     .displayAsGrid {
         flex-wrap: wrap;
         row-gap: 5px;
+    }
+
+    .offsetButton {
+        margin-top: -4px;
     }
 </style>
