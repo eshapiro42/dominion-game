@@ -46,6 +46,10 @@ class Interaction(metaclass=ABCMeta):
         The socket ID of the player with whom to interact.
         """
         return self._sid
+    
+    @sid.setter
+    def sid(self, sid: Optional[str]):
+        self._sid = sid
 
     def start(self):
         self._hand = self.player.hand
