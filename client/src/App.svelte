@@ -141,7 +141,7 @@
     $socket.on(
         "connect",
         function(data) {
-            console.log($socket.id);
+            // console.log($socket.id);
         }
     )
 

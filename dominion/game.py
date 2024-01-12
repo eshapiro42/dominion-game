@@ -515,9 +515,35 @@ class Game:
         self.player_names.append(name)
         self.player_sids.append(sid)
         self.player_interactions_classes.append(interactions_class)
-        # If there are two players, the game is joinable
+        # If there are two players, the game is startable
         if len(self.player_names) == 2:
             self.startable = True
+
+    def remove_player(self, name: str) -> bool:
+        '''
+        Remove a player from the game. Returns whether the player was a CPU.
+        
+        Will fail if the game has already started.
+
+        Will set :obj:`Game.startable` to :obj:`False` if only one player is left afterward.
+
+        Args:
+            name: The player's name.
+        '''
+        # Players can only be removed before the game starts
+        if self.started:
+            raise GameStartedError()
+        try:
+            index = self.player_names.index(name)
+            self.player_names.pop(index)
+            self.player_sids.pop(index)
+            interactions_class = self.player_interactions_classes.pop(index)
+        except Exception as exception:
+            print(exception)
+        # If there are fewer than two players, the game is not startable
+        if len(self.player_names) < 2:
+            self.startable = False
+        return interactions_class == AutoInteraction
 
     def start(self, debug: bool = False):
         '''

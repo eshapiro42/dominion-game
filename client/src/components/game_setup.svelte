@@ -119,6 +119,15 @@
         $socket.emit("add cpu", {room: $room});
     }
 
+    function removePlayer(playerName) {
+        $socket.emit(
+            "remove player", {
+                player_name: playerName,
+                room: $room,
+            }
+        );
+    }
+
     function startGame() {
         if (!gameStartable) {
             alert("The game cannot be started without at least two players.");
@@ -176,6 +185,17 @@
 
     $socket.on("game startable", function(data) {
         gameStartable = true;
+    });
+
+    $socket.on("game not startable", function(data) {
+        gameStartable = false;
+    });
+
+    $socket.on("player removed", function(data) {
+        if ($username == data.player_name) {
+            alert("You have been removed from this game.");
+            window.location.reload(true);
+        }
     });
 
     $socket.on("game started", function(data) {
@@ -261,18 +281,27 @@
 
 {#if !hidden}
     {#if roomJoined}
-        <div class="panel">
-            <table class="table table-hover table-center table-bordered">
-                <thead>
-                    <tr><td><b>Players in Room</b></td></tr>
-                </thead>
-                <tbody>
-                    {#each playersInRoom as player}
-                    <tr><td>{player}</td></tr>
-                    {/each}
-                </tbody>
-            </table>
-        </div>
+        <table class="panel">
+            <thead>
+                <tr><td><b>Players in Room</b></td></tr>
+            </thead>
+            <tbody>
+                {#each playersInRoom as player}
+                <tr><td class="playerRow">
+                    {player}
+                    {#if roomCreator && player != $username} <!-- Only the room creator can delete players and cannot delete himself -->
+                        <i class="fa-solid fa-trash-can"
+                            on:click={
+                                () => {
+                                    removePlayer(player);
+                                }
+                            }
+                        ></i>
+                    {/if}
+                </td></tr>
+                {/each}
+            </tbody>
+        </table>
         {#if roomCreator}
             <div class="panel-sticky">
                 <div class="buttons panel">
@@ -440,20 +469,45 @@
         margin-bottom: 50px;
     }
 
-    .table {
-        text-align: left;
+    table {
+        text-align: center;
         vertical-align: middle;
+        border: 1px solid slategrey;
     }
 
-    .table-center {
-        text-align: center;
+    thead {
+        background-color: #343338;
+        color: #dadada;
     }
 
     td {
         padding: 20px;
     }
 
+    tbody tr:hover {
+        background-color: #f0f0f0;
+    }
+
+    tr:not(:last-of-type) {
+        border-bottom: 1px dashed slategrey;
+    }
+
     .panel {
         left: 0px;
+    }
+
+    .playerRow {
+        display: flex;
+        flex-direction: row;
+        gap: 30px;
+        justify-content: center;
+    }
+
+    .fa-trash-can {
+        margin-top: 4px;
+    }
+
+    .fa-trash-can:hover {
+        cursor: pointer;
     }
 </style>

@@ -150,6 +150,23 @@ def add_cpu(data):
     if game_startable_after != game_startable_before:
         socketio.emit('game startable', room=room)
 
+@socketio.on('remove player')
+def remove_player(data):
+    room = data["room"]
+    player_name = data["player_name"]
+    # Remove the player from the game
+    game = games[room]
+    game_startable_before = game.startable
+    is_cpu = game.remove_player(player_name)
+    # Let everyone know the player's shame
+    socketio.emit("player removed", {"player_name": player_name}, room=room)
+    socketio.emit("players in room", game.player_names)
+    socketio.send(f'{player_name} has been removed from room {room}.\n', room=room)
+    # If the game just became startable, push an event
+    game_startable_after = game.startable
+    if game_startable_after != game_startable_before:
+        socketio.emit('game not startable', room=room)
+
 @socketio.on('start game')
 def start_game(data):
     username = data['username']
