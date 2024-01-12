@@ -114,3 +114,7 @@ button:focus {
 	top: 0;
 	z-index: 1;
 }
+
+.offsetButton {
+	margin-top: -4px;
+}

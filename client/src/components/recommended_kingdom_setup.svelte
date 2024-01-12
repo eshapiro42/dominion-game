@@ -42,6 +42,31 @@
     );
 </script>
 
+<h5 class=selectionText>
+    {#if recommendedSet != null}
+            Selected Kingdom: 
+            <p class="fakeLink"
+                on:click={
+                    () => {
+                        document.getElementById(recommendedSets[recommendedSet].name).scrollIntoView(true);
+                    }
+                }
+            >
+                {recommendedSets[recommendedSet].name}
+            </p>
+    {:else}
+        No Kingdom Selected
+    {/if}
+</h5>
+<button class="offsetButton"
+    on:click={
+        () => {
+            recommendedSet = Math.floor(Math.random() * recommendedSets.length)
+        }
+    }
+>
+    Random Recommended Kingdom
+</button>
 <main>
     <div class="dropdowns">
         <div class="sort">
@@ -66,6 +91,7 @@
     {#each recommendedSetsSorted as set, index}
         <div 
             class="panel {recommendedSet == index ? "selected" : ""}"
+            id="{set.name}"
             on:click={
                 () => {
                     recommendedSet = index;
@@ -206,6 +232,7 @@
 
     .panel {
         left: 0px;
+        scroll-margin-top: 38px;
     }
 
     .panel:hover:not(.selected) {
@@ -214,5 +241,20 @@
     
     .selected {
         background-color: #cde6fe;
+    }
+
+    .fakeLink {
+        color: rgb(0,100,200);
+    }
+
+    .fakeLink:hover {
+        text-decoration: underline;
+        cursor: pointer;
+    }
+
+    .selectionText {
+        display: flex;
+        flex-direction: row;
+        gap: 6px;
     }
 </style>

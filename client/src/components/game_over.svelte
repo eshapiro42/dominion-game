@@ -263,8 +263,4 @@
         flex-wrap: wrap;
         row-gap: 5px;
     }
-
-    .offsetButton {
-        margin-top: -4px;
-    }
 </style>

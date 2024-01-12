@@ -274,11 +274,13 @@
             </table>
         </div>
         {#if roomCreator}
-            <div class="panel">
-                <div class="buttons">
+            <div class="panel-sticky">
+                <div class="buttons panel">
                     <button type="button" on:click={startGame}>Start Game</button>
                     <button type="button" on:click={addCPU}>Add CPU</button>
                 </div>
+            </div>
+            <div class="panel">
                 <main>
                     <div class="customizations">
                         <label class="customization space-below">
@@ -390,8 +392,11 @@
 
     .buttons {
         flex-basis: 100%;
-        margin-top: 50px;
-        margin-bottom: 50px;
+        margin-top: 20px;
+        /* margin-bottom: 20px; */
+        padding-top: 30px;
+        padding-bottom: 25px;
+        background: white;
     }
 
     .customization {
