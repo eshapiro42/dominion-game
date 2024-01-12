@@ -517,7 +517,7 @@
     }
 
     .bane {
-        box-shadow: $shadow, inset 0 0 15px #dab3ff
+        box-shadow: $shadow, inset 0 0 15px #80bfff;
     }
 
     .name {
