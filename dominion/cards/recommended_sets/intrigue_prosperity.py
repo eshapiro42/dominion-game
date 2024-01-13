@@ -1,5 +1,7 @@
+from typing import List
+
 from .recommended_set import RecommendedSet
-from ...expansions import IntrigueExpansion, ProsperityExpansion
+from ...expansions import Expansion, BaseExpansion, IntrigueExpansion, ProsperityExpansion
 from ...cards import intrigue_cards, prosperity_cards
 
 
@@ -21,6 +23,21 @@ class PathsToVictory(RecommendedSet):
         intrigue_cards.ShantyTown,
         intrigue_cards.Upgrade,
     ]
+    additional_cards = [
+        (prosperity_cards.Platinum, None),
+        (prosperity_cards.Colony, None),
+    ]
+
+    @property
+    def expansion_instances(self) -> List[Expansion] | None:
+        # Add the Platinum and Colony
+        if self._expansion_instances is None:
+            self._expansion_instances = [
+                BaseExpansion(self.game),
+                IntrigueExpansion(self.game),
+                ProsperityExpansion(self.game, platinum_and_colony=True),
+            ]
+        return self._expansion_instances
 
 
 class AllAlongTheWatchtower(RecommendedSet):
@@ -41,6 +58,21 @@ class AllAlongTheWatchtower(RecommendedSet):
         intrigue_cards.Pawn,
         intrigue_cards.Torturer,
     ]
+    additional_cards = [
+        (prosperity_cards.Platinum, None),
+        (prosperity_cards.Colony, None),
+    ]
+
+    @property
+    def expansion_instances(self) -> List[Expansion] | None:
+        # Add the Platinum and Colony
+        if self._expansion_instances is None:
+            self._expansion_instances = [
+                BaseExpansion(self.game),
+                IntrigueExpansion(self.game),
+                ProsperityExpansion(self.game, platinum_and_colony=True),
+            ]
+        return self._expansion_instances
 
 
 class LuckySeven(RecommendedSet):
@@ -61,6 +93,21 @@ class LuckySeven(RecommendedSet):
         intrigue_cards.Swindler,
         intrigue_cards.WishingWell,
     ]
+    additional_cards = [
+        (prosperity_cards.Platinum, None),
+        (prosperity_cards.Colony, None),
+    ]
+
+    @property
+    def expansion_instances(self) -> List[Expansion] | None:
+        # Add the Platinum and Colony
+        if self._expansion_instances is None:
+            self._expansion_instances = [
+                BaseExpansion(self.game),
+                IntrigueExpansion(self.game),
+                ProsperityExpansion(self.game, platinum_and_colony=True),
+            ]
+        return self._expansion_instances
 
 
 RECOMMENDED_SETS = [

@@ -1,5 +1,7 @@
+from typing import List
+
 from .recommended_set import RecommendedSet
-from ...expansions import ProsperityExpansion, CornucopiaExpansion
+from ...expansions import Expansion, BaseExpansion, ProsperityExpansion, CornucopiaExpansion
 from ...cards import prosperity_cards, cornucopia_cards
 
 
@@ -21,6 +23,21 @@ class Detours(RecommendedSet):
         cornucopia_cards.Remake,
         cornucopia_cards.Tournament,
     ]
+    additional_cards = [
+        (prosperity_cards.Platinum, None),
+        (prosperity_cards.Colony, None),
+    ]
+
+    @property
+    def expansion_instances(self) -> List[Expansion] | None:
+        # Add the Platinum and Colony
+        if self._expansion_instances is None:
+            self._expansion_instances = [
+                BaseExpansion(self.game),
+                ProsperityExpansion(self.game, platinum_and_colony=True),
+                CornucopiaExpansion(self.game),
+            ]
+        return self._expansion_instances
 
 
 RECOMMENDED_SETS = [Detours]

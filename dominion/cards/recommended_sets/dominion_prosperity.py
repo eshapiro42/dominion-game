@@ -1,5 +1,7 @@
+from typing import List
+
 from .recommended_set import RecommendedSet
-from ...expansions import DominionExpansion, ProsperityExpansion
+from ...expansions import Expansion, BaseExpansion, DominionExpansion, ProsperityExpansion
 from ...cards import dominion_cards, prosperity_cards
 
 
@@ -21,6 +23,21 @@ class BiggestMoney(RecommendedSet):
         prosperity_cards.RoyalSeal,
         prosperity_cards.Venture,
     ]
+    additional_cards = [
+        (prosperity_cards.Platinum, None),
+        (prosperity_cards.Colony, None),
+    ]
+
+    @property
+    def expansion_instances(self) -> List[Expansion] | None:
+        # Add the Platinum and Colony
+        if self._expansion_instances is None:
+            self._expansion_instances = [
+                BaseExpansion(self.game),
+                DominionExpansion(self.game),
+                ProsperityExpansion(self.game, platinum_and_colony=True),
+            ]
+        return self._expansion_instances
 
 
 class TheKingsArmy(RecommendedSet):
@@ -41,6 +58,21 @@ class TheKingsArmy(RecommendedSet):
         prosperity_cards.Rabble,
         prosperity_cards.Vault,
     ]
+    additional_cards = [
+        (prosperity_cards.Platinum, None),
+        (prosperity_cards.Colony, None),
+    ]
+
+    @property
+    def expansion_instances(self) -> List[Expansion] | None:
+        # Add the Platinum and Colony
+        if self._expansion_instances is None:
+            self._expansion_instances = [
+                BaseExpansion(self.game),
+                DominionExpansion(self.game),
+                ProsperityExpansion(self.game, platinum_and_colony=True),
+            ]
+        return self._expansion_instances
 
 
 class TheGoodLife(RecommendedSet):
@@ -61,6 +93,21 @@ class TheGoodLife(RecommendedSet):
         prosperity_cards.Monument,
         prosperity_cards.Mountebank,
     ]
+    additional_cards = [
+        (prosperity_cards.Platinum, None),
+        (prosperity_cards.Colony, None),
+    ]
+
+    @property
+    def expansion_instances(self) -> List[Expansion] | None:
+        # Add the Platinum and Colony
+        if self._expansion_instances is None:
+            self._expansion_instances = [
+                BaseExpansion(self.game),
+                DominionExpansion(self.game),
+                ProsperityExpansion(self.game, platinum_and_colony=True),
+            ]
+        return self._expansion_instances
 
 
 RECOMMENDED_SETS = [
