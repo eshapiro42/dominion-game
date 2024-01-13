@@ -666,13 +666,13 @@ class BuyPhase(Phase):
         for treasure in treasures:
             # Add the Treasure to the played cards area and remove from hand
             self.player.play(treasure)
-            # Activate side effects cause by playing this Treasure
+            # Add the value of this Treasure
+            self.turn.coppers_remaining += treasure.value
+            # Activate side effects caused by playing this Treasure
             if hasattr(treasure, 'play'):
                 treasure.play()
             # Process any Treasure hooks
             self.process_treasure_hooks(treasure)
-            # Add the value of this Treasure
-            self.turn.coppers_remaining += treasure.value
 
     def process_pre_buy_hooks(self):
         '''

@@ -980,7 +980,10 @@ class IllGottenGains(TreasureCard):
     def play(self):
         prompt = "You played an Ill-Gotten Gains. Would you like to gain a Copper to your hand?"
         if self.owner.interactions.choose_yes_or_no(prompt):
-            self.owner.gain_to_hand(base_cards.Copper)
+            gained_copper = self.owner.gain_to_hand(base_cards.Copper)[0]
+            prompt = "Would you like to play the Copper you just gained?"
+            if self.owner.interactions.choose_yes_or_no(prompt):
+                self.owner.turn.buy_phase.play_treasures([gained_copper])
 
 
 class Inn(ActionCard):

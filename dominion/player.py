@@ -309,7 +309,7 @@ class Player:
             ignore_post_gain_actions: Whether to ignore post-gain actions (defaults to False).
 
         Returns:
-            The Card that was gained.
+            A list of cards that were gained.
         """
         gained_cards = []
         for _ in range(quantity):
