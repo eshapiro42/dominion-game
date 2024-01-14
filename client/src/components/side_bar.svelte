@@ -25,11 +25,11 @@
     <a class="section" href="#Supply">Supply</a>
     <a class="section" href="#Your Discard Pile">Discard</a>
     <a class="section" href="#Trash">Trash</a>
-    {#if prizes}
-        <a class="section" href="#Prizes">Prizes</a>
-    {/if}
     {#if (tradeRoute)}
         <a class="section" href="#Trade Route">Trade Route</a>
+    {/if}
+    {#if prizes}
+        <a class="section" href="#Prizes">Prizes</a>
     {/if}
     <a class="section" href="#Player Info">Players</a>
 </main>
