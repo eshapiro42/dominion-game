@@ -41,8 +41,8 @@
 
     span {
         border: 1px solid transparent;
-        border-top-left-radius: 10px;
-        border-top-right-radius: 10px;
+        border-top-left-radius: 20px;
+        border-top-right-radius: 20px;
         display: block;
         padding: 10px;
         cursor: pointer;

@@ -348,7 +348,7 @@
             </div>
             <br>
             <br>
-            <div class="panel">
+            <div class="tabs">
                 <Tabs
                     tabNames={
                         [
@@ -360,7 +360,8 @@
                     }
                     bind:selectedTab={selectedTab}
                 />
-
+            </div>
+            <div class="panel">
                 {#if selectedTab === "Random Kingdom"}
                     <main>
                         <div class="customizations">
@@ -557,5 +558,10 @@
 
     .offsetText {
         margin-top: -5px;
+    }
+
+    .tabs {
+        width: 90vw;
+        margin: auto;
     }
 </style>
