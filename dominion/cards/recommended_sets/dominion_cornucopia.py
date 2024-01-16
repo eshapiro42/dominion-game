@@ -27,6 +27,7 @@ class BountyOfTheHunt(RecommendedSet):
         cornucopia_cards.Menagerie,
         cornucopia_cards.Tournament,
     ]
+    additional_cards = [(card_class, None) for card_class in cornucopia_cards.PRIZES]
 
 
 class BadOmens(RecommendedSet):

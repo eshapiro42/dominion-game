@@ -26,6 +26,8 @@ class Detours(RecommendedSet):
     additional_cards = [
         (prosperity_cards.Platinum, None),
         (prosperity_cards.Colony, None),
+    ] + [
+        (card_class, None) for card_class in cornucopia_cards.PRIZES
     ]
 
     @property

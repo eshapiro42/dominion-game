@@ -21,6 +21,7 @@ class BlueHarvest(RecommendedSet):
         hinterlands_cards.Trader,
         hinterlands_cards.Tunnel,
     ]
+    additional_cards = [(card_class, None) for card_class in cornucopia_cards.PRIZES]
 
 
 class TravelingCircus(RecommendedSet):

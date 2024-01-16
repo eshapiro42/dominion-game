@@ -48,9 +48,8 @@ class TheSpiceOfLife(RecommendedSet):
         intrigue_cards.MiningVillage,
         intrigue_cards.Replace,
     ]
-    additional_cards = [(intrigue_cards.WishingWell, "Bane")]
+    additional_cards = [(intrigue_cards.WishingWell, "Bane")] + [(card_class, None) for card_class in cornucopia_cards.PRIZES]
 
-    
     @property
     def expansion_instances(self) -> List[Expansion] | None:
         # Add the Wishing Well as the Bane card
@@ -81,6 +80,7 @@ class SmallVictories(RecommendedSet):
         intrigue_cards.Pawn,
         intrigue_cards.SecretPassage,
     ]
+    additional_cards = [(card_class, None) for card_class in cornucopia_cards.PRIZES]
 
 
 RECOMMENDED_SETS = [

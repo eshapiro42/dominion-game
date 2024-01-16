@@ -41,6 +41,7 @@ class BakingContest(RecommendedSet):
         guilds_cards.Stonemason,
         cornucopia_cards.Tournament,
     ]
+    additional_cards = [(card_class, None) for card_class in cornucopia_cards.PRIZES]
 
 
 RECOMMENDED_SETS = [
