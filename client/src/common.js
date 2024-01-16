@@ -56,3 +56,26 @@ export function sortCards(cards, sortByProperty, victoryCardsFirst=false) {
     return cards.sort(
         (a, b) => compareCards(a, b, sortByProperty));
 };
+
+export function sticky(node) {
+    const stickySentinelStyle = "position: absolute; height: 1px;"
+    const stickySentinel = document.createElement("div");
+    stickySentinel.classList.add("stickySentinel");
+    stickySentinel.style = stickySentinelStyle;
+    node.parentNode.insertBefore(stickySentinel, node);
+
+    const intersectionCallback = function(entries) {
+        // only observing one item at a time
+        const entry = entries[0];
+        let isStuck = !entry.isIntersecting;
+        node.dispatchEvent(
+            new CustomEvent('stuck', {
+                detail: {isStuck}
+            })
+        );
+    };
+
+    const intersectionObserver = new IntersectionObserver(intersectionCallback, {});
+
+    intersectionObserver.observe(stickySentinel);
+}

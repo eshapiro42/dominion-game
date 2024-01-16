@@ -1,5 +1,8 @@
 <script>
     import {createEventDispatcher} from "svelte";
+    import {fade} from "svelte/transition";
+
+    import {sticky} from "../common.js";
 
     import {
         socket,
@@ -36,6 +39,7 @@
             }
         ]
     };
+    let isStuck = false;
 
     var expansions = [
         {name: "Dominion", property: "dominion", selected: false},
@@ -277,7 +281,11 @@
             }
         }
     }
-</script>
+
+    function handleStuck(e) {
+        isStuck = e.detail.isStuck;
+    }
+    </script>
 
 {#if !hidden}
     {#if roomJoined}
@@ -287,47 +295,60 @@
             </thead>
             <tbody>
                 {#each playersInRoom as player}
-                <tr><td class="playerRow">
-                    {player}
-                    {#if roomCreator && player != $username} <!-- Only the room creator can delete players and cannot delete himself -->
-                        <i class="fa-solid fa-trash-can"
-                            on:click={
-                                () => {
-                                    removePlayer(player);
+                <tr>
+                    <td class="playerRow">
+                        {player}
+                        {#if roomCreator && player != $username} <!-- Only the room creator can delete players and cannot delete himself -->
+                            <i class="fa-solid fa-trash-can"
+                                on:click={
+                                    () => {
+                                        removePlayer(player);
+                                    }
                                 }
-                            }
-                        ></i>
-                    {/if}
-                </td></tr>
+                            ></i>
+                        {/if}
+                    </td>
+                </tr>
                 {/each}
             </tbody>
         </table>
         {#if roomCreator}
-            <div class="panel-sticky">
-                <div class="buttons panel">
-                    <button type="button" on:click={startGame}>Start Game</button>
+        <br>
+        <br>
+            <div class="panel-sticky"
+                use:sticky
+                on:stuck={handleStuck}
+            >
+                <div class="buttons panel"
+                    class:isStuck
+                >
+                    {#if isStuck}
+                        <i class="fa-solid fa-arrow-up"
+                            transition:fade={{delay:0, duration: 300}}
+                            on:click={() => window.scrollTo(0, 0)}
+                        ></i>
+                    {/if}
+                    <button type="button" class="startGameButton" on:click={startGame}>Start Game</button>
                     <button type="button" on:click={addCPU}>Add CPU</button>
-                </div>
-            </div>
-            <div class="panel">
-                <main>
-                    <div class="customizations">
-                        <label class="customization space-below">
+
+                        <label class="customization offsetText">
                             <input type="checkbox" bind:checked={allowSimultaneousReactions.selected}>
                             <div class="hoverable">
                                 Allow Simultaneous Reactions
                                 <span class="hoverable-text">
                                     {#each allowSimultaneousReactions.description as line}
-                                        <span>
-                                            {@html line}
-                                        </span>
+                                    <span>
+                                        {@html line}
+                                    </span>
                                     {/each}
                                 </span>
                             </div>
                         </label>
-                    </div>
-                </main>
-
+                </div>
+            </div>
+            <br>
+            <br>
+            <div class="panel">
                 <Tabs
                     tabNames={
                         [
@@ -389,12 +410,16 @@
                         {:else}
                             No file loaded.
                         {/if}
-                        <button on:click={
-                            async () => {
-                                [saved_kingdom["file_handle"]] = await window.showOpenFilePicker(openFileOptions);
-                                saved_kingdom["file"] = await saved_kingdom["file_handle"].getFile();
-                                saved_kingdom["contents"] = await saved_kingdom["file"].text();
-                            }}>
+                        <button 
+                            class="offsetButton"
+                            on:click={
+                                async () => {
+                                    [saved_kingdom["file_handle"]] = await window.showOpenFilePicker(openFileOptions);
+                                    saved_kingdom["file"] = await saved_kingdom["file_handle"].getFile();
+                                    saved_kingdom["contents"] = await saved_kingdom["file"].text();
+                                }
+                            }
+                        >
                             Select File
                         </button>
                     </main>
@@ -420,12 +445,18 @@
     }
 
     .buttons {
-        flex-basis: 100%;
-        margin-top: 20px;
-        /* margin-bottom: 20px; */
+        display: flex;
+        gap: 20px;
+        justify-content: center;
+        align-items: center;
         padding-top: 30px;
-        padding-bottom: 25px;
+        padding-bottom: 21px;
         background: white;
+    }
+
+    .startGameButton {
+        background-color: #343338;
+        color: #dadada; 
     }
 
     .customization {
@@ -465,10 +496,6 @@
         visibility: visible;
     }
 
-    .space-below {
-        margin-bottom: 50px;
-    }
-
     table {
         text-align: center;
         vertical-align: middle;
@@ -496,6 +523,11 @@
         left: 0px;
     }
 
+    .isStuck {
+        z-index: 10;
+        border-bottom: 1px solid slategrey;
+    }
+
     .playerRow {
         display: flex;
         flex-direction: row;
@@ -505,9 +537,25 @@
 
     .fa-trash-can {
         margin-top: 4px;
+        position: absolute;
+        right: 20px;
     }
 
     .fa-trash-can:hover {
         cursor: pointer;
+    }
+
+    .fa-arrow-up {
+        position: absolute;
+        left: 20px;
+        top: 40px;
+    }
+
+    .fa-arrow-up:hover {
+        cursor: pointer;
+    }
+
+    .offsetText {
+        margin-top: -5px;
     }
 </style>

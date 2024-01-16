@@ -1,8 +1,12 @@
 <script>
+    import {fade} from "svelte/transition";
+
     import {
         socket,
         currentPlayer,
     } from "../stores.js";
+
+    import {sticky} from "../common.js";
  
     let phase = "";
     let actions = 1;
@@ -11,6 +15,8 @@
     let handSize = 5;
     let turnsPlayed = 0;
     let coffers = null;
+
+    let isStuck = false;
 
     $socket.on(
         "current turn info",
@@ -26,10 +32,23 @@
             };
         }
     );
+
+    function handleStuck(e) {
+        isStuck = e.detail.isStuck;
+    }
 </script>
 
-<div class="panel-sticky">
+<div class="panel-sticky"
+    use:sticky
+    on:stuck={handleStuck}
+>
     <main class="panel">
+        {#if isStuck}
+            <i class="fa-solid fa-arrow-up"
+                transition:fade={{delay:0, duration: 300}}
+                on:click={() => window.scrollTo(0, 0)}
+            ></i>
+        {/if}
         <div>
             <div>
                 {$currentPlayer == "" ? "No One" : $currentPlayer}
@@ -87,5 +106,15 @@
         display: flex;
         flex-direction: row;
         justify-content: space-evenly;
+    }
+
+    .fa-arrow-up {
+        position: absolute;
+        left: 20px;
+        top: 23px;
+    }
+
+    .fa-arrow-up:hover {
+        cursor: pointer;
     }
 </style>

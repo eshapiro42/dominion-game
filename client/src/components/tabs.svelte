@@ -46,8 +46,7 @@
         display: block;
         padding: 10px;
         cursor: pointer;
-        margin-bottom: -1px;
-        border-bottom: 1px solid #343338;
+        /* border-bottom: 1px solid #343338; */
     }
 
     li:hover:not(.selected) > span {

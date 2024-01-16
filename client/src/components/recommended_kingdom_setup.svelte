@@ -42,32 +42,35 @@
     );
 </script>
 
-<h5 class=selectionText>
-    {#if recommendedSet != null}
-            Selected Kingdom: 
-            <p class="fakeLink"
-                on:click={
-                    () => {
-                        document.getElementById(recommendedSets[recommendedSet].name).scrollIntoView(true);
-                    }
-                }
-            >
-                {recommendedSets[recommendedSet].name}
-            </p>
-    {:else}
-        No Kingdom Selected
-    {/if}
-</h5>
-<button class="offsetButton"
-    on:click={
-        () => {
-            recommendedSet = Math.floor(Math.random() * recommendedSets.length)
-        }
-    }
->
-    Random Recommended Kingdom
-</button>
+
 <main>
+    <div class="selectedKingdom">
+        <h5 class=selectionText>
+            {#if recommendedSet != null}
+                    Selected Kingdom: 
+                    <div class="fakeLink"
+                        on:click={
+                            () => {
+                                document.getElementById(recommendedSets[recommendedSet].name).scrollIntoView(true);
+                            }
+                        }
+                    >
+                        {recommendedSets[recommendedSet].name}
+                    </div>
+            {:else}
+                No Kingdom Selected
+            {/if}
+        </h5>
+        <button class="offsetButton"
+            on:click={
+                () => {
+                    recommendedSet = Math.floor(Math.random() * recommendedSets.length)
+                }
+            }
+        >
+            Random Recommended Kingdom
+        </button>
+    </div>
     <div class="dropdowns">
         <div class="sort">
             <p>Sort By<p>
@@ -232,7 +235,7 @@
 
     .panel {
         left: 0px;
-        scroll-margin-top: 38px;
+        scroll-margin-top: 30px;
     }
 
     .panel:hover:not(.selected) {
@@ -256,5 +259,18 @@
         display: flex;
         flex-direction: row;
         gap: 6px;
+    }
+
+    .selectedKingdom {
+        justify-content: center;
+        display: flex;
+        flex-direction: row;
+        gap: 50px;
+        padding-top: 40px;;
+    }
+
+    .offsetButton {
+        display: flex;
+        align-items: center;
     }
 </style>
