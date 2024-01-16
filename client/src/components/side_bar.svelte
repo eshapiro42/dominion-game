@@ -1,36 +1,73 @@
 <script>
-    import {socket} from "../stores.js";
+    import {socket, activeCarousel} from "../stores.js";
 
     let tradeRoute = false;
     let prizes = false;
 
+    $: sections = [
+        {
+            title: "Played Cards",
+            displayName: "Active",
+            visible: true,
+        },
+        {
+            title: "Your Hand",
+            displayName: "Hand",
+            visible: true,
+        },
+        {
+            title: "Supply",
+            displayName: "Supply",
+            visible: true,
+        },
+        {
+            title: "Your Discard Pile",
+            displayName: "Discard",
+            visible: true,
+        },
+        {
+            title: "Trash",
+            displayName: "Trash",
+            visible: true,
+        },
+        {
+            title: "Trade Route",
+            displayName: "Trade Route",
+            visible: tradeRoute,
+        },
+        {
+            title: "Prizes",
+            displayName: "Prizes",
+            visible: prizes,
+        },
+    ]
+
     $socket.on(
         "trade route",
-        (data) => {
+        (_) => {
             tradeRoute = true;
         }
     );
 
     $socket.on(
         "prizes",
-        (data) => {
+        (_) => {
             prizes = true;
         }
     )
 </script>
 
 <main>
-    <a class="section" href="#Played Cards">Active</a>
-    <a class="section" href="#Your Hand">Hand</a>
-    <a class="section" href="#Supply">Supply</a>
-    <a class="section" href="#Your Discard Pile">Discard</a>
-    <a class="section" href="#Trash">Trash</a>
-    {#if (tradeRoute)}
-        <a class="section" href="#Trade Route">Trade Route</a>
-    {/if}
-    {#if prizes}
-        <a class="section" href="#Prizes">Prizes</a>
-    {/if}
+    {#each sections as section}
+        {#if section.visible}
+            <a 
+                class="section {section.title == $activeCarousel ? "active" : ""}" 
+                href="#{section.title}"
+            >
+                {section.displayName}
+            </a>
+        {/if}
+    {/each}
     <a class="section" href="#Player Info">Players</a>
 </main>
 
@@ -67,6 +104,10 @@
         font-weight: bold;
         flex-grow: 1;
         font-size: 20px;
+    }
+
+    .section.active {
+        background-color: #4f4141;
     }
 
     .section:hover {

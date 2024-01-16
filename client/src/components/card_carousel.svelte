@@ -6,6 +6,8 @@
     import Card from "./card.svelte";
     import SelectionPrompt from "./selection_prompt.svelte";
 
+    import {activeCarousel} from "../stores.js";
+
     import {sortCards} from "../common.js";
 
     export let title;
@@ -97,6 +99,7 @@
     $: active = waitingForSelection.value;
 
     $: if (active) {
+        activeCarousel.set(title);
         // Scroll to the active carousel after a short delay to allow the page to render
         setTimeout(
             () => {
@@ -105,6 +108,9 @@
             },
             300,
         );
+    }
+    else {
+        activeCarousel.set(null);
     }
 
     function handleClicked(event) {
