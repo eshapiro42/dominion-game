@@ -67,6 +67,8 @@ button:focus {
 
 .panel {
 	width: 100%;
+	max-width: 90vw;
+	min-width: 90vw;
 	padding-right: 0.75rem;
 	padding-left: 0.75rem;
 	margin-right: auto;
@@ -75,32 +77,6 @@ button:focus {
 	left: 32px; /* half the width of the sidebar */
 }
 
-@media (min-width: 576px) {
-	.panel {
-		max-width: 426px;
-	}
-}
-@media (min-width: 768px) {
-	.panel {
-		max-width: 618px;
-	}
-}
-@media (min-width: 992px) {
-	.panel {
-		max-width: 842px;
-	}
-}
-@media (min-width: 1200px) {
-	.panel {
-		max-width: 1050px;
-	}
-}
-@media (min-width: 1400px) {
-	.panel {
-		max-width: 90vw;
-		min-width: 90vw;
-	}
-}
 /* Do not show sidebar on mobile devices */
 @media (max-width: 767px) {
 	.panel {
