@@ -107,11 +107,13 @@
     }
 
     .section.active {
-        background-color: #4f4141;
+        background-color: #ffcccc;
+        color: #343338;
     }
 
     .section:hover {
         background-color: #605e67;
+        color: #dadada
     }
 
     a {
