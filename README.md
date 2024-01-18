@@ -42,11 +42,11 @@ The backend is written in `Python` and uses `Flask-SocketIO` as an HTTP and `Soc
 
 If you are using Windows (which I do not recommend), you will need to install Microsoft Visual C++ 14.0 or higher or you will encounter issues trying to install Python dependencies. You can install it from [Microsoft C++ Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/). If you're using Linux or WSL, you can skip this step.
 
-Navigate into the `dominion-game` repository that you just cloned and create a new virtual environment there. Make sure you are using the desired version of `Python` to create the virtual environment (i.e., replace `python3.10` in the second line below with whichever interpreter you are using).
+Navigate into the `dominion-game` repository that you just cloned and create a new virtual environment there. Make sure you are using the desired version of `Python` to create the virtual environment (i.e., replace `python3.12` in the second line below with whichever interpreter you are using).
 
 ```
 cd dominion-game
-python3.10 -m venv venv
+python3.12 -m venv venv
 ```
 
 Activate the newly created virtual environment and install dependencies.
