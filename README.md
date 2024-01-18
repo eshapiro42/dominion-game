@@ -38,7 +38,7 @@ The backend is where the game state and logic is all kept. Both the frontend and
 
 The backend processes game logic and keeps track of updating the game state. Each game has a heartbeat which enables displays across all clients to update whenever a change occurs on the backend, without the game need complicated logic to know when to send updates. The server also handles getting answers from each client (which card to play, which card to discard, etc.), which it does by sending the client a request for a response and waiting until one is received. Both the heartbeat and response requests are refreshable, which allows players to rejoin a game from which they have become disconnected (if they use precisely the same username as before) and pick up right where they left off.
 
-The backend is written in `Python` and uses `Flask-SocketIO` as an HTTP and `Socket.IO` server. Make sure you have `Python 3.8` or newer installed. I recommend using the official installers from [Python.org](https://www.python.org/downloads/).
+The backend is written in `Python` and uses `Flask-SocketIO` as an HTTP and `Socket.IO` server. Make sure you have `Python 3.11` or newer installed. I recommend using the official installers from [Python.org](https://www.python.org/downloads/).
 
 If you are using Windows (which I do not recommend), you will need to install Microsoft Visual C++ 14.0 or higher or you will encounter issues trying to install Python dependencies. You can install it from [Microsoft C++ Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/). If you're using Linux or WSL, you can skip this step.
 
