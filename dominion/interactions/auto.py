@@ -19,30 +19,6 @@ class AutoInteraction(Interaction):
         print(message)
         print()
 
-    def display_supply(self):
-        pass
-
-    def display_hand(self):
-        pass
-
-    def display_discard_pile(self):
-        pass
-
-    def _get_played_cards_data(self):
-        return {
-            "cards" : [card.json for card in self.played_cards],
-        }
-
-    def display_played_cards(self):
-        try:
-            self.socketio.emit(
-                "display played cards",
-                self._get_played_cards_data(),
-                to=self.room, # Always send played cards to all players
-            )
-        except Exception as exception:
-            print(exception)
-
     def sleep_random(self):
         """
         Sleep to simulate thought unless we are running tests.
@@ -75,7 +51,6 @@ class AutoInteraction(Interaction):
             return [None]
         while True:
             try:
-                self.display_hand()
                 if force:
                     cards_chosen = random.sample(valid_cards, max_cards)
                 else:
@@ -188,7 +163,6 @@ class AutoInteraction(Interaction):
             return None
         while True:
             try:
-                self.display_discard_pile()
                 if force:
                     print(f'Enter choice 1-{len(self.discard_pile)}: ', end='')
                     # Weight options by cost
@@ -446,7 +420,6 @@ class AutoInteraction(Interaction):
             max_cards = min(max_cards, len(cards)) # Don't ask for more cards than we have
         while True:
             try:
-                self.display_hand()
                 if force:
                     cards_chosen = random.sample(cards, max_cards)
                 else:

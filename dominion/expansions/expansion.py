@@ -135,6 +135,14 @@ class Expansion(metaclass=ABCMeta):
         needs to be sent with each heartbeat, overload this method.
 
         E.g., sending information about the Trade Route.
+
+        Each expansion should handle caching of its own data.
+        """
+        pass
+
+    def refresh_heartbeat(self):
+        """
+        Clear any cached heartbeat data.
         """
         pass
 

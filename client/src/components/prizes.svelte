@@ -32,7 +32,7 @@
     }
 
     $socket.on(
-        "prizes", 
+        "display prizes", 
         (data) => {
             show = true;
             cards = data.cards;

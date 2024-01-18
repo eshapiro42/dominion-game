@@ -8,6 +8,7 @@ class ProsperityExpansion(Expansion):
     def __init__(self, game, platinum_and_colony: bool | None = None):
         super().__init__(game)
         self.platinum_and_colony = platinum_and_colony
+        self.trade_route_cache = None
 
     @property
     def basic_card_piles(self):
@@ -82,14 +83,23 @@ class ProsperityExpansion(Expansion):
                         break
             sorted_victory_card_classes_with_coin_tokens = sorted(victory_card_classes_with_coin_tokens, key=lambda card_class: self.game.current_turn.get_cost(card_class))
             victory_card_names_with_coin_tokens = [card_class.name for card_class in sorted_victory_card_classes_with_coin_tokens]
-            self.game.socketio.emit(
-                "trade route",
-                {
-                    "victory_cards": victory_card_names_with_coin_tokens,
-                    "tokens": self.game.supply.trade_route,
-                },
-                room=self.game.room
-            )
+            trade_route_data = {
+                "victory_cards": victory_card_names_with_coin_tokens,
+                "tokens": self.game.supply.trade_route,
+            }
+            if trade_route_data != self.trade_route_cache:
+                self.trade_route_cache = trade_route_data
+                try:
+                    self.game.socketio.emit(
+                        "display trade route",
+                        trade_route_data,
+                        room=self.game.room
+                    )
+                except Exception as exception:
+                    print(exception)
+
+    def refresh_heartbeat(self):
+        self.trade_route_cache = None
 
     @property
     def game_end_conditions(self):

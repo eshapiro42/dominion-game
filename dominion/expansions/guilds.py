@@ -44,6 +44,10 @@ class OverpayPostBuyHook(PostBuyHook):
 class GuildsExpansion(Expansion):
     name = "Guilds"
 
+    def __init__(self, game):
+        super().__init__(game)
+        self.coffers_cache = None
+
     @property
     def basic_card_piles(self) -> List[Tuple[Type[Card], int]]:
         return []
@@ -72,16 +76,8 @@ class GuildsExpansion(Expansion):
             if card_class.can_overpay:
                 self.game.add_post_buy_hook(overpay_post_buy_hook, card_class)
 
-
     def heartbeat(self):
-        # Send coffers info for each player
-        self.game.socketio.emit(
-            "coffers",
-            {
-                "coffers": [player.coffers for player in self.game.players],
-            },
-            room=self.game.room
-        )
+        pass
 
     def scoring(self, player: Player) -> int:
         return 0

@@ -5,7 +5,7 @@ import random
 from typing import TYPE_CHECKING, Type
 
 from .expansion import Expansion
-from ..cards import cards, cornucopia_cards
+from ..cards import cornucopia_cards
 from ..grammar import s, it_or_them
 from ..supply import FiniteSupplyStack
 
@@ -19,6 +19,7 @@ class CornucopiaExpansion(Expansion):
         super().__init__(game)
         self.bane_card_class = bane_card_class
         self.prizes = [prize() for prize in cornucopia_cards.PRIZES]
+        self.prizes_cache = None
 
     @property
     def basic_card_piles(self):
@@ -60,14 +61,22 @@ class CornucopiaExpansion(Expansion):
     def heartbeat(self):
         # Display prizes
         if cornucopia_cards.Tournament in self.game.supply.card_stacks:
-            self.game.socketio.emit(
-                "prizes",
-                {
-                    "cards": [card.json for card in self.prizes]
-                },
-                room=self.game.room,
-            )
-            
+            if (prizes := [card.json for card in self.prizes]) != self.prizes_cache:
+                self.prizes_cache = prizes
+                try:
+                    self.game.socketio.emit(
+                        "display prizes",
+                        {
+                            "cards": prizes,
+                        },
+                        room=self.game.room,
+                    )
+                except Exception as exception:
+                    print(exception)
+
+    def refresh_heartbeat(self):
+        self.prizes_cache = None
+
     def order_treasures(self, player, treasures):
         # If any Horns of Plenty are in the played treasures, allow the player to play them last
         if any(isinstance(treasure, cornucopia_cards.HornOfPlenty) for treasure in treasures):
@@ -81,7 +90,6 @@ class CornucopiaExpansion(Expansion):
                 # Add the Horns of Plenty to the end of the list of played treasures
                 treasures.extend(horns_of_plenty)
         return treasures
-
 
     @property
     def game_end_conditions(self):

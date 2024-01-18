@@ -4,7 +4,7 @@
     let title = "Player Info";
     let playersInfo = [];
 
-    $socket.on("players info", function(data) {
+    $socket.on("display players info", function(data) {
         playersInfo = data;
     });
 </script>

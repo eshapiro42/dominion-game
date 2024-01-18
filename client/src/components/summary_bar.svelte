@@ -19,7 +19,7 @@
     let isStuck = false;
 
     $socket.on(
-        "current turn info",
+        "display current turn info",
         (data) => {
             phase = data.current_phase;
             actions = data.actions;
