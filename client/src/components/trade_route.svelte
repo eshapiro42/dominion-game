@@ -7,7 +7,7 @@
     let show = false;
 
     $socket.on(
-        "trade route",
+        "display trade route",
         function(data) {
             show = true;
             victoryCards = data.victory_cards;

@@ -613,17 +613,11 @@ class Game:
             self.broadcast("Simultaneous reactions are allowed.")
         # Set up the supply
         self.supply.setup()
-        # Print out the supply
-        for player in self.players:
-            player.interactions.display_supply()
         # Randomly decide turn order
         self.turn_order = random.sample(self.players, len(self.players))
         # Each player figures out the turn order of the other players
         for player in self.players:
             player.get_other_players()
-        # Print out each player's hand (other than the starting player)
-        for player in self.turn_order[1:]:
-            player.interactions.display_hand()
         # Start the game loop!
         if not debug:
             self.game_loop()

@@ -117,27 +117,6 @@ class Interaction(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def display_supply(self):
-        """
-        Display the player's supply.
-        """
-        pass
-
-    @abstractmethod
-    def display_hand(self):
-        """
-        Display the player's hand.
-        """
-        pass
-
-    @abstractmethod
-    def display_discard_pile(self):
-        """
-        Display the player's discard pile.
-        """
-        pass
-
-    @abstractmethod
     def choose_card_from_hand(self, prompt: str, force: bool, invalid_cards: List[Card] | None = None) -> Card | None:
         """
         Request the player to choose a card from their hand.

@@ -14,6 +14,7 @@ from dominion.cards.custom_sets import CustomSet
 from dominion.cards.recommended_sets import ALL_RECOMMENDED_SETS
 from dominion.expansions import DominionExpansion, IntrigueExpansion, ProsperityExpansion, CornucopiaExpansion, HinterlandsExpansion, GuildsExpansion
 from dominion.game import Game, GameStartedError
+from dominion.heartbeat import HeartBeat
 from dominion.interactions import BrowserInteraction, AutoInteraction
 
 
@@ -232,7 +233,7 @@ def start_game(data):
     if allow_simultaneous_reactions:
         game.allow_simultaneous_reactions = True
     # Start the game's heartbeat
-    socketio.start_background_task(game.heartbeat)
+    socketio.start_background_task(game.heartbeat.beat)
     # Start the game (nothing can happen after this)
     game.start()
 
@@ -347,57 +348,6 @@ def kill_game(room):
     disconnected_players.pop(room, None)
     cpus.pop(room, None)
     socketio.send(f'Game {room} has ended.\n', room=room)
-
-
-class HeartBeat():
-    def __init__(self, game):
-        self.game = game
-        self.run = True
-        self.beats_per_second = 5 # Must be an integer
-        self.message_interval = 60 # In seconds
-        self.sleep_time = 1 / self.beats_per_second
-        self.message_frequency = self.beats_per_second * self.message_interval
-
-    def __call__(self):
-        counter = 0
-        while self.run:
-            socketio.sleep(self.sleep_time)
-            if counter == self.message_frequency:
-                counter = 0
-                print(f"<3 Game {self.game.room} heartbeat <3")
-            if not self.game.started or self.game.current_turn is None:
-                continue
-            try:
-                # Display cards in carousels
-                # All players see the current player's played cards
-                self.game.current_turn.player.interactions.display_played_cards()
-                # Each player sees their own hand and discard, as well as the supply and trash
-                for player in self.game.players:
-                    if isinstance(player.interactions, BrowserInteraction):
-                        player.interactions.display_hand()
-                        player.interactions.display_supply()
-                        player.interactions.display_discard_pile()
-                        player.interactions.display_trash()
-                # Display current turn info in status bar
-                if hasattr(self.game, "current_turn"):
-                    self.game.current_turn.display()
-                # Display player info
-                if hasattr(self.game, "turn_order"):
-                    players_info = [player.get_info() for player in self.game.turn_order] # Get player info in turn order
-                    socketio.emit(
-                        "players info",
-                        players_info,
-                        room=self.game.room
-                    )
-                # Send expansion-specific info
-                for expansion in self.game.supply.customization.expansions:
-                    expansion.heartbeat()
-            except Exception as exception:
-                print(exception)
-            counter += 1
-
-    def stop(self):
-        self.run = False
 
 
 admin = Blueprint("admin", __name__)

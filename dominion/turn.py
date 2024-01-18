@@ -208,6 +208,23 @@ class Turn:
         A dictionary of cost modifiers for cards.
         """
         return self._cost_modifiers
+    
+    @property
+    def json(self):
+        """
+        Return information about the current turn.
+        """
+        current_turn_info = {
+            "current_phase": self.current_phase,
+            "actions": s(self.actions_remaining, "Action"),
+            "buys": s(self.buys_remaining, "Buy"),
+            "coppers": self.coppers_remaining,
+            "hand_size": s(len(self.player.hand), "Card"),
+            "turns_played": self.player.turns_played,
+        }
+        if GuildsExpansion in self.game.expansions:
+            current_turn_info["coffers"] = s(self.player.coffers, "Coffer")
+        return current_turn_info
 
     def get_cost(self, card_like: Card | Type[Card]) -> int:
         """
@@ -236,7 +253,6 @@ class Turn:
         self.player.turns_played += 1
         self.player.interactions.new_turn()
         self.process_pre_turn_hooks()
-        self.player.interactions.display_hand()
         self.action_phase.start()
         self.buy_phase.start()
         self.cleanup_phase.start()
@@ -342,26 +358,6 @@ class Turn:
                 self.game.broadcast(f'+{num_coppers} $ → {self.coppers_remaining} $.')
             elif num_coppers < 0:
                 self.game.broadcast(f'-{-num_coppers} $ → {self.coppers_remaining} $.')
-
-    def display(self):
-        """
-        Send information about the turn to the client.
-        """
-        current_turn_info = {
-            "current_phase": self.current_phase,
-            "actions": s(self.actions_remaining, "Action"),
-            "buys": s(self.buys_remaining, "Buy"),
-            "coppers": self.coppers_remaining,
-            "hand_size": s(len(self.player.hand), "Card"),
-            "turns_played": self.player.turns_played,
-        }
-        if GuildsExpansion in self.game.expansions:
-            current_turn_info["coffers"] = s(self.player.coffers, "Coffer")
-        self.game.socketio.emit(
-            "current turn info",
-            current_turn_info,
-            room=self.game.room,
-        )
 
     def process_pre_turn_hooks(self):
         '''
@@ -811,8 +807,6 @@ class CleanupPhase(Phase):
         self.process_pre_cleanup_hooks()
         # Clean up the player's mat
         self.player.cleanup()
-        # Show their hand for next turn
-        self.player.interactions.display_hand()
         # Set the player's turn to None
         self.player.turn = None
         # Reset all card's cost modifiers

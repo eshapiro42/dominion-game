@@ -626,7 +626,8 @@ class Player:
         self._sid = new_sid
         self.interactions.sid = new_sid
 
-    def get_info(self):
+    @property
+    def json(self):
         info = {
             "name": self.name,
             "hand_size": len(self.hand),

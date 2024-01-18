@@ -43,7 +43,7 @@
     ]
 
     $socket.on(
-        "trade route",
+        "display trade route",
         (_) => {
             tradeRoute = true;
         }
