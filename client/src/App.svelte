@@ -97,7 +97,7 @@
 
     function refreshHeartbeat() {
         $socket.emit(
-            "refresh heartbeat",
+            "refresh",
             {
                 room: $room,
             }
