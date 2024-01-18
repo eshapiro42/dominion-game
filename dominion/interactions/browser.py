@@ -20,16 +20,26 @@ class BrowserInteraction(Interaction):
         Send a request to the player and wait for a response, then return it.
         """
         self.event = Event()
+        self.refresh = False
         self.response = None
         # Try in a loop with a one second timeout in case an event gets missed or a network error occurs
         tries = 0
+        # Send request
+        self.socketio.emit(
+            event_name,
+            data, 
+            to=self.sid,
+        )
         while True:
-            # Send request
-            self.socketio.emit(
-                event_name,
-                data, 
-                to=self.sid,
-            )
+            if self.refresh:
+                # Resend request if refresh is requested
+                print("Resending request...")
+                self.socketio.emit(
+                    event_name,
+                    data, 
+                    to=self.sid,
+                )
+                self.refresh = False
             # Wait for response
             if self.event.wait(1):
                 # Response was received
@@ -55,6 +65,9 @@ class BrowserInteraction(Interaction):
                 "prompt": prompt,
             }
         )
+    
+    def _refresh_heartbeat(self):
+        self.refresh = True
 
     def choose_cards_from_hand(self, prompt, force, max_cards=1, invalid_cards=None) -> List[Card]:
         print("choose_card_from_hand")

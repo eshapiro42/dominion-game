@@ -21,6 +21,10 @@ class HeartBeatCache:
         self.individual = defaultdict(lambda: defaultdict(list))
         self.communal = defaultdict(list)
 
+    def clear(self):
+        self.individual.clear()
+        self.communal.clear()
+
 
 class HeartBeat:
     def __init__(self, game: Game):
@@ -31,6 +35,11 @@ class HeartBeat:
         self.message_interval = 60 # In seconds
         self.sleep_time = 1 / self.beats_per_second
         self.message_frequency = self.beats_per_second * self.message_interval
+
+    def refresh(self):
+        self.cache.clear()
+        for expansion in self.game.supply.customization.expansions:
+            expansion.refresh_heartbeat()
 
     def get_individual_json(self, player: Player, source: DataSource):
         match source:
@@ -120,6 +129,3 @@ class HeartBeat:
 
     def stop(self):
         self.run = False
-
-
-

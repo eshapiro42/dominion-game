@@ -98,6 +98,9 @@ class ProsperityExpansion(Expansion):
                 except Exception as exception:
                     print(exception)
 
+    def refresh_heartbeat(self):
+        self.trade_route_cache = None
+
     @property
     def game_end_conditions(self):
         return [self.game_end_condition_colony_pile_empty]

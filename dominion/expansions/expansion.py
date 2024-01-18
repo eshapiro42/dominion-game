@@ -140,6 +140,12 @@ class Expansion(metaclass=ABCMeta):
         """
         pass
 
+    def refresh_heartbeat(self):
+        """
+        Clear any cached heartbeat data.
+        """
+        pass
+
     def order_treasures(self, player: Player, treasures: List[TreasureCard]) -> List[TreasureCard]:
         """
         If this expansion contains cards that care about the order

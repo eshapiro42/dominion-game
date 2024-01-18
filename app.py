@@ -84,7 +84,6 @@ def join_room(data):
     except GameStartedError:
         if username in disconnected_players[room]:
             disconnected_players[room].remove(username)
-            connected_players[room].append(username)
             # Find the player object and set its sid
             for player in game.players:
                 if player.name == username:
@@ -94,6 +93,7 @@ def join_room(data):
                     # Send the events needed to get the rejoined player's UI back in the right state
                     socketio.emit("game started", to=sid)
                     socketio.emit("current player", data=game.current_turn.player.name, to=sid)
+                    refresh_heartbeat(room)
                     return True # This activates the client's joined_room() callback
         else:
             socketio.send(f'The game has already started.\n', sid=sid)
@@ -296,6 +296,11 @@ def send_kingdom_json(data):
         room=room,
     )
 
+@socketio.on("refresh")
+def refresh(data):
+    room = data["room"]
+    refresh_heartbeat(room)
+
 @socketio.on("disconnect")
 def disconnect():
     try:
@@ -336,6 +341,15 @@ def handle_response(response_data):
     # Process the response
     player.interactions.response = response_data
     player.interactions.event.set()
+
+
+def refresh_heartbeat(room):
+    game = games[room]
+    game.heartbeat.refresh()
+    # Refresh any pending interaction requests
+    for player in game.players:
+        if isinstance(player.interactions, BrowserInteraction):
+            player.interactions._refresh_heartbeat()
 
 
 def kill_game(room):

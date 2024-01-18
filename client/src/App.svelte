@@ -95,6 +95,15 @@
         gameOver.show = true;
     }
 
+    function refreshHeartbeat() {
+        $socket.emit(
+            "refresh heartbeat",
+            {
+                room: $room,
+            }
+        );
+    }
+
     $socket.on(
         "new turn",
         function(data) {
@@ -226,6 +235,9 @@
                     }}>
                     Save Kingdom
                 </button>
+                <i class="fa-solid fa-rotate-right"
+                    on:click={refreshHeartbeat}
+                ></i>
             {/if}
         </div>
     </header>
@@ -290,5 +302,9 @@
 
     header {
         margin: 20px;
+    }
+
+    .fa-rotate-right {
+        cursor: pointer;
     }
 </style>

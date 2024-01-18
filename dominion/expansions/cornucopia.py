@@ -74,6 +74,9 @@ class CornucopiaExpansion(Expansion):
                 except Exception as exception:
                     print(exception)
 
+    def refresh_heartbeat(self):
+        self.prizes_cache = None
+
     def order_treasures(self, player, treasures):
         # If any Horns of Plenty are in the played treasures, allow the player to play them last
         if any(isinstance(treasure, cornucopia_cards.HornOfPlenty) for treasure in treasures):
