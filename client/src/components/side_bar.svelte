@@ -116,6 +116,10 @@
         color: #dadada
     }
 
+    .section.active:hover {
+        color: ffcccc;
+    }
+
     a {
         color: #dadada;
     }
