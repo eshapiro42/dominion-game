@@ -96,6 +96,7 @@
             waitingForSelection.prompt = data.prompt;
             waitingForSelection.handler = handleCardSelected;
             waitingForSelection.type = data.card_type.toLowerCase();
+            waitingForSelection.force = data.force;
             waitingForSelection.maxCards = 1;
         }
     );

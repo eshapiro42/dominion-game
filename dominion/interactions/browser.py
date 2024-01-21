@@ -128,7 +128,7 @@ class BrowserInteraction(Interaction):
             else:
                 return None
 
-    def choose_specific_card_type_from_hand(self, prompt, card_type):
+    def choose_specific_card_type_from_hand(self, prompt, card_type, force=False):
         print("choose_specific_card_type_from_hand")
         # Only cards of the correct type can be chosen
         playable_cards = [card for card in self.hand if card_type in card.types]
@@ -141,9 +141,13 @@ class BrowserInteraction(Interaction):
                     "choose specific card type from hand",
                     {
                         "prompt": prompt,
+                        "force": force,
                         "card_type": card_type.name,
                     }
                 )
+                if force:
+                    if response is None:
+                        raise ArithmeticError("Not enough cards chosen.")
                 if response is None:
                     return None
                 for card in self.hand:

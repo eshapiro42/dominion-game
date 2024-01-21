@@ -154,13 +154,14 @@ class Interaction(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def choose_specific_card_type_from_hand(self, prompt: str, card_type: CardType) -> Card | None:
+    def choose_specific_card_type_from_hand(self, prompt: str, card_type: CardType, force: bool = True) -> Card | None:
         """
         Request the player to choose a card of the specified type from their hand.
 
         Args:
             prompt: The prompt to display to the player.
             card_type: The card type to be chosen.
+            force: Whether or not to force the player to choose a card.
         """
         pass
 

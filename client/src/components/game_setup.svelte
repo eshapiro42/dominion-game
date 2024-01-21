@@ -428,6 +428,8 @@
         {:else}
             <main>
                 <div>
+                    <br>
+                    <br>
                     <p>Please wait for the host to start the game.</p>
                 </div>
             </main>

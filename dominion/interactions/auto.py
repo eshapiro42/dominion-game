@@ -81,7 +81,7 @@ class AutoInteraction(Interaction):
             else:
                 return None
 
-    def choose_specific_card_type_from_hand(self, prompt, card_type):
+    def choose_specific_card_type_from_hand(self, prompt, card_type, force=False):
         self.sleep_random()
         print(prompt)
         print()
@@ -90,23 +90,10 @@ class AutoInteraction(Interaction):
         if not playable_cards:
             print(f'There are no {card_type.name.lower().capitalize()} cards in your hand.\n')
             return None
-        while True:
-            try:
-                print(f'Enter choice 1-{len(playable_cards)} (0 to skip): ', end='')
-                choices = list(range(0, len(playable_cards) + 1))
-                # Weight options equally (except for skip)
-                weights = [1 if num == 0 else 100 for num in choices]
-                card_num = random.choices(choices, weights, k=1)[0]
-                print(card_num)
-                print()
-                if card_num == 0:
-                    return None
-                else:
-                    card_to_play = playable_cards[card_num - 1]
-                    return card_to_play
-            except (IndexError, ValueError):
-                print('That is not a valid choice.\n')
-                raise
+        if not force:
+            playable_cards.append(None)
+        card = random.choice(playable_cards)
+        return card
 
     def choose_cards_of_specific_type_from_played_cards(self, prompt, force, card_type, max_cards=1, ordered=False) -> List[Card]:
         self.sleep_random()

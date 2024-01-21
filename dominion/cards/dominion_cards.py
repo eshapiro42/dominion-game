@@ -252,7 +252,7 @@ class Bureaucrat(AttackCard):
             else: 
                 # If there is more than one type of Victory card, player must choose one
                 prompt = f'{attacker} played a Bureaucrat. Choose a Victory card to put back onto your deck.'
-                card = player.interactions.choose_from_options(prompt=prompt, options=victory_cards, force=True)
+                card = player.interactions.choose_specific_card_type_from_hand(prompt=prompt, card_type=CardType.VICTORY, force=True)
             self.game.broadcast(f'{player} put {a(card)} on top of their deck.')
             player.hand.remove(card)
             player.deck.append(card)
