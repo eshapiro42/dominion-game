@@ -50,7 +50,7 @@
     );
 
     $socket.on(
-        "prizes",
+        "display prizes",
         (_) => {
             prizes = true;
         }
