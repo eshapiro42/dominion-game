@@ -61,7 +61,7 @@
                 No Kingdom Selected
             {/if}
         </h5>
-        <button class="offsetButton"
+        <button class="blueButton offset" style="--offset-top: -8px;"
             on:click={
                 () => {
                     recommendedSet = Math.floor(Math.random() * recommendedSets.length)
@@ -101,7 +101,6 @@
                 }
             }
         >
-        <hr>
             <div class="title">
                 <h4>{set.name}</h4>
                 <p>{set.expansions.join(", ")}<p>
@@ -148,12 +147,12 @@
 <style lang="scss">
     $margin: 5px;
 
-    $scrollbar-color: #34333880;
-    $scrollbar-color-hover: #343338;
+    $scrollbar-color: color-mix(in srgb, var(--blue-color), var(--body-background-color) 20%);
+    $scrollbar-color-hover: var(--blue-color);
 
     main {
-        margin-top: 20px;
-        border: 1px solid slategrey;
+        border: 1px solid var(--border-color);
+        border-top: none;
 
         ::-webkit-scrollbar {
             height: 10px;
@@ -174,6 +173,7 @@
 
     .sort {
         margin-top: 25px;
+        margin-bottom: 25px;
         display: flex;
         justify-content: center;
         align-items: baseline;
@@ -203,13 +203,14 @@
         width: 100%;
         height: 100%;
         text-align: center;
-        margin-top: 25px;
+        padding-top: 35px;
     }
 
     .dropdowns {
         display: flex;
         justify-content: center;
         gap: 100px;
+        border-bottom: var(--hrule);
     }
 
     .cards {
@@ -236,18 +237,20 @@
     .panel {
         left: 0px;
         scroll-margin-top: 30px;
+        border-bottom: var(--hrule);
+        padding-bottom: 35px;
     }
 
     .panel:hover:not(.selected) {
-        background-color: #f0f0f0;
+        background-color: color-mix(in srgb, var(--body-background-color), var(--blue-color) 20%);
     }
     
     .selected {
-        background-color: #cde6fe;
+        background-color: color-mix(in srgb, var(--body-background-color), var(--blue-color) 50%);
     }
 
     .fakeLink {
-        color: rgb(0,100,200);
+        color: color-mix(in srgb, var(--blue-color), var(--text-color) 40%);
     }
 
     .fakeLink:hover {
@@ -267,10 +270,5 @@
         flex-direction: row;
         gap: 50px;
         padding-top: 40px;;
-    }
-
-    .offsetButton {
-        display: flex;
-        align-items: center;
     }
 </style>

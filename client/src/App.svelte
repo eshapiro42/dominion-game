@@ -1,7 +1,7 @@
 <script>
     import {
         socket,
-        classicFont,
+        dataTheme,
         currentPlayer,
         room,
         username,
@@ -16,6 +16,7 @@
     import PlayedCards from "./components/played_cards.svelte";
     import PlayerInfo from "./components/player_info.svelte";
     import Prizes from "./components/prizes.svelte";
+    import Settings from "./components/settings.svelte";
     import SideBar from "./components/side_bar.svelte";
     import SummaryBar from "./components/summary_bar.svelte";
     import Supply from "./components/supply.svelte";
@@ -95,14 +96,22 @@
         gameOver.show = true;
     }
 
-    function refreshHeartbeat() {
-        $socket.emit(
-            "refresh",
-            {
-                room: $room,
-            }
+    function getPreferredTheme() {
+        const query = window.matchMedia(
+            "(prefers-color-scheme: dark)"
         );
+        if (query.matches) {
+            return "dark";
+        }
+        return "light";
     }
+
+    function setTheme(theme) {
+        $dataTheme = theme;
+        document.documentElement.setAttribute("data-theme", theme);
+    }
+
+    setTheme(getPreferredTheme());
 
     $socket.on(
         "new turn",
@@ -212,32 +221,11 @@
 <main>
     <header>
         <div class={headerClass}>
-            <h1>Dominion</h1>
+            <div class="title">
+                <h1>Dominion</h1> <Settings/>
+            </div>
             {#if roomJoined}
             <p>Room ID: {$room}</p>
-            {/if}
-
-            {#if gameStarted}
-                <select bind:value={$classicFont}>
-                    <option value={false}>
-                        Modern Font
-                    </option>
-                    <option value={true}>
-                        Classic Font
-                    </option>
-                </select>
-                <button on:click|stopPropagation={
-                    () => {
-                        $socket.emit(
-                            "request kingdom json",
-                            {room: $room}
-                        );
-                    }}>
-                    Save Kingdom
-                </button>
-                <i class="fa-solid fa-rotate-right"
-                    on:click={refreshHeartbeat}
-                ></i>
             {/if}
         </div>
     </header>
@@ -306,5 +294,14 @@
 
     .fa-rotate-right {
         cursor: pointer;
+    }
+
+    .title {
+        width: 100%;
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+        gap: 20px;
     }
 </style>

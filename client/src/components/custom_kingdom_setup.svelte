@@ -167,12 +167,12 @@
 <style lang="scss">
     $margin: 5px;
 
-    $scrollbar-color: #34333880;
-    $scrollbar-color-hover: #343338;
+    $scrollbar-color: color-mix(in srgb, var(--blue-color), var(--body-background-color) 20%);
+    $scrollbar-color-hover: var(--blue-color);
 
     main {
-        margin-top: 20px;
-        border: 1px solid slategrey;
+        border: 1px solid var(--border-color);
+        border-top: none;
 
         ::-webkit-scrollbar {
             height: 10px;
@@ -226,6 +226,8 @@
     }
 
     .dropdowns {
+        margin-top: 25px;
+        margin-bottom: 25px;
         display: flex;
         justify-content: center;
         gap: 100px;

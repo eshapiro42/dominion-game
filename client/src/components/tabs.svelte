@@ -34,7 +34,7 @@
         list-style-type: none;
         margin: 0;
         padding: 0;
-        border-bottom: 1px solid #343338;
+        border-bottom: 1px solid var(--border-color);
         text-align: center;
         justify-content: center;
     }
@@ -46,21 +46,20 @@
         display: block;
         padding: 10px;
         cursor: pointer;
-        /* border-bottom: 1px solid #343338; */
     }
 
     li:hover:not(.selected) > span {
-        border-top-color: rgba(52, 51, 56, 0.2);
-        border-left-color: rgba(52, 51, 56, 0.2);
-        border-right-color: rgba(52, 51, 56, 0.2);
-        background-color: rgba(128, 191, 255, 0.2);
-
+        border-top-color: color-mix(in srgb, var(--body-background-color), var(--border-color) 20%);
+        border-left-color: color-mix(in srgb, var(--body-background-color), var(--border-color) 20%);
+        border-right-color: color-mix(in srgb, var(--body-background-color), var(--border-color) 20%);
+        background-color: color-mix(in srgb, var(--body-background-color), var(--blue-color) 20%);
     }
 
     li.selected > span {
-        border-top-color: #343338;
-        border-left-color: #343338;
-        border-right-color: #343338;
-        background-color: #80bfff;
+        border-top-color: var(--border-color);
+        border-left-color: var(--border-color);
+        border-right-color: var(--border-color);
+        background-color: var(--blue-color);
+        color: var(--dark-text-color);
     }
 </style>

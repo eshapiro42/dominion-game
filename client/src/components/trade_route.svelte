@@ -62,7 +62,7 @@
 <style>
     main {
         margin-top: 20px;
-        border: 1px solid slategrey;
+        border: 1px solid var(--border-color);
     }
 
     .title {
@@ -91,8 +91,7 @@
         padding: 10px;
         padding-top: 25px;
         gap: 10px;
-        background-color: #343338;
-        color: #dadada;
+        background-color: var(--thead-background-color);
     }
 
     .coinTokens {
@@ -102,34 +101,4 @@
         align-self: center;
         padding: 10px;
     }
-
-    .hoverable {
-        position: relative;
-        display: inline-block;
-        border-bottom: 1px dotted #343338;
-    }
-
-    .hoverable .hoverable-text {
-        visibility: hidden;
-        position: absolute;
-        left: 50px;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        gap: 10px;
-        z-index: 1;
-        font-size: 85%;
-        width: 300px;
-        background-color: #343338;
-        color: #dadada;
-        text-align: left;
-        overflow-wrap: break-word;
-        border-radius: 10px;
-        padding: 10px;
-    }
-
-    .hoverable:hover .hoverable-text {
-        visibility: visible;
-    }
-
 </style>

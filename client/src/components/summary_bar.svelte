@@ -42,7 +42,9 @@
     use:sticky
     on:stuck={handleStuck}
 >
-    <main class="panel">
+    <main class="panel"
+        class:isStuck
+    >
         {#if isStuck}
             <i class="fa-solid fa-arrow-up"
                 transition:fade={{delay:0, duration: 300}}
@@ -97,8 +99,9 @@
 <style>
     main {
         z-index: 10;
-        background-color: #343338;
-        color: #dadada;
+        background-color: var(--thead-background-color);
+        color: var(--light-text-color);
+        border: 1px solid var(--border-color);
         padding-top: 20px;
         padding-bottom: 20px;
         margin-top: 20px;
@@ -116,5 +119,9 @@
 
     .fa-arrow-up:hover {
         cursor: pointer;
+    }
+
+    .isStuck {
+        border-top: none;
     }
 </style>

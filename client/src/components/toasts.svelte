@@ -144,10 +144,11 @@
 
     .toast {
         text-align: left;
-        border: 1px solid slategrey;
+        border: 1px solid var(--grey-black);
         display: block;
         padding: 10px;
-        background-color: lightpink;
+        background-color: var(--toast-background-color);
+        color: var(--toast-text-color);
         overflow-wrap: break-word;
         display: flex;
         flex-direction: row;
@@ -155,11 +156,11 @@
     }
 
     .playerMessage {
-        background-color: lightblue;
+        background-color: var(--purple-color);
     }
 
     .showExpiredToasts {
-        color: slategrey;
+        color: var(--blue-color);
     }
 
     .expiredToasts {
@@ -169,8 +170,8 @@
         height: auto;
         margin: 5px;
         max-height: 50vh;
-        background-color: white;
-        border: 1px solid slategrey;
+        background-color: var(--thead-background-color);
+        border: 1px solid var(--border-color);
         overflow-y: auto;
         display: flex;
         flex-direction: column-reverse; /* So that the newest messages are at the bottom and scroll automatically */

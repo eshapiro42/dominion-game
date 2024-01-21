@@ -180,11 +180,13 @@
             {selectionIndex}
         </span>
     {/if}
-    <ul class="effects">
-        {#each renderedEffects as effect}
-            <li>{@html effect}</li>
-        {/each}
-    </ul>
+    {#if renderedEffects.length > 0}
+        <ul class="effects">
+            {#each renderedEffects as effect}
+                <li>{@html effect}</li>
+            {/each}
+        </ul>
+    {/if}
     <ul class="description">
         {#each renderedDescription as description}
             <li>{@html description}</li>
@@ -207,31 +209,29 @@
     $corner-radius: 20px;
     $margin: 5px;
 
-    $shadow-color: rgba(127, 145, 163, 0.5);
+    $shadow-color: var(--card-shadow-color);
     $shadow: 1px 1px 4px 4px $shadow-color;
 
     $font-size: 16px;
-    $dark-text-color: #343338;
-    $light-text-color: #dadada;
+    $dark-text-color: var(--dark-text-color);
+    $light-text-color: var(--light-text-color);
     $point: #100e17;
     $point-light: rgb(33, 29, 47);
 
     $dark-scrollbar-color: #34333880;
-    $dark-scrollbar-color-hover: #343338;
+    $dark-scrollbar-color-hover: var(--action-card-color);
     $light-scrollbar-color: #d9d9d980;
     $light-scrollbar-color-hover: #dadada;
 
 
     main {
-        border: 1px solid slategrey;
+        border: var(--card-border);
         display: flex;
         flex: 0 0 auto;
-        position: relative;
         width: $width;
         min-height: $height;
         max-height: $height;
         font-size: $font-size;
-        color: $light-text-color;
         flex-direction: column;
         padding: $padding;
         margin-right: $margin;
@@ -269,11 +269,11 @@
         position: absolute;
         top: 0px;
         right: 0px;
-        background-color: #343338;
-        color: #dadada;
+        background-color: var(--action-card-color);
+        color: var(--light-text-color);
         font-size: 85%;
         border-radius: $corner-radius;
-        border-color: #dadada;
+        border-color: var(--border-color);
         border-width: 1px;
         margin-top: $margin;
         margin-right: $margin;
@@ -290,10 +290,10 @@
         bottom: 0%;
         left: 50%;
         transform: translate(-50%, 0);
-        background-color: #343338;
+        background-color: var(--action-card-color);
         color: #dadada;
         font-size: 85%;
-        border: 3px solid red;
+        border: var(--selected-card-border);
         border-bottom: 0;
         border-top-left-radius: $corner-radius;
         border-top-right-radius: $corner-radius;
@@ -303,13 +303,13 @@
     }
 
     .selected {
-        border: 3px solid red;
+        border: var(--selected-card-border);
         transform: translateY(-20px);
         transition: 0.4s ease-out;
     }
 
     .action {
-        background-color: #343338;
+        background-color: var(--action-card-color);
         color: $light-text-color;
 
         ::-webkit-scrollbar-thumb {
@@ -322,12 +322,12 @@
     }
 
     .action .hoverable-text, .action .selection-index {
-        background-color: #dadada;
-        color: #343338;
+        background-color: var(--light-text-color);
+        color: var(--action-card-color);
     }
 
     .attack {
-        background-color: #ffcccc;
+        background-color: var(--attack-card-color);
         color: $dark-text-color;
 
         ::-webkit-scrollbar-thumb {
@@ -340,11 +340,11 @@
     }
 
     .attack .hoverable-text, .attack .selection-index {
-        color: #ffcccc;
+        color: var(--attack-card-color);
     }
 
     .reaction {
-        background-color: #80bfff;
+        background-color: var(--reaction-card-color);
         color: $dark-text-color;
 
         ::-webkit-scrollbar-thumb {
@@ -357,11 +357,11 @@
     }
 
     .reaction .hoverable-text, .reaction .selection-index {
-        color: #80bfff;
+        color: var(--reaction-card-color);
     }
 
     .victory {
-        background-color: #c1f0c1;
+        background-color: var(--victory-card-color);
         color: $dark-text-color;
 
         ::-webkit-scrollbar-thumb {
@@ -374,12 +374,12 @@
     }
 
     .victory .hoverable-text, .victory .selection-index {
-        background-color: #343338;
-        color: #c1f0c1;
+        background-color: var(--action-card-color);
+        color: var(--victory-card-color);
     }
 
     .curse {
-        background-color: #dab3ff;
+        background-color: var(--curse-card-color);
         color: $dark-text-color;
 
         ::-webkit-scrollbar-thumb {
@@ -392,11 +392,11 @@
     }
 
     .curse .hoverable-text, .curse .selection-index {
-        color: #dab3ff;
+        color: var(--curse-card-color);
     }
 
     .treasure {
-        background-color: #fff0b3;
+        background-color: var(--treasure-card-color);
         color: $dark-text-color;
 
         ::-webkit-scrollbar-thumb {
@@ -409,7 +409,7 @@
     }
 
     .treasure .hoverable-text, .treasure .selection-index {
-        color: #fff0b3;
+        color: var(--treasure-card-color);
     }
 
     .basicTreasure .description {
@@ -423,14 +423,14 @@
     }
 
     .victory_action {
-        background-color: #c1f0c1;
+        background-color: var(--victory-card-color);
         background: repeating-linear-gradient(
             -45deg,
-            #c1f0c1,
-            #c1f0c1 30px,
-            rgba(52, 51, 56, 0.05) 30px,
-            rgba(52, 51, 56, 0.05) 60px,
-        ), #c1f0c1;
+            var(--victory-card-color),
+            var(--victory-card-color) 30px,
+            color-mix(in srgb, var(--victory-card-color), var(--action-card-color) 5%) 30px,
+            color-mix(in srgb, var(--victory-card-color), var(--action-card-color) 5%) 60px,
+        ), var(--victory-card-color);
         color: $dark-text-color;
 
         ::-webkit-scrollbar-thumb {
@@ -443,17 +443,17 @@
     }
 
     .victory_action .hoverable-text, .treasure .selection-index {
-        color: #c1f0c1;
+        color: var(--victory-card-color);
     }
 
     .victory_treasure {
         background: repeating-linear-gradient(
             -45deg,
-            #fff0b3,
-            #fff0b3 30px,
-            rgba(193, 240, 193, 0.2) 30px,
-            rgba(193, 240, 193, 0.2) 60px,
-        ), #fff0b3;
+            var(--treasure-card-color),
+            var(--treasure-card-color) 30px,
+            color-mix(in srgb, var(--treasure-card-color), var(--victory-card-color) 30%) 30px,
+            color-mix(in srgb, var(--treasure-card-color), var(--victory-card-color) 23%) 60px,
+        ), var(--treasure-card-color);
         color: $dark-text-color;
 
         ::-webkit-scrollbar-thumb {
@@ -466,17 +466,17 @@
     }
 
     .victory_treasure .hoverable-text, .treasure .selection-index {
-        color: #fff0b3;
+        color: var(--treasure-card-color);
     }
 
     .treasure_reaction {
         background: repeating-linear-gradient(
             -45deg,
-            #fff0b3,
-            #fff0b3 30px,
-            rgba(128, 191, 255, 0.1) 30px,
-            rgba(128, 191, 255, 0.1) 60px,
-        ), #fff0b3;
+            var(--treasure-card-color),
+            var(--treasure-card-color) 30px,
+            color-mix(in srgb, var(--treasure-card-color), var(--reaction-card-color) 12%) 30px,
+            color-mix(in srgb, var(--treasure-card-color), var(--reaction-card-color) 12%) 60px,
+        ), var(--treasure-card-color);
         color: $dark-text-color;
 
         ::-webkit-scrollbar-thumb {
@@ -489,18 +489,18 @@
     }
 
     .treasure_reaction .hoverable-text, .treasure .selection-index {
-        color: #fff0b3;
+        color: var(--treasure-card-color);
     }
 
     .victory_reaction {
-        background-color: #c1f0c1;
+        background-color: var(--victory-card-color);
         background: repeating-linear-gradient(
             -45deg,
-            #c1f0c1,
-            #c1f0c1 30px,
-            rgba(128, 191, 255, 0.1) 30px,
-            rgba(128, 191, 255, 0.1) 60px,
-        ), #c1f0c1;
+            var(--victory-card-color),
+            var(--victory-card-color) 30px,
+            color-mix(in srgb, var(--victory-card-color), var(--reaction-card-color) 15%) 30px,
+            color-mix(in srgb, var(--victory-card-color), var(--reaction-card-color) 15%) 60px,
+        ), var(--victory-card-color);
         color: $dark-text-color;
 
         ::-webkit-scrollbar-thumb {
@@ -513,11 +513,11 @@
     }
 
     .victory_reaction .hoverable-text, .treasure .selection-index {
-        color: #c1f0c1;
+        color: var(--victory-card-color);
     }
 
     .bane {
-        box-shadow: $shadow, inset 0 0 15px #80bfff;
+        box-shadow: $shadow, inset 0 0 15px var(--reaction-card-color);
     }
 
     .name {
@@ -567,6 +567,7 @@
     .footer {
         display: flex;
         justify-content: space-between;
+        align-items: flex-end;
         position: absolute;
         width: $width;
         bottom: $margin;
@@ -578,8 +579,12 @@
         font-family: trajan-pro-3, serif;
     }
 
+    .cost {
+        text-wrap: nowrap;
+    }
+
     .unselectable {
-        opacity: 0.5;
+        opacity: var(--unselectable-card-opacity);
         box-shadow: none;
         top: 1px;
         left: 1px;

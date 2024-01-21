@@ -78,8 +78,9 @@
         width: 64px;
         height: 100%;
         position: fixed;
-        background-color: #343338;
-        color: #dadada;
+        background-color: var(--thead-background-color);
+        color: var(--light-text-color);
+        border-right: 1px solid var(--border-color);
         display: flex;
         flex-direction: column;
         flex-wrap: wrap;
@@ -107,17 +108,16 @@
     }
 
     .section.active {
-        background-color: #ffcccc;
-        color: #343338;
+        background-color: var(--blue-color);
+        color: var(--dark-text-color);
     }
 
     .section:hover {
-        background-color: #605e67;
-        color: #dadada
+        background-color: color-mix(in srgb, var(--blue-color), #000000 20%);
     }
 
     a {
-        color: #dadada;
+        color: var(--light-text-color);
     }
 
     a:hover {

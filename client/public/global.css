@@ -1,5 +1,79 @@
 @import url("https://use.typekit.net/ktm4syd.css");
 
+:root {
+    --white: white;
+    --near-white: #dadada;
+    --black: black;
+    --grey-black: #1d1d1d;
+    --grey: #343338;
+    --blue: #80bfff;
+	--red: #ffcccc;
+	--green: #c1f0c1;
+	--purple: #dab3ff;
+	--yellow: #fff0b3;
+    --dark-text-color: var(--grey-black);
+    --light-text-color: var(--near-white);
+	--hrule: 1px solid color-mix(in srgb, var(--body-background-color), var(--border-color) 30%);
+}
+
+[data-theme="light"] {
+    /* Text Colors */
+	--text-color: var(--grey-black);
+    --contrasting-text-color: var(--near-white);
+	--toast-text-color: var(--grey-black);
+    /* Background Colors */
+	--body-background-color: var(--white);
+    --button-background-color: var(--near-white);
+	--input-background-color: color-mix(in srgb, var(--blue), var(--white) 80%);
+    --thead-background-color: var(--grey);
+	--toast-background-color: var(--blue-color);
+	--select-background-color: var(--white);
+    /* Calculated Colors */
+    --blue-color: var(--blue);
+	--purple-color: var(--purple);
+	--border-color: var(--grey-black);
+	/* Cards*/
+	--card-border: 1px solid var(--grey-black);
+	--selected-card-border: 3px solid var(--blue-color);
+	--card-shadow-color: rgba(127, 145, 163, 0.5);
+	--action-card-color: var(--grey);
+	--reaction-card-color: var(--blue);
+	--attack-card-color: var(--red);
+	--victory-card-color: var(--green);
+	--curse-card-color: var(--purple);
+	--treasure-card-color: var(--yellow);
+	--unselectable-card-opacity: 50%;
+}
+
+[data-theme="dark"] {
+    /* Text Colors */
+	--text-color: var(--near-white);
+    --contrasting-text-color: var(--grey-black);
+	--toast-text-color: var(--grey-black);
+    /* Background Colors */
+	--body-background-color: var(--grey);
+    --button-background-color: var(--grey-black);
+    --input-background-color: color-mix(in srgb, var(--blue-color), var(--near-white) 50%);
+    --thead-background-color: var(--grey-black);
+	--toast-background-color: var(--blue-color);
+	--select-background-color: var(--grey-black);
+    /* Calculated Colors */
+    --blue-color: color-mix(in srgb, var(--blue), #000000 15%);
+	--purple-color: color-mix(in srgb, var(--purple), #000000 15%);
+	--border-color: var(--blue-color);
+	/* Cards*/
+	--card-border: none;
+	--selected-card-border: 3px solid var(--blue-color);
+	--card-shadow-color: rgba(40, 40, 40, 0.5);
+	--action-card-color: var(--grey-black);
+	--reaction-card-color: var(--blue-color);
+	--attack-card-color: color-mix(in srgb, var(--red), #000000 15%);
+	--victory-card-color: color-mix(in srgb, var(--green), #000000 15%);
+	--curse-card-color: var(--purple-color);
+	--treasure-card-color: color-mix(in srgb, var(--yellow), #000000 15%);
+	--unselectable-card-opacity: 20%;
+}
+
 html, body {
 	position: relative;
 	width: 100%;
@@ -8,7 +82,8 @@ html, body {
 }
 
 body {
-	color: #333;
+	color: var(--text-color);
+	background-color: var(--body-background-color);
 	margin: 0;
 	padding: 8px;
 	box-sizing: border-box;
@@ -29,7 +104,15 @@ a:visited {
 }
 
 label {
-	display: block;
+	display: flex;
+	margin-top: 7px;
+}
+
+input[type="checkbox"] {
+	width: 14px;
+	height: 14px;
+	margin-top: 5px;
+	margin-right: 10px;
 }
 
 input, button, select, textarea {
@@ -37,20 +120,41 @@ input, button, select, textarea {
 	font-size: inherit;
 	-webkit-padding: 0.4em 0;
 	padding: 0.4em;
-	margin: 0 0 0.5em 0;
 	box-sizing: border-box;
-	border: 1px solid #ccc;
+	border: 1px solid var(--border-color);
 	border-radius: 2px;
+}
+
+input {
+    color: var(--dark-text-color);
+    background-color: var(--input-background-color);
+    border: 1px solid var(--border-color);
+    width: 100%;
 }
 
 input:disabled {
 	color: #ccc;
 }
 
+input:not(:last-child) {
+	margin-bottom: 10px;
+}
+
+select {
+	background-color: var(--select-background-color);
+	color: var(--text-color);
+}
+
 button {
-	color: #333;
-	background-color: #f4f4f4;
-	outline: none;
+	color: var(--text-color);
+	background-color: var(--button-background-color);
+    border: 1px solid var(--border-color);
+}
+
+.blueButton {
+	background-color: var(--blue-color);
+	color: var(--dark-text-color); 
+	border-color: var(--dark-text-color);
 }
 
 button:disabled {
@@ -65,23 +169,48 @@ button:focus {
 	border-color: #666;
 }
 
-.panel {
-	width: 100%;
-	max-width: 90vw;
-	min-width: 90vw;
-	padding-right: 0.75rem;
-	padding-left: 0.75rem;
-	margin-right: auto;
-	margin-left: auto;
-	position: relative;
-	left: 32px; /* half the width of the sidebar */
+/* Tables */
+
+table {
+    text-align: center;
+    vertical-align: middle;
+    border: 1px solid var(--border-color);
+	border-collapse: collapse; 
 }
 
-/* Do not show sidebar on mobile devices */
-@media (max-width: 767px) {
-	.panel {
-		left: 0;
-	}
+thead {
+    background-color: var(--thead-background-color);
+    color: var(--light-text-color);
+}
+
+thead tr {
+	border-bottom: var(--hrule);
+}
+
+tbody {
+	border-color: var(--border-color);
+}
+
+td, th {
+    padding: 20px;
+}
+
+tbody tr:hover {
+    background-color: color-mix(in srgb, var(--body-background-color), var(--blue-color) 20%);
+}
+
+tbody tr:not(:last-of-type) {
+	border-bottom: var(--hrule);
+}
+
+/* Panels */
+
+.panel {
+	/* padding-right: 0.75rem;
+	padding-left: 0.75rem; */
+	margin-right: auto;
+	margin-left: auto;
+	left: 32px; /* half the width of the sidebar */
 }
 
 .panel-sticky {
@@ -91,6 +220,79 @@ button:focus {
 	z-index: 1;
 }
 
-.offsetButton {
-	margin-top: -6px;
+table, .panel {
+	position: relative;
+	width: 100%;
+	max-width: 90vw;
+	min-width: 90vw;
+    left: 32px;
+}
+
+/* Do not show sidebar on mobile devices */
+@media (max-width: 767px) {
+	table, .panel {
+		left: 0;
+	}
+}
+
+h2 {
+    margin: 0px;
+}
+
+.space-above {
+	margin-top: 50px;
+}
+
+.hoverable {
+	position: relative;
+	display: inline-block;
+	border-bottom: 1px dotted var(--border-color);
+}
+
+.hoverable .hoverable-text {
+	visibility: hidden;
+	position: absolute;
+	left: 50px;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	gap: 10px;
+	z-index: 1;
+	font-size: 85%;
+	width: 300px;
+	background-color: var(--thead-background-color);
+	color: var(--light-text-color);
+	text-align: left;
+	overflow-wrap: break-word;
+	border-radius: 10px;
+	padding: 10px;
+}
+
+.hoverable:hover .hoverable-text {
+	visibility: visible;
+	transition-delay: 0.3s;
+}
+
+.offset {
+	/* Add an offset to any element by adding
+		class="offset"
+		style="--offset-{direction}={offset-amount};"
+
+		Example: 
+
+		<button class="offset" style="--offset-top: -8px;">
+	*/
+	margin-top: var(--offset-top);
+	margin-bottom: var(--offset-bottom);
+	margin-left: var(--offset-left);
+	margin-right: var(--offset-right);
+}
+
+@keyframes blinking {
+	0%, 30%, 70%, 100% {
+		background-color: var(--body-background-color);
+	}
+	50% {
+		background-color: color-mix(in srgb, var(--body-background-color), var(--blue-color) 10%);
+	}
 }

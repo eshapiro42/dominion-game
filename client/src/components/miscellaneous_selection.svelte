@@ -149,12 +149,15 @@
                     {#if type == "alert"}
                         <button on:click={submit}>Okay</button>
                     {:else if type == "boolean"}
-                        <button on:click={
-                            () => {
-                                selection = true;
-                                submit()
+                        <button 
+                            class="blueButton"
+                            on:click={
+                                () => {
+                                    selection = true;
+                                    submit()
+                                }
                             }
-                        }>
+                        >
                             Yes
                         </button>
 
@@ -167,7 +170,9 @@
                             No
                         </button>
                     {:else}
-                        <button on:click={submit}>
+                        <button class="blueButton" 
+                            on:click={submit}
+                        >
                             Send
                         </button>
 
@@ -192,8 +197,8 @@
 <style>
     main {
         margin-top: 20px;
-        padding-top: 20px;
-        border: 1px solid slategrey;
+        padding: 20px;
+        border: 1px solid var(--border-color);
         display: flex;
         flex-direction: column;
         gap: 20px;
@@ -201,17 +206,8 @@
         justify-content: flex-start;        
     }
 
-    @keyframes blinking {
-        0%, 30%, 70%, 100% {
-            background-color: #fff;
-        }
-        50% {
-            background-color: rgb(250, 226, 226);
-        }
-    }
-
     .show {
-        animation: blinking 3s infinite;
+        animation: blinking 3s ease-in-out infinite;
     }
 
     .flex-item {
