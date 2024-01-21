@@ -54,7 +54,7 @@
 <style>
     main {
         margin-top: 20px;
-        border: 1px solid slategrey;
+        border: 1px solid var(--border-color);
     }
 
     .title {
@@ -83,8 +83,9 @@
         justify-content: space-evenly;
         gap: 10px;
         padding: 25px;
-        background-color: #343338;
-        color: #dadada;
+        border: 1px solid var(--border-color);
+        background-color: var(--thead-background-color);
+        color: var(--light-text-color);
     }
 
     .playerInfoItem {

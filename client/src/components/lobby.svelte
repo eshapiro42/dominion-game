@@ -83,7 +83,7 @@
         />
 
         {#if selectedTab == "Join a Game"}
-            <div class="form-row space-above"
+            <div class="space-above"
                 on:keyup={
                     (event) => {
                         if (event.key == "Enter") {
@@ -92,16 +92,12 @@
                     }
                 }
             >
-                <div class="col">
-                    <input type="text" class="form-control" placeholder="Your Name" autocomplete="off" bind:value={username} required>
-                </div>
-                <div class="col">
-                    <input type="text" class="form-control" placeholder="Room ID" autocomplete="off" bind:value={room} required>
-                </div>
+                <input type="text" placeholder="Your Name" autocomplete="off" bind:value={username} required>
+                <input type="text" placeholder="Room ID" autocomplete="off" bind:value={room} required>
                 <button class="space-above" on:click={joinRoom}>Let's Move It</button>
             </div>
         {:else if selectedTab == "Create a Game"}
-            <div class="form-group space-above"
+            <div class="space-above"
                 on:keyup={
                     (event) => {
                         if (event.key == "Enter") {
@@ -110,7 +106,7 @@
                     }
                 }
             >
-                <input type="text" class="form-control" placeholder="Your Name" bind:value={username} autocomplete="off" required>
+                <input type="text" placeholder="Your Name" bind:value={username} autocomplete="off" required>
             </div>
             <button class="space-above" on:click={createRoom}>Let's Groove It</button>
         {/if}
@@ -118,10 +114,6 @@
 {/if}
 
 <style>
-    .space-above {
-        margin-top: 50px;
-    }
-
     .panel {
         left: 0px;
     }

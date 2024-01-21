@@ -60,9 +60,9 @@
 <main>
     <p class="flex-item"><b>{@html renderedPrompt}</b></p>
     <div class="flex-item">
-        <button type="button" on:click={handleSendSelection}>Send Selection</button>
+        <button class="blueButton" on:click={handleSendSelection}>Send Selection</button>
         {#if selectAllEnabled}
-            <button type="button" on:click={handleSelectAll}>Select All</button>
+            <button on:click={handleSelectAll}>Select All</button>
         {/if}
     </div>
 </main>
@@ -71,7 +71,8 @@
     main {
         flex: 0 0 100%;
         gap: 10px;
-        border: 1px solid slategrey;
+        padding: 20px;
+        border: 1px solid var(--border-color);
     }
 
     .flex-item {

@@ -58,7 +58,8 @@
         >
             <div class="title">
                 <h4>Game Over</h4>
-                <button class="offsetButton"
+                <button
+                    class="blueButton offset" style="--offset-top: -6px;"
                     on:click={
                         () => {
                             window.location.reload(true);
@@ -74,7 +75,7 @@
                 <br>
                 <h5>{endGameData.winners}</h5>
                 <br>
-                <table class="table table-hover table-bordered">
+                <table>
                     <thead>
                         <tr>
                             <th>Player</th>
@@ -157,21 +158,12 @@
 <style lang="scss">
     $margin: 5px;
 
-    $scrollbar-color: #34333880;
-    $scrollbar-color-hover: #343338;
-
-    @keyframes blinking {
-        0%, 30%, 70%, 100% {
-            background-color: #fff;
-        }
-        50% {
-            background-color: rgb(250, 226, 226);
-        }
-    }
+    $scrollbar-color: color-mix(in srgb, var(--blue-color), var(--body-background-color) 20%);
+    $scrollbar-color-hover: var(--blue-color);
 
     main {
         margin-top: 20px;
-        border: 1px solid slategrey;
+        border: 1px solid var(--border-color);
 
         ::-webkit-scrollbar {
             height: 10px;
@@ -191,7 +183,7 @@
     }
 
     .active {
-        animation: blinking 3s infinite;
+        animation: blinking 3s infinite ease-in-out;
     }
 
     .sort {
@@ -210,11 +202,6 @@
         align-items: baseline;
         flex-wrap: nowrap;
         gap: 10px;
-    }
-
-    .table {
-        text-align: left;
-        vertical-align: middle;
     }
 
     .text {
@@ -241,6 +228,8 @@
         display: flex;
         justify-content: center;
         gap: 100px;
+        margin-top: 20px;
+        margin-bottom: 20px;
     }
     
     .cards {
@@ -262,5 +251,13 @@
     .displayAsGrid {
         flex-wrap: wrap;
         row-gap: 5px;
+    }
+
+    table {
+        min-width: 0px;
+        left: 0px;
+        border-left: none;
+        border-right: none;
+        color: var(--text-color);
     }
 </style>

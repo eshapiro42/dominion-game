@@ -328,10 +328,10 @@
                             on:click={() => window.scrollTo(0, 0)}
                         ></i>
                     {/if}
-                    <button type="button" class="startGameButton" on:click={startGame}>Start Game</button>
+                    <button type="button" class="blueButton" on:click={startGame}>Start Game</button>
                     <button type="button" on:click={addCPU}>Add CPU</button>
 
-                        <label class="customization offsetText">
+                        <label class="customization">
                             <input type="checkbox" bind:checked={allowSimultaneousReactions.selected}>
                             <div class="hoverable">
                                 Allow Simultaneous Reactions
@@ -363,7 +363,7 @@
             </div>
             <div class="panel">
                 {#if selectedTab === "Random Kingdom"}
-                    <main>
+                    <main class="space-above">
                         <div class="customizations">
                             {#each expansions as expansion}
                                 <label class="customization">
@@ -405,14 +405,13 @@
                         />
                     </main>
                 {:else if selectedTab === "Saved Kingdom"}
-                    <main>
+                    <main class="space-above">
                         {#if saved_kingdom.hasOwnProperty("file_handle")}
                             Loaded {saved_kingdom["file_handle"].name}.
                         {:else}
                             No file loaded.
                         {/if}
-                        <button 
-                            class="offsetButton"
+                        <button
                             on:click={
                                 async () => {
                                     [saved_kingdom["file_handle"]] = await window.showOpenFilePicker(openFileOptions);
@@ -438,7 +437,6 @@
 
 <style>
     main {
-        margin-top: 50px;
         display: flex;
         flex-direction: row;
         justify-content: space-evenly;
@@ -450,14 +448,11 @@
         gap: 20px;
         justify-content: center;
         align-items: center;
-        padding-top: 30px;
-        padding-bottom: 21px;
-        background: white;
-    }
-
-    .startGameButton {
-        background-color: #343338;
-        color: #dadada; 
+        padding-top: 20px;
+        padding-bottom: 18px;
+        background: var(--body-background-color);
+        transition: background-color 0.3s linear;
+        border: 1px solid var(--border-color);
     }
 
     .customization {
@@ -468,65 +463,18 @@
         text-align: left;
     }
 
-    .hoverable {
-        position: relative;
-        display: inline-block;
-        border-bottom: 1px dotted #343338;
-    }
-
-    .hoverable .hoverable-text {
-        visibility: hidden;
-        position: absolute;
-        left: 50px;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        gap: 10px;
-        z-index: 1;
-        font-size: 85%;
-        width: 300px;
-        background-color: #343338;
-        color: #dadada;
-        text-align: left;
-        overflow-wrap: break-word;
-        border-radius: 10px;
-        padding: 10px;
-    }
-
-    .hoverable:hover .hoverable-text {
-        visibility: visible;
-    }
-
-    table {
-        text-align: center;
-        vertical-align: middle;
-        border: 1px solid slategrey;
-    }
-
-    thead {
-        background-color: #343338;
-        color: #dadada;
-    }
-
-    td {
-        padding: 20px;
-    }
-
-    tbody tr:hover {
-        background-color: #f0f0f0;
-    }
-
-    tr:not(:last-of-type) {
-        border-bottom: 1px dashed slategrey;
-    }
-
     .panel {
         left: 0px;
     }
 
     .isStuck {
         z-index: 10;
-        border-bottom: 1px solid slategrey;
+        background-color: var(--thead-background-color);
+        color: var(--light-text-color);
+        transition: all 0.3s linear;
+        border-top: none;
+        border-left: none;
+        border-right: none;
     }
 
     .playerRow {
@@ -554,10 +502,6 @@
 
     .fa-arrow-up:hover {
         cursor: pointer;
-    }
-
-    .offsetText {
-        margin-top: -5px;
     }
 
     .tabs {

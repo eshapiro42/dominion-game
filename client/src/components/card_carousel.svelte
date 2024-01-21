@@ -236,21 +236,12 @@
 <style lang="scss">
     $margin: 5px;
 
-    $scrollbar-color: #34333880;
-    $scrollbar-color-hover: #343338;
-
-    @keyframes blinking {
-        0%, 30%, 70%, 100% {
-            background-color: #fff;
-        }
-        50% {
-            background-color: rgb(250, 226, 226);
-        }
-    }
+    $scrollbar-color: color-mix(in srgb, var(--blue-color), var(--body-background-color) 20%);
+    $scrollbar-color-hover: var(--blue-color);
 
     main {
         margin-top: 20px;
-        border: 1px solid slategrey;
+        border: 1px solid var(--border-color);
 
         ::-webkit-scrollbar {
             height: 10px;
@@ -270,7 +261,7 @@
     }
 
     .active {
-        animation: blinking 3s infinite;
+        animation: blinking 3s infinite linear;
     }
 
     .sort {
