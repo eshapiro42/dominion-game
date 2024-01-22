@@ -274,16 +274,12 @@
         margin: 20px;
     }
 
-    .fa-rotate-right {
-        cursor: pointer;
-    }
-
     .title {
         width: 100%;
         display: flex;
         flex-direction: row;
         justify-content: center;
-        align-items: center;
+        align-items: baseline;
         gap: 20px;
     }
 </style>

@@ -104,7 +104,7 @@
 </script>
 
 <main>
-    <i class="fa-solid fa-sliders"
+    <i class="fa-solid fa-gear"
         class:showSettings
         on:click|stopPropagation={toggleSettings}
     >
@@ -193,7 +193,11 @@
         color: var(--blue-color);
     }
 
-    .fa-sliders {
+    .fa-gear {
         font-size: 30px;
+    }
+
+    .fa-gear:hover {
+        cursor: pointer;
     }
 </style>

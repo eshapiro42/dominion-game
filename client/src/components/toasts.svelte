@@ -181,6 +181,10 @@
         font-size: 30px;
     }
 
+    .fa-message:hover {
+        cursor: pointer;
+    }
+
     .messageInputs {
         display: flex;
         flex-direction: row;

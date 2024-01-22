@@ -3,6 +3,8 @@
     export let displayAs = "row";
     export let sortByProperty = "type";
     export let illegalSortByOptions = [];
+    export let inMenu = false;
+    export let show = true;
 
     let sortByOptions = [
         {text: "Type", property: "type"},
@@ -40,33 +42,58 @@
     }
 </script>
 
-<main>
-    <div class="dropdowns">
-        <div class="sort">
-            <p>Sort By<p>
-            <select bind:value={sortByProperty}>
-                {#each sortByOptions as option}
-                    <option value={option.property}>
-                        {option.text}
-                    </option>
-                {/each}
-            </select>
+{#if show}
+    <main
+        on:click|stopPropagation={()=>{}}
+    >
+        <div class="dropdowns"
+            class:inMenu
+        >
+            <div class="sort">
+                <p>Sort By<p>
+                <select bind:value={sortByProperty}>
+                    {#each sortByOptions as option}
+                        <option value={option.property}>
+                            {option.text}
+                        </option>
+                    {/each}
+                </select>
+            </div>
+            <div class="displayAs">
+                <p>Display As<p>
+                <select bind:value={displayAs}>
+                    <option value="row">Row</option>
+                    <option value="grid">Grid</option>
+                </select>
+            </div>
         </div>
-        <div class="displayAs">
-            <p>Display As<p>
-            <select bind:value={displayAs}>
-                <option value="row">Row</option>
-                <option value="grid">Grid</option>
-            </select>
-        </div>
-    </div>
-</main>
+    </main>
+{/if}
 
 <style>
     .dropdowns {
         display: flex;
         justify-content: center;
         gap: 100px;
+    }
+
+    .inMenu {
+        position: absolute;
+        z-index: 1000000000;
+        display: flex;
+        flex-direction: column;
+        gap: 0px;
+        align-items: end;
+        padding: 10px;
+        padding-top: 0px;
+        height: auto;
+        margin: 5px;
+        max-height: 50vh;
+        background-color: var(--thead-background-color);
+        border: 1px solid var(--border-color);
+        overflow-y: auto;
+        right: 10px;
+        top: 50px;
     }
 
     .sort, .displayAs {

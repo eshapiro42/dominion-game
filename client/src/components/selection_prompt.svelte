@@ -73,6 +73,7 @@
         gap: 10px;
         padding: 20px;
         border: 1px solid var(--border-color);
+        background-color: color-mix(in srgb, var(--blue-color), var(--body-background-color) 70%);
     }
 
     .flex-item {

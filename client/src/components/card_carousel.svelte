@@ -81,6 +81,7 @@
     let selectedAll = false;
     let selectedCardIds = [];
     let displayAs;
+    let showCardDisplayOptions = false;
 
     $: sortedCards = sortCards(cards, sortByProperty);
 
@@ -137,13 +138,36 @@
         );
         selectedCardIds = [];
     }
+
+    function toggleCardDisplayOptions() {
+        showCardDisplayOptions = !showCardDisplayOptions;
+        if (showCardDisplayOptions) {
+            document.body.addEventListener('click', toggleCardDisplayOptions);
+        }
+        else{
+            document.body.removeEventListener('click', toggleCardDisplayOptions);
+        }
+    }
 </script>
 
 <section id="{title}">
     <main
         class="panel"
-        class:active    
+        class:active
     >
+        <i class="fa-solid fa-gear"
+            class:showCardDisplayOptions
+            on:click|stopPropagation={toggleCardDisplayOptions}
+        >
+        </i>
+        <CardDisplayOptions
+            name={title}
+            illegalSortByOptions={title == "Supply" ? ["orderSent"] : []}
+            inMenu=true
+            bind:show={showCardDisplayOptions}
+            bind:displayAs={displayAs}
+            bind:sortByProperty={sortByProperty}
+        />
         <div class="title">
             {#if (title == "Prizes")}
                 <div class="hoverable">
@@ -163,12 +187,6 @@
             {:else}
                 <h4>{title}</h4>
             {/if}
-            <CardDisplayOptions
-                name={title}
-                illegalSortByOptions={title == "Supply" ? ["orderSent"] : []}
-                bind:displayAs={displayAs}
-                bind:sortByProperty={sortByProperty}
-            />
         </div>
 
         {#if waitingForSelection.value}
@@ -314,5 +332,19 @@
 
     .hoverable:hover .hoverable-text {
         visibility: visible;
+    }
+
+    .fa-gear {
+        position: absolute;
+        right: 20px;
+        top: 20px;
+    }
+
+    .fa-gear:hover {
+        cursor: pointer;
+    }
+
+    .showCardDisplayOptions {
+        color: var(--blue-color);
     }
 </style>
