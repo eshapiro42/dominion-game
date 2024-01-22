@@ -90,6 +90,7 @@
         margin: 5px;
         max-height: 50vh;
         background-color: var(--thead-background-color);
+        color: var(--light-text-color);
         border: 1px solid var(--border-color);
         overflow-y: auto;
         right: 10px;

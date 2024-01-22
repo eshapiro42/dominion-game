@@ -90,8 +90,10 @@
         align-items: center;
         padding: 10px;
         padding-top: 25px;
+        margin-left: 10px;
         gap: 10px;
         background-color: var(--thead-background-color);
+        border: 1px solid var(--border-color);
     }
 
     .coinTokens {
@@ -100,5 +102,6 @@
         font-size: 60px;
         align-self: center;
         padding: 10px;
+        margin-right: 10px;
     }
 </style>
