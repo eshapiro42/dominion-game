@@ -218,4 +218,10 @@
         text-align: center;
         padding-bottom: 25px;
     }
+
+    label {
+        display: flex;
+        align-items: baseline;
+        gap: 5px;
+    }
 </style>
