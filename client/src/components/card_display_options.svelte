@@ -75,6 +75,7 @@
         display: flex;
         justify-content: center;
         gap: 100px;
+        padding: 10px;
     }
 
     .inMenu {
@@ -82,10 +83,9 @@
         z-index: 1000000000;
         display: flex;
         flex-direction: column;
-        gap: 0px;
+        gap: 5px;
         align-items: end;
         padding: 10px;
-        padding-top: 0px;
         height: auto;
         margin: 5px;
         max-height: 50vh;
@@ -94,16 +94,19 @@
         border: 1px solid var(--border-color);
         overflow-y: auto;
         right: 10px;
-        top: 50px;
+        top: 42px;
     }
 
     .sort, .displayAs {
-        margin-top: 25px;
         display: flex;
         justify-content: center;
         align-items: baseline;
         flex-wrap: nowrap;
         gap: 10px;
+    }
+
+    p {
+        margin: 0px;
     }
 
 </style>
