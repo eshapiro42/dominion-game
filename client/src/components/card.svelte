@@ -2,7 +2,7 @@
     import {createEventDispatcher} from "svelte";
     import {fade} from 'svelte/transition';
 
-    import {classicFont} from "../stores.js";
+    import {chosenFont} from "../stores.js";
     
     const dispatch = createEventDispatcher();
     
@@ -161,7 +161,7 @@
     class:bane
     class:unselectable
     class:selected
-    class:classic={$classicFont}
+    class:classic={$chosenFont == "classic"}
 >
     {#if quantity == null}
         <div class="name">{name}</div>
@@ -199,10 +199,6 @@
 </main>
 
 <style lang="scss">
-    $ratio: 1.618;
-    $width: 200px;
-    $height: $width * $ratio;
-
     $padding: 10px;
     $padding-basis: 15px;
     $header-padding: 0px 0px $padding-basis 0px;
@@ -228,9 +224,9 @@
         border: var(--card-border);
         display: flex;
         flex: 0 0 auto;
-        width: $width;
-        min-height: $height;
-        max-height: $height;
+        width: var(--card-width);
+        min-height: calc(var(--card-width) * 1.618);
+        max-height: calc(var(--card-width) * 1.618);
         font-size: $font-size;
         flex-direction: column;
         padding: $padding;
@@ -523,7 +519,7 @@
     .name {
         display: flex;
         justify-content: space-between;
-        width: $width;
+        width: var(--card-width);
         padding: $header-padding;
     }
 
@@ -569,10 +565,11 @@
         justify-content: space-between;
         align-items: flex-end;
         position: absolute;
-        width: $width;
+        width: var(--card-width);
         bottom: $margin;
         margin-top: $padding-basis;
         padding-right: $padding-basis + 4px;
+        gap: 5px;
     }
 
     .classic .footer {
@@ -581,6 +578,16 @@
 
     .cost {
         text-wrap: nowrap;
+    }
+
+    .type {
+        text-wrap: nowrap;
+        overflow-x: auto;
+        scrollbar-width: none;
+    }
+
+    .type::-webkit-scrollbar {
+        display: none;
     }
 
     .unselectable {

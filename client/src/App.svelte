@@ -1,7 +1,6 @@
 <script>
     import {
         socket,
-        dataTheme,
         currentPlayer,
         room,
         username,
@@ -95,23 +94,6 @@
         gameOver.cards = cards;
         gameOver.show = true;
     }
-
-    function getPreferredTheme() {
-        const query = window.matchMedia(
-            "(prefers-color-scheme: dark)"
-        );
-        if (query.matches) {
-            return "dark";
-        }
-        return "light";
-    }
-
-    function setTheme(theme) {
-        $dataTheme = theme;
-        document.documentElement.setAttribute("data-theme", theme);
-    }
-
-    setTheme(getPreferredTheme());
 
     $socket.on(
         "new turn",

@@ -14,6 +14,7 @@
     --dark-text-color: var(--grey-black);
     --light-text-color: var(--near-white);
 	--hrule: 1px solid color-mix(in srgb, var(--body-background-color), var(--border-color) 30%);
+	--card-width: 200px;
 }
 
 [data-theme="light"] {
