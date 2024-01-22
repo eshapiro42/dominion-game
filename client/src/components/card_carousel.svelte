@@ -9,12 +9,13 @@
     import {activeCarousel} from "../stores.js";
 
     import {sortCards} from "../common.js";
+    import CardDisplayOptions from "./card_display_options.svelte";
 
     export let title;
     export let waitingForSelection;
-    export let sortByProperty = "type";
     export let invalidCardNames = [];
     export let invalidCardIds = [];
+    export let sortByProperty;
 
     export let cards = [ 
         // This is the "source of truth" for all cards in the front-end
@@ -79,18 +80,7 @@
 
     let selectedAll = false;
     let selectedCardIds = [];
-
-    let displayAs = "row";
-
-    $: displayAsRow = displayAs == "row";
-    $: displayAsGrid = displayAs == "grid";
-
-    let sortByOptions = [
-        {text: "Type", property: "type"},
-        {text: "Cost", property: "cost"},
-        {text: "Name", property: "name"},
-        {text: "Order Sent", property: "orderSent"},
-    ]
+    let displayAs;
 
     $: sortedCards = sortCards(cards, sortByProperty);
 
@@ -173,25 +163,12 @@
             {:else}
                 <h4>{title}</h4>
             {/if}
-            <div class="dropdowns">
-                <div class="sort">
-                    <p>Sort By<p>
-                    <select bind:value={sortByProperty}>
-                        {#each sortByOptions as option}
-                            <option value={option.property}>
-                                {option.text}
-                            </option>
-                        {/each}
-                    </select>
-                </div>
-                <div class="displayAs">
-                    <p>Display As<p>
-                    <select bind:value={displayAs}>
-                        <option value="row">Row</option>
-                        <option value="grid">Grid</option>
-                    </select>
-                </div>
-            </div>
+            <CardDisplayOptions
+                name={title}
+                illegalSortByOptions={title == "Supply" ? ["orderSent"] : []}
+                bind:displayAs={displayAs}
+                bind:sortByProperty={sortByProperty}
+            />
         </div>
 
         {#if waitingForSelection.value}
@@ -210,8 +187,8 @@
 
         <div
             class="cards"
-            class:displayAsRow
-            class:displayAsGrid
+            class:displayAsRow={displayAs == "row"}
+            class:displayAsGrid={displayAs == "grid"}
         >
             {#each sortedCards as card (card.id)}
                 <Card
@@ -264,24 +241,6 @@
         animation: blinking 3s infinite linear;
     }
 
-    .sort {
-        margin-top: 25px;
-        display: flex;
-        justify-content: center;
-        align-items: baseline;
-        flex-wrap: nowrap;
-        gap: 10px;
-    }
-
-    .displayAs {
-        margin-top: 25px;
-        display: flex;
-        justify-content: center;
-        align-items: baseline;
-        flex-wrap: nowrap;
-        gap: 10px;
-    }
-
     .text {
         display: flex;
         width: 100%;
@@ -296,12 +255,6 @@
         height: 100%;
         text-align: center;
         margin-top: 25px;
-    }
-
-    .dropdowns {
-        display: flex;
-        justify-content: center;
-        gap: 100px;
     }
 
     .selectionPrompt {

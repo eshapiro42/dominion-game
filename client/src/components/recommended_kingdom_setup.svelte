@@ -1,5 +1,6 @@
 <script>
     import Card from "./card.svelte";
+    import CardDisplayOptions from "./card_display_options.svelte";
 
     import {sortCards} from "../common.js";
 
@@ -7,14 +8,7 @@
     export let recommendedSet = null;
 
     let sortByProperty = "cost";
-    let displayAs = "row";
-
-    let sortByOptions = [
-        {text: "Type", property: "type"},
-        {text: "Cost", property: "cost"},
-        {text: "Name", property: "name"},
-        // {text: "Order Sent", property: "orderSent"},
-    ]
+    let displayAs;
 
     let waitingForSelection = {
         value: false,
@@ -27,9 +21,6 @@
         ordered: false,
     }
 
-    $: displayAsRow = displayAs == "row";
-    $: displayAsGrid = displayAs == "grid";
-
     $: recommendedSetsSorted = recommendedSets.map(
         setData => (
             {
@@ -41,7 +32,6 @@
         )
     );
 </script>
-
 
 <main>
     <div class="selectedKingdom">
@@ -71,25 +61,12 @@
             Random Recommended Kingdom
         </button>
     </div>
-    <div class="dropdowns">
-        <div class="sort">
-            <p>Sort By<p>
-            <select bind:value={sortByProperty}>
-                {#each sortByOptions as option}
-                    <option value={option.property}>
-                        {option.text}
-                    </option>
-                {/each}
-            </select>
-        </div>
-        <div class="displayAs">
-            <p>Display As<p>
-            <select bind:value={displayAs}>
-                <option value="row">Row</option>
-                <option value="grid">Grid</option>
-            </select>
-        </div>
-    </div>
+    <CardDisplayOptions
+        name="Recommended Kingdom Setup"
+        illegalSortByOptions={["orderSent"]}
+        bind:displayAs={displayAs}
+        bind:sortByProperty={sortByProperty}
+    />
 
     {#each recommendedSetsSorted as set, index}
         <div 
@@ -107,8 +84,8 @@
             </div>
             <div
                 class="cards"
-                class:displayAsRow
-                class:displayAsGrid
+                class:displayAsRow={displayAs == "row"}
+                class:displayAsGrid={displayAs == "grid"}
             >
                 {#each set.cards as card}
                     <Card
@@ -126,8 +103,8 @@
             {#if set.additional_cards.length > 0}
                 <div
                     class="cards"
-                    class:displayAsRow
-                    class:displayAsGrid
+                    class:displayAsRow={displayAs == "row"}
+                    class:displayAsGrid={displayAs == "grid"}
                 >
                     {#each set.additional_cards as card}
                     <Card
@@ -171,25 +148,6 @@
         }
     }
 
-    .sort {
-        margin-top: 25px;
-        margin-bottom: 25px;
-        display: flex;
-        justify-content: center;
-        align-items: baseline;
-        flex-wrap: nowrap;
-        gap: 10px;
-    }
-
-    .displayAs {
-        margin-top: 25px;
-        display: flex;
-        justify-content: center;
-        align-items: baseline;
-        flex-wrap: nowrap;
-        gap: 10px;
-    }
-
     .text {
         display: flex;
         width: 100%;
@@ -204,13 +162,6 @@
         height: 100%;
         text-align: center;
         padding-top: 35px;
-    }
-
-    .dropdowns {
-        display: flex;
-        justify-content: center;
-        gap: 100px;
-        border-bottom: var(--hrule);
     }
 
     .cards {

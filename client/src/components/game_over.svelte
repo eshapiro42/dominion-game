@@ -1,5 +1,6 @@
 <script>
     import Card from "./card.svelte";
+    import CardDisplayOptions from "./card_display_options.svelte";
 
     import {sortCards} from "../common.js";
 
@@ -12,16 +13,9 @@
 
     export let show;
 
-    let sortByProperty = "type";
-    let displayAs = "row";
+    let sortByProperty;
+    let displayAs;
     let active = false;
-
-    let sortByOptions = [
-        {text: "Type", property: "type"},
-        {text: "Cost", property: "cost"},
-        {text: "Name", property: "name"},
-        // {text: "Order Sent", property: "orderSent"},
-    ]
 
     let waitingForSelection = {
         value: false,
@@ -33,9 +27,6 @@
         prompt: "",
         ordered: false,
     }
-
-    $: displayAsRow = displayAs == "row";
-    $: displayAsGrid = displayAs == "grid";
 
     $: if (show) {
         active = true;
@@ -108,25 +99,11 @@
                     </tbody>
                 </table>
             </div>
-            <div class="dropdowns">
-                <div class="sort">
-                    <p>Sort By<p>
-                    <select bind:value={sortByProperty}>
-                        {#each sortByOptions as option}
-                            <option value={option.property}>
-                                {option.text}
-                            </option>
-                        {/each}
-                    </select>
-                </div>
-                <div class="displayAs">
-                    <p>Display As<p>
-                    <select bind:value={displayAs}>
-                        <option value="row">Row</option>
-                        <option value="grid">Grid</option>
-                    </select>
-                </div>
-            </div>
+            <CardDisplayOptions
+                name="Game Over"
+                bind:displayAs={displayAs}
+                bind:sortByProperty={sortByProperty}
+            />
         
             {#each endGameData.playerData as playerData}
                 <div class="title">
@@ -134,8 +111,8 @@
                 </div>
                 <div
                     class="cards"
-                    class:displayAsRow
-                    class:displayAsGrid
+                    class:displayAsRow={displayAs == "row"}
+                    class:displayAsGrid={displayAs == "grid"}
                 >
                     {#each sortCards(playerData.cards, sortByProperty, true) as card}
                         <Card
@@ -186,24 +163,6 @@
         animation: blinking 3s infinite ease-in-out;
     }
 
-    .sort {
-        margin-top: 25px;
-        display: flex;
-        justify-content: center;
-        align-items: baseline;
-        flex-wrap: nowrap;
-        gap: 10px;
-    }
-
-    .displayAs {
-        margin-top: 25px;
-        display: flex;
-        justify-content: center;
-        align-items: baseline;
-        flex-wrap: nowrap;
-        gap: 10px;
-    }
-
     .text {
         display: flex;
         width: 100%;
@@ -224,14 +183,6 @@
         gap: 30px;
     }
 
-    .dropdowns {
-        display: flex;
-        justify-content: center;
-        gap: 100px;
-        margin-top: 20px;
-        margin-bottom: 20px;
-    }
-    
     .cards {
         flex-basis: 100%;
         display: flex;

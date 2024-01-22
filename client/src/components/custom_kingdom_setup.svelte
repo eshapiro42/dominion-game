@@ -1,5 +1,6 @@
 <script>
     import Card from "./card.svelte";
+    import CardDisplayOptions from "./card_display_options.svelte";
 
     import {sortCards} from "../common.js";
 
@@ -11,7 +12,7 @@
     let usePlatinumAndColony = null;
     let invalidCardIds = [];
     let sortByProperty = "cost";
-    let displayAs = "row";
+    let displayAs;
     let selectedAll = false;
     let selectedCardIds = [];
     let selectedCardNames = [];
@@ -27,16 +28,8 @@
         prompt: "",
         ordered: true,
     }
-    let sortByOptions = [
-        {text: "Type", property: "type"},
-        {text: "Cost", property: "cost"},
-        {text: "Name", property: "name"},
-        // {text: "Order Sent", property: "orderSent"},
-    ]
 
     $: numSelected = selectedCardIds.length;
-    $: displayAsRow = displayAs == "row";
-    $: displayAsGrid = displayAs == "grid";
 
     $: availableBaneCards = allKingdomCards
         .flatMap(expansion => expansion.cards)
@@ -96,25 +89,12 @@
 </script>
 
 <main>
-    <div class="dropdowns">
-        <div class="sort">
-            <p>Sort By<p>
-            <select bind:value={sortByProperty}>
-                {#each sortByOptions as option}
-                    <option value={option.property}>
-                        {option.text}
-                    </option>
-                {/each}
-            </select>
-        </div>
-        <div class="displayAs">
-            <p>Display As<p>
-            <select bind:value={displayAs}>
-                <option value="row">Row</option>
-                <option value="grid">Grid</option>
-            </select>
-        </div>
-    </div>
+    <CardDisplayOptions
+        name="Custom Kingdom Setup"
+        illegalSortByOptions={["orderSent"]}
+        bind:displayAs={displayAs}
+        bind:sortByProperty={sortByProperty}
+    />
 
     {#each allKingdomCardsSorted as expansionData}
         <hr>
@@ -140,8 +120,8 @@
             {/if}
             <div
                 class="cards"
-                class:displayAsRow
-                class:displayAsGrid
+                class:displayAsRow={displayAs == "row"}
+                class:displayAsGrid={displayAs == "grid"}
             >
                 {#each expansionData.cards as card (card.id)}
                     <Card
@@ -191,24 +171,6 @@
         }
     }
 
-    .sort {
-        margin-top: 25px;
-        display: flex;
-        justify-content: center;
-        align-items: baseline;
-        flex-wrap: nowrap;
-        gap: 10px;
-    }
-
-    .displayAs {
-        margin-top: 25px;
-        display: flex;
-        justify-content: center;
-        align-items: baseline;
-        flex-wrap: nowrap;
-        gap: 10px;
-    }
-
     .text {
         display: flex;
         width: 100%;
@@ -223,14 +185,6 @@
         height: 100%;
         text-align: center;
         margin-top: 25px;
-    }
-
-    .dropdowns {
-        margin-top: 25px;
-        margin-bottom: 25px;
-        display: flex;
-        justify-content: center;
-        gap: 100px;
     }
 
     .cards {
