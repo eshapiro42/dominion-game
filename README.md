@@ -74,7 +74,7 @@ The backend must always be run from within this virtual environment.
 
 Assuming the frontend is compiled and the backend server is running, you should be able to play the game in your browser. If you're running the debug server, the default port is `5000` so it can be accessed at `localhost:5000`. If you're running the production server, the default port is `8000` so it can be accessed at `localhost:8000`.
 
-![image](https://user-images.githubusercontent.com/11021129/163091317-71e3153a-dde3-467e-bd6a-27e60bc2a61c.png)
+<img width="1587" alt="image" src="https://github.com/eshapiro42/dominion-game/assets/11021129/4047d7fa-7906-4d0d-a0a5-57c1ca3004cc">
 
 ## Documentation
 
