@@ -38,12 +38,29 @@
     }
 
     function setTheme(theme) {
+        // Disable all transitions
+        const css = document.createElement('style');
+        css.appendChild(
+            document.createTextNode(
+                `* {
+                    -webkit-transition: none !important;
+                    -moz-transition: none !important;
+                    -o-transition: none !important;
+                    -ms-transition: none !important;
+                    transition: none !important;
+                }`
+            )
+        )
+        document.head.appendChild(css);
         // Set the theme variable
         chosenTheme = theme;
         // Update the page
         document.documentElement.setAttribute("data-theme", theme);
         // Cache the selected theme in the browser
         localStorage.setItem("theme", theme);
+        // Redraw and enable transitions
+        const _ = window.getComputedStyle(css).opacity;
+        document.head.removeChild(css);
     }
 
     // On load, set to the preferred theme (if any)
