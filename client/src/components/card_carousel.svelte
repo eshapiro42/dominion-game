@@ -305,35 +305,6 @@
         row-gap: 5px;
     }
 
-    .hoverable {
-        position: relative;
-        display: inline-block;
-        border-bottom: 1px dotted #343338;
-    }
-
-    .hoverable .hoverable-text {
-        visibility: hidden;
-        position: absolute;
-        left: 50px;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        gap: 10px;
-        z-index: 1;
-        font-size: 85%;
-        width: 300px;
-        background-color: #343338;
-        color: #dadada;
-        text-align: left;
-        overflow-wrap: break-word;
-        border-radius: 10px;
-        padding: 10px;
-    }
-
-    .hoverable:hover .hoverable-text {
-        visibility: visible;
-    }
-
     .fa-gear {
         position: absolute;
         right: 20px;

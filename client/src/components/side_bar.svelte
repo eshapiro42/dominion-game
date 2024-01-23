@@ -73,6 +73,7 @@
 
 <style>
     main {
+        z-index: 9999;
         left: 0;
         top: 0;
         width: 64px;

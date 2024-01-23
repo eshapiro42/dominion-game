@@ -131,7 +131,7 @@
         max-width: 40vw;
         position: fixed;
         text-align: right;
-        z-index: 1000000000;
+        z-index: 99999;
     }
 
     .currentToasts {

@@ -172,7 +172,7 @@
 
 <style>
     main {
-        z-index: 1000000000;
+        z-index: 99999;
     }
 
     .settings {

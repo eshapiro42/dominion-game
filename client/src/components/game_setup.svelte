@@ -470,7 +470,6 @@
     }
 
     .isStuck {
-        z-index: 10;
         background-color: var(--thead-background-color);
         color: var(--light-text-color);
         transition: all 0.3s linear;

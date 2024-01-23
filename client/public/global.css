@@ -218,7 +218,7 @@ tbody tr:not(:last-of-type) {
 	position: -webkit-sticky;
 	position: sticky;
 	top: 0;
-	z-index: 1;
+	z-index: 9999;
 }
 
 table, .panel {
@@ -258,7 +258,7 @@ h2 {
 	flex-direction: column;
 	justify-content: center;
 	gap: 10px;
-	z-index: 1;
+	z-index: 9;
 	font-size: 85%;
 	width: 300px;
 	background-color: var(--thead-background-color);

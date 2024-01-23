@@ -98,7 +98,6 @@
 
 <style>
     main {
-        z-index: 10;
         background-color: var(--thead-background-color);
         color: var(--light-text-color);
         border: 1px solid var(--border-color);

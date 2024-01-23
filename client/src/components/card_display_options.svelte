@@ -80,7 +80,7 @@
 
     .inMenu {
         position: absolute;
-        z-index: 1000000000;
+        z-index: 999;
         display: flex;
         flex-direction: column;
         gap: 5px;

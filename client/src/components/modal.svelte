@@ -24,7 +24,7 @@
         position: fixed;
         background-color: rgba(0, 0, 0, 0.7);
         text-align: center;
-        z-index: 10;
+        z-index: 999999;
     }
 
     .contents {
