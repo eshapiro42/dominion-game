@@ -9,6 +9,7 @@
 
     let sortByProperty = "cost";
     let displayAs;
+    let showCardDisplayOptions = false;
 
     let waitingForSelection = {
         value: false,
@@ -31,9 +32,24 @@
             }
         )
     );
+
+    function toggleCardDisplayOptions() {
+        showCardDisplayOptions = !showCardDisplayOptions;
+        if (showCardDisplayOptions) {
+            document.body.addEventListener('click', toggleCardDisplayOptions);
+        }
+        else{
+            document.body.removeEventListener('click', toggleCardDisplayOptions);
+        }
+    }
 </script>
 
 <main>
+    <i class="fa-solid fa-gear"
+        class:showCardDisplayOptions
+        on:click|stopPropagation={toggleCardDisplayOptions}
+    >
+    </i>
     <div class="selectedKingdom">
         <h5 class=selectionText>
             {#if recommendedSet != null}
@@ -64,6 +80,8 @@
     <CardDisplayOptions
         name="Recommended Kingdom Setup"
         illegalSortByOptions={["orderSent"]}
+        inMenu=true
+        bind:show={showCardDisplayOptions}
         bind:displayAs={displayAs}
         bind:sortByProperty={sortByProperty}
     />
@@ -189,7 +207,6 @@
         left: 0px;
         scroll-margin-top: 30px;
         border-bottom: var(--hrule);
-        padding-bottom: 35px;
     }
 
     .panel:hover:not(.selected) {
@@ -220,6 +237,23 @@
         display: flex;
         flex-direction: row;
         gap: 50px;
-        padding-top: 40px;;
+        padding-top: 70px;
+        padding-bottom: 60px;
+        border-bottom: var(--hrule);
+    }
+
+    .fa-gear {
+        position: absolute;
+        right: 20px;
+        top: 20px;
+        z-index: 999;
+    }
+
+    .fa-gear:hover {
+        cursor: pointer;
+    }
+
+    .showCardDisplayOptions {
+        color: var(--blue-color);
     }
 </style>

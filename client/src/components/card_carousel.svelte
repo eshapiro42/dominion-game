@@ -4,12 +4,12 @@
     const dispatch = createEventDispatcher();
 
     import Card from "./card.svelte";
+    import CardDisplayOptions from "./card_display_options.svelte";
     import SelectionPrompt from "./selection_prompt.svelte";
 
     import {activeCarousel} from "../stores.js";
 
     import {sortCards} from "../common.js";
-    import CardDisplayOptions from "./card_display_options.svelte";
 
     export let title;
     export let waitingForSelection;
@@ -309,6 +309,7 @@
         position: absolute;
         right: 20px;
         top: 20px;
+        z-index: 999;
     }
 
     .fa-gear:hover {
