@@ -28,7 +28,6 @@
         prompt: "",
         ordered: true,
     }
-    let showCardDisplayOptions = false;
 
     $: numSelected = selectedCardIds.length;
 
@@ -87,29 +86,12 @@
             }
         }
     }
-
-    function toggleCardDisplayOptions() {
-        showCardDisplayOptions = !showCardDisplayOptions;
-        if (showCardDisplayOptions) {
-            document.body.addEventListener('click', toggleCardDisplayOptions);
-        }
-        else{
-            document.body.removeEventListener('click', toggleCardDisplayOptions);
-        }
-    }
 </script>
 
 <main>
-    <i class="fa-solid fa-gear"
-        class:showCardDisplayOptions
-        on:click|stopPropagation={toggleCardDisplayOptions}
-    >
-    </i>
     <CardDisplayOptions
         name="Custom Kingdom Setup"
         illegalSortByOptions={["orderSent"]}
-        inMenu=true
-        bind:show={showCardDisplayOptions}
         bind:displayAs={displayAs}
         bind:sortByProperty={sortByProperty}
     />
@@ -229,20 +211,5 @@
         left: 0px;
         padding-top: 30px;
         border-bottom: var(--hrule);
-    }
-
-    .fa-gear {
-        z-index: 999;
-        position: absolute;
-        right: 20px;
-        top: 20px;
-    }
-
-    .fa-gear:hover {
-        cursor: pointer;
-    }
-
-    .showCardDisplayOptions {
-        color: var(--blue-color);
     }
 </style>

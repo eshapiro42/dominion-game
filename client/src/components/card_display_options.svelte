@@ -3,8 +3,7 @@
     export let displayAs = "row";
     export let sortByProperty = "type";
     export let illegalSortByOptions = [];
-    export let inMenu = false;
-    export let show = true;
+    export let show = false;
 
     let sortByOptions = [
         {text: "Type", property: "type"},
@@ -18,6 +17,16 @@
             sortByOptions = sortByOptions.filter((option) => option.property !== illegalOption);
         }
     );
+
+    function toggleCardDisplayOptions() {
+        show = !show;
+        if (show) {
+            document.body.addEventListener('click', toggleCardDisplayOptions);
+        }
+        else{
+            document.body.removeEventListener('click', toggleCardDisplayOptions);
+        }
+    }
 
     function getPreferredDisplayOptions() {
         let cachedDisplayOptions = JSON.parse(localStorage.getItem("displayOptions"));
@@ -42,13 +51,16 @@
     }
 </script>
 
+<i class="fa-solid fa-gear"
+    class:show
+    on:click|stopPropagation={toggleCardDisplayOptions}
+>
+</i>
 {#if show}
     <main
         on:click|stopPropagation={()=>{}}
     >
-        <div class="dropdowns"
-            class:inMenu
-        >
+        <div class="dropdowns">
             <div class="sort">
                 <p>Sort By<p>
                 <select bind:value={sortByProperty}>
@@ -72,13 +84,6 @@
 
 <style>
     .dropdowns {
-        display: flex;
-        justify-content: center;
-        gap: 100px;
-        padding: 10px;
-    }
-
-    .inMenu {
         position: absolute;
         z-index: 999;
         display: flex;
@@ -107,6 +112,21 @@
 
     p {
         margin: 0px;
+    }
+
+    .fa-gear {
+        position: absolute;
+        right: 20px;
+        top: 20px;
+        z-index: 999;
+    }
+
+    .fa-gear:hover {
+        cursor: pointer;
+    }
+
+    .show {
+        color: var(--blue-color);
     }
 
 </style>

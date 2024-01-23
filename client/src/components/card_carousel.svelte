@@ -81,7 +81,6 @@
     let selectedAll = false;
     let selectedCardIds = [];
     let displayAs;
-    let showCardDisplayOptions = false;
 
     $: sortedCards = sortCards(cards, sortByProperty);
 
@@ -138,16 +137,6 @@
         );
         selectedCardIds = [];
     }
-
-    function toggleCardDisplayOptions() {
-        showCardDisplayOptions = !showCardDisplayOptions;
-        if (showCardDisplayOptions) {
-            document.body.addEventListener('click', toggleCardDisplayOptions);
-        }
-        else{
-            document.body.removeEventListener('click', toggleCardDisplayOptions);
-        }
-    }
 </script>
 
 <section id="{title}">
@@ -155,16 +144,9 @@
         class="panel"
         class:active
     >
-        <i class="fa-solid fa-gear"
-            class:showCardDisplayOptions
-            on:click|stopPropagation={toggleCardDisplayOptions}
-        >
-        </i>
         <CardDisplayOptions
             name={title}
             illegalSortByOptions={title == "Supply" ? ["orderSent"] : []}
-            inMenu=true
-            bind:show={showCardDisplayOptions}
             bind:displayAs={displayAs}
             bind:sortByProperty={sortByProperty}
         />
@@ -303,20 +285,5 @@
     .displayAsGrid {
         flex-wrap: wrap;
         row-gap: 5px;
-    }
-
-    .fa-gear {
-        position: absolute;
-        right: 20px;
-        top: 20px;
-        z-index: 999;
-    }
-
-    .fa-gear:hover {
-        cursor: pointer;
-    }
-
-    .showCardDisplayOptions {
-        color: var(--blue-color);
     }
 </style>
