@@ -671,6 +671,7 @@ class Game:
             self.current_turn.start()
             # Check if the game ended after each turn
             ended, explanation = self.ended
+            ended = True
             if ended:
                 self.end(explanation)
                 break

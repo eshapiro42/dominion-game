@@ -16,6 +16,7 @@
     let sortByProperty;
     let displayAs;
     let active = false;
+    let showCardDisplayOptions = false;
 
     let waitingForSelection = {
         value: false,
@@ -39,6 +40,16 @@
             300,
         );
     }
+
+    function toggleCardDisplayOptions() {
+        showCardDisplayOptions = !showCardDisplayOptions;
+        if (showCardDisplayOptions) {
+            document.body.addEventListener('click', toggleCardDisplayOptions);
+        }
+        else{
+            document.body.removeEventListener('click', toggleCardDisplayOptions);
+        }
+    }
 </script>
 
 {#if show}
@@ -47,6 +58,11 @@
             class="panel"
             class:active    
         >
+        <i class="fa-solid fa-gear"
+            class:showCardDisplayOptions
+            on:click|stopPropagation={toggleCardDisplayOptions}
+        >
+        </i>
             <div class="title">
                 <h4>Game Over</h4>
                 <button
@@ -101,6 +117,8 @@
             </div>
             <CardDisplayOptions
                 name="Game Over"
+                inMenu=true
+                bind:show={showCardDisplayOptions}        
                 bind:displayAs={displayAs}
                 bind:sortByProperty={sortByProperty}
             />
@@ -210,5 +228,20 @@
         border-left: none;
         border-right: none;
         color: var(--text-color);
+    }
+
+    .fa-gear {
+        position: absolute;
+        right: 20px;
+        top: 20px;
+        z-index: 999;
+    }
+
+    .fa-gear:hover {
+        cursor: pointer;
+    }
+
+    .showCardDisplayOptions {
+        color: var(--blue-color);
     }
 </style>
