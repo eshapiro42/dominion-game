@@ -198,6 +198,14 @@
             1000,
         );
     }
+
+    window.addEventListener(
+        "beforeunload", 
+        (event) => { 
+            event.preventDefault(); 
+            event.returnValue = true; 
+        }
+    ); 
 </script>
 
 <main>
