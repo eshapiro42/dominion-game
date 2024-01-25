@@ -447,7 +447,7 @@ class HornOfPlenty(TreasureCard):
         num_differently_named_cards = len(set([card.name for card in self.owner.played_cards]))
         # Gain a card costing up to that amount
         self.game.broadcast(f"{self.owner} may gain a card costing up to {num_differently_named_cards} $ from their Horn of Plenty.")
-        prompt = f"Choose a card costing up to {num_differently_named_cards} to gain from your Horn of Plenty."
+        prompt = f"Choose a card costing up to {num_differently_named_cards} $ to gain from your Horn of Plenty."
         card_class_to_gain = self.owner.interactions.choose_card_class_from_supply(prompt, max_cost=num_differently_named_cards, force=True)
         if card_class_to_gain is not None:
             self.owner.gain(card_class_to_gain)
