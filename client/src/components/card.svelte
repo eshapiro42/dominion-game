@@ -588,6 +588,7 @@
         list-style-type: none;
         padding: 0;
         margin-left: 0;
+        margin-bottom: 0;
         font-family: serif;
     }
 
