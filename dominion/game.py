@@ -4,12 +4,12 @@ import itertools
 import random
 
 from collections import defaultdict, Counter
-from typing import TYPE_CHECKING, Callable, Optional, Dict, List, Tuple, Type
+from typing import TYPE_CHECKING, Any, Callable, Optional, Dict, List, Tuple, Type
 
 from .cards.cards import Card, CardType, CardJSON
 from .expansions import BaseExpansion, DominionExpansion, ProsperityExpansion, IntrigueExpansion, CornucopiaExpansion, HinterlandsExpansion, GuildsExpansion
 from .grammar import s
-from .interactions import AutoInteraction
+from .interactions import AutoInteraction, BrowserInteraction
 from .player import Player
 from .supply import Supply
 from .turn import Turn
@@ -45,21 +45,20 @@ class Game:
         room: The room ID for this game.
     '''
     def __init__(self, socketio: Optional[SocketIO] = None, room: Optional[str] = None, test: bool = False):
-        self._socketio = socketio
-        self._test = test # If not running tests, slows down CPU interactions to simulate thought
-        self._room = room
-        self._player_names = []
-        self._player_sids = []
-        self._player_interactions_classes = []
-        self._players = []
-        self._startable = False
-        self._started = False
-        self._kill_scheduled = False
-        self._killed = False
-        self._current_turn = None
+        self._socketio: SocketIO = socketio
+        self._test: bool = test # If not running tests, slows down CPU interactions to simulate thought
+        self._room: str = room
+        self._future_human_players: List[Dict[str, Any]] = []
+        self._future_cpus: int = 0
+        self._players: List[Player] = []
+        self._startable: bool = False
+        self._started: bool = False
+        self._kill_scheduled: bool = False
+        self._killed: bool = False
+        self._current_turn: Turn | None = None
         self._treasure_hooks = defaultdict(list)
         self._pre_buy_hooks = defaultdict(list)
-        self._pre_turn_hooks = []
+        self._pre_turn_hooks: List[PreTurnHook] = []
         self._post_discard_hooks = defaultdict(list)
         self._post_buy_hooks = defaultdict(list)
         self._game_end_conditions = []
@@ -105,39 +104,30 @@ class Game:
         The room ID for this game.
         '''
         return self._room
-
+    
     @property
-    def player_names(self) -> List[str]:
+    def future_players(self) -> List[Dict[str, Any]]:
         '''
-        A list of the names of players in the game.
+        A combined list of human and CPU players that are
+        planned for inclusion in the game.
         '''
-        return self._player_names
-
-    @player_names.setter
-    def player_names(self, player_names: List[str]):
-        self._player_names = player_names
-
+        cpu_players = [
+            {
+                "name": f"CPU {str(num + 1)}",
+                "sid": None,
+                "interactions_class": AutoInteraction,
+            }
+            for num in range(0, self._future_cpus)
+        ]
+        return self._future_human_players + cpu_players
+    
     @property
-    def player_sids(self) -> List[str]:
+    def future_player_names(self) -> List[str]:
         '''
-        A list of SIDs corresponding to each player in the game (these lists share an index).
+        A list of names of all human and CPU players that
+        are planned for inclusion in the game.
         '''
-        return self._player_sids
-
-    @player_sids.setter
-    def player_sids(self, player_sids: List[str]):
-        self._player_sids = player_sids
-
-    @property
-    def player_interactions_classes(self) -> List[Type[Interaction]]:
-        '''
-        A list of interaction classes corresponding to each player in the game (these lists share an index).
-        '''
-        return self._player_interactions_classes
-
-    @player_interactions_classes.setter
-    def player_interactions_classes(self, player_interactions_classes: List[Type[Interaction]]):
-        self._player_interactions_classes = player_interactions_classes
+        return [player["name"] for player in self.future_players]
 
     @property
     def players(self) -> List[Player]:
@@ -494,7 +484,7 @@ class Game:
             pass
         self.expansions.add(expansion)
 
-    def add_player(self, name: Optional[str] = None, sid: Optional[str] = None, interactions_class: Type[Interaction] = AutoInteraction):
+    def add_player(self, name: str, sid: str):
         '''
         Add a new player into the game.
         
@@ -503,25 +493,42 @@ class Game:
         Will set :obj:`Game.startable` to :obj:`True` when the second player is added.
 
         Args:
-            name: The player's name. If :obj:`None`, the player will be called a "Player N", where N is their player number.
+            name: The player's name.
             sid: The player's Socket.IO SID. Required for networked play.
-            interactions_class: The player's interaction class. Defaults to :class:`~.auto.AutoInteraction`.
         '''
         # Players can only be added before the game starts
         if self.started:
             raise GameStartedError()
-        if name is None:
-            name = f'Player {self.num_players + 1}'
-        self.player_names.append(name)
-        self.player_sids.append(sid)
-        self.player_interactions_classes.append(interactions_class)
+        self._future_human_players.append(
+            {
+                "name": name,
+                "sid": sid,
+                "interactions_class": BrowserInteraction,
+            }
+        )
         # If there are two players, the game is startable
-        if len(self.player_names) == 2:
+        if self.num_players >= 2:
+            self.startable = True
+
+    def add_cpu(self):
+        '''
+        Add a new CPU player into the game.
+        
+        Will fail if the game has already started.
+
+        Will set :obj:`Game.startable` to :obj:`True` when the second player is added.
+        '''
+        # Players can only be added before the game starts
+        if self.started:
+            raise GameStartedError()
+        self._future_cpus += 1
+        # If there are two players, the game is startable
+        if self.num_players >= 2:
             self.startable = True
 
     def remove_player(self, name: str) -> bool:
         '''
-        Remove a player from the game. Returns whether the player was a CPU.
+        Remove a player from the game.
         
         Will fail if the game has already started.
 
@@ -534,16 +541,16 @@ class Game:
         if self.started:
             raise GameStartedError()
         try:
-            index = self.player_names.index(name)
-            self.player_names.pop(index)
-            self.player_sids.pop(index)
-            interactions_class = self.player_interactions_classes.pop(index)
+            if "CPU" in name:
+                self._future_cpus -= 1
+            else:
+                player_to_remove = [player for player in self._future_human_players if player["name"] == name][0]
+                self._future_human_players.remove(player_to_remove)
         except Exception as exception:
             print(exception)
         # If there are fewer than two players, the game is not startable
-        if len(self.player_names) < 2:
+        if self.num_players < 2:
             self.startable = False
-        return interactions_class == AutoInteraction
 
     def start(self, debug: bool = False):
         '''
@@ -556,16 +563,12 @@ class Game:
             debug: If :obj:`True`, does not run the game loop. Defaults to :obj:`False`. 
         '''
         # NOTE: THE ORDER OF EVENTS HERE IS EXTREMELY IMPORTANT!
-        self.started = True
-
-        # TODO: Remove this: it is for testing recommended sets
-        # self.recommended_set = TheJestersWorkshop
-        
+        self.started = True        
         # Create the supply
-        self.supply = Supply(num_players=self.num_players)
+        self.supply = Supply(num_players=len(self.future_players)) # Can't use self.num_players because the Player objects don't exist yet
         # Create each player object
-        for player_name, player_sid, player_interactions_class in zip(self.player_names, self.player_sids, self.player_interactions_classes):
-            player = Player(game=self, name=player_name, interactions_class=player_interactions_class, socketio=self.socketio, sid=player_sid)
+        for future_player in self.future_players:
+            player = Player(game=self, name=future_player["name"], interactions_class=future_player["interactions_class"], socketio=self.socketio, sid=future_player["sid"])
             self.players.append(player)
             player.interactions.start()
         # Add in the selected recommended set, if any
@@ -577,7 +580,7 @@ class Game:
                 self.game_end_conditions += expansion_instance.game_end_conditions
         # Add in the custom set, if any
         elif self.custom_set is not None:
-            game_creator_name = self.player_names[0]
+            game_creator_name = self.players[0].name
             self.broadcast(f"Using {game_creator_name}'s Custom Kingdom.")
             self.supply.customization.custom_set = self.custom_set(self)
             for expansion_instance in self.supply.customization.custom_set.expansion_instances:
@@ -735,13 +738,6 @@ class Game:
         '''
         The number of players in the game.
         '''
-        return len(self.player_names)
-
-
-if __name__ == '__main__':
-    game = Game()
-    game.add_player()
-    game.add_player()
-    game.add_player()
-    game.add_player()
-    game.start(debug=True)
+        if not self.started:
+            return len(self.future_players)
+        return len(self.players)

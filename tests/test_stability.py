@@ -74,6 +74,6 @@ def test_stability():
     # Add a random number (2-4) players into the game
     num_players = random.randint(2, 4)
     for _ in range(num_players):
-        game.add_player()
+        game.add_cpu()
     game.start()
     del(game)

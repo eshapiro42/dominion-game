@@ -57,8 +57,6 @@ all_kingdom_cards_json = [{"expansion": expansion.name, "cards": [card_class().j
 def join_room(data):
     username = data['username']
     room = data['room']
-    if data['client_type'] == 'browser':
-        interaction_class = BrowserInteraction
     # If the user is already in the room, reject them
     if username in connected_players[room]:
         socketio.send(f'A player with that username has already joined the game.')
@@ -73,8 +71,8 @@ def join_room(data):
         game = games[room]
         game.kill_scheduled = False # Cancel erasure of the game if necessary
         game_startable_before = game.startable
-        game.add_player(username, sid, interactions_class=interaction_class)
-        socketio.emit("players in room", game.player_names)
+        game.add_player(username, sid)
+        socketio.emit("players in room", game.future_player_names)
         socketio.send(f'{username} has entered room {room}.\n', room=room)
         # If the game just became startable, push an event
         game_startable_after = game.startable
@@ -107,8 +105,6 @@ def create_room(data):
         socketio.send("The server is not allowing new games to be created at this time.", to=request.sid)
         return None
     username = data['username']
-    if data['client_type'] == 'browser':
-        interaction_class = BrowserInteraction
     characters = string.ascii_uppercase + string.digits
     # Create a unique room ID
     room = ''.join(random.choice(characters) for i in range(4))
@@ -126,8 +122,8 @@ def create_room(data):
     # Create the game's heartbeat
     game.heartbeat = HeartBeat(game)
     # Add the player to the game
-    game.add_player(username, sid, interactions_class=interaction_class)
-    socketio.emit("players in room", game.player_names)
+    game.add_player(username, sid)
+    socketio.emit("players in room", game.future_player_names)
     socketio.send(f'{username} has created room {room}\n', room=room)
     return room # This activates the client's set_room() callback
 
@@ -143,8 +139,8 @@ def add_cpu(data):
     game = games[room]
     game_startable_before = game.startable
     cpu_name = f'CPU {cpu_num}'
-    game.add_player(cpu_name, sid=None, interactions_class=AutoInteraction)
-    socketio.emit("players in room", game.player_names)
+    game.add_cpu()
+    socketio.emit("players in room", game.future_player_names)
     socketio.send(f'{cpu_name} has entered room {room}.\n', room=room)
     # If the game just became startable, push an event
     game_startable_after = game.startable
@@ -158,10 +154,10 @@ def remove_player(data):
     # Remove the player from the game
     game = games[room]
     game_startable_before = game.startable
-    is_cpu = game.remove_player(player_name)
+    game.remove_player(player_name)
     # Let everyone know the player's shame
     socketio.emit("player removed", {"player_name": player_name}, room=room)
-    socketio.emit("players in room", game.player_names)
+    socketio.emit("players in room", game.future_player_names)
     socketio.send(f'{player_name} has been removed from room {room}.\n', room=room)
     # If the game just became startable, push an event
     game_startable_after = game.startable
