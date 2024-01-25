@@ -521,8 +521,19 @@
         color: var(--victory-card-color);
     }
 
+    @keyframes shake {
+        0% { transform: rotate(0deg); }
+        2% { transform: rotate(1deg); }
+        4% { transform: rotate(0deg); }
+        6% { transform: rotate(-2deg); }
+        8% { transform: rotate(0deg); }
+        10% { transform: rotate(1deg); }
+        12% { transform: rotate(0deg); }
+        100% { transform: rotate(0deg); }
+    }
+
     .bane {
-        box-shadow: $shadow, inset 0 0 15px var(--reaction-card-color);
+        animation: shake 3s infinite;
     }
 
     .header {
