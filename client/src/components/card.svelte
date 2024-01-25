@@ -163,13 +163,20 @@
     class:selected
     class:classic={$chosenFont == "classic"}
 >
-    {#if quantity == null}
-        <div class="name">{name}</div>
-    {:else if quantity == "inf"}
-        <div class="name">{name} &ndash &#8734;</div>
-    {:else}
-        <div class="name">{name} &ndash {quantity}</div>
-    {/if}
+    <div class="header">
+        <div class="name">
+            {name}
+        </div>
+        {#if quantity == "inf"}
+            <div class="quantity">
+                &#8734
+            </div>
+        {:else if quantity}
+            <div class="quantity">
+                {quantity}
+            </div>
+        {/if}
+    </div>
     <span class="hoverable-text">
         <span class="hoverable-text-line">
             {expansion}
@@ -516,15 +523,38 @@
         box-shadow: $shadow, inset 0 0 15px var(--reaction-card-color);
     }
 
+    .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        position: relative;
+        width: var(--card-width);
+        padding: $header-padding;
+        padding-right: $padding-basis + 4px;
+        gap: 5px;
+        top: -$margin;
+    }
+
+    .classic .header {
+        font-family: trajan-pro-3, serif;
+    }
+
     .name {
         display: flex;
         justify-content: space-between;
         width: var(--card-width);
         padding: $header-padding;
+        text-wrap: nowrap;
+        overflow-x: auto;
+        scrollbar-width: none;
     }
 
-    .classic .name {
-        font-family: trajan-pro-3, serif;
+    .name::-webkit-scrollbar {
+        display: none;
+    }
+
+    .quantity {
+        text-wrap: nowrap;
     }
 
     .effects {
