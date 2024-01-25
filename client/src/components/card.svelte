@@ -23,6 +23,7 @@
     export let selectedCardIds = [];
     export let invalidCardNames = [];
     export let invalidCardIds = [];
+    export let forceBane = false;
 
     let hovering = false;
     let selectable = true;
@@ -45,7 +46,7 @@
     $: victory_reaction = types.includes("victory") && types.includes("reaction");
 
     // Bane "type"
-    $: bane = types.includes("bane");
+    $: bane = types.includes("bane") || forceBane;
 
     function renderText(text) {
         return text
@@ -203,7 +204,11 @@
     </div>
     <div class="footer">
         <div class="cost">{cost}&nbsp;<i class="fa-solid fa-coins"></i></div>
-        <div class="type">{type}</div>
+        {#if forceBane}
+            <div class="type">Bane, {type}</div>
+        {:else}
+            <div class="type">{type}</div>
+        {/if}
     </div>
 </main>
 

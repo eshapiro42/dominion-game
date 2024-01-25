@@ -124,6 +124,7 @@
                 {#each expansionData.cards as card (card.id)}
                     <Card
                         {...card}
+                        forceBane={card == baneCard}
                         {waitingForSelection}
                         {selectedAll}
                         {numSelected}
