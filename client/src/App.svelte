@@ -199,13 +199,15 @@
         );
     }
 
-    window.addEventListener(
-        "beforeunload", 
-        (event) => { 
-            event.preventDefault(); 
-            event.returnValue = true; 
-        }
-    ); 
+    $: if (gameStarted) {
+        window.addEventListener(
+            "beforeunload", 
+            (event) => { 
+                event.preventDefault(); 
+                event.returnValue = true; 
+            }
+        );
+    }
 </script>
 
 <main>
