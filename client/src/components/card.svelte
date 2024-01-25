@@ -187,18 +187,20 @@
             {selectionIndex}
         </span>
     {/if}
-    {#if renderedEffects.length > 0}
-        <ul class="effects">
-            {#each renderedEffects as effect}
-                <li>{@html effect}</li>
+    <div class="body">
+        {#if renderedEffects.length > 0}
+            <ul class="effects">
+                {#each renderedEffects as effect}
+                    <li>{@html effect}</li>
+                {/each}
+            </ul>
+        {/if}
+        <ul class="description">
+            {#each renderedDescription as description}
+                <li>{@html description}</li>
             {/each}
         </ul>
-    {/if}
-    <ul class="description">
-        {#each renderedDescription as description}
-            <li>{@html description}</li>
-        {/each}
-    </ul>
+    </div>
     <div class="footer">
         <div class="cost">{cost}&nbsp;<i class="fa-solid fa-coins"></i></div>
         <div class="type">{type}</div>
@@ -529,7 +531,6 @@
         align-items: flex-start;
         position: relative;
         width: var(--card-width);
-        padding: $header-padding;
         padding-right: $padding-basis + 4px;
         gap: 5px;
         top: -$margin;
@@ -543,7 +544,6 @@
         display: flex;
         justify-content: space-between;
         width: var(--card-width);
-        padding: $header-padding;
         text-wrap: nowrap;
         overflow-x: auto;
         scrollbar-width: none;
@@ -557,12 +557,20 @@
         text-wrap: nowrap;
     }
 
+    .body {
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+        position: relative;
+        overflow-y: auto;
+        padding-top: $padding-basis;
+    }
+
     .effects {
         font-weight: 700;
         font-style: normal;
         list-style-type: none;
         padding: 0;
-        margin-bottom: $padding-basis;
         margin-left: 0;
         font-family: serif;
     }
@@ -572,13 +580,14 @@
     }
 
     .description {
+        display: flex;
+        flex-direction: column;
+        gap: $padding;
         font-weight: 400;
         font-style: normal;
         list-style-type: none;
         padding: 0;
         margin-left: 0;
-        margin-bottom: $padding-basis;
-        overflow-y: auto;
         font-family: serif;
     }
 
@@ -586,18 +595,14 @@
         font-family: minion-pro, serif;
     }
 
-    .description li:not(:last-child) { 
-        margin-bottom: 10px;  
-    }
-
     .footer {
         display: flex;
+        flex: 0;
         justify-content: space-between;
         align-items: flex-end;
-        position: absolute;
+        position: relative;
         width: var(--card-width);
-        bottom: $margin;
-        margin-top: $padding-basis;
+        bottom: -$margin;
         padding-right: $padding-basis + 4px;
         gap: 5px;
     }
