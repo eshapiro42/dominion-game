@@ -9,6 +9,14 @@
     let chosenTheme = null;
     let chosenCardSize = null;
 
+    const themes = ["dark", "light"];
+    const fonts = ["modern", "classic",];
+    const cardSizes = ["tiny", "small", "medium", "large",];
+
+    function capitalize(word) {
+        return word && word[0].toUpperCase() + word.slice(1);
+    }
+
     function toggleSettings() {
         showSettings = !showSettings;
         if (showSettings) {
@@ -22,7 +30,6 @@
     // Getters and setters
 
     function getPreferredTheme() {
-        const themes = ["dark", "light"];
         // Check if the user has set a preference
         const cached_theme = localStorage.getItem("theme");
         if (cached_theme && themes.includes(cached_theme)) {
@@ -71,7 +78,6 @@
     $: setTheme(chosenTheme);
 
     function getPreferredFont() {
-        const fonts = ["modern", "classic",];
         // Check if the user has set a preference
         const cached_font = localStorage.getItem("font");
         if (cached_font && fonts.includes(cached_font)) {
@@ -96,7 +102,6 @@
     $: setFont($chosenFont);
 
     function getPreferredCardSize() {
-        const cardSizes = ["small", "medium", "large",];
         // Check if the user has set a preference
         const cached_card_size = localStorage.getItem("cardSize");
         if (cached_card_size && cardSizes.includes(cached_card_size)) {
@@ -136,31 +141,26 @@
             on:click|stopPropagation={()=>{}}
         >
             <select bind:value={chosenTheme}>
-                <option value="dark">
-                    Dark Mode
-                </option>
-                <option value="light">
-                    Light Mode
-                </option>
+                {#each themes as theme}
+                    <option value={theme}>
+                        {capitalize(theme)} Mode
+                    </option>
+                {/each}
+
             </select>
             <select bind:value={$chosenFont}>
-                <option value="modern">
-                    Modern Font
-                </option>
-                <option value="classic">
-                    Classic Font
-                </option>
+                {#each fonts as font}
+                    <option value={font}>
+                        {capitalize(font)} Font
+                    </option>
+                {/each}
             </select>
             <select bind:value={chosenCardSize}>
-                <option value="small">
-                    Small Cards
-                </option>
-                <option value="medium">
-                    Medium Cards
-                </option>
-                <option value="large">
-                    Large Cards
-                </option>
+                {#each cardSizes as cardSize}
+                    <option value={cardSize}>
+                        {capitalize(cardSize)} Cards
+                    </option>
+                {/each}
             </select>
             <button 
                 class="blueButton"

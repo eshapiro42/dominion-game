@@ -75,6 +75,13 @@
 	--unselectable-card-opacity: 20%;
 }
 
+[card-size="tiny"] {
+	--card-width: 140px;
+	--card-font-size: 14px;
+	--card-body-top-padding: 7px;
+	--card-stripe-width: 26px;
+}
+
 [card-size="small"] {
 	--card-width: 160px;
 	--card-font-size: 16px;
@@ -85,7 +92,7 @@
 [card-size="medium"] {
 	--card-width: 180px;
 	--card-font-size: 17px;
-	--card-body-top-padding: 18px;
+	--card-body-top-padding: 17px;
 	--card-stripe-width: 34px;
 }
 
