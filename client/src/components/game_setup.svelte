@@ -473,9 +473,8 @@
         background-color: var(--thead-background-color);
         color: var(--light-text-color);
         transition: all 0.3s linear;
+        box-sizing: content-box;
         border-top: none;
-        border-left: none;
-        border-right: none;
     }
 
     .playerRow {
