@@ -409,24 +409,14 @@
         color: var(--treasure-card-color);
     }
 
-    .basicTreasure .description {
-        padding-top: 40px;
-        font-size: 350%;
-    }
-
-    .basicVictory .description {
-        padding-top: 40px;
-        font-size: 350%;
-    }
-
     .victory_action {
         background-color: var(--victory-card-color);
         background: repeating-linear-gradient(
             -45deg,
             var(--victory-card-color),
-            var(--victory-card-color) 30px,
-            color-mix(in srgb, var(--victory-card-color), var(--action-card-color) 5%) 30px,
-            color-mix(in srgb, var(--victory-card-color), var(--action-card-color) 5%) 60px,
+            var(--victory-card-color) var(--card-stripe-width),
+            color-mix(in srgb, var(--victory-card-color), var(--action-card-color) 5%) var(--card-stripe-width),
+            color-mix(in srgb, var(--victory-card-color), var(--action-card-color) 5%) calc(2 * var(--card-stripe-width)),
         ), var(--victory-card-color);
         color: var(--dark-text-color);
 
@@ -447,9 +437,9 @@
         background: repeating-linear-gradient(
             -45deg,
             var(--treasure-card-color),
-            var(--treasure-card-color) 30px,
-            color-mix(in srgb, var(--treasure-card-color), var(--victory-card-color) 30%) 30px,
-            color-mix(in srgb, var(--treasure-card-color), var(--victory-card-color) 23%) 60px,
+            var(--treasure-card-color) var(--card-stripe-width),
+            color-mix(in srgb, var(--treasure-card-color), var(--victory-card-color) 30%) var(--card-stripe-width),
+            color-mix(in srgb, var(--treasure-card-color), var(--victory-card-color) 23%) calc(2 * var(--card-stripe-width)),
         ), var(--treasure-card-color);
         color: var(--dark-text-color);
 
@@ -470,9 +460,9 @@
         background: repeating-linear-gradient(
             -45deg,
             var(--treasure-card-color),
-            var(--treasure-card-color) 30px,
-            color-mix(in srgb, var(--treasure-card-color), var(--reaction-card-color) 12%) 30px,
-            color-mix(in srgb, var(--treasure-card-color), var(--reaction-card-color) 12%) 60px,
+            var(--treasure-card-color) var(--card-stripe-width),
+            color-mix(in srgb, var(--treasure-card-color), var(--reaction-card-color) 12%) var(--card-stripe-width),
+            color-mix(in srgb, var(--treasure-card-color), var(--reaction-card-color) 12%) calc(2 * var(--card-stripe-width)),
         ), var(--treasure-card-color);
         color: var(--dark-text-color);
 
@@ -494,9 +484,9 @@
         background: repeating-linear-gradient(
             -45deg,
             var(--victory-card-color),
-            var(--victory-card-color) 30px,
-            color-mix(in srgb, var(--victory-card-color), var(--reaction-card-color) 15%) 30px,
-            color-mix(in srgb, var(--victory-card-color), var(--reaction-card-color) 15%) 60px,
+            var(--victory-card-color) var(--card-stripe-width),
+            color-mix(in srgb, var(--victory-card-color), var(--reaction-card-color) 15%) var(--card-stripe-width),
+            color-mix(in srgb, var(--victory-card-color), var(--reaction-card-color) 15%) calc(2 * var(--card-stripe-width)),
         ), var(--victory-card-color);
         color: var(--dark-text-color);
 
@@ -593,6 +583,13 @@
         margin-left: 0;
         margin-bottom: 0;
         font-family: serif;
+    }
+
+    .basicTreasure .description, .basicVictory .description {
+        font-size: 350%;
+        height: 100%;
+        justify-content: space-evenly;
+        margin-top: calc(-1 * var(--card-body-top-padding));
     }
 
     .classic .description {
