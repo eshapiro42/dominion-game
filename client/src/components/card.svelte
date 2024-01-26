@@ -213,26 +213,13 @@
 </main>
 
 <style lang="scss">
-    $padding: 10px;
-    $padding-basis: 15px;
-    $header-padding: 0px 0px $padding-basis 0px;
     $corner-radius: 20px;
     $margin: 5px;
-
-    $shadow-color: var(--card-shadow-color);
-    $shadow: 1px 1px 4px 4px $shadow-color;
-
-    $font-size: 16px;
-    $dark-text-color: var(--dark-text-color);
-    $light-text-color: var(--light-text-color);
-    $point: #100e17;
-    $point-light: rgb(33, 29, 47);
 
     $dark-scrollbar-color: #34333880;
     $dark-scrollbar-color-hover: var(--action-card-color);
     $light-scrollbar-color: #d9d9d980;
     $light-scrollbar-color-hover: #dadada;
-
 
     main {
         border: var(--card-border);
@@ -241,12 +228,12 @@
         width: var(--card-width);
         min-height: calc(var(--card-width) * 1.618);
         max-height: calc(var(--card-width) * 1.618);
-        font-size: $font-size;
+        font-size: var(--card-font-size);
         flex-direction: column;
-        padding: $padding;
+        padding: 10px;
         margin-right: $margin;
         border-radius: $corner-radius;
-        box-shadow: $shadow;
+        box-shadow: 1px 1px 4px 4px var(--card-shadow-color);;
         transition: 0.4s ease-out;
         position: relative;
         left: 0px;
@@ -320,7 +307,7 @@
 
     .action {
         background-color: var(--action-card-color);
-        color: $light-text-color;
+        color: var(--light-text-color);
 
         ::-webkit-scrollbar-thumb {
             background-color: $light-scrollbar-color;
@@ -338,7 +325,7 @@
 
     .attack {
         background-color: var(--attack-card-color);
-        color: $dark-text-color;
+        color: var(--dark-text-color);
 
         ::-webkit-scrollbar-thumb {
             background-color: $dark-scrollbar-color;
@@ -355,7 +342,7 @@
 
     .reaction {
         background-color: var(--reaction-card-color);
-        color: $dark-text-color;
+        color: var(--dark-text-color);
 
         ::-webkit-scrollbar-thumb {
             background-color: $dark-scrollbar-color;
@@ -372,7 +359,7 @@
 
     .victory {
         background-color: var(--victory-card-color);
-        color: $dark-text-color;
+        color: var(--dark-text-color);
 
         ::-webkit-scrollbar-thumb {
             background-color: $dark-scrollbar-color;
@@ -390,7 +377,7 @@
 
     .curse {
         background-color: var(--curse-card-color);
-        color: $dark-text-color;
+        color: var(--dark-text-color);
 
         ::-webkit-scrollbar-thumb {
             background-color: $dark-scrollbar-color;
@@ -407,7 +394,7 @@
 
     .treasure {
         background-color: var(--treasure-card-color);
-        color: $dark-text-color;
+        color: var(--dark-text-color);
 
         ::-webkit-scrollbar-thumb {
             background-color: $dark-scrollbar-color;
@@ -424,12 +411,12 @@
 
     .basicTreasure .description {
         padding-top: 40px;
-        font-size: 60px;
+        font-size: 350%;
     }
 
     .basicVictory .description {
         padding-top: 40px;
-        font-size: 60px;
+        font-size: 350%;
     }
 
     .victory_action {
@@ -441,7 +428,7 @@
             color-mix(in srgb, var(--victory-card-color), var(--action-card-color) 5%) 30px,
             color-mix(in srgb, var(--victory-card-color), var(--action-card-color) 5%) 60px,
         ), var(--victory-card-color);
-        color: $dark-text-color;
+        color: var(--dark-text-color);
 
         ::-webkit-scrollbar-thumb {
             background-color: $dark-scrollbar-color;
@@ -464,7 +451,7 @@
             color-mix(in srgb, var(--treasure-card-color), var(--victory-card-color) 30%) 30px,
             color-mix(in srgb, var(--treasure-card-color), var(--victory-card-color) 23%) 60px,
         ), var(--treasure-card-color);
-        color: $dark-text-color;
+        color: var(--dark-text-color);
 
         ::-webkit-scrollbar-thumb {
             background-color: $dark-scrollbar-color;
@@ -487,7 +474,7 @@
             color-mix(in srgb, var(--treasure-card-color), var(--reaction-card-color) 12%) 30px,
             color-mix(in srgb, var(--treasure-card-color), var(--reaction-card-color) 12%) 60px,
         ), var(--treasure-card-color);
-        color: $dark-text-color;
+        color: var(--dark-text-color);
 
         ::-webkit-scrollbar-thumb {
             background-color: $dark-scrollbar-color;
@@ -511,7 +498,7 @@
             color-mix(in srgb, var(--victory-card-color), var(--reaction-card-color) 15%) 30px,
             color-mix(in srgb, var(--victory-card-color), var(--reaction-card-color) 15%) 60px,
         ), var(--victory-card-color);
-        color: $dark-text-color;
+        color: var(--dark-text-color);
 
         ::-webkit-scrollbar-thumb {
             background-color: $dark-scrollbar-color;
@@ -547,7 +534,7 @@
         align-items: flex-start;
         position: relative;
         width: var(--card-width);
-        padding-right: $padding-basis + 4px;
+        padding-right: 19px;
         gap: 5px;
         top: -$margin;
     }
@@ -579,7 +566,7 @@
         flex-direction: column;
         position: relative;
         overflow-y: auto;
-        padding-top: $padding-basis;
+        padding-top: var(--card-body-top-padding);
     }
 
     .effects {
@@ -598,7 +585,7 @@
     .description {
         display: flex;
         flex-direction: column;
-        gap: $padding;
+        gap: 10px;
         font-weight: 400;
         font-style: normal;
         list-style-type: none;
@@ -620,7 +607,7 @@
         position: relative;
         width: var(--card-width);
         bottom: -$margin;
-        padding-right: $padding-basis + 4px;
+        padding-right: 19px;
         gap: 5px;
     }
 

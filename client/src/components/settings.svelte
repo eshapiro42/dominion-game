@@ -22,9 +22,10 @@
     // Getters and setters
 
     function getPreferredTheme() {
+        const themes = ["dark", "light"];
         // Check if the user has set a preference
         const cached_theme = localStorage.getItem("theme");
-        if (cached_theme) {
+        if (cached_theme && themes.includes(cached_theme)) {
             return cached_theme;
         }
         // Check if the user has a preferred color scheme
@@ -70,9 +71,10 @@
     $: setTheme(chosenTheme);
 
     function getPreferredFont() {
+        const fonts = ["modern", "classic",];
         // Check if the user has set a preference
         const cached_font = localStorage.getItem("font");
-        if (cached_font) {
+        if (cached_font && fonts.includes(cached_font)) {
             return cached_font;
         }
         else {
@@ -94,13 +96,14 @@
     $: setFont($chosenFont);
 
     function getPreferredCardSize() {
+        const cardSizes = ["small", "medium", "large",];
         // Check if the user has set a preference
         const cached_card_size = localStorage.getItem("cardSize");
-        if (cached_card_size) {
+        if (cached_card_size && cardSizes.includes(cached_card_size)) {
             return cached_card_size;
         }
         else {
-            return "200px";
+            return "medium";
         }
     }
 
@@ -108,7 +111,8 @@
         // Set the card size variable
         chosenCardSize = cardSize;
         // Set the CSS variable
-        document.querySelector(":root").style.setProperty("--card-width", cardSize);
+        // document.querySelector(":root").style.setProperty("--card-width", cardSize);
+        document.documentElement.setAttribute("card-size", cardSize);
         // Cache the selected size in the browser
         localStorage.setItem("cardSize", cardSize);
     }
@@ -148,11 +152,14 @@
                 </option>
             </select>
             <select bind:value={chosenCardSize}>
-                <option value="160px">
+                <option value="small">
                     Small Cards
                 </option>
-                <option value="200px">
-                    Normal Cards
+                <option value="medium">
+                    Medium Cards
+                </option>
+                <option value="large">
+                    Large Cards
                 </option>
             </select>
             <button 
