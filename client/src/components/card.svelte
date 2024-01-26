@@ -537,7 +537,7 @@
         100% { transform: rotate(0deg); }
     }
 
-    .bane {
+    .bane:not(:hover) {
         animation: shake 3s infinite;
     }
 
