@@ -498,19 +498,12 @@
         color: var(--victory-card-color);
     }
 
-    @keyframes shake {
-        0% { transform: rotate(0deg); }
-        2% { transform: rotate(1deg); }
-        4% { transform: rotate(0deg); }
-        6% { transform: rotate(-2deg); }
-        8% { transform: rotate(0deg); }
-        10% { transform: rotate(1deg); }
-        12% { transform: rotate(0deg); }
-        100% { transform: rotate(0deg); }
+    .action.bane {
+        color: color-mix(in srgb, var(--light-text-color), var(--curse-card-color) 70%);
     }
 
-    .bane:not(:hover) {
-        animation: shake 3s infinite;
+    :not(.action).bane {
+        color: color-mix(in srgb, var(--dark-text-color), var(--curse-card-color) 40%);
     }
 
     .header {
