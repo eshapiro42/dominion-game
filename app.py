@@ -46,8 +46,6 @@ sids: Dict[str, Tuple[str, Any]] = {}
 connected_players: DefaultDict[str, List[str]] = defaultdict(list)
 # Global dictionary of disconnected players, indexed by room ID, {room: [username, ...], ...}
 disconnected_players: DefaultDict[str, List[str]] = defaultdict(list)
-# Global dictionary of CPUs, indexed by room ID, {room: CPU_COUNT}
-cpus: Dict[str, int] = {}
 # Global variable for admin use
 allow_game_creation: bool = True
 # All Kingdom cards (for building custom kingdoms)
@@ -130,16 +128,11 @@ def create_room(data):
 @socketio.on('add cpu')
 def add_cpu(data):
     room = data['room']
-    # Add the CPU to the global dictionary of CPUs
-    if room not in cpus:
-        cpus[room] = 0
-    cpus[room] += 1
-    cpu_num = cpus[room]
     # Add the CPU player to the game
     game = games[room]
     game_startable_before = game.startable
-    cpu_name = f'CPU {cpu_num}'
     game.add_cpu()
+    cpu_name = f"CPU {game._future_cpus}"
     socketio.emit("players in room", game.future_player_names)
     socketio.send(f'{cpu_name} has entered room {room}.\n', room=room)
     # If the game just became startable, push an event
@@ -356,7 +349,6 @@ def kill_game(room):
     games.pop(room, None)
     connected_players.pop(room, None)
     disconnected_players.pop(room, None)
-    cpus.pop(room, None)
     socketio.send(f'Game {room} has ended.\n', room=room)
 
 
