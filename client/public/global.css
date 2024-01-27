@@ -195,22 +195,30 @@ button {
     border: 1px solid var(--border-color);
 }
 
+button:disabled {
+	background-color: transparent;
+}
+
+button:not(:disabled):hover {
+	background-color: color-mix(in srgb, var(--button-background-color), var(--blue-color) 30%);
+}
+
+button:not(:disabled):active {
+	background-color: color-mix(in srgb, var(--button-background-color), var(--blue-color) 50%);
+}
+
 .blueButton {
 	background-color: var(--blue-color);
 	color: var(--dark-text-color); 
 	border-color: var(--dark-text-color);
 }
 
-button:disabled {
-	color: #999;
+.blueButton:not(:disabled):hover {
+	background-color: color-mix(in srgb, var(--blue-color), var(--button-background-color) 30%);
 }
 
-button:not(:disabled):active {
-	background-color: #ddd;
-}
-
-button:focus {
-	border-color: #666;
+.blueButton:not(:disabled):active {
+	background-color: color-mix(in srgb, var(--blue-color), var(--button-background-color) 50%);
 }
 
 /* Tables */
@@ -298,6 +306,11 @@ h2 {
 	border-bottom: 1px dotted var(--border-color);
 }
 
+.hoverable:hover {
+	cursor: pointer;
+	color: color-mix(in srgb, var(--text-color), var(--blue-color) 50%);
+}
+
 .hoverable .hoverable-text {
 	visibility: hidden;
 	position: absolute;
@@ -335,6 +348,14 @@ h2 {
 	margin-bottom: var(--offset-bottom);
 	margin-left: var(--offset-left);
 	margin-right: var(--offset-right);
+}
+
+.fa-gear:hover, .fa-trash-can:hover, .fa-message:hover {
+	color: color-mix(in srgb, var(--text-color), var(--blue-color) 50%);
+}
+
+.fa-gear:active, .fa-trash-can:active, .fa-message:active {
+	color: color-mix(in srgb, var(--blue-color), var(--thead-background-color) 50%);
 }
 
 @keyframes blinking {

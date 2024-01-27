@@ -189,10 +189,12 @@
 
     $socket.on("game startable", function(data) {
         gameStartable = true;
+        document.getElementById("startGameButton").disabled = false;
     });
 
     $socket.on("game not startable", function(data) {
         gameStartable = false;
+        document.getElementById("startGameButton").disabled = true;
     });
 
     $socket.on("player removed", function(data) {
@@ -328,7 +330,7 @@
                             on:click={() => window.scrollTo(0, 0)}
                         ></i>
                     {/if}
-                    <button type="button" class="blueButton" on:click={startGame}>Start Game</button>
+                    <button type="button" class="blueButton" id="startGameButton" disabled on:click={startGame}>Start Game</button>
                     <button type="button" on:click={addCPU}>Add CPU</button>
 
                         <label class="customization">

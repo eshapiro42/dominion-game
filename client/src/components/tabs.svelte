@@ -59,6 +59,10 @@
         background-color: color-mix(in srgb, var(--body-background-color), var(--blue-color) 20%);
     }
 
+    li:active:not(.selected) > span {
+        background-color: color-mix(in srgb, var(--blue-color), var(--thead-background-color) 50%);
+    }
+
     li.selected > span {
         border-top-color: var(--border-color);
         border-left-color: var(--border-color);
