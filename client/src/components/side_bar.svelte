@@ -88,6 +88,7 @@
         gap: 20px;
         justify-content: space-around;
         align-items: stretch;
+        font-family: var(--title-font-family);
     }
 
     /* Do not show sidebar on mobile devices */

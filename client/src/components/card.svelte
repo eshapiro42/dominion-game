@@ -1,8 +1,6 @@
 <script>
     import {createEventDispatcher} from "svelte";
     import {fade} from 'svelte/transition';
-
-    import {chosenFont} from "../stores.js";
     
     const dispatch = createEventDispatcher();
     
@@ -162,7 +160,6 @@
     class:bane
     class:unselectable
     class:selected
-    class:classic={$chosenFont == "classic"}
 >
     <div class="header">
         <div class="name">
@@ -240,7 +237,6 @@
         right: 50px;
         overflow-y: hidden;
         overflow-x: hidden;
-        font-family: "Segoe UI", sans-serif;
 
         ::-webkit-scrollbar {
             width: 10px;
@@ -527,10 +523,7 @@
         padding-right: 19px;
         gap: 5px;
         top: -$margin;
-    }
-
-    .classic .header {
-        font-family: trajan-pro-3, serif;
+        font-family: var(--title-font-family);
     }
 
     .name {
@@ -557,6 +550,7 @@
         position: relative;
         overflow-y: auto;
         padding-top: var(--card-body-top-padding);
+        font-family: var(--card-body-font-family);
     }
 
     .effects {
@@ -565,11 +559,6 @@
         list-style-type: none;
         padding: 0;
         margin-left: 0;
-        font-family: serif;
-    }
-
-    .classic .effects {
-        font-family: minion-pro, serif;
     }
 
     .description {
@@ -582,7 +571,6 @@
         padding: 0;
         margin-left: 0;
         margin-bottom: 0;
-        font-family: serif;
     }
 
     .basicTreasure .description, .basicVictory .description {
@@ -590,10 +578,6 @@
         height: 100%;
         justify-content: space-evenly;
         margin-top: calc(-1 * var(--card-body-top-padding));
-    }
-
-    .classic .description {
-        font-family: minion-pro, serif;
     }
 
     .footer {
@@ -606,10 +590,7 @@
         bottom: -$margin;
         padding-right: 19px;
         gap: 5px;
-    }
-
-    .classic .footer {
-        font-family: trajan-pro-3, serif;
+        font-family: var(--title-font-family);
     }
 
     .cost {

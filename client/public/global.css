@@ -103,6 +103,20 @@
 	--card-stripe-width: 38px;
 }
 
+[font="modern"] {
+	--title-font-family: "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+	--body-font-family: var(--title-font-family);
+	--card-body-font-family: "Times New Roman", serif;
+	--body-font-size: 16px;
+}
+
+[font="classic"] {
+	--title-font-family: trajan-pro-3, serif;
+	--body-font-family: var(--card-body-font-family);
+	--card-body-font-family: minion-pro, serif;
+	--body-font-size: 17px;
+}
+
 html, body {
 	position: relative;
 	width: 100%;
@@ -116,7 +130,8 @@ body {
 	margin: 0;
 	padding: 8px;
 	box-sizing: border-box;
-	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+	font-family: var(--body-font-family);
+	font-size: var(--body-font-size);
 }
 
 a {
@@ -145,7 +160,7 @@ input[type="checkbox"], input[type="radio"] {
 }
 
 input, button, select, textarea {
-	font-family: inherit;
+	font-family: var(--title-font-family);
 	font-size: inherit;
 	-webkit-padding: 0.4em 0;
 	padding: 0.4em;
@@ -210,6 +225,7 @@ table {
 thead {
     background-color: var(--thead-background-color);
     color: var(--light-text-color);
+	font-family: var(--title-font-family);
 }
 
 thead tr {
@@ -262,6 +278,10 @@ table, .panel {
 	table, .panel {
 		left: 0;
 	}
+}
+
+h1, h2, h3, h4, h5, h6 {
+	font-family: var(--title-font-family);
 }
 
 h2 {

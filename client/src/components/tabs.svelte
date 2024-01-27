@@ -28,6 +28,10 @@
 </main>
 
 <style>
+    main {
+        font-family: var(--title-font-family);
+    }
+
     ul {
         display: flex;
         flex-wrap: nowrap;

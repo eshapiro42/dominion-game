@@ -108,6 +108,7 @@
         display: flex;
         flex-direction: row;
         justify-content: space-evenly;
+        font-family: var(--title-font-family);
     }
 
     .fa-arrow-up {

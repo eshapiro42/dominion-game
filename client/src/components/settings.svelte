@@ -1,11 +1,11 @@
 <script>
     import {
         socket,
-        chosenFont,
         room,
     } from "../stores.js";
 
     let showSettings = false;
+    let chosenFont = null;
     let chosenTheme = null;
     let chosenCardSize = null;
 
@@ -60,9 +60,7 @@
             )
         )
         document.head.appendChild(css);
-        // Set the theme variable
-        chosenTheme = theme;
-        // Update the page
+        // Set the CSS attribute
         document.documentElement.setAttribute("data-theme", theme);
         // Cache the selected theme in the browser
         localStorage.setItem("theme", theme);
@@ -72,7 +70,7 @@
     }
 
     // On load, set to the preferred theme (if any)
-    setTheme(getPreferredTheme());
+    chosenTheme = getPreferredTheme();
 
     // On change, set to and cache the new theme
     $: setTheme(chosenTheme);
@@ -89,17 +87,17 @@
     }
 
     function setFont(font) {
-        // Set the font store variable
-        $chosenFont = font;
+        // Set the CSS attribute
+        document.documentElement.setAttribute("font", font);
         // Cache the selected font in the browser
         localStorage.setItem("font", font);
     }
 
     // On load, set to the preferred font (if any)
-    setFont(getPreferredFont());
+    chosenFont = getPreferredFont();
 
     // On change, set and cache the font
-    $: setFont($chosenFont);
+    $: setFont(chosenFont);
 
     function getPreferredCardSize() {
         // Check if the user has set a preference
@@ -113,17 +111,14 @@
     }
 
     function setCardSize(cardSize) {
-        // Set the card size variable
-        chosenCardSize = cardSize;
-        // Set the CSS variable
-        // document.querySelector(":root").style.setProperty("--card-width", cardSize);
+        // Set the CSS attribute
         document.documentElement.setAttribute("card-size", cardSize);
         // Cache the selected size in the browser
         localStorage.setItem("cardSize", cardSize);
     }
 
     // On load, set to the preferred card size (if any)
-    setCardSize(getPreferredCardSize());
+    chosenCardSize = getPreferredCardSize();
 
     // On change, set and cache the card size
     $: setCardSize(chosenCardSize);
@@ -148,7 +143,7 @@
                 {/each}
 
             </select>
-            <select bind:value={$chosenFont}>
+            <select bind:value={chosenFont}>
                 {#each fonts as font}
                     <option value={font}>
                         {capitalize(font)} Font
