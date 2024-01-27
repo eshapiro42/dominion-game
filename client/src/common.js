@@ -58,7 +58,7 @@ export function sortCards(cards, sortByProperty, victoryCardsFirst=false) {
 };
 
 export function sticky(node) {
-    const stickySentinelStyle = "position: absolute; height: 1px;"
+    const stickySentinelStyle = "position: absolute"
     const stickySentinel = document.createElement("div");
     stickySentinel.classList.add("stickySentinel");
     stickySentinel.style = stickySentinelStyle;
