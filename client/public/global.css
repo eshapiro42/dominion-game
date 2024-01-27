@@ -80,6 +80,8 @@
 	--card-font-size: 14px;
 	--card-body-top-padding: 7px;
 	--card-stripe-width: 26px;
+	--card-border-radius: 15px;
+	--card-padding: 8px;
 }
 
 [card-size="small"] {
@@ -87,6 +89,8 @@
 	--card-font-size: 16px;
 	--card-body-top-padding: 12px;
 	--card-stripe-width: 30px;
+	--card-border-radius: 20px;
+	--card-padding: 10px;
 }
 
 [card-size="medium"] {
@@ -94,6 +98,8 @@
 	--card-font-size: 17px;
 	--card-body-top-padding: 17px;
 	--card-stripe-width: 34px;
+	--card-border-radius: 25px;
+	--card-padding: 12px;
 }
 
 [card-size="large"] {
@@ -101,6 +107,8 @@
 	--card-font-size: 18px;
 	--card-body-top-padding: 22px;
 	--card-stripe-width: 38px;
+	--card-border-radius: 30px;
+	--card-padding: 14px;
 }
 
 [font="modern"] {

@@ -210,7 +210,6 @@
 </main>
 
 <style lang="scss">
-    $corner-radius: 20px;
     $margin: 5px;
 
     $dark-scrollbar-color: #34333880;
@@ -227,10 +226,10 @@
         max-height: calc(var(--card-width) * 1.618);
         font-size: var(--card-font-size);
         flex-direction: column;
-        padding: 10px;
+        padding: var(--card-padding);
         margin-right: $margin;
-        border-radius: $corner-radius;
-        box-shadow: 1px 1px 4px 4px var(--card-shadow-color);;
+        border-radius: var(--card-border-radius);
+        box-shadow: 1px 1px 4px 4px var(--card-shadow-color);
         transition: 0.4s ease-out;
         position: relative;
         left: 0px;
@@ -245,7 +244,7 @@
             background-color: transparent;
         }
         ::-webkit-scrollbar-thumb {
-            border-radius: 20px;
+            border-radius: var(--card-border-radius);
             border: 2px solid transparent;
             background-clip: content-box;
         }
@@ -265,7 +264,7 @@
         background-color: var(--action-card-color);
         color: var(--light-text-color);
         font-size: 85%;
-        border-radius: $corner-radius;
+        border-radius: var(--card-border-radius);
         border-color: var(--border-color);
         border-width: 1px;
         margin-top: $margin;
@@ -288,8 +287,8 @@
         font-size: 85%;
         border: var(--selected-card-border);
         border-bottom: 0;
-        border-top-left-radius: $corner-radius;
-        border-top-right-radius: $corner-radius;
+        border-top-left-radius: var(--card-border-radius);
+        border-top-right-radius: var(--card-border-radius);
         padding: 7px;
         padding-left: 10px;
         padding-right: 10px;
@@ -519,8 +518,7 @@
         justify-content: space-between;
         align-items: flex-start;
         position: relative;
-        width: var(--card-width);
-        padding-right: 19px;
+        width: calc(var(--card-width) - 2 * var(--card-padding));
         gap: 5px;
         top: -$margin;
         font-family: var(--title-font-family);
@@ -586,9 +584,8 @@
         justify-content: space-between;
         align-items: flex-end;
         position: relative;
-        width: var(--card-width);
+        width: calc(var(--card-width) - 2 * var(--card-padding));
         bottom: -$margin;
-        padding-right: 19px;
         gap: 5px;
         font-family: var(--title-font-family);
     }
