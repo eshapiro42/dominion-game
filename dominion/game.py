@@ -644,7 +644,8 @@ class Game:
             card_class_counter: Counter[Type[Card]] = Counter([type(card) for card in player.all_cards])
             player_cards_json: List[CardJSON] = []
             for card_class, quantity in card_class_counter.items():
-                card_json = card_class().json
+                card_example = next(card for card in player.all_cards if isinstance(card, card_class))
+                card_json = card_example.json
                 card_json["quantity"] = quantity
                 player_cards_json.append(card_json)
             end_game_data["playerData"].append(
