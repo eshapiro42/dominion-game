@@ -199,13 +199,22 @@
         );
     }
 
+    function preventUnload(event) {
+        event.preventDefault(); 
+        event.returnValue = true; 
+    }
+
     $: if (gameStarted) {
         window.addEventListener(
             "beforeunload", 
-            (event) => { 
-                event.preventDefault(); 
-                event.returnValue = true; 
-            }
+            preventUnload,
+        );
+    }
+
+    $: if (gameOver.show) {
+        window.removeEventListener(
+            "beforeunload",
+            preventUnload,
         );
     }
 </script>
