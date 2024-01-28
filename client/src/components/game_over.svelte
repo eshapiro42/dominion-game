@@ -89,9 +89,11 @@
                                 <td>
                                     {playerData.turns}
                                 </td>
-                                {#if playerData.victoryTokens}
+                                {#if endGameData.showVictoryTokens}
                                     <td>
-                                        {playerData.victoryTokens}
+                                        {#if playerData.victoryTokens}
+                                            {playerData.victoryTokens}
+                                        {/if}
                                     </td>
                                 {/if}
                             </tr>
