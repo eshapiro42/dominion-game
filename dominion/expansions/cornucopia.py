@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import random
 
-from typing import TYPE_CHECKING, Type
+from typing import TYPE_CHECKING, List, Type
 
 from .expansion import Expansion
 from ..cards import cornucopia_cards
@@ -10,7 +10,8 @@ from ..grammar import s, it_or_them
 from ..supply import FiniteSupplyStack
 
 if TYPE_CHECKING:
-    from ..cards.cards import Card
+    from ..cards.cards import Card, TreasureCard
+
 
 class CornucopiaExpansion(Expansion):
     name = 'Cornucopia'
@@ -76,6 +77,21 @@ class CornucopiaExpansion(Expansion):
 
     def refresh_heartbeat(self):
         self.prizes_cache = None
+
+    def should_order_treasures(self, treasures: List[TreasureCard]) -> bool:
+        """
+        Treasures should be ordered if there is a Horn of Plenty
+        in the list of Treasures and there are other (non-Horn of Plenty)
+        Treasures being played or played cards from earlier in the turn.
+        """
+        if any(isinstance(treasure, cornucopia_cards.HornOfPlenty) for treasure in treasures):
+            # Check for non-Horn of Plenty Treasure cards
+            if not all(isinstance(treasure, cornucopia_cards.HornOfPlenty) for treasure in treasures):
+                return True
+            # Check for played cards from earlier in the turn
+            if self.game.current_turn.player.played_cards:
+                return True
+        return False
 
     def order_treasures(self, player, treasures):
         # If any Horns of Plenty are in the played treasures, allow the player to play them last

@@ -1,6 +1,15 @@
+from __future__ import annotations
+
 import random
+
+from typing import List, TYPE_CHECKING
+
 from .expansion import Expansion
 from ..cards import cards, base_cards, prosperity_cards
+
+if TYPE_CHECKING:
+    from ..cards.cards import TreasureCard
+
 
 class ProsperityExpansion(Expansion):
     name = 'Prosperity'
@@ -100,6 +109,17 @@ class ProsperityExpansion(Expansion):
 
     def refresh_heartbeat(self):
         self.trade_route_cache = None
+
+    def should_order_treasures(self, treasures: List[TreasureCard]) -> bool:
+        """
+        Treasures should be ordered if there is a Bank in the list
+        of Treasures and there are other Treasures being played.
+        """
+        if any(isinstance(treasure, prosperity_cards.Bank) for treasure in treasures):
+            # Check for other Treasure cards
+            if len(treasures) > 1:
+                return True
+        return False
 
     @property
     def game_end_conditions(self):
