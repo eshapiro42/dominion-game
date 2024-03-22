@@ -211,7 +211,23 @@ class Turn:
         A dictionary of cost modifiers for cards.
         """
         return self._cost_modifiers
-    
+
+    def should_order_treasures(self, treasures: List[TreasureCard]) -> bool:
+        """
+        Whether or not to order treasures before playing them.
+
+        This will usually be False except when playing with specific cards
+        such as Horn of Plenty or Bank.
+
+        This is calculated by checking each expansion for conditions that
+        might necessitate ordering treasures. Each expansion much implement
+        this logic in their own way, and if any check returns True then this
+        function will return True.
+        """
+        for expansion_instance in self.game.supply.customization.expansions:
+            if expansion_instance.should_order_treasures(treasures):
+                return True
+
     @property
     def json(self):
         """
@@ -686,11 +702,15 @@ class BuyPhase(Phase):
             self.game.broadcast(f"{self.player} did not play any Treasures.")
             return
         # Allow each expansion to modify the order of Treasures played
-        for expansion_instance in self.supply.customization.expansions:
-            treasures = expansion_instance.order_treasures(self.player, treasures)
-        treasures_string = Card.group_and_sort_by_cost(treasures)
-        self._game_log.add_entry(f"{self.player} played Treasures: {treasures_string}.", parent=self._log_entry)
-        self.game.broadcast(f"{self.player} played Treasures: {treasures_string}.")
+        if self.turn.should_order_treasures(treasures):
+            num_treasures_played = len(treasures)
+            prompt = f"You played some Treasures which might benefit from being played in a particular order. Please choose the order in which you would like to play them. (1 will be played first, {num_treasures_played} will be played last.)"
+            treasures = self.player.interactions.choose_cards_from_list(prompt, treasures, force=True, max_cards=num_treasures_played, ordered=True)
+            treasures_string = ", ".join([treasure.name for treasure in treasures])
+            self.game.broadcast(f"{self.player} played Treasures in the following order: {treasures_string}.")
+        else:
+            treasures_string = Card.group_and_sort_by_cost(treasures)
+            self.game.broadcast(f"{self.player} played Treasures: {treasures_string}.")
         # Play the Treasures
         for treasure in treasures:
             # Add the Treasure to the played cards area and remove from hand
@@ -698,7 +718,7 @@ class BuyPhase(Phase):
             # Add the value of this Treasure
             self.turn.coppers_remaining += treasure.value
             # Activate side effects caused by playing this Treasure
-            if hasattr(treasure, 'play'):
+            if hasattr(treasure, "play"):
                 treasure.play()
             # Process any Treasure hooks
             self.process_treasure_hooks(treasure)

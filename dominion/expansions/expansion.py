@@ -146,21 +146,17 @@ class Expansion(metaclass=ABCMeta):
         """
         pass
 
-    def order_treasures(self, player: Player, treasures: List[TreasureCard]) -> List[TreasureCard]:
+    def should_order_treasures(self, treasures: List[TreasureCard]) -> bool:
         """
         If this expansion contains cards that care about the order
         in which Treasure cards are played, overload this method
-        and use it to allow players to adjust the order of played
-        Treasure cards.
+        and have it return True if a list of treasures should be
+        ordered.
 
-        E.g., players will normally want to play the Horn of Plenty
-        after their other Treasure cards.
-
-        Args:
-            player: The Player whose turn it is currently.
-            treasures: A list of Treasure cards that have been played.
+        This will usually be False except when playing with specific cards
+        such as Horn of Plenty or Bank.
         """
-        return treasures
+        return False
 
     def scoring(self, player: Player) -> int:
         """
