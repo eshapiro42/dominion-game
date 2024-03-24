@@ -120,11 +120,12 @@
     }
 
     function sendSelection() {
-        var selectedCards = cards.filter(
-            (card) => {
-                return selectedCardIds.some(
-                    (selectedCardId) => {
-                        return card.id == selectedCardId;
+        // Find the selected cards by ID while maintaining order of selection
+        var selectedCards = selectedCardIds.map(
+            (id) => {
+                return cards.find(
+                    (card) => {
+                        return card.id == id;
                     }
                 );
             }
