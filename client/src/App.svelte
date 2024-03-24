@@ -100,6 +100,12 @@
         "new turn",
         function(data) {
             $currentPlayer = data.player;
+            if ($currentPlayer === $username) {
+                document.documentElement.setAttribute("your-turn", true);
+            }
+            else {
+                document.documentElement.setAttribute("your-turn", false);
+            }
         }
     );
 

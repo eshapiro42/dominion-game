@@ -127,6 +127,16 @@
 	--body-font-size: 17px;
 }
 
+[your-turn=true] {
+    --blinking-color: var(--blue-color);
+    --blinking-speed: 3s;
+}
+
+[your-turn=false] {
+    --blinking-color: var(--attack-card-color);
+    --blinking-speed: 1s;
+}
+
 html, body {
 	position: relative;
 	width: 100%;
@@ -377,6 +387,6 @@ h2 {
 		background-color: var(--body-background-color);
 	}
 	50% {
-		background-color: color-mix(in srgb, var(--body-background-color), var(--blue-color) 10%);
+		background-color: color-mix(in srgb, var(--body-background-color), var(--blinking-color) 10%);
 	}
 }

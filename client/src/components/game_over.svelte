@@ -162,7 +162,7 @@
     }
 
     .active {
-        animation: blinking 3s infinite ease-in-out;
+        animation: blinking var(--blinking-speed) infinite ease-in-out;
     }
 
     .text {

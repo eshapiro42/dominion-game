@@ -207,7 +207,7 @@
     }
 
     .show {
-        animation: blinking 3s ease-in-out infinite;
+        animation: blinking var(--blinking-speed) ease-in-out infinite;
     }
 
     .flex-item {
