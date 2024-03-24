@@ -239,7 +239,7 @@
     }
 
     .active {
-        animation: blinking 3s infinite linear;
+        animation: blinking var(--blinking-speed) infinite linear;
     }
 
     .text {
