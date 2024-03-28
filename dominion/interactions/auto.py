@@ -14,11 +14,33 @@ if TYPE_CHECKING:
 
 
 class AutoInteraction(Interaction):
+    def notify_if_not_my_turn(func):
+        def wrapper(self, *args, **kwargs):
+            # If it is not this player's turn, notify the player whose turn it is that they are waiting on this player
+            if self.game.current_turn.player != self.player:
+                self.socketio.emit(
+                    "waiting on player",
+                    self.player.name,
+                    to=self.game.current_turn.player.sid,
+                )
+            # Call the method
+            ret = func(self, *args, **kwargs)
+            # If it is not this player's turn, notify the player whose turn it is that the response was received
+            if self.game.current_turn.player != self.player:
+                self.socketio.emit(
+                    "not waiting on player",
+                    self.player.name,
+                    to=self.game.current_turn.player.sid,
+                )
+            return ret
+        return wrapper
+
     def send(self, message):
         # TODO: Turn off printing (useful for debugging)
         print(message)
         print()
 
+    @notify_if_not_my_turn
     def sleep_random(self):
         """
         Sleep to simulate thought unless we are running tests.
