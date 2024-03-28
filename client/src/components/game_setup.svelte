@@ -189,12 +189,16 @@
 
     $socket.on("game startable", function(data) {
         gameStartable = true;
-        document.getElementById("startGameButton").disabled = false;
+        if (roomCreator) {
+            document.getElementById("startGameButton").disabled = false;
+        }
     });
 
     $socket.on("game not startable", function(data) {
         gameStartable = false;
-        document.getElementById("startGameButton").disabled = true;
+        if (roomCreator) {
+            document.getElementById("startGameButton").disabled = true;
+        }
     });
 
     $socket.on("player removed", function(data) {
