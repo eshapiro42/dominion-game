@@ -707,9 +707,11 @@ class BuyPhase(Phase):
             prompt = f"You played some Treasures which might benefit from being played in a particular order. Please choose the order in which you would like to play them. (1 will be played first, {num_treasures_played} will be played last.)"
             treasures = self.player.interactions.choose_cards_from_list(prompt, treasures, force=True, max_cards=num_treasures_played, ordered=True)
             treasures_string = ", ".join([treasure.name for treasure in treasures])
+            self._game_log.add_entry(f"{self.player} played Treasures in the following order: {treasures_string}.", parent=self._log_entry)
             self.game.broadcast(f"{self.player} played Treasures in the following order: {treasures_string}.")
         else:
             treasures_string = Card.group_and_sort_by_cost(treasures)
+            self._game_log.add_entry(f"{self.player} played Treasures: {treasures_string}.", parent=self._log_entry)
             self.game.broadcast(f"{self.player} played Treasures: {treasures_string}.")
         # Play the Treasures
         for treasure in treasures:
