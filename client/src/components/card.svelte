@@ -300,6 +300,10 @@
         transition: 0.4s ease-out;
     }
 
+    .selected.reaction:not(.attack):not(.victory):not(.treasure):not(.curse) {
+        border: 3px solid var(--victory-card-color);
+    }
+
     .action {
         background-color: var(--action-card-color);
         color: var(--light-text-color);
