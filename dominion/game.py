@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Any, Callable, Optional, Dict, List, Tuple, Ty
 
 from .cards.cards import Card, CardType, CardJSON
 from .expansions import BaseExpansion, DominionExpansion, ProsperityExpansion, IntrigueExpansion, CornucopiaExpansion, HinterlandsExpansion, GuildsExpansion
+from .game_log import GameLog
 from .grammar import s
 from .interactions import AutoInteraction, BrowserInteraction
 from .player import Player
@@ -62,6 +63,7 @@ class Game:
         self._post_discard_hooks = defaultdict(list)
         self._post_buy_hooks = defaultdict(list)
         self._game_end_conditions = []
+        self._game_log: GameLog = GameLog(self)
         self._recommended_set = None
         self._custom_set = None
         self._expansions = set()
@@ -104,7 +106,14 @@ class Game:
         The room ID for this game.
         '''
         return self._room
-    
+
+    @property
+    def game_log(self) -> GameLog:
+        '''
+        The game log for this game.
+        '''
+        return self._game_log
+
     @property
     def future_players(self) -> List[Dict[str, Any]]:
         '''
@@ -120,7 +129,7 @@ class Game:
             for num in range(0, self._future_cpus)
         ]
         return self._future_human_players + cpu_players
-    
+
     @property
     def future_player_names(self) -> List[str]:
         '''
@@ -571,8 +580,11 @@ class Game:
             player = Player(game=self, name=future_player["name"], interactions_class=future_player["interactions_class"], socketio=self.socketio, sid=future_player["sid"])
             self.players.append(player)
             player.interactions.start()
+        # Initiate start-of-game logging
+        game_start_log_entry = self.game_log.add_entry("The game has started.")
         # Add in the selected recommended set, if any
         if self.recommended_set is not None:
+            self.game_log.add_entry(f'Using "{self.recommended_set.name}" Recommended Kingdom.', parent=game_start_log_entry)
             self.broadcast(f'Using "{self.recommended_set.name}" Recommended Kingdom.')
             self.supply.customization.recommended_set = self.recommended_set(self)
             for expansion_instance in self.supply.customization.recommended_set.expansion_instances:
@@ -581,6 +593,7 @@ class Game:
         # Add in the custom set, if any
         elif self.custom_set is not None:
             game_creator_name = self.players[0].name
+            self.game_log.add_entry(f"Using {game_creator_name}'s Custom Kingdom.", parent=game_start_log_entry)
             self.broadcast(f"Using {game_creator_name}'s Custom Kingdom.")
             self.supply.customization.custom_set = self.custom_set(self)
             for expansion_instance in self.supply.customization.custom_set.expansion_instances:
@@ -600,9 +613,11 @@ class Game:
                 expansion_names[-2] = f"{expansion_names[-2]} and {expansion_names[-1]}"
                 expansion_names.pop()
                 expansions_string = ", ".join(expansion_names)
+                self.game_log.add_entry(f"Using {expansions_string} expansions.", parent=game_start_log_entry)
                 self.broadcast(f"Using {expansions_string} expansions.")
             elif len(expansion_names) == 1:
                 expansion_name = expansion_names[0]
+                self.game_log.add_entry(f"Using {expansion_name} expansion.", parent=game_start_log_entry)
                 self.broadcast(f"Using {expansion_name} expansion.")
             # Add in other supply customizations
             self.supply.customization.distribute_cost = self.distribute_cost
@@ -613,6 +628,7 @@ class Game:
             self.supply.customization.require_trashing = self.require_trashing
         # Notify players if simultaneous reactions are allowed
         if self.allow_simultaneous_reactions:
+            self.game_log.add_entry("Simultaneous reactions are allowed.", parent=game_start_log_entry)
             self.broadcast("Simultaneous reactions are allowed.")
         # Set up the supply
         self.supply.setup()
@@ -628,11 +644,14 @@ class Game:
     def end(self, explanation: str):
         print(self.scores)
         # Game is over. Print out info.
-        self.broadcast(explanation)
+        game_over_log_entry = self.game_log.add_entry("Game over!")
+        self.game_log.add_entry(explanation, parent=game_over_log_entry)
         self.broadcast('Game over!')
+        self.broadcast(explanation)
         victory_points_dict, turns_played_dict, winners = self.scores
         winners_str = ', '.join(map(str, winners))
         winners_str = f'{s(len(winners), "Winner").split(" ")[-1]}: {winners_str}.'
+        self.game_log.add_entry(winners_str, parent=game_over_log_entry)
         self.broadcast(winners_str)
         end_game_data = {
             "explanation": explanation,
