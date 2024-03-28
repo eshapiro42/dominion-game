@@ -209,7 +209,7 @@ class Advisor(ActionCard):
     description = '\n'.join(
         [
             # "+1 Action",
-            "Reval the top 3 cards of your deck. The player to your left chooses one of them. Discard that card and put the rest into your hand.",
+            "Reveal the top 3 cards of your deck. The player to your left chooses one of them. Discard that card and put the rest into your hand.",
         ]
     )
 
