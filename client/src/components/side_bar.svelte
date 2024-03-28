@@ -1,8 +1,15 @@
 <script>
+    import {onMount} from "svelte";
     import {socket, activeCarousel} from "../stores.js";
 
     let tradeRoute = false;
     let prizes = false;
+
+    onMount(
+        () => {
+            document.documentElement.setAttribute("sidebar-width", "64px");
+        }
+    );
 
     $: sections = [
         {

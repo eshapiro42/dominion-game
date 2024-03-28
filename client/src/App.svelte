@@ -7,6 +7,7 @@
     } from "./stores.js";
 
     import DiscardPile from "./components/discard_pile.svelte";
+    import GameLog from "./components/game_log.svelte";
     import GameSetup from "./components/game_setup.svelte";
     import GameOver from "./components/game_over.svelte";
     import Hand from "./components/hand.svelte";
@@ -247,6 +248,8 @@
         <SummaryBar/>
 
         <SideBar/>
+
+        <GameLog/>
 
         <MiscellaneousSelection
             show={miscellaneousSelection.show}

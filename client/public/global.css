@@ -15,6 +15,8 @@
     --light-text-color: var(--near-white);
 	--hrule: 1px solid color-mix(in srgb, var(--body-background-color), var(--border-color) 30%);
 	--card-width: 200px;
+    --sidebar-width: 64px;
+    --gamelog-width: 256px;
 }
 
 [data-theme="light"] {
@@ -271,33 +273,32 @@ tbody tr:not(:last-of-type) {
 
 /* Panels */
 
-.panel {
-	/* padding-right: 0.75rem;
-	padding-left: 0.75rem; */
-	margin-right: auto;
-	margin-left: auto;
-	left: 32px; /* half the width of the sidebar */
+table, .panel {
+    position: relative;
+    margin-left: calc(var(--sidebar-width) + 32px);
+    margin-right: calc(var(--gamelog-width) + 32px);
 }
 
 .panel-sticky {
-	position: -webkit-sticky;
-	position: sticky;
-	top: 0;
-	z-index: 9999;
+    position: -webkit-sticky;
+    position: sticky;
+    top: 0;
+    z-index: 9999;
 }
 
-table, .panel {
+/* table, .panel {
 	position: relative;
 	width: 100%;
 	max-width: 90vw;
 	min-width: 90vw;
     left: 32px;
-}
+} */
 
-/* Do not show sidebar on mobile devices */
+/* Do not show sidebar or game log on mobile devices */
 @media (max-width: 767px) {
 	table, .panel {
-		left: 0;
+		--sidebar-width: 0px;
+		--gamelog-width: 0px;
 	}
 }
 
