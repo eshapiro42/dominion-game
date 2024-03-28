@@ -277,7 +277,7 @@
                     }
                 );
                 let bane_card_name = saved_kingdom["data"]["bane_card_name"]
-                if (!allCardNames.includes(bane_card_name)) {
+                if (bane_card_name && !allCardNames.includes(bane_card_name)) {
                     alert(`The provided file contains an invalid Bane card name: ${bane_card_name}`);
                 }
             }
