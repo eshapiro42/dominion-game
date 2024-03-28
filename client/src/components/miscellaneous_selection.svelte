@@ -3,7 +3,9 @@
     
     const dispatch = createEventDispatcher();
 
-    import {socket} from "../stores.js";
+    import {socket, username, currentPlayer} from "../stores.js";
+
+    import {flashTitle} from "../common.js";
 
     import CardCarousel from "./card_carousel.svelte";
 
@@ -89,6 +91,10 @@
             () => {
                 location.hash = "#" + title;
                 history.pushState("", document.title, window.location.pathname + window.location.search);
+                if ($username != $currentPlayer) {
+                    flashTitle("You Must React!");
+                    alert(`Heads up: It is still ${$currentPlayer}'s turn!`);
+                }
             },
             300,
         );

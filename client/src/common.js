@@ -79,3 +79,21 @@ export function sticky(node) {
 
     intersectionObserver.observe(stickySentinel);
 }
+
+export function flashTitle(text) {
+    // If the tab is not active, flash the title until it is active
+    // If the tab is already active, this should just flash once
+    document.title = text;
+    let flashInterval = setInterval(
+        () => {
+            if (!document.hidden) {
+                document.title = "Dominion";
+                clearInterval(flashInterval);
+            }
+            else {
+                document.title = (document.title == "Dominion" ? text : "Dominion");
+            }
+        },
+        1000,
+    );
+}
