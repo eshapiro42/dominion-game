@@ -651,7 +651,7 @@ class Mine(ActionCard):
     extra_coppers = 0
 
     def action(self):
-        prompt = 'You played a Mine. You may choose a Treasure card from your hand to trash. If you do, you will gain a Treasure card costing up to 3 $ more than it.'
+        prompt = 'You played a Mine. You may choose a Treasure card from your hand to trash. If you do, you will gain a Treasure card to your hand costing up to 3 $ more than the trashed card.'
         card_to_trash = self.interactions.choose_specific_card_type_from_hand(prompt=prompt, card_type=CardType.TREASURE)
         if card_to_trash is None:
             self.game.broadcast(f'{self.owner} did not trash anything.')
