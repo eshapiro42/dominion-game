@@ -263,7 +263,11 @@ def send_kingdom_json(data):
     room = data["room"]
     game = games[room]
     supply = game.supply
-    json_data = {"cards": [], "additional_cards": None}
+    json_data = {
+        "cards": [],
+        "additional_cards": None,
+        "bane_card_name": None,
+    }
     bane_card_class = None
     for expansion_instance in supply.customization.expansions:
         if isinstance(expansion_instance, CornucopiaExpansion):
