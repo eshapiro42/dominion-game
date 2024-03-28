@@ -24,6 +24,7 @@
     import Toasts from "./components/toasts.svelte";
     import TradeRoute from "./components/trade_route.svelte";
     import Trash from "./components/trash.svelte";
+    import Waiting from "./components/waiting.svelte";
 
     let gameStarted = false;
     let roomCreator = false;
@@ -44,6 +45,7 @@
             }
         ]
     };
+    let waitingOnPlayers = [];
 
     function joinedRoom(event) {
         $room = event.detail.room;
@@ -187,6 +189,20 @@
         }
     );
 
+    $socket.on(
+        "waiting on player",
+        (player) => {
+            waitingOnPlayers = [...waitingOnPlayers, player];
+        }
+    );
+
+    $socket.on(
+        "not waiting on player",
+        (player) => {
+            waitingOnPlayers = waitingOnPlayers.filter(item => item != player);
+        }
+    )
+
     $: headerClass = gameStarted ? "panel" : ""; // This will re-center the header once the game has started
 
     $: if ($currentPlayer === $username && $currentPlayer !== "") {
@@ -274,6 +290,10 @@
         <Prizes/>
 
         <PlayerInfo/>
+
+        <Waiting
+            players={waitingOnPlayers}
+        />
     {/if}
 </main>
 
