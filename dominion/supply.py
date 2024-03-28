@@ -217,7 +217,7 @@ class Supply:
         self._card_stacks = {}
         self._post_gain_hooks = defaultdict(list)
         self._customization = Customization()
-        self._possible_kingdom_card_classes: List[Type(Card)] = []
+        self._possible_kingdom_card_classes: List[Type[Card]] = []
         # TODO: Remove these (they are for debugging specific cards)
         # self.customization.required_card_classes.add(guilds_cards.Stonemason)
 
