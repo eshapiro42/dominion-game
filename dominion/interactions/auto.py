@@ -18,20 +18,22 @@ class AutoInteraction(Interaction):
         def wrapper(self, *args, **kwargs):
             # If it is not this player's turn, notify the player whose turn it is that they are waiting on this player
             if self.game.current_turn.player != self.player:
-                self.socketio.emit(
-                    "waiting on player",
-                    self.player.name,
-                    to=self.game.current_turn.player.sid,
-                )
+                if not self.game.current_turn.player.is_cpu:
+                    self.socketio.emit(
+                        "waiting on player",
+                        self.player.name,
+                        to=self.game.current_turn.player.sid,
+                    )
             # Call the method
             ret = func(self, *args, **kwargs)
             # If it is not this player's turn, notify the player whose turn it is that the response was received
             if self.game.current_turn.player != self.player:
-                self.socketio.emit(
-                    "not waiting on player",
-                    self.player.name,
-                    to=self.game.current_turn.player.sid,
-                )
+                if not self.game.current_turn.player.is_cpu:
+                    self.socketio.emit(
+                        "not waiting on player",
+                        self.player.name,
+                        to=self.game.current_turn.player.sid,
+                    )
             return ret
         return wrapper
 

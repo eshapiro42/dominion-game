@@ -9,6 +9,7 @@ from .cards import base_cards, intrigue_cards, prosperity_cards, cornucopia_card
 from .cards.cards import Card, CardType, ReactionCard, ReactionType
 from .expansions import ProsperityExpansion, GuildsExpansion
 from .grammar import a, s
+from .interactions.auto import AutoInteraction
 from .supply import SupplyStackEmptyError
 from .turn import BuyPhase
 
@@ -126,7 +127,14 @@ class Player:
         """
         The Player's played cards from the current Turn.
         """
-        return self._played_cards        
+        return self._played_cards
+    
+    @property
+    def is_cpu(self) -> bool:
+        """
+        Whether the Player is a CPU player.
+        """
+        return isinstance(self.interactions, AutoInteraction)
 
     def get_other_players(self) -> List[Player]:
         """
