@@ -7,9 +7,9 @@
     import CardDisplayOptions from "./card_display_options.svelte";
     import SelectionPrompt from "./selection_prompt.svelte";
 
-    import {activeCarousel} from "../stores.js";
+    import {activeCarousel, username, currentPlayer} from "../stores.js";
 
-    import {sortCards} from "../common.js";
+    import {flashTitle, sortCards} from "../common.js";
 
     export let title;
     export let waitingForSelection;
@@ -95,6 +95,10 @@
             () => {
                 location.hash = "#" + title;
                 history.pushState("", document.title, window.location.pathname + window.location.search);
+                if ($username != $currentPlayer) {
+                    flashTitle("You Must React!");
+                    alert(`Heads up: It is still ${$currentPlayer}'s turn!`);
+                }
             },
             300,
         );
