@@ -51,45 +51,69 @@
                 on:click={() => window.scrollTo(0, 0)}
             ></i>
         {/if}
-        <div>
-            <div>
+        <div class="field">
+            <div class="field-title">
+                Current Turn
+            </div>
+            <div class="field-value">
                 {$currentPlayer == "" ? "No One" : $currentPlayer}
             </div>
         </div>
-        <div>
-            <div>
+        <div class="field">
+            <div class="field-title">
+                Phase
+            </div>
+            <div class="field-value">
                 {phase}
             </div>
         </div>
-        <div>
-            <div>
+        <div class="field">
+            <div class="field-title">
+                Actions
+            </div>
+            <div class="field-value">
                 {actions}
             </div>
         </div>
-        <div>
-            <div>
+        <div class="field">
+            <div class="field-title">
+                Buys
+            </div>
+            <div class="field-value">
                 {buys}
             </div>
         </div>
-        <div>
-            <div>
+        <div class="field">
+            <div class="field-title">
+                Treasure
+            </div>
+            <div class="field-value">
                 {coppers} <i class="fa-solid fa-coins"></i>
             </div>
         </div>
-        <div>
-            <div>
+        <div class="field">
+            <div class="field-title">
+                Hand
+            </div>
+            <div class="field-value">
                 {handSize}
             </div>
         </div>
         {#if coffers != null}
-            <div>
-                <div>
+            <div class="field">
+                <div class="field-title">
+                    Coffers
+                </div>
+                <div class="field-value">
                     {coffers}
                 </div>
             </div>
         {/if}
-        <div>
-            <div>
+        <div class="field">
+            <div class="field-title">
+                Turns Played
+            </div>
+            <div class="field-value">
                 Turn #{turnsPlayed}
             </div>
         </div>
@@ -114,7 +138,7 @@
     .fa-arrow-up {
         position: absolute;
         left: 20px;
-        top: 23px;
+        transform: translateY(100%);
     }
 
     .fa-arrow-up:hover {
@@ -123,5 +147,19 @@
 
     .isStuck {
         border-top: none;
+    }
+
+    .field {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .field-title {
+        color: color-mix(in srgb, var(--light-text-color) 60%, var(--thead-background-color) 40%);
+        font-size: 80%;
+        font-weight: bold;
+
     }
 </style>
