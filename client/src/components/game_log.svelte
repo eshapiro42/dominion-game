@@ -155,6 +155,8 @@
 
     .entry:not(.newTurn):not(.newPhase) {
         padding-left: 10px;
+        margin-left: 10px;
+        border-left: 1px solid color-mix(in srgb, var(--blue-color) 20%, var(--thead-background-color) 80%);
     }
 
     .timestamp {
@@ -172,10 +174,9 @@
     }
 
     .newPhase {
-        background-color: color-mix(in srgb, var(--victory-card-color) 5%, var(--thead-background-color) 95%);
-        margin-left: -10px;
+        background-color: color-mix(in srgb, var(--attack-card-color) 5%, var(--thead-background-color) 95%);
         margin-right: -10px;
-        padding-left: 15px;
+        padding-left: 10px;
         padding-right: 10px;
     }
 
