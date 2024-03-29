@@ -53,9 +53,11 @@
         }
     );
 
-    $socket.on("disconnect", 
+    $socket.on(
+        "disconnect", 
         (reason) => {
             const entry = {
+                "disconnect": true,
                 "timestamp": new Date().toLocaleTimeString(),
                 "message": `You have become disconnected from the server. Reason: ${reason}.`,
             }
@@ -63,7 +65,8 @@
         }
     );
 
-    $socket.on("new phase",
+    $socket.on(
+        "new phase",
         (phase_name) => {
             const entry = {
                 "new_phase": true,
@@ -78,7 +81,7 @@
         const entry = {
             "new_turn": true,
             "timestamp": new Date().toLocaleTimeString(),
-            "message": `${$currentPlayer}'s Turn!`
+            "message": `${$currentPlayer}'s Turn!`,
         }
         newEntry(entry);
     }
@@ -91,7 +94,7 @@
 <main>
     <div class="scroll-container" bind:this={scrollContainer}>
         {#each entries as entry}
-            <div class="entry {entry.hasOwnProperty("new_turn") ? "newTurn" : ""} {entry.hasOwnProperty("new_phase") ? "newPhase": ""}">
+            <div class="entry {entry.hasOwnProperty("new_turn") ? "newTurn" : ""} {entry.hasOwnProperty("new_phase") ? "newPhase": ""} {entry.hasOwnProperty("disconnect") ? "disconnect": ""}">
                 <div class="timestamp">
                     {entry.timestamp}
                 </div>
@@ -153,7 +156,7 @@
         padding-bottom: 5px;
     }
 
-    .entry:not(.newTurn):not(.newPhase) {
+    .entry:not(.newTurn):not(.newPhase):not(.disconnect) {
         padding-left: 10px;
         margin-left: 10px;
         border-left: 1px solid color-mix(in srgb, var(--blue-color) 20%, var(--thead-background-color) 80%);
@@ -175,6 +178,15 @@
 
     .newPhase {
         background-color: color-mix(in srgb, var(--attack-card-color) 5%, var(--thead-background-color) 95%);
+        margin-right: -10px;
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+
+    .disconnect {
+        background-color: var(--attack-card-color);
+        color: var(--dark-text-color);
+        margin-left: -10px;
         margin-right: -10px;
         padding-left: 10px;
         padding-right: 10px;
