@@ -34,10 +34,12 @@ class Turn:
         self._actions_remaining = 1
         self._buys_remaining = 1
         self._coppers_remaining = 0
+        self._game_log = self.game.game_log
+        self._log_entry = self.game.game_log.add_entry(f"{self.player}'s Turn.")
         self._current_phase = None
-        self._action_phase: ActionPhase | None = None
-        self._buy_phase: BuyPhase | None = None
-        self._cleanup_phase: CleanupPhase | None = None
+        self._action_phase = ActionPhase(self)
+        self._buy_phase = BuyPhase(self)
+        self._cleanup_phase = CleanupPhase(self)
         self._treasure_hooks = defaultdict(list)
         self._post_treasure_hooks = []
         self._post_gain_hooks = defaultdict(list)
@@ -46,8 +48,6 @@ class Turn:
         self._pre_cleanup_hooks = []
         self._invalid_card_classes = []
         self._cost_modifiers = defaultdict(int)
-        self._game_log = self.game.game_log
-        self._log_entry = self.game.game_log.add_entry(f"{self.player}'s Turn.")
 
     @property
     def player(self) -> Player:
@@ -272,11 +272,8 @@ class Turn:
         self.player.turns_played += 1
         self.player.interactions.new_turn()
         self.process_pre_turn_hooks()
-        self._action_phase = ActionPhase(self)
         self.action_phase.start()
-        self._buy_phase = BuyPhase(self)
         self.buy_phase.start()
-        self._cleanup_phase = CleanupPhase(self)
         self.cleanup_phase.start()
 
     def add_treasure_hook(self, treasure_hook: TreasureHook, card_class: Type[Card]):
@@ -455,12 +452,6 @@ class Phase(metaclass=ABCMeta):
         self._supply = self.player.game.supply
         self._game_log = self.game.game_log
         self._log_entry = self._game_log.add_entry(self.phase_name, parent=self.turn._log_entry)
-        self._turn.current_phase = self.phase_name
-        self._game.socketio.emit(
-            "new phase",
-            self._turn.current_phase,
-            to=self._game.room,
-        )
 
     @property
     def turn(self) -> Turn:
@@ -495,7 +486,15 @@ class Phase(metaclass=ABCMeta):
         '''
         Start the phase.
         '''
-        pass
+        self._turn.current_phase = self.phase_name
+        try:
+            self._game.socketio.emit(
+                "new phase",
+                self._turn.current_phase,
+                to=self._game.room,
+            )
+        except AttributeError:
+            pass
 
     @property
     @abstractmethod
@@ -519,6 +518,7 @@ class ActionPhase(Phase):
         Start the Action phase. While the player has Actions remaining and Action cards
         in their hand, ask them which Action cards they would like to play (then play them).     
         '''
+        super().start()
         while self.turn.actions_remaining > 0:
             # If there are no action cards in the player's hand, move on
             if not any(CardType.ACTION in card.types for card in self.player.hand):
@@ -605,6 +605,7 @@ class BuyPhase(Phase):
         While the player has buys remaining, ask them which cards 
         they would like to buy (then gain them).
         '''
+        super().start()
         self.cards_gained: int = 0 # Used occasionally with cards like Merchant Guild
         # Run any expansion-specific pre buy actions
         for expansion_instance in self.supply.customization.expansions:
@@ -870,6 +871,7 @@ class CleanupPhase(Phase):
 
         All cards in the supply have their cost modifiers reset to the default.
         '''
+        super().start()
         # Process any pre-cleanup hooks registered this turn
         self.process_pre_cleanup_hooks()
         # Clean up the player's mat

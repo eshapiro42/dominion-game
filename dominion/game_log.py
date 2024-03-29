@@ -60,7 +60,10 @@ class GameLog:
             self.root_entries.append(entry)
         else:
             parent.children.append(entry)
-        self.game.socketio.emit("new log entry", entry.serialize(), room=self.game.room)
+        try:
+            self.game.socketio.emit("new log entry", entry.serialize(), room=self.game.room)
+        except AttributeError:
+            pass
         print(entry)
         return entry
     
