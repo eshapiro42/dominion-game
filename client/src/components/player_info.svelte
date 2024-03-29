@@ -33,6 +33,14 @@
                         <div>Deck Size</div>
                         <div>{playerInfo.deck_size}</div>
                     </div>
+                    <div class="playerInfoItem">
+                        <div>Played Cards</div>
+                        <div>{playerInfo.played_size}</div>
+                    </div>
+                    <div class="playerInfoItem">
+                        <div>Total Cards</div>
+                        <div>{playerInfo.total_cards}</div>
+                    </div>
                     {#if "victory_tokens" in playerInfo}
                         <div class="playerInfoItem">
                             <div>Victory Tokens</div>

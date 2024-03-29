@@ -641,6 +641,8 @@ class Player:
             "hand_size": len(self.hand),
             "discard_size": len(self.discard_pile),
             "deck_size": len(self.deck),
+            "played_size": len(self.played_cards),
+            "total_cards": len(self.all_cards),
         }
         if ProsperityExpansion in self.game.expansions:
             info["victory_tokens"] = self.victory_tokens
