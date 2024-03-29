@@ -96,7 +96,7 @@
         bind:sortByProperty={sortByProperty}
     />
     {#each allKingdomCardsSorted as expansionData}
-        <div class="panel">
+        <div class="expansion">
             <div class="title">
                 <h4>{expansionData.expansion}</h4>
             </div>
@@ -208,7 +208,7 @@
         row-gap: 5px;
     }
 
-    .panel {
+    .expansion {
         left: 0px;
         padding-top: 30px;
         border-bottom: var(--hrule);

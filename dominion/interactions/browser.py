@@ -1,6 +1,7 @@
 import inspect
 import math
 from contextlib import contextmanager
+from datetime import datetime
 from threading import Event # Monkey patched to use gevent Events
 from typing import List, Optional
 
@@ -13,7 +14,11 @@ from .interaction import Interaction
 class BrowserInteraction(Interaction):
     def send(self, message):
         message = f'\n{message}\n'
-        self.socketio.send(message, to=self.sid)
+        data = {
+            "message": message,
+            "timestamp": datetime.now().isoformat(),
+        }
+        self.socketio.emit("message", data, to=self.sid)
         
     def _call(self, event_name, data):
         """

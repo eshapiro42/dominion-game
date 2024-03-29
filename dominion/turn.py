@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, List, Dict, Type
 
 from .cards.cards import Card, CardType, CurseCard
 from .expansions import GuildsExpansion
+from .game_log import GameLog, GameLogEntry
 from .grammar import a, s
 from .interactions import AutoInteraction, BrowserInteraction
 
@@ -33,10 +34,12 @@ class Turn:
         self._actions_remaining = 1
         self._buys_remaining = 1
         self._coppers_remaining = 0
-        self._current_phase = "Action Phase"
-        self._action_phase = ActionPhase(turn=self)
-        self._buy_phase = BuyPhase(turn=self)
-        self._cleanup_phase = CleanupPhase(turn=self)
+        self._game_log = self.game.game_log
+        self._log_entry = self.game.game_log.add_entry(f"{self.player}'s Turn.")
+        self._current_phase = None
+        self._action_phase = ActionPhase(self)
+        self._buy_phase = BuyPhase(self)
+        self._cleanup_phase = CleanupPhase(self)
         self._treasure_hooks = defaultdict(list)
         self._post_treasure_hooks = []
         self._post_gain_hooks = defaultdict(list)
@@ -341,8 +344,10 @@ class Turn:
         self.actions_remaining += num_actions
         if message:
             if num_actions > 0:
+                self._game_log.add_context_aware_subentry(f"+{s(num_actions, 'action')} → {s(self.actions_remaining, 'action')}.")
                 self.game.broadcast(f"+{s(num_actions, 'action')} → {s(self.actions_remaining, 'action')}.")
             elif num_actions < 0:
+                self._game_log.add_context_aware_subentry(f"-{s(-num_actions, 'action')} → {s(self.actions_remaining, 'action')}.")
                 self.game.broadcast(f"-{s(-num_actions, 'action')} → {s(self.actions_remaining, 'action')}.")
 
     def plus_buys(self, num_buys: int, message: bool = True):
@@ -356,8 +361,10 @@ class Turn:
         self.buys_remaining += num_buys
         if message:
             if num_buys > 0:
+                self._game_log.add_context_aware_subentry(f"+{s(num_buys, 'buy')} → {s(self.buys_remaining, 'buy')}.")
                 self.game.broadcast(f"+{s(num_buys, 'buy')} → {s(self.buys_remaining, 'buy')}.")
             elif num_buys < 0:
+                self._game_log.add_context_aware_subentry(f"-{s(-num_buys, 'buy')} → {s(self.buys_remaining, 'buy')}.")
                 self.buys_remaining(f"-{s(-num_buys, 'buy')} → {s(self.buys_remaining,'buy')}.")
 
     def plus_coppers(self, num_coppers: int, message: bool = True):
@@ -371,8 +378,10 @@ class Turn:
         self.coppers_remaining += num_coppers
         if message:
             if num_coppers > 0:
+                self._game_log.add_context_aware_subentry(f"+{num_coppers} $ → {self.coppers_remaining} $.")
                 self.game.broadcast(f'+{num_coppers} $ → {self.coppers_remaining} $.')
             elif num_coppers < 0:
+                self._game_log.add_context_aware_subentry(f'-{-num_coppers} $ → {self.coppers_remaining} $.')
                 self.game.broadcast(f'-{-num_coppers} $ → {self.coppers_remaining} $.')
 
     def process_pre_turn_hooks(self):
@@ -441,6 +450,8 @@ class Phase(metaclass=ABCMeta):
         self._player = self.turn.player
         self._game = self.player.game
         self._supply = self.player.game.supply
+        self._game_log = self.game.game_log
+        self._log_entry = self._game_log.add_entry(self.phase_name, parent=self.turn._log_entry)
 
     @property
     def turn(self) -> Turn:
@@ -475,18 +486,39 @@ class Phase(metaclass=ABCMeta):
         '''
         Start the phase.
         '''
+        self._turn.current_phase = self.phase_name
+        try:
+            self._game.socketio.emit(
+                "new phase",
+                self._turn.current_phase,
+                to=self._game.room,
+            )
+        except AttributeError:
+            pass
+
+    @property
+    @abstractmethod
+    def phase_name(self) -> str:
+        '''
+        The name of the phase.
+        '''
         pass
 
 
 class ActionPhase(Phase):
     '''
     Action phase of the current turn.
-    '''    
+    '''
+    @property
+    def phase_name(self) -> str:
+        return "Action Phase"
+    
     def start(self):
         '''
         Start the Action phase. While the player has Actions remaining and Action cards
         in their hand, ask them which Action cards they would like to play (then play them).     
         '''
+        super().start()
         while self.turn.actions_remaining > 0:
             # If there are no action cards in the player's hand, move on
             if not any(CardType.ACTION in card.types for card in self.player.hand):
@@ -511,6 +543,7 @@ class ActionPhase(Phase):
         Args:
             card: The action card to play.
         '''
+        self._game_log.add_entry(f"{self.player} played {a(card)}.", parent=self._log_entry)
         self.game.broadcast(f'{self.player} played {a(card)}.')
         # Add the card to the played cards area
         self.player.play(card)
@@ -525,6 +558,7 @@ class ActionPhase(Phase):
         Args:
             card: The action card to play.
         '''
+        self._game_log.add_entry(f"{self.player} played {a(card)}.", parent=self._log_entry)
         self.game.broadcast(f'{self.player} played {a(card)}.')
         self.walk_through_action_card(card)
 
@@ -552,6 +586,10 @@ class BuyPhase(Phase):
     '''
     Buy phase of the current turn.
     '''
+    @property
+    def phase_name(self) -> str:
+        return "Buy Phase"
+
     def start(self):
         '''
         Start the buy phase. 
@@ -567,7 +605,7 @@ class BuyPhase(Phase):
         While the player has buys remaining, ask them which cards 
         they would like to buy (then gain them).
         '''
-        self.turn.current_phase = "Buy Phase"
+        super().start()
         self.cards_gained: int = 0 # Used occasionally with cards like Merchant Guild
         # Run any expansion-specific pre buy actions
         for expansion_instance in self.supply.customization.expansions:
@@ -667,6 +705,7 @@ class BuyPhase(Phase):
             treasures: A list of treasure cards to play.
         '''
         if not treasures:
+            self._game_log.add_entry(f"{self.player} did not any Treasures.", parent=self._log_entry)
             self.game.broadcast(f"{self.player} did not play any Treasures.")
             return
         # Allow each expansion to modify the order of Treasures played
@@ -675,9 +714,11 @@ class BuyPhase(Phase):
             prompt = f"You played some Treasures which might benefit from being played in a particular order. Please choose the order in which you would like to play them. (1 will be played first, {num_treasures_played} will be played last.)"
             treasures = self.player.interactions.choose_cards_from_list(prompt, treasures, force=True, max_cards=num_treasures_played, ordered=True)
             treasures_string = ", ".join([treasure.name for treasure in treasures])
+            self._game_log.add_entry(f"{self.player} played Treasures in the following order: {treasures_string}.", parent=self._log_entry)
             self.game.broadcast(f"{self.player} played Treasures in the following order: {treasures_string}.")
         else:
             treasures_string = Card.group_and_sort_by_cost(treasures)
+            self._game_log.add_entry(f"{self.player} played Treasures: {treasures_string}.", parent=self._log_entry)
             self.game.broadcast(f"{self.player} played Treasures: {treasures_string}.")
         # Play the Treasures
         for treasure in treasures:
@@ -765,6 +806,7 @@ class BuyPhase(Phase):
         # Buying a card uses one buy
         self.turn.buys_remaining -= 1
         # Gain the desired card
+        self._game_log.add_entry(f"{self.player} bought {a(card_class.name)}.", parent=self._log_entry)
         self.game.broadcast(f'{self.player} bought {a(card_class.name)}.')
         purchased_card = self.player.gain(card_class, message=False)[0]
         self.turn.coppers_remaining -= self.supply.card_stacks[card_class].modified_cost
@@ -787,10 +829,12 @@ class BuyPhase(Phase):
         '''
         card_class = self.player.interactions.choose_card_class_from_supply(prompt=prompt, max_cost=max_cost, force=force, exact_cost=exact_cost)
         if card_class is None:
+            self._game_log.add_entry(f"{self.player} did not gain anything.", parent=self._log_entry)
             self.game.broadcast(f'{self.player} did not gain anything.')
             return
         else:
             # Gain the desired card
+            self._game_log.add_entry(f"{self.player} gained {a(card_class.name)}.", parent=self._log_entry)
             self.game.broadcast(f'{self.player} gained {a(card_class.name)}.')
             self.player.gain(card_class, message=False)
 
@@ -799,6 +843,10 @@ class CleanupPhase(Phase):
     '''
     Cleanup phase of the current Turn.
     '''
+    @property
+    def phase_name(self) -> str:
+        return "Cleanup Phase"
+
     def process_pre_cleanup_hooks(self):
         '''
         Activate any pre-cleanup hooks currently registered.
@@ -823,7 +871,7 @@ class CleanupPhase(Phase):
 
         All cards in the supply have their cost modifiers reset to the default.
         '''
-        self.turn.current_phase = "Cleanup Phase"
+        super().start()
         # Process any pre-cleanup hooks registered this turn
         self.process_pre_cleanup_hooks()
         # Clean up the player's mat

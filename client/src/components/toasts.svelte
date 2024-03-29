@@ -70,19 +70,19 @@
         showExpiredToasts = !showExpiredToasts;
     }
 
-    $socket.on("message", function(data) {
-        addMessage(data);
-    });
+    // $socket.on("message", function(data) {
+    //     addMessage(data);
+    // });
 
-    $socket.on("player message", function(data) {
-        addMessage(data, true);
-    });
+    // $socket.on("player message", function(data) {
+    //     addMessage(data, true);
+    // });
 
-    $socket.on("disconnect", 
-        (reason) => {
-            addMessage(`You have become disconnected from the server. Reason: ${reason}`);
-        }
-    );
+    // $socket.on("disconnect", 
+    //     (reason) => {
+    //         addMessage(`You have become disconnected from the server. Reason: ${reason}`);
+    //     }
+    // );
 </script>
 
 <main>

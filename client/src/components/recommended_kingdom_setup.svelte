@@ -70,7 +70,7 @@
 
     {#each recommendedSetsSorted as set, index}
         <div 
-            class="panel {recommendedSet == index ? "selected" : ""}"
+            class="kingdom {recommendedSet == index ? "selected" : ""}"
             id="{set.name}"
             on:click={
                 () => {
@@ -185,13 +185,13 @@
         row-gap: 5px;
     }
 
-    .panel {
+    .kingdom {
         left: 0px;
         scroll-margin-top: 30px;
         border-bottom: var(--hrule);
     }
 
-    .panel:hover:not(.selected) {
+    .kingdom:hover:not(.selected) {
         background-color: color-mix(in srgb, var(--body-background-color), var(--blue-color) 20%);
     }
     

@@ -9,6 +9,7 @@
     import {flashTitle} from "./common.js";
 
     import DiscardPile from "./components/discard_pile.svelte";
+    import GameLog from "./components/game_log.svelte";
     import GameSetup from "./components/game_setup.svelte";
     import GameOver from "./components/game_over.svelte";
     import Hand from "./components/hand.svelte";
@@ -203,8 +204,6 @@
         }
     )
 
-    $: headerClass = gameStarted ? "panel" : ""; // This will re-center the header once the game has started
-
     $: if ($currentPlayer === $username && $currentPlayer !== "") {
         flashTitle("Your Turn!");
     }
@@ -230,18 +229,16 @@
 </script>
 
 <main>
-    <header>
-        <div class={headerClass}>
-            <div class="title">
-                <h1>Dominion</h1> <Settings/>
-            </div>
-            {#if roomJoined}
-            <p>Room ID: {$room}</p>
-            {/if}
+    <div class="panel">
+        <div class="title">
+            <h1>Dominion</h1> <Settings/>
         </div>
-    </header>
+        {#if roomJoined}
+        <p>Room ID: {$room}</p>
+        {/if}
+    </div>
 
-    <Toasts/>
+    <!-- <Toasts/> -->
 
     <Lobby 
         on:joined={joinedRoom}
@@ -252,6 +249,8 @@
         {roomCreator}
         on:started={startedGame}
     />
+
+    <GameLog/>
 
     {#if gameStarted}
         <SummaryBar/>
@@ -301,10 +300,6 @@
     main {
         text-align: center;
         padding-bottom: 20px;
-    }
-
-    header {
-        margin: 20px;
     }
 
     .title {
