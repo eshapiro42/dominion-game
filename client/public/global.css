@@ -15,7 +15,7 @@
     --light-text-color: var(--near-white);
 	--hrule: 1px solid color-mix(in srgb, var(--body-background-color), var(--border-color) 30%);
 	--card-width: 200px;
-    --sidebar-width: 64px;
+    --sidebar-width: 0px;
     --gamelog-width: 256px;
 }
 
@@ -250,26 +250,36 @@ button:not(:disabled):active {
 
 table {
     text-align: center;
-    vertical-align: middle;
     border: 1px solid var(--border-color);
 	border-collapse: collapse; 
+	display: block;
 }
 
 thead {
     background-color: var(--thead-background-color);
     color: var(--light-text-color);
 	font-family: var(--title-font-family);
+	display: block;
+	text-align: -webkit-center;
 }
 
 thead tr {
+	display: block;
 	border-bottom: var(--hrule);
 }
 
 tbody {
+	display: block;
 	border-color: var(--border-color);
+	text-align: -webkit-center;
+}
+
+tbody tr {
+	display: block;
 }
 
 td, th {
+	display: block;
     padding: 20px;
 }
 

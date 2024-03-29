@@ -354,7 +354,7 @@
             </div>
             <br>
             <br>
-            <div class="tabs">
+            <div class="panel">
                 <Tabs
                     tabNames={
                         [
@@ -397,19 +397,15 @@
                         </div>
                     </main>
                 {:else if selectedTab === "Recommended Kingdom"}
-                    <main>
-                        <RecommendedKingdomSetup 
-                            {recommendedSets}
-                            bind:recommendedSet={recommendedSet}
-                    />
-                    </main>
+                    <RecommendedKingdomSetup 
+                        {recommendedSets}
+                        bind:recommendedSet={recommendedSet}
+                />
                 {:else if selectedTab === "Custom Kingdom"}
-                    <main>
-                        <CustomKingdomSetup 
-                            {allKingdomCards}
-                            bind:customKingdomData={customKingdomData}
-                        />
-                    </main>
+                    <CustomKingdomSetup 
+                        {allKingdomCards}
+                        bind:customKingdomData={customKingdomData}
+                    />
                 {:else if selectedTab === "Saved Kingdom"}
                     <main class="space-above">
                         {#if saved_kingdom.hasOwnProperty("file_handle")}
@@ -508,10 +504,5 @@
 
     .fa-arrow-up:hover {
         cursor: pointer;
-    }
-
-    .tabs {
-        width: 90vw;
-        margin: auto;
     }
 </style>

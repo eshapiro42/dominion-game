@@ -7,7 +7,7 @@
 
     onMount(
         () => {
-            document.documentElement.setAttribute("sidebar-width", "64px");
+            document.documentElement.style.setProperty("--sidebar-width", "64px");
         }
     );
 

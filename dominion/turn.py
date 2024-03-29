@@ -455,6 +455,12 @@ class Phase(metaclass=ABCMeta):
         self._supply = self.player.game.supply
         self._game_log = self.game.game_log
         self._log_entry = self._game_log.add_entry(self.phase_name, parent=self.turn._log_entry)
+        self._turn.current_phase = self.phase_name
+        self._game.socketio.emit(
+            "new phase",
+            self._turn.current_phase,
+            to=self._game.room,
+        )
 
     @property
     def turn(self) -> Turn:

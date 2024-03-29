@@ -204,8 +204,6 @@
         }
     )
 
-    $: headerClass = gameStarted ? "panel" : ""; // This will re-center the header once the game has started
-
     $: if ($currentPlayer === $username && $currentPlayer !== "") {
         flashTitle("Your Turn!");
     }
@@ -231,18 +229,16 @@
 </script>
 
 <main>
-    <header>
-        <div class={headerClass}>
-            <div class="title">
-                <h1>Dominion</h1> <Settings/>
-            </div>
-            {#if roomJoined}
-            <p>Room ID: {$room}</p>
-            {/if}
+    <div class="panel">
+        <div class="title">
+            <h1>Dominion</h1> <Settings/>
         </div>
-    </header>
+        {#if roomJoined}
+        <p>Room ID: {$room}</p>
+        {/if}
+    </div>
 
-    <Toasts/>
+    <!-- <Toasts/> -->
 
     <Lobby 
         on:joined={joinedRoom}
@@ -254,12 +250,12 @@
         on:started={startedGame}
     />
 
+    <GameLog/>
+
     {#if gameStarted}
         <SummaryBar/>
 
         <SideBar/>
-
-        <GameLog/>
 
         <MiscellaneousSelection
             show={miscellaneousSelection.show}
@@ -304,10 +300,6 @@
     main {
         text-align: center;
         padding-bottom: 20px;
-    }
-
-    header {
-        margin: 20px;
     }
 
     .title {
