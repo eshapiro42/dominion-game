@@ -390,3 +390,7 @@ h2 {
 		background-color: color-mix(in srgb, var(--body-background-color), var(--blinking-color) 10%);
 	}
 }
+
+:target {
+    scroll-margin-top: 24px;
+}
