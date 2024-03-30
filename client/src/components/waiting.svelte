@@ -17,18 +17,20 @@
     }
 </script>
 
-{#if show}
-    <main>
-        <p>Waiting for {formattedPlayers}...</p>
+<!-- {#if show} -->
+    <main class="panel-sticky">
+        <div class="panel">
+            <p>Waiting for {formattedPlayers}...</p>
+        </div>
     </main>
-{/if}
+<!-- {/if} -->
 
 <style>
     main {
         height: 64px;
         width: 100%;
+        left: 0px;
         bottom: 0;
-        left: 0;
         display: flex;
         position: fixed;
         justify-content: center;
@@ -38,8 +40,13 @@
         z-index: 999;
     }
 
+    .panel-sticky {
+        top: unset;
+        bottom: 0px;
+    }
+
     p {
         line-height: 64px;
-        margin-left: 64px;
+        /* margin-left: calc(-1 * var(--gamelog-width)); */
     }
 </style>

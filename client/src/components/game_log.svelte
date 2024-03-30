@@ -12,7 +12,7 @@
         document.documentElement.style.setProperty("--gamelog-width", "256px");
     } 
     else {
-        document.documentElement.style.setProperty("--gamelog-width", "0");
+        document.documentElement.style.setProperty("--gamelog-width", "0px");
     }
 
     onMount(
