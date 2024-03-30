@@ -1,11 +1,12 @@
 <script>
-    import {onMount, tick} from "svelte";
+    import {afterUpdate, beforeUpdate, onMount, tick} from "svelte";
     import {socket, currentPlayer} from "../stores.js";
 
     let show = true;
 
     let entries = [];
     let scrollContainer = null;
+    let scrolledToBottom = true;
 
     $: if (show) {
         document.documentElement.style.setProperty("--gamelog-width", "256px");
@@ -25,17 +26,27 @@
     );
 
     function newEntry(entry) {
-        // Detect whether the log is already scrolled all the way down
-        var scrolledToBottom = scrollContainer.scrollHeight - Math.ceil(scrollContainer.scrollTop) <= scrollContainer.clientHeight;
         // Append the new log entry
         entries = [...entries, entry];
-        // If the log was scrolled all the way down, scroll to the bottom again
-        if (scrolledToBottom) {
-            tick().then(() => {
-                scrollContainer.scrollTop = scrollContainer.scrollHeight;
-            });
-        }
     }
+
+    beforeUpdate(
+        () => {
+            if (scrollContainer) {
+                // Detect whether the log is already scrolled all the way down
+                scrolledToBottom = scrollContainer.scrollHeight - Math.ceil(scrollContainer.scrollTop) <= scrollContainer.clientHeight + 64;
+            }
+        }
+    );
+
+    afterUpdate(
+        () => {
+            if (scrollContainer && scrolledToBottom) {
+                // If the log was scrolled all the way down, scroll to the bottom again
+                scrollContainer.scrollTop = scrollContainer.scrollHeight;
+            }
+        }
+    );
 
     $socket.on(
         "message",
