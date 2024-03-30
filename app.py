@@ -161,7 +161,7 @@ def remove_player(data):
 def start_game(data):
     username = data['username']
     room = data['room']
-    allow_simultaneous_reactions = data['allowSimultaneousReactions']
+    allow_simultaneous_reactions = data['allowSimultaneousReactions']['selected']
     recommended_set_index = data.get('recommended_set_index')
     custom_set_data = data.get('custom_set_data')
     dominion = data.get('dominion')
