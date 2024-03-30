@@ -17,13 +17,13 @@
     }
 </script>
 
-<!-- {#if show} -->
+{#if show}
     <main class="panel-sticky">
         <div class="panel">
             <p>Waiting for {formattedPlayers}...</p>
         </div>
     </main>
-<!-- {/if} -->
+{/if}
 
 <style>
     main {
@@ -34,7 +34,7 @@
         display: flex;
         position: fixed;
         justify-content: center;
-        background-color: var(--blue-color);
+        background-color: color-mix(in srgb, var(--blue-color) 90%, transparent 10%);
         color: var(--dark-text-color);
         text-align: center;
         z-index: 999;
