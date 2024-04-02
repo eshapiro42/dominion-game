@@ -26,6 +26,10 @@
     );
 
     function newEntry(entry) {
+        // Check if entry should be italicized (kind of a hack but YOLO)
+        if (entry.message.includes("→")) {
+            entry.italicize = true;
+        }
         // Append the new log entry
         entries = [...entries, entry];
     }
@@ -105,7 +109,7 @@
 <main>
     <div class="scroll-container" bind:this={scrollContainer}>
         {#each entries as entry}
-            <div class="entry {entry.hasOwnProperty("new_turn") ? "newTurn" : ""} {entry.hasOwnProperty("new_phase") ? "newPhase": ""} {entry.hasOwnProperty("disconnect") ? "disconnect": ""}">
+            <div class="entry {entry.hasOwnProperty("new_turn") ? "newTurn" : ""} {entry.hasOwnProperty("new_phase") ? "newPhase": ""} {entry.hasOwnProperty("disconnect") ? "disconnect": ""} {entry.hasOwnProperty("italicize") ? "italicize": ""}">
                 <div class="timestamp">
                     {entry.timestamp}
                 </div>
@@ -167,6 +171,10 @@
         padding-bottom: 5px;
         margin-right: -10px;
         padding-right: 10px;
+    }
+
+    .entry.italicize > .message{
+        font-style: italic;
     }
 
     .entry:hover {
