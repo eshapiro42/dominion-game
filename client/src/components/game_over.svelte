@@ -65,42 +65,30 @@
                 <h5>{endGameData.explanation}</h5>
                 <br>
                 <h5>{endGameData.winners}</h5>
-                <br>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Player</th>
-                            <th>Victory Points</th>
-                            <th>Turns Taken</th>
+                <div class="results">
+                    <div class="results-table">
+                        <div class="results-row results-heading">
+                            <span>Player</span>
+                            <span>Victory Points</span>
+                            <span>Turns Taken</span>
                             {#if endGameData.showVictoryTokens}
-                                <th>Victory Tokens</th>
+                                <span>Victory Tokens</span>
                             {/if}
-                        </tr>
-                    </thead>
-                    <tbody>
+                        </div>
                         {#each endGameData.playerData as playerData}
-                            <tr>
-                                <td>
-                                    <b>{playerData.name}</b>
-                                </td>
-                                <td>
-                                    {playerData.score}
-                                </td>
-                                <td>
-                                    {playerData.turns}
-                                </td>
+                            <div class="results-row">
+                                <span><b>{playerData.name}</b></span>
+                                <span>{playerData.score}</span>
+                                <span>{playerData.turns}</span>
                                 {#if endGameData.showVictoryTokens}
-                                    <td>
-                                        {#if playerData.victoryTokens}
-                                            {playerData.victoryTokens}
-                                        {/if}
-                                    </td>
+                                    <span>{playerData.victoryTokens}</span>
                                 {/if}
-                            </tr>
+                            </div>
                         {/each}
-                    </tbody>
-                </table>
+                    </div>
+                </div>
             </div>
+
             <CardDisplayOptions
                 name="Game Over"
                 bind:displayAs={displayAs}
@@ -206,11 +194,35 @@
         row-gap: 5px;
     }
 
-    table {
-        min-width: 0px;
-        left: 0px;
-        border-left: none;
-        border-right: none;
-        color: var(--text-color);
+    .results {
+        margin-top: 40px;
+        margin-bottom: 40px;
     }
+
+    .results-table {
+        display: grid;
+        border-collapse: collapse;
+        border-top: 1px solid var(--border-color);
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .results-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    }
+
+    .results-row > span {
+        padding: 20px;
+    }
+
+    .results-row.results-heading {
+        background-color: var(--thead-background-color);
+        font-weight: bold;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .results-row:not(.results-heading):hover {
+        background-color: color-mix(in srgb, var(--body-background-color), var(--blue-color) 20%);
+    }
+
 </style>
