@@ -176,7 +176,7 @@
         "game over",
         (data) => {
             createGameOver(data.endGameData, data.cards);
-            $socket.disconnect();
+            // $socket.disconnect();
         }
     );
 
