@@ -105,7 +105,7 @@ class HeartBeat:
     def beat(self):
         counter = 0
         while self.run:
-            if self.game.ended[0]:
+            if self.game.ended:
                 print(f"<3 Game {self.game.room} ended <3")
                 self.stop()
             self.game.socketio.sleep(self.sleep_time)

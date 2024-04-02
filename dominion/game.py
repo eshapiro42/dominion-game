@@ -74,6 +74,7 @@ class Game:
         self._require_drawer = False
         self._require_buy = False
         self._require_trashing = False
+        self._ended = False
 
         self.add_expansion(BaseExpansion) # This must always be here or the game will not work
         # self.add_expansion(DominionExpansion)
@@ -693,9 +694,10 @@ class Game:
             self.current_turn = Turn(player)
             self.current_turn.start()
             # Check if the game ended after each turn
-            ended, explanation = self.ended
+            ended, explanation = self.end_condition_met
             if ended:
                 self.end(explanation)
+                self.ended = True
                 break
 
     def broadcast(self, message: str):
@@ -709,7 +711,7 @@ class Game:
             player.interactions.send(message)
         
     @property
-    def ended(self) -> Tuple[bool, Optional[str]]:
+    def end_condition_met(self) -> Tuple[bool, Optional[str]]:
         '''
         Check whether the game has ended.
         
@@ -725,6 +727,17 @@ class Game:
                 return True, explanation
         else:
             return False, None
+
+    @property
+    def ended(self) -> bool:
+        '''
+        Whether the game has ended.
+        '''
+        return self._ended
+    
+    @ended.setter
+    def ended(self, ended: bool):
+        self._ended = ended
 
     @property
     def scores(self) -> Tuple[Dict[Player, int], Dict[Player, int], List[str]]:
