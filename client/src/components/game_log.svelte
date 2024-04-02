@@ -122,8 +122,8 @@
 </main>
 
 <style lang="scss">
-    $light-scrollbar-color: #d9d9d980;
-    $light-scrollbar-color-hover: #dadada;
+    $scrollbar-color: color-mix(in srgb, var(--blue-color), var(--body-background-color) 20%);
+    $scrollbar-color-hover: var(--blue-color);
 
     main {
         z-index: 9999;
@@ -149,10 +149,10 @@
             border-radius: var(--card-border-radius);
             border: 2px solid transparent;
             background-clip: content-box;
-            background-color: $light-scrollbar-color;
+            background-color: $scrollbar-color;
         }
         ::-webkit-scrollbar-thumb:hover {
-            background-color: $light-scrollbar-color-hover;
+            background-color: $scrollbar-color-hover;
         }
     }
 
