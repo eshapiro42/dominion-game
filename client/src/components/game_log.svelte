@@ -132,14 +132,14 @@
         color: var(--light-text-color);
         border-left: 1px solid var(--border-color);
         font-family: var(--title-font-family);
-        font-size: 80%;
+        font-size: 85%;
         text-align: start;
 
         ::-webkit-scrollbar {
             width: 10px;
         }
         ::-webkit-scrollbar-track {
-            background-color: transparent;
+            background-color: var(--body-background-color);
         }
         ::-webkit-scrollbar-thumb {
             border-radius: var(--card-border-radius);
@@ -165,6 +165,12 @@
         direction: ltr;
         padding-top: 5px;
         padding-bottom: 5px;
+        margin-right: -10px;
+        padding-right: 10px;
+    }
+
+    .entry:hover {
+        background-color: color-mix(in srgb, var(--victory-card-color) 20%, var(--thead-background-color) 80%);
     }
 
     .entry:not(.newTurn):not(.newPhase):not(.disconnect) {
@@ -180,27 +186,21 @@
     }
 
     .newTurn {
-        background-color: color-mix(in srgb, var(--blue-color) 10%, var(--thead-background-color) 90%);
+        background-color: color-mix(in srgb, var(--blue-color) 20%, var(--thead-background-color) 80%);
         margin-left: -10px;
-        margin-right: -10px;
         padding-left: 10px;
-        padding-right: 10px;
+        font-weight: bold;
     }
 
     .newPhase {
-        background-color: color-mix(in srgb, var(--attack-card-color) 5%, var(--thead-background-color) 95%);
-        margin-right: -10px;
         padding-left: 10px;
-        padding-right: 10px;
+        font-weight: bold;
     }
 
     .disconnect {
-        background-color: var(--attack-card-color);
-        color: var(--dark-text-color);
+        background-color: color-mix(in srgb, var(--attack-card-color) 10%, var(--thead-background-color) 90%);
         margin-left: -10px;
-        margin-right: -10px;
         padding-left: 10px;
-        padding-right: 10px;
     }
 
     /* Do not show game log on mobile devices */
