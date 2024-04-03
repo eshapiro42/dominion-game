@@ -428,7 +428,7 @@
                 {/if}
             </div>
         {:else}
-            <main>
+            <main class="panel">
                 <div>
                     <br>
                     <br>

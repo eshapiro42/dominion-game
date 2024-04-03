@@ -122,7 +122,7 @@ def create_room(data):
     # Add the player to the game
     game.add_player(username, sid)
     socketio.emit("players in room", game.future_player_names)
-    socketio.send(f'{username} has created room {room}\n', room=room)
+    socketio.send(f'{username} has created room {room}.\n', room=room)
     return room # This activates the client's set_room() callback
 
 @socketio.on('add cpu')
