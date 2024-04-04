@@ -55,13 +55,13 @@ all_kingdom_cards_json = [{"expansion": expansion.name, "cards": [card_class().j
 def join_room(data):
     username = data['username']
     room = data['room']
+    sid = request.sid
     # If the user is already in the room, reject them
     if username in connected_players[room]:
-        socketio.send(f'A player with that username has already joined the game.')
+        socketio.send(f'A player with that username has already joined the game.', to=sid)
         return False
     # Add the user to the room
     flask_socketio.join_room(room)
-    sid = request.sid
     sids[sid] = (room, data)
     connected_players[room].append(username)
     try:
@@ -70,7 +70,7 @@ def join_room(data):
         game.kill_scheduled = False # Cancel erasure of the game if necessary
         game_startable_before = game.startable
         game.add_player(username, sid)
-        socketio.emit("players in room", game.future_player_names)
+        socketio.emit("players in room", game.future_player_names, room=room)
         socketio.send(f'{username} has entered room {room}.\n', room=room)
         # If the game just became startable, push an event
         game_startable_after = game.startable
@@ -121,7 +121,7 @@ def create_room(data):
     game.heartbeat = HeartBeat(game)
     # Add the player to the game
     game.add_player(username, sid)
-    socketio.emit("players in room", game.future_player_names)
+    socketio.emit("players in room", game.future_player_names, room=room)
     socketio.send(f'{username} has created room {room}.\n', room=room)
     return room # This activates the client's set_room() callback
 
@@ -133,7 +133,7 @@ def add_cpu(data):
     game_startable_before = game.startable
     game.add_cpu()
     cpu_name = f"CPU {game._future_cpus}"
-    socketio.emit("players in room", game.future_player_names)
+    socketio.emit("players in room", game.future_player_names, room=room)
     socketio.send(f'{cpu_name} has entered room {room}.\n', room=room)
     # If the game just became startable, push an event
     game_startable_after = game.startable
@@ -150,7 +150,7 @@ def remove_player(data):
     game.remove_player(player_name)
     # Let everyone know the player's shame
     socketio.emit("player removed", {"player_name": player_name}, room=room)
-    socketio.emit("players in room", game.future_player_names)
+    socketio.emit("players in room", game.future_player_names, room=room)
     socketio.send(f'{player_name} has been removed from room {room}.\n', room=room)
     # If the game just became startable, push an event
     game_startable_after = game.startable
