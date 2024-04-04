@@ -97,14 +97,14 @@ class Turn:
         self._coppers_remaining = coppers_remaining
 
     @property
-    def current_phase(self) -> str:
+    def current_phase(self) -> Phase:
         """
-        A string representing the current phase of the turn.
+        The current phase of the turn.
         """
         return self._current_phase
 
     @current_phase.setter
-    def current_phase(self, current_phase: str):
+    def current_phase(self, current_phase: Phase):
         self._current_phase = current_phase
 
     @property
@@ -234,7 +234,7 @@ class Turn:
         Return information about the current turn.
         """
         current_turn_info = {
-            "current_phase": self.current_phase,
+            "current_phase": self.current_phase.phase_name,
             "actions": s(self.actions_remaining, "Action"),
             "buys": s(self.buys_remaining, "Buy"),
             "coppers": self.coppers_remaining,
@@ -452,6 +452,7 @@ class Phase(metaclass=ABCMeta):
         self._supply = self.player.game.supply
         self._game_log = self.game.game_log
         self._log_entry = self._game_log.add_entry(self.phase_name, parent=self.turn._log_entry)
+        self._cards_gained: int = 0 # Used occasionally with cards like Merchant Guild
 
     @property
     def turn(self) -> Turn:
@@ -480,17 +481,28 @@ class Phase(metaclass=ABCMeta):
         The current game's supply.
         """
         return self._supply
+    
+    @property
+    def cards_gained(self) -> int:
+        """
+        The number of cards gained this phase.
+        """
+        return self._cards_gained
+    
+    @cards_gained.setter
+    def cards_gained(self, cards_gained: int):
+        self._cards_gained = cards_gained
 
     @abstractmethod
     def start(self):
         '''
         Start the phase.
         '''
-        self._turn.current_phase = self.phase_name
+        self._turn.current_phase = self
         try:
             self._game.socketio.emit(
                 "new phase",
-                self._turn.current_phase,
+                self._turn.current_phase.phase_name,
                 to=self._game.room,
             )
         except AttributeError:
@@ -606,7 +618,6 @@ class BuyPhase(Phase):
         they would like to buy (then gain them).
         '''
         super().start()
-        self.cards_gained: int = 0 # Used occasionally with cards like Merchant Guild
         # Run any expansion-specific pre buy actions
         for expansion_instance in self.supply.customization.expansions:
             expansion_instance.additional_pre_buy_phase_actions()

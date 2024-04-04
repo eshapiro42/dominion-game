@@ -457,7 +457,7 @@ class Tunnel(VictoryCard, ReactionCard):
             When you discard this other than during Clean-up, you may reveal it to gain a Gold.
             """
             turn = self.game.current_turn
-            if turn.current_phase == "Cleanup Phase":
+            if turn.current_phase.phase_name == "Cleanup Phase":
                 return
             if player.interactions.choose_yes_or_no(f"Would you like to reveal the Tunnel you just discarded to gain a Gold?"):
                 player.gain(base_cards.Gold, message=False)

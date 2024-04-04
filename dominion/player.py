@@ -299,9 +299,9 @@ class Player:
                 card = self.process_post_gain_actions(card, card.gain_to)
             gained_cards.append(card)
         if gained_cards:
-            # If it is this player's turn and these card are gained during the buy phase, increment the counter (needed for cards like Merchant Guild)
-            if self.turn is not None and self.turn.current_phase == "Buy Phase":
-                self.turn.buy_phase.cards_gained += len(gained_cards)
+            # If it is this player's turn, increment the counter of cards gained in this phase (needed for cards like Merchant Guild)
+            if self.turn is not None:
+                self.turn.current_phase.cards_gained += len(gained_cards)
             return gained_cards
         return None
         
@@ -337,9 +337,9 @@ class Player:
             if not ignore_post_gain_actions:
                 self.process_post_gain_actions(card, self.hand)
         if gained_cards:
-            # If it is this player's turn and these card are gained during the buy phase, increment the counter (needed for cards like Merchant Guild)
-            if self.turn is not None and self.turn.current_phase == "Buy Phase":
-                self.turn.buy_phase.cards_gained += len(gained_cards)
+            # If it is this player's turn, increment the counter of cards gained in this phase (needed for cards like Merchant Guild)
+            if self.turn is not None:
+                self.turn.current_phase.cards_gained += len(gained_cards)
             return gained_cards
         return None
 
@@ -376,9 +376,9 @@ class Player:
             if not ignore_post_gain_actions:
                 self.process_post_gain_actions(card, self.deck)
         if gained_cards:
-            # If it is this player's turn and these card are gained during the buy phase, increment the counter (needed for cards like Merchant Guild)
-            if self.turn is not None and self.turn.current_phase == "Buy Phase":
-                self.turn.buy_phase.cards_gained += len(gained_cards)
+            # If it is this player's turn, increment the counter of cards gained in this phase (needed for cards like Merchant Guild)
+            if self.turn is not None:
+                self.turn.current_phase.cards_gained += len(gained_cards)
             return gained_cards
         return None
 
