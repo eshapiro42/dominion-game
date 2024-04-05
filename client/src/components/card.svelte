@@ -26,6 +26,7 @@
     let hovering = false;
     let selectable = true;
     let selectionIndex = null;
+    let bodyRef = null;
 
     // Primordial types
     $: action = types.includes("action") && !types.includes("attack") && !types.includes("reaction");
@@ -45,6 +46,12 @@
 
     // Bane "type"
     $: bane = types.includes("bane") || forceBane;
+
+    export function scrollToTop() {
+        if (bodyRef != null) {
+            bodyRef.scrollTop = 0;
+        }
+    }
 
     function renderText(text) {
         return text
@@ -185,7 +192,10 @@
             {selectionIndex}
         </span>
     {/if}
-    <div class="body">
+    <div 
+        class="body"
+        bind:this={bodyRef}
+    >
         {#if renderedEffects.length > 0}
             <ul class="effects">
                 {#each renderedEffects as effect}

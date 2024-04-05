@@ -81,6 +81,7 @@
     let selectedAll = false;
     let selectedCardIds = [];
     let displayAs;
+    let cardRefs = [];
 
     $: sortedCards = sortCards(cards, sortByProperty);
 
@@ -90,11 +91,20 @@
 
     $: if (active) {
         activeCarousel.set(title);
-        // Scroll to the active carousel after a short delay to allow the page to render
+        // Scroll all cards in the carousel back to the top
+        cardRefs.forEach(
+            (cardRef) => {
+                console.log(cardRef);
+                cardRef.scrollToTop();
+            }
+        );
         setTimeout(
             () => {
+                // Scroll to the active carousel after a short delay to allow the page to render
                 location.hash = "#" + title;
                 history.pushState("", document.title, window.location.pathname + window.location.search);
+   
+                // If it is another player's turn, flash the tab title
                 if ($username != $currentPlayer) {
                     flashTitle("You Must React!");
                     alert(`Heads up: It is still ${$currentPlayer}'s turn!`);
@@ -195,8 +205,9 @@
             class:displayAsRow={displayAs == "row"}
             class:displayAsGrid={displayAs == "grid"}
         >
-            {#each sortedCards as card (card.id)}
+            {#each sortedCards as card, index (card.id)}
                 <Card
+                    bind:this={cardRefs[index]}
                     {...card}
                     {invalidCardNames}
                     {invalidCardIds}
