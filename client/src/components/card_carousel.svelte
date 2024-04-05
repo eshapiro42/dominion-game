@@ -94,8 +94,9 @@
         // Scroll all cards in the carousel back to the top
         cardRefs.forEach(
             (cardRef) => {
-                console.log(cardRef);
-                cardRef.scrollToTop();
+                if (cardRef) {
+                    cardRef.scrollToTop();
+                }
             }
         );
         setTimeout(
