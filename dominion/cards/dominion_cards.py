@@ -867,7 +867,7 @@ class Spy(AttackCard):
     extra_buys = 0
     extra_coppers = 0
 
-    allow_simultaneous_reactions = False # The frontend cannot currently handle the attacker simultaneously reacting to multiple players' responses
+    allow_simultaneous_reactions = True
 
     def reveal_top_card_and_discard_or_replace(self, revealer, chooser):
         # Revealer reveals a card
@@ -919,7 +919,7 @@ class Thief(AttackCard):
     extra_buys = 0
     extra_coppers = 0
 
-    allow_simultaneous_reactions = False # The frontend cannot currently handle the attacker simultaneously reacting to multiple players' responses
+    allow_simultaneous_reactions = True
 
     def attack_effect(self, attacker, player):
         # Player reveals two cards

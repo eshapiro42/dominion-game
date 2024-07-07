@@ -24,60 +24,61 @@ class BrowserInteraction(Interaction):
         """
         Send a request to the player and wait for a response, then return it.
         """
-        # If it is not this player's turn, notify the player whose turn it is that they are waiting on this player
-        if self.game.current_turn.player != self.player:
-            if not self.game.current_turn.player.is_cpu:
-                self.socketio.emit(
-                    "waiting on player",
-                    self.player.name,
-                    to=self.game.current_turn.player.sid,
-                )
-        self.event = Event()
-        self.refresh = False
-        self.response = None
-        # Try in a loop with a one second timeout in case an event gets missed or a network error occurs
-        tries = 0
-        # Send request
-        self.socketio.emit(
-            event_name,
-            data, 
-            to=self.sid,
-        )
-        while True:
-            if self.refresh:
-                # Resend request if refresh is requested
-                print("Resending request...")
-                self.socketio.emit(
-                    event_name,
-                    data, 
-                    to=self.sid,
-                )
-                self.refresh = False
-            # Wait for response
-            if self.event.wait(1):
-                # Response was received
-                break
-            if self.game.killed:
-                raise Exception(f"Game {self.room} was killed.")
-            tries += 1
-            if tries == 30 or tries % 60 == 0:
-                print(f"Still waiting for input from player {self.player.name} in room {self.room} after {tries} seconds")
-        # Acknowledge the response
-        self.socketio.emit(
-            "response received",
-            to=self.sid,
-        )
-        # If it is not this player's turn, notify the player whose turn it is that the response was received
-        if self.game.current_turn.player != self.player:
-            if not self.game.current_turn.player.is_cpu:
-                self.socketio.emit(
-                    "not waiting on player",
-                    self.player.name,
-                    to=self.game.current_turn.player.sid,
-                )
-        # Return the response
-        print(f"Response data: {self.response}")
-        return self.response
+        with self._lock:
+            # If it is not this player's turn, notify the player whose turn it is that they are waiting on this player
+            if self.game.current_turn.player != self.player:
+                if not self.game.current_turn.player.is_cpu:
+                    self.socketio.emit(
+                        "waiting on player",
+                        self.player.name,
+                        to=self.game.current_turn.player.sid,
+                    )
+            self.event = Event()
+            self.refresh = False
+            self.response = None
+            # Try in a loop with a one second timeout in case an event gets missed or a network error occurs
+            tries = 0
+            # Send request
+            self.socketio.emit(
+                event_name,
+                data, 
+                to=self.sid,
+            )
+            while True:
+                if self.refresh:
+                    # Resend request if refresh is requested
+                    print("Resending request...")
+                    self.socketio.emit(
+                        event_name,
+                        data, 
+                        to=self.sid,
+                    )
+                    self.refresh = False
+                # Wait for response
+                if self.event.wait(1):
+                    # Response was received
+                    break
+                if self.game.killed:
+                    raise Exception(f"Game {self.room} was killed.")
+                tries += 1
+                if tries == 30 or tries % 60 == 0:
+                    print(f"Still waiting for input from player {self.player.name} in room {self.room} after {tries} seconds")
+            # Acknowledge the response
+            self.socketio.emit(
+                "response received",
+                to=self.sid,
+            )
+            # If it is not this player's turn, notify the player whose turn it is that the response was received
+            if self.game.current_turn.player != self.player:
+                if not self.game.current_turn.player.is_cpu:
+                    self.socketio.emit(
+                        "not waiting on player",
+                        self.player.name,
+                        to=self.game.current_turn.player.sid,
+                    )
+            # Return the response
+            print(f"Response data: {self.response}")
+            return self.response
 
     def _enter_choice(self, prompt):
         return self._call(

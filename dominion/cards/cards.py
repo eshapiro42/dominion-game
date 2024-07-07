@@ -413,13 +413,6 @@ class AttackCard(ActionCard):
         If simultaneous reactions are not allowed for the game,
         then this has no effect.
 
-        This currently only works for attack effects where the
-        only required input is from the players being attacked,
-        such as  with the Militia. If the attack requires feedback
-        from the attacker, like with Spy, Thief, Swindler, etc,
-        the frontend is not currently equipped to deal with
-        simultaneous reactions.
-
         This also cannot be used for attacks that require the
         attacked players to gain cards from the Supply, such as Witch,
         Swindler, Torturer, Replace, etc. That's because there may be

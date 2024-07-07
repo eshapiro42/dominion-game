@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from abc import ABCMeta, abstractmethod
+from gevent.lock import RLock
 from typing import TYPE_CHECKING, Any, Optional, Deque, List, Type
 
 if TYPE_CHECKING:
@@ -25,6 +26,7 @@ class Interaction(metaclass=ABCMeta):
         self._player = player
         self._socketio = socketio
         self._sid = sid
+        self._lock = RLock()
 
     @property
     def player(self) -> Player:

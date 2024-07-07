@@ -296,7 +296,7 @@ class Oracle(AttackCard):
 
     has_plus_one_card = True
 
-    allow_simultaneous_reactions = False # The frontend cannot currently handle the attacker simultaneously reacting to multiple players' responses
+    allow_simultaneous_reactions = True
 
     def attack_effect(self, attacker, player):
         # Reveal the top 2 cards of the player's deck
@@ -540,7 +540,7 @@ class NobleBrigand(AttackCard):
     extra_buys = 0
     extra_coppers = 1
 
-    allow_simultaneous_reactions = False # The frontend cannot currently handle the attacker simultaneously reacting to multiple players' responses
+    allow_simultaneous_reactions = True
 
     class NobleBrigandPostBuyHook(PostBuyHook):
         persistent = True
