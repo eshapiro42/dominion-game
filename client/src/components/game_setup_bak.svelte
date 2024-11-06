@@ -1,6 +1,9 @@
 <script>
     import {createEventDispatcher} from "svelte";
+    import {fade} from "svelte/transition";
     import CardCarousel from "./card_carousel.svelte";
+
+    import {sticky} from "../common.js";
 
     import {
         socket,
@@ -25,6 +28,7 @@
     let allKingdomCards = [];
     let hidden = false;
     let saved_kingdom = {}
+    let customKingdomData = {};
     let openFileOptions = {
         multiple: false,
         types: [
@@ -36,37 +40,9 @@
             }
         ]
     };
+    let isStuck = false;
 
-    let selectedCards = [];
-    let baneCard = null;
-    let usePlatinumAndColony = null;
-
-    $: selectedCardNames = selectedCards.map(card => card.name);
-    $: baneCardName = baneCard ? baneCard.name : null;
-
-    $: selectedKingdomData = {
-        selected_cards: selectedCards,
-        bane_card: baneCard,
-        use_platinum_and_colony: usePlatinumAndColony
-    }
-
-    $: if (roomCreator) {
-        $socket.emit(
-            "update selected kingdom", {
-                selectedKingdomData: selectedKingdomData,
-                room: $room,
-            }
-        )
-    }
-
-    $: if (!roomCreator) {
-        $socket.emit(
-            "request selected kingdom", {
-                room: $room,
-            }
-        )
-    }
-
+    let cards = [];
     let waitingForSelection = {
         value: false,
         handler: null,
@@ -271,43 +247,17 @@
         }
     );
 
-    $socket.on("players in room", function(data) {
-        playersInRoom = data;
-    });
-
     $socket.on(
         "random kingdom generated",
         (data) => {
-            if (roomCreator) {
-                selectedCards = data;
-            }
+            cards = data;
+            console.log(cards);
         }
     )
 
-    $socket.on(
-        "requested selected kingdom",
-        (data) => {
-            if (roomCreator) {
-                $socket.emit(
-                    "update selected kingdom", {
-                        selectedKingdomData: selectedKingdomData,
-                        room: $room,
-                    }
-                )
-            }
-        }
-    )
-
-    $socket.on(
-        "updated selected kingdom",
-        (data) => {
-            if (!roomCreator) {
-                selectedCards = data.selectedKingdomData.selected_cards;
-                baneCard = data.selectedKingdomData.bane_card;
-                usePlatinumAndColony = data.selectedKingdomData.use_platinum_and_colony;
-            }
-        }
-    )
+    $socket.on("players in room", function(data) {
+        playersInRoom = data;
+    });
 
     $: if (roomJoined) {
         $socket.emit(
@@ -363,63 +313,71 @@
             }
         }
     }
+
+    function handleStuck(e) {
+        isStuck = e.detail.isStuck;
+    }
     </script>
 
 {#if !hidden}
     {#if roomJoined}
         <div class="container">
-            <div id="top-section">
-                <div id="players-and-options">
-                    <table class="panel">
-                        <thead>
-                            <tr><td><b>Players in Room</b></td></tr>
-                        </thead>
-                        <tbody>
-                            {#each playersInRoom as player}
-                            <tr>
-                                <td class="playerRow">
-                                    {player}
-                                    {#if roomCreator && player != $username}
-                                        <i class="fa-solid fa-trash-can"
-                                            on:click={() => { removePlayer(player); }}
-                                        ></i>
-                                    {/if}
-                                </td>
-                            </tr>
-                            {/each}
-                        </tbody>
-                    </table>
-                    {#if roomCreator}
-                        <div class="buttons panel">
-                            <button type="button" class="blueButton" id="startGameButton" disabled on:click={startGame}>Start Game</button>
-                            <button type="button" on:click={addCPU}>Add CPU</button>
+            <div class="top-section">
+                <table class="panel">
+                    <thead>
+                        <tr><td><b>Players in Room</b></td></tr>
+                    </thead>
+                    <tbody>
+                        {#each playersInRoom as player}
+                        <tr>
+                            <td class="playerRow">
+                                {player}
+                                {#if roomCreator && player != $username}
+                                    <i class="fa-solid fa-trash-can"
+                                        on:click={() => { removePlayer(player); }}
+                                    ></i>
+                                {/if}
+                            </td>
+                        </tr>
+                        {/each}
+                    </tbody>
+                </table>
+                {#if roomCreator}
+                    <div class="buttons panel {isStuck ? 'isStuck' : ''}">
+                        {#if isStuck}
+                            <i class="fa-solid fa-arrow-up"
+                                transition:fade={{ delay: 0, duration: 300 }}
+                                on:click={() => window.scrollTo(0, 0)}
+                            ></i>
+                        {/if}
+                        <button type="button" class="blueButton" id="startGameButton" disabled on:click={startGame}>Start Game</button>
+                        <button type="button" on:click={addCPU}>Add CPU</button>
 
-                            <label class="customization">
-                                <input type="checkbox" bind:checked={allowSimultaneousReactions.selected}>
-                                <div class="hoverable">
-                                    Allow Simultaneous Reactions
-                                    <span class="hoverable-text">
-                                        {#each allowSimultaneousReactions.description as line}
-                                            <span>{@html line}</span>
-                                        {/each}
-                                    </span>
-                                </div>
-                            </label>
-                        </div>
-                    {/if}
-                </div>
+                        <label class="customization">
+                            <input type="checkbox" bind:checked={allowSimultaneousReactions.selected}>
+                            <div class="hoverable">
+                                Allow Simultaneous Reactions
+                                <span class="hoverable-text">
+                                    {#each allowSimultaneousReactions.description as line}
+                                        <span>{@html line}</span>
+                                    {/each}
+                                </span>
+                            </div>
+                        </label>
+                    </div>
                     <CardCarousel
                         title="Selected Kingdom"
-                        bind:cards={selectedCards}
+                        {cards}
                         sortByProperty="orderSent"
                         {waitingForSelection}
-                        dismissable={roomCreator ? true : false}
+                        dismissable=true
                         on:selected={handleSelected}
                     />
+                {/if}
             </div>
 
             {#if roomCreator}
-                <div id="bottom-section">
+                <div class="bottom-section">
                     <div class="panel">
                         <Tabs
                             tabNames={[
@@ -466,8 +424,8 @@
                         {:else if selectedTab === "Custom Kingdom"}
                             <CustomKingdomSetup
                                 {allKingdomCards}
-                                bind:customKingdomData={selectedKingdomData}
-                                bind:cards={selectedCards}
+                                bind:customKingdomData={customKingdomData}
+                                bind:cards={cards}
                             />
                         {:else if selectedTab === "Saved Kingdom"}
                             <main class="space-above">
@@ -520,6 +478,12 @@
         border: 1px solid var(--border-color);
     }
 
+    #selectedKingdomContainer {
+        background: var(--body-background-color);
+        transition: background-color 0.3s linear;
+        border: 1px solid var(--border-color);
+    }
+
     .customization {
         padding: 10px;
     }
@@ -530,6 +494,14 @@
 
     .panel {
         left: 0px;
+    }
+
+    .isStuck {
+        background-color: var(--thead-background-color);
+        color: var(--light-text-color);
+        transition: all 0.3s linear;
+        box-sizing: content-box;
+        border-top: none;
     }
 
     .playerRow {
@@ -549,31 +521,34 @@
         cursor: pointer;
     }
 
+    .fa-arrow-up {
+        position: absolute;
+        left: 20px;
+        top: 40px;
+    }
+
+    .fa-arrow-up:hover {
+        cursor: pointer;
+    }
+
     .container {
         display: flex;
         flex-direction: column;
         height: 100%;
     }
 
-    #top-section {
+    .top-section {
         position: sticky;
         top: 0;
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 20px;
+        padding: 20px;
         flex: 0 0 30%;
         overflow: hidden;
     }
 
-    #players-and-options {
-        display: flex;
-        flex-direction: row;
-        justify-content: space-between;
-        gap: 20px;
-    }
-
-    #bottom-section {
+    .bottom-section {
         display: flex;
         flex-direction: column;
         padding: 20px;

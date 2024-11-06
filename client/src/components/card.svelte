@@ -22,8 +22,8 @@
     export let invalidCardNames = [];
     export let invalidCardIds = [];
     export let forceBane = false;
+    export let dismissable = false;
 
-    let hovering = false;
     let selectable = true;
     let selectionIndex = null;
     let bodyRef = null;
@@ -107,9 +107,23 @@
                 cost: cost,
                 type: type,
                 id: id,
-                selected: selected,
+                selected: dismissable ? false : selected,
             }
         );
+    }
+
+    function dismissed() {
+        dispatch(
+            "dismissed",
+            {
+                name: name,
+                effects: effects,
+                description: description,
+                cost: cost,
+                type: type,
+                id: id,
+            }
+        )
     }
 
     $: if (waitingForSelection != null && !waitingForSelection.value) {
@@ -147,11 +161,6 @@
 <main
     in:fade
     on:click={clicked}
-    on:dblclick={
-        () => {
-            hovering = true;
-        }
-    }
     class:action
     class:attack
     class:reaction
@@ -167,6 +176,7 @@
     class:bane
     class:unselectable
     class:selected
+    class:dismissable
 >
     <div class="header">
         <div class="name">
@@ -180,13 +190,15 @@
             <div class="quantity">
                 {quantity}
             </div>
+        {:else if dismissable}
+            <div 
+                class="quantity"
+                on:click={dismissed}
+            >
+                <i class="fa-solid fa-times"></i>
+            </div>
         {/if}
     </div>
-    <span class="hoverable-text">
-        <span class="hoverable-text-line">
-            {expansion}
-        </span>
-    </span>
     {#if selectionIndex != null && waitingForSelection.ordered}
         <span class="selection-index">
             {selectionIndex}
@@ -210,6 +222,11 @@
         </ul>
     </div>
     <div class="footer">
+        <span class="hoverable-text">
+            <span class="hoverable-text-line">
+                {expansion}
+            </span>
+        </span>
         <div class="cost">{cost}&nbsp;<i class="fa-solid fa-coins"></i></div>
         {#if forceBane}
             <div class="type">Bane, {type}</div>
@@ -260,8 +277,8 @@
         }
     }
 
-    main:hover {
-        transform: translateY(-20px);
+    main:not(.dismissable):hover {
+        transform: translateY(-20px) !important;
         transition: 0.4s ease-out;
         transition-delay: 0.1s;
     }
@@ -269,7 +286,7 @@
     main .hoverable-text {
         visibility: hidden;
         position: absolute;
-        top: 0px;
+        bottom: 0px;
         right: 0px;
         background-color: var(--action-card-color);
         color: var(--light-text-color);
@@ -277,8 +294,7 @@
         border-radius: var(--card-border-radius);
         border-color: var(--border-color);
         border-width: 1px;
-        margin-top: $margin;
-        margin-right: $margin;
+        margin-right: -$margin;
         padding: 7px;
     }
 
@@ -616,5 +632,39 @@
         box-shadow: none;
         top: 1px;
         left: 1px;
+    }
+
+    .fa-times {
+        cursor: pointer;
+        min-width: calc(1.2 * var(--card-font-size));
+        min-height: calc(1.2 * var(--card-font-size));
+        width: calc(1.2 * var(--card-font-size));
+        height: calc(1.2 * var(--card-font-size));
+        margin-right: -5px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .fa-times:hover {
+        border: var(--dark-text-color) 1px solid;
+        color: var(--dark-text-color);
+        background-color: var(--attack-card-color);
+    }
+
+    .fa-times:active {
+        color: var(--dark-text-color);
+        transform: translate(0, 2px) !important;
+        transition: 0.1s ease-out;
+    }
+
+    .attack .fa-times:hover {
+        background-color: var(--dark-text-color);
+        color: var(--attack-card-color);
+    }
+
+    .attack .fa-times:active {
+        color: var(--attack-card-color);
     }
 </style>

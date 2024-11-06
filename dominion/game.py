@@ -582,7 +582,10 @@ class Game:
             self.players.append(player)
             player.interactions.start()
         # Initiate start-of-game logging
-        game_start_log_entry = self.game_log.add_entry("The game has started.")
+        if debug:
+            game_start_log_entry = self.game_log.add_entry("The game has started in debug mode.")
+        else:
+            game_start_log_entry = self.game_log.add_entry("The game has started.")
         # Add in the selected recommended set, if any
         if self.recommended_set is not None:
             self.game_log.add_entry(f'Using "{self.recommended_set.name}" Recommended Kingdom.', parent=game_start_log_entry)

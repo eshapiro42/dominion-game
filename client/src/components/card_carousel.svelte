@@ -16,6 +16,7 @@
     export let invalidCardNames = [];
     export let invalidCardIds = [];
     export let sortByProperty;
+    export let dismissable = false;
 
     export let cards = [ 
         // This is the "source of truth" for all cards in the front-end
@@ -134,6 +135,14 @@
         }
     }
 
+    function handleDismissed(event) {
+        cards = cards.filter(
+            (card) => {
+                return card.id != event.detail.id;
+            }
+        );
+    }
+
     function sendSelection() {
         // Find the selected cards by ID while maintaining order of selection
         var selectedCards = selectedCardIds.map(
@@ -216,7 +225,9 @@
                     {selectedAll}
                     {numSelected}
                     {selectedCardIds}
+                    {dismissable}
                     on:clicked={handleClicked}
+                    on:dismissed={handleDismissed}
                 />
             {:else}
                 <div class="text">

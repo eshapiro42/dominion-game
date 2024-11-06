@@ -157,6 +157,58 @@ def remove_player(data):
     if game_startable_after != game_startable_before:
         socketio.emit('game not startable', room=room)
 
+@socketio.on('generate random kingdom')
+def generate_random_kingdom(data):
+    room = data['room']
+    dominion = data.get('dominion')
+    intrigue = data.get('intrigue')
+    prosperity = data.get('prosperity')
+    cornucopia = data.get('cornucopia')
+    hinterlands = data.get('hinterlands')
+    guilds = data.get('guilds')
+    # distribute_cost = data.get('distributeCost')
+    disable_attack_cards = data.get('disableAttacks')
+    require_plus_two_action = data.get('requirePlusTwoAction')
+    require_drawer = data.get('requireDrawer')
+    require_buy = data.get('requireBuy')
+    require_trashing = data.get('requireTrashing')
+    # Create a temporary Game object
+    game = Game(socketio=None, room=None)
+    # Generate a random Kingdom
+    print("Creating random game from selected expansions.")
+    if dominion:
+        game.add_expansion(DominionExpansion)
+    if intrigue:
+        game.add_expansion(IntrigueExpansion)
+    if prosperity:
+        game.add_expansion(ProsperityExpansion)
+    if cornucopia:
+        game.add_expansion(CornucopiaExpansion)
+    if hinterlands:
+        game.add_expansion(HinterlandsExpansion)
+    if guilds:
+        game.add_expansion(GuildsExpansion)
+    # if distribute_cost:
+    #     game.distribute_cost = True
+    if disable_attack_cards:
+        game.disable_attack_cards = True
+    if require_plus_two_action:
+        game.require_plus_two_action = True
+    if require_drawer:
+        game.require_drawer = True
+    if require_buy:
+        game.require_buy = True
+    if require_trashing:
+        game.require_trashing = True
+    game.start(debug=True)
+    # Send the Kingdom to the client
+    print(game.supply.basic_card_piles)
+    print(game.supply.card_stacks.keys())
+    basic_card_classes = [basic_card_pile[0] for basic_card_pile in game.supply.basic_card_piles]
+    supply_json = [card_class().json for card_class in game.supply.card_stacks.keys() if card_class not in basic_card_classes]
+    socketio.emit('random kingdom generated', data=supply_json, room=room)
+
+
 @socketio.on('start game')
 def start_game(data):
     username = data['username']
@@ -289,6 +341,23 @@ def send_kingdom_json(data):
         room=room,
     )
 
+@socketio.on("update selected kingdom")
+def on_update_selected_kingdom(data):
+    """
+    Pass the currently selected kingdom data
+    for display to non-host players.
+    """
+    room = data["room"]
+    update_selected_kingdom(data, room)
+
+@socketio.on("request selected kingdom")
+def on_request_selected_kingdom(data):
+    room = data["room"]
+    socketio.emit(
+        "requested selected kingdom",
+        room=room,
+    )
+
 @socketio.on("refresh")
 def refresh(data):
     room = data["room"]
@@ -334,6 +403,14 @@ def handle_response(response_data):
     # Process the response
     player.interactions.response = response_data
     player.interactions.event.set()
+
+
+def update_selected_kingdom(data, room):
+    socketio.emit(
+        "updated selected kingdom",
+        data=data,
+        room=room,
+    )
 
 
 def refresh_heartbeat(room):

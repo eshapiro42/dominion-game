@@ -6,6 +6,7 @@
 
     export let customKingdomData = {};
     export let allKingdomCards = [];
+    export let cards = [];
 
     let allKingdomCardsSorted = [];
     let baneCard = null;
@@ -63,6 +64,9 @@
         var cardId = event.detail.id;
         var cardName = event.detail.name;
         if (cardSelected) {
+            if (!cards.some(card => card.id === cardId)) {
+                cards = cards.concat(event.detail)
+            }
             selectedCardIds = selectedCardIds.concat(cardId);
             selectedCardNames = selectedCardNames.concat(cardName);
             if (cardName === "Young Witch") {
