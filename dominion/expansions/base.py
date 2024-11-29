@@ -4,7 +4,7 @@ from ..cards import cards, base_cards
 
 class BaseExpansion(Expansion):
     name = 'Base'
-    
+
     @property
     def basic_card_piles(self):
         basic_card_piles = []
@@ -32,8 +32,8 @@ class BaseExpansion(Expansion):
     @property
     def game_end_conditions(self):
         return [
-            self.game_end_condition_province_pile_empty, 
-            self.game_end_condition_three_supply_piles_empty
+            self.game_end_condition_province_pile_empty,
+            self.game_end_condition_supply_piles_empty,
         ]
 
     def game_end_condition_province_pile_empty(self):
@@ -42,8 +42,9 @@ class BaseExpansion(Expansion):
         else:
             return False, None
 
-    def game_end_condition_three_supply_piles_empty(self):
-        if self.supply.num_empty_stacks >= 3:
+    def game_end_condition_supply_piles_empty(self):
+        empty_stack_threshold = 3 if self.game.num_players <= 4 else 4
+        if self.supply.num_empty_stacks >= empty_stack_threshold:
             empty_piles = [stack for stack in self.supply.card_stacks.values() if stack.is_empty]
             return True, f"Three Supply piles are empty:  {', '.join(map(str, empty_piles))}."
         else:
