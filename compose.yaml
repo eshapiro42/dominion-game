@@ -1,0 +1,9 @@
+services:
+  dominion:
+    image: dominion-game
+    build: .
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    environment:
+      - FLASK_DEBUG=false
