@@ -6,6 +6,4 @@ services:
     ports:
       - "80:80"
     environment:
-      - FLASK_ENV=development
-    volumes:
-      - ./:/app
+      - FLASK_DEBUG=false
