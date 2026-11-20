@@ -1,4 +1,4 @@
-FROM node:23 AS frontend-builder
+FROM node:24 AS frontend-builder
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm install
